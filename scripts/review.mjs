@@ -14,7 +14,9 @@ const {
   options: { model: { type: 'string' }, effort: { type: 'string' }, ask: { type: 'string' } },
 });
 if (!number || !model || !effort) {
-  console.error('Usage: node scripts/review.mjs <pull request> --model <model> --effort <effort> [--ask <question>]');
+  console.error(
+    'Usage: node scripts/review.mjs <pull request> --model <model> --effort <effort> [--ask <question>]',
+  );
   process.exit(1);
 }
 
@@ -30,14 +32,20 @@ const schema = {
         type: 'object',
         additionalProperties: false,
         required: ['path', 'line', 'body'],
-        properties: { path: { type: 'string' }, line: { type: 'integer' }, body: { type: 'string' } },
+        properties: {
+          path: { type: 'string' },
+          line: { type: 'integer' },
+          body: { type: 'string' },
+        },
       },
     },
   },
 };
 
 const git = (...args) => execFileSync('git', args, { encoding: 'utf8', maxBuffer: 2 ** 28 });
-const env = Object.fromEntries(Object.entries(process.env).filter(([name]) => !name.includes('_APP_')));
+const env = Object.fromEntries(
+  Object.entries(process.env).filter(([name]) => !name.includes('_APP_')),
+);
 
 // The only place that knows the reviewer's tool: a prompt goes in, JSON of the schema's shape comes out.
 // The pull request's text is untrusted and the answer is published, so the tool may read the checkout and
@@ -46,13 +54,35 @@ const env = Object.fromEntries(Object.entries(process.env).filter(([name]) => !n
 const tool = 'Codex CLI';
 function runReviewer(prompt, tree, tmp) {
   writeFileSync(join(tmp, 'schema.json'), JSON.stringify(schema));
-  const files = ['--output-schema', join(tmp, 'schema.json'), '--output-last-message', join(tmp, 'answer.json')];
+  const files = [
+    '--output-schema',
+    join(tmp, 'schema.json'),
+    '--output-last-message',
+    join(tmp, 'answer.json'),
+  ];
   const gitDir = git('rev-parse', '--path-format=absolute', '--git-common-dir').trim();
-  const roots = [gitDir, dirname(dirname(process.execPath))].map((root) => `${JSON.stringify(root)}="read"`);
+  const roots = [gitDir, dirname(dirname(process.execPath))].map(
+    (root) => `${JSON.stringify(root)}="read"`,
+  );
   const readable = `{":minimal"="read",":workspace_roots"={"."="read"},${roots}}`;
-  const config = [`model_reasoning_effort="${effort}"`, 'default_permissions="review"', `permissions.review.filesystem=${readable}`];
-  const args = ['exec', '--cd', tree, '--model', model, ...config.flatMap((entry) => ['-c', entry])];
-  execFileSync('codex', [...args, ...files, '-'], { input: prompt, env, stdio: ['pipe', 'inherit', 'inherit'] });
+  const config = [
+    `model_reasoning_effort="${effort}"`,
+    'default_permissions="review"',
+    `permissions.review.filesystem=${readable}`,
+  ];
+  const args = [
+    'exec',
+    '--cd',
+    tree,
+    '--model',
+    model,
+    ...config.flatMap((entry) => ['-c', entry]),
+  ];
+  execFileSync('codex', [...args, ...files, '-'], {
+    input: prompt,
+    env,
+    stdio: ['pipe', 'inherit', 'inherit'],
+  });
   return JSON.parse(readFileSync(join(tmp, 'answer.json'), 'utf8'));
 }
 
@@ -61,7 +91,10 @@ const token = appId && (await appToken(appId, appKey));
 async function github(path, body) {
   const response = await fetch(`https://api.github.com${path}`, {
     method: body ? 'POST' : 'GET',
-    headers: { accept: 'application/vnd.github+json', ...(token && { authorization: `Bearer ${token}` }) },
+    headers: {
+      accept: 'application/vnd.github+json',
+      ...(token && { authorization: `Bearer ${token}` }),
+    },
     body: body && JSON.stringify(body),
   });
   if (!response.ok) throw new Error(`${path}: ${response.status} ${await response.text()}`);
@@ -84,7 +117,11 @@ const said = (
   .sort((a, b) => a.at.localeCompare(b.at))
   .map((entry) => {
     const onIssue = closes && entry.issue_url?.endsWith(`/${closes}`);
-    const place = entry.path ? ` on ${entry.path}:${entry.line ?? entry.original_line}` : onIssue ? ' on the issue' : '';
+    const place = entry.path
+      ? ` on ${entry.path}:${entry.line ?? entry.original_line}`
+      : onIssue
+        ? ' on the issue'
+        : '';
     return `${entry.user.login}${place}:\n${entry.body}`;
   });
 
@@ -106,7 +143,9 @@ const prompt = [
     ? `Answer this question about the pull request, and nothing else, as AGENTS.md describes:\n${ask}`
     : 'Review this pull request as AGENTS.md describes.',
   `Pull request #${number} in ${repo}: ${pull.title}\n\n${pull.body ?? ''}`,
-  issue ? `The issue it closes, #${closes}: ${issue.title}\n\n${issue.body ?? ''}` : 'It names no issue.',
+  issue
+    ? `The issue it closes, #${closes}: ${issue.title}\n\n${issue.body ?? ''}`
+    : 'It names no issue.',
   `Earlier reviews and comments on the pull request and the issue, oldest first:\n\n${said.join('\n\n') || 'None.'}`,
   `The working directory is a checkout of ${pull.head.sha}. Its diff against ${pull.base.ref}:\n\n${diff}`,
 ].join('\n\n---\n\n');
@@ -144,5 +183,9 @@ if (token) {
   });
   console.log(review.html_url);
 } else {
-  console.log([body, ...inline.map((finding) => `${finding.path}:${finding.line}\n${finding.body}`)].join('\n\n'));
+  console.log(
+    [body, ...inline.map((finding) => `${finding.path}:${finding.line}\n${finding.body}`)].join(
+      '\n\n',
+    ),
+  );
 }

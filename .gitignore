@@ -1,4 +1,8 @@
 node_modules/
+/dist
+/.angular
+/playwright-report
+/test-results
 .env
 
 # Impeccable downloads its platform binary on first run
