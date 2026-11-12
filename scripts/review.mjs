@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 import { execFileSync } from 'node:child_process';
-import { createSign } from 'node:crypto';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { parseArgs } from 'node:util';
+import { appToken, repo } from './app-token.mjs';
 
 const {
   values: { model, effort, ask },
@@ -37,11 +37,11 @@ const schema = {
 };
 
 const git = (...args) => execFileSync('git', args, { encoding: 'utf8', maxBuffer: 2 ** 28 });
-const { REVIEWER_APP_ID: appId, REVIEWER_APP_KEY: appKey, ...env } = process.env;
+const env = Object.fromEntries(Object.entries(process.env).filter(([name]) => !name.includes('_APP_')));
 
 // The only place that knows the reviewer's tool: a prompt goes in, JSON of the schema's shape comes out.
 // The pull request's text is untrusted and the answer is published, so the tool may read the checkout and
-// the repository's git directory, nothing else of this machine, and does not learn where the App's key is.
+// the repository's git directory, nothing else of this machine, and does not learn where the Apps' keys are.
 // Its sandbox starts the CLI again from inside, so the Node installation that holds the CLI must stay readable.
 const tool = 'Codex CLI';
 function runReviewer(prompt, tree, tmp) {
@@ -56,9 +56,8 @@ function runReviewer(prompt, tree, tmp) {
   return JSON.parse(readFileSync(join(tmp, 'answer.json'), 'utf8'));
 }
 
-const repo = git('remote', 'get-url', 'origin').match(/github\.com[:/](.+?)(\.git)?\s*$/)[1];
-
-let token;
+const { REVIEWER_APP_ID: appId, REVIEWER_APP_KEY: appKey } = process.env;
+const token = appId && (await appToken(appId, appKey));
 async function github(path, body) {
   const response = await fetch(`https://api.github.com${path}`, {
     method: body ? 'POST' : 'GET',
@@ -67,15 +66,6 @@ async function github(path, body) {
   });
   if (!response.ok) throw new Error(`${path}: ${response.status} ${await response.text()}`);
   return response.json();
-}
-
-if (appId) {
-  const now = Math.floor(Date.now() / 1000);
-  const encode = (part) => Buffer.from(JSON.stringify(part)).toString('base64url');
-  const unsigned = `${encode({ alg: 'RS256', typ: 'JWT' })}.${encode({ iat: now - 60, exp: now + 540, iss: appId })}`;
-  token = `${unsigned}.${createSign('RSA-SHA256').update(unsigned).sign(readFileSync(appKey), 'base64url')}`;
-  const installation = await github(`/repos/${repo}/installation`);
-  ({ token } = await github(`/app/installations/${installation.id}/access_tokens`, {}));
 }
 
 const pull = await github(`/repos/${repo}/pulls/${number}`);
