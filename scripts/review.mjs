@@ -71,13 +71,13 @@ if (appId) {
 }
 
 const pull = await github(`/repos/${repo}/pulls/${number}`);
-const closes = pull.body?.match(/\b(?:close|fix|resolve)[sd]? #(\d+)/i)?.[1];
+const closes = pull.body?.match(/\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?) #(\d+)/i)?.[1];
 const issue = closes && (await github(`/repos/${repo}/issues/${closes}`));
 const said = (
   await Promise.all(
-    [`pulls/${number}/reviews`, `pulls/${number}/comments`, `issues/${number}/comments`].map((list) =>
-      github(`/repos/${repo}/${list}?per_page=100`),
-    ),
+    [`pulls/${number}/reviews`, `pulls/${number}/comments`, `issues/${number}/comments`]
+      .concat(closes ? `issues/${closes}/comments` : [])
+      .map((list) => github(`/repos/${repo}/${list}?per_page=100`)),
   )
 )
   .flat()
@@ -85,7 +85,8 @@ const said = (
   .map((entry) => ({ ...entry, at: entry.submitted_at ?? entry.created_at }))
   .sort((a, b) => a.at.localeCompare(b.at))
   .map((entry) => {
-    const place = entry.path ? ` on ${entry.path}:${entry.line ?? entry.original_line}` : '';
+    const onIssue = closes && entry.issue_url?.endsWith(`/${closes}`);
+    const place = entry.path ? ` on ${entry.path}:${entry.line ?? entry.original_line}` : onIssue ? ' on the issue' : '';
     return `${entry.user.login}${place}:\n${entry.body}`;
   });
 
@@ -108,7 +109,7 @@ const prompt = [
     : 'Review this pull request as AGENTS.md describes.',
   `Pull request #${number} in ${repo}: ${pull.title}\n\n${pull.body ?? ''}`,
   issue ? `The issue it closes, #${closes}: ${issue.title}\n\n${issue.body ?? ''}` : 'It names no issue.',
-  `Earlier reviews and comments, oldest first:\n\n${said.join('\n\n') || 'None.'}`,
+  `Earlier reviews and comments on the pull request and the issue, oldest first:\n\n${said.join('\n\n') || 'None.'}`,
   `The working directory is a checkout of ${pull.head.sha}. Its diff against ${pull.base.ref}:\n\n${diff}`,
 ].join('\n\n---\n\n');
 

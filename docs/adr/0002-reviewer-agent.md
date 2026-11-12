@@ -47,12 +47,12 @@ What these statements rest on, on 2026-11-12:
 
 - **Verified here:** the command against a pull request of this repository with a stand-in for
   the reviewer's tool: the prompt, the checkout, the check of lines against the diff and the
-  printed review. The options of Codex CLI 0.167.2 that the command uses, from its own help.
+  printed review. A review of this change by Codex CLI 0.167.2 on a ChatGPT login, with model
+  and effort from the command line; it found two defects, which were fixed.
 - **Taken from documentation:** that the hosted review offers no choice of model or effort
   ([Codex on GitHub](https://learn.chatgpt.com/docs/third-party/github)), and that the action
   requires an API key ([codex-action](https://github.com/openai/codex-action)).
-- **Not checked yet:** a review by the real tool, and posting through the App. Both are done
-  before this ADR is accepted.
+- **Not checked yet:** posting through the App. It is done before this ADR is accepted.
 
 ## Consequences
 
