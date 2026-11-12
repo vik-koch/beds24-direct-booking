@@ -23,3 +23,9 @@ The site is written by an AI coding agent (Claude Code) and directed by me. I wr
 issue's intent, the agent plans in the issue, commits and opens the pull request, a second agent
 on another model reviews it there, and I accept and merge. Issues, pull requests and reviews are
 public on purpose: the process is part of what this project shows.
+
+## Licence
+
+The code and the documents of this repository are under the [MIT licence](LICENSE). The agent
+skills in `.claude/skills/` and `.agents/skills/` are third-party files and keep their own
+licences.
