@@ -3,7 +3,7 @@ import { execFileSync } from 'node:child_process';
 import { createSign } from 'node:crypto';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { parseArgs } from 'node:util';
 
 const {
@@ -42,12 +42,14 @@ const { REVIEWER_APP_ID: appId, REVIEWER_APP_KEY: appKey, ...env } = process.env
 // The only place that knows the reviewer's tool: a prompt goes in, JSON of the schema's shape comes out.
 // The pull request's text is untrusted and the answer is published, so the tool may read the checkout and
 // the repository's git directory, nothing else of this machine, and does not learn where the App's key is.
+// Its sandbox starts the CLI again from inside, so the Node installation that holds the CLI must stay readable.
 const tool = 'Codex CLI';
 function runReviewer(prompt, tree, tmp) {
   writeFileSync(join(tmp, 'schema.json'), JSON.stringify(schema));
   const files = ['--output-schema', join(tmp, 'schema.json'), '--output-last-message', join(tmp, 'answer.json')];
   const gitDir = git('rev-parse', '--path-format=absolute', '--git-common-dir').trim();
-  const readable = `{":minimal"="read",":workspace_roots"={"."="read"},${JSON.stringify(gitDir)}="read"}`;
+  const roots = [gitDir, dirname(dirname(process.execPath))].map((root) => `${JSON.stringify(root)}="read"`);
+  const readable = `{":minimal"="read",":workspace_roots"={"."="read"},${roots}}`;
   const config = [`model_reasoning_effort="${effort}"`, 'default_permissions="review"', `permissions.review.filesystem=${readable}`];
   const args = ['exec', '--cd', tree, '--model', model, ...config.flatMap((entry) => ['-c', entry])];
   execFileSync('codex', [...args, ...files, '-'], { input: prompt, env, stdio: ['pipe', 'inherit', 'inherit'] });
