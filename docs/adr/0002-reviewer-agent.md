@@ -1,6 +1,6 @@
 # ADR 2: The reviewer agent is a local command
 
-Status: accepted, 2026-11-12.
+Status: accepted, 2026-11-12. Group: process.
 
 ## Context
 

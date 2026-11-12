@@ -1,6 +1,6 @@
 # ADR 1: Beds24 holds the bookings, an own website shows them
 
-Status: accepted, 2026-11-12.
+Status: accepted, 2026-11-12. Group: product.
 
 ## Context
 
