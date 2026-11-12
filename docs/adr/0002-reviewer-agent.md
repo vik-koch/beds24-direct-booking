@@ -1,6 +1,6 @@
 # ADR 2: The reviewer agent is a local command
 
-Status: proposed, 2026-11-12.
+Status: accepted, 2026-11-12.
 
 ## Context
 
@@ -45,14 +45,16 @@ review needs:
 
 What these statements rest on, on 2026-11-12:
 
-- **Verified here:** the command against a pull request of this repository with a stand-in for
-  the reviewer's tool: the prompt, the checkout, the check of lines against the diff and the
-  printed review. A review of this change by Codex CLI 0.167.2 on a ChatGPT login, with model
-  and effort from the command line; it found two defects, which were fixed.
+- **Verified here:** three rounds of review of this change by Codex CLI 0.167.2 on a ChatGPT
+  login, with model and effort from the command line, posted through the App. They found four
+  defects, which were fixed, among them the two limits on the reviewer below. With those limits
+  in place the reviewer's shell commands run, and a file in the home directory cannot be read
+  from inside its sandbox.
 - **Taken from documentation:** that the hosted review offers no choice of model or effort
   ([Codex on GitHub](https://learn.chatgpt.com/docs/third-party/github)), and that the action
   requires an API key ([codex-action](https://github.com/openai/codex-action)).
-- **Not checked yet:** posting through the App. It is done before this ADR is accepted.
+- **Not checked:** what the tool can reach on the network. In one round, when its shell did not
+  start, it reported reading the project's documents through GitHub.
 
 ## Consequences
 
@@ -63,10 +65,13 @@ What these statements rest on, on 2026-11-12:
 - **Replacing the tool is a change to one function,** as long as the new tool can be run from a
   command line, read the checkout and return the same shape. There is no interface for several
   tools: with one tool it would be untested guesswork.
-- **The reviewer reads what the pull request says.** Title, description and comments of a
-  public repository reach the model. It runs in the tool's read-only sandbox, the
-  guidelines tell it to treat that text as material, and a review is only started for a pull
-  request the developer has chosen.
+- **The reviewer reads untrusted text and its answer is published.** Title, description and
+  comments of a public repository reach the model, and so could an instruction hidden in them.
+  The command therefore gives the tool a permissions profile of its own: it can read the
+  checkout, the repository's git directory and the Node installation that holds the tool, and
+  nothing else of the machine, and it is not told where the App's key is. What is left to leak
+  is public already. The guidelines tell the reviewer to treat that text as material, and a
+  review is only started for a pull request the developer has chosen.
 - **Two environment variables on the reviewing machine,** `REVIEWER_APP_ID` and
   `REVIEWER_APP_KEY`. They are no part of the site. Without them the command prints the review
   instead of posting it, which is also the way to try a model.
