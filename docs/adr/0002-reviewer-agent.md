@@ -58,8 +58,10 @@ What these statements rest on, on 2026-11-12:
 
 ## Consequences
 
-- **A review happens when someone asks for one.** Nothing reviews a pull request by itself, and
-  nothing blocks a merge without a review; that stays a habit, not a gate.
+- **The agent's review happens when someone asks for one.** Nothing starts it by itself and no
+  rule demands it; that stays a habit. The gate is elsewhere: since ADR 3 the maintainer can
+  approve the developer agent's pull requests, and `main` requires that one approval. The
+  reviewer comments and does not approve.
 - **A re-review is the same command again.** The reviewer is given the earlier reviews and the
   replies, so it can see what was answered.
 - **Replacing the tool is a change to one function,** as long as the new tool can be run from a
