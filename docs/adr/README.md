@@ -17,7 +17,10 @@ What is built, for whom, and where its boundaries are.
 
 The technology the site is built with and runs on.
 
-None yet.
+<!-- prettier-ignore -->
+| ADR | Decision | Status |
+|---|---|---|
+| [4](0004-the-stack.md) | The stack: Angular with server rendering, keyed text files, spartan/ui and Tailwind | Accepted |
 
 ## Process
 
