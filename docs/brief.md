@@ -60,7 +60,7 @@ real business goes into the public repository.
 | Map | An open map (MapLibre with open tiles is the candidate), restyled per season | No consent banner, no billing key. |
 | Reviews | Score, count and a quiet link to the listing; no review texts | Booking.com forbids publishing texts retrieved by its API. |
 | Tracking | None that needs consent | Goal: no cookie banner. |
-| UI | Tailwind, with Angular Aria for the behaviour of interactive controls and native elements for the rest (ADR 4); one SVG icon set | No library's look to override; two custom themes stay easy. |
+| UI | Tailwind with spartan/ui's copy-in components (ADR 4) and one SVG icon set; the week grid's behaviour is decided by a spike | No self-built components; two custom themes stay easy. |
 | Repo shape | One Angular app, no workspace tool, no libraries; the simulator in a second folder | The code is small. |
 | Beds24 simulator | Small own server that answers in the recorded response shapes from fictional data; it is the demo's runtime backend and the e2e tests' backend, and includes a fake booking page | The demo has no real Beds24 account or token; the booking flow needs state. The real recordings stay private as the reference. |
 | Name | Repository `beds24-direct-booking`; the demo at `beds24.vikkoch.com`, not indexed, its booking page plainly marked as simulated | Says what it is and is findable. The seasons go into the tagline: "seasonal rental" means something else. |
