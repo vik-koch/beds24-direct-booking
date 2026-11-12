@@ -20,7 +20,7 @@ The technology the site is built with and runs on.
 <!-- prettier-ignore -->
 | ADR | Decision | Status |
 |---|---|---|
-| [4](0004-the-stack.md) | The stack: Angular with server rendering, keyed text files, spartan/ui and Tailwind | Proposed |
+| [4](0004-the-stack.md) | The stack: Angular with server rendering, keyed text files, spartan/ui and Tailwind | Accepted |
 
 ## Process
 

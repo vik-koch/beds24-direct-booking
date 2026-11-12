@@ -1,6 +1,6 @@
 # ADR 4: The stack
 
-Status: proposed, 2026-11-12. Group: stack.
+Status: accepted, 2026-11-12, with the two conditions below. Group: stack.
 
 ## Context
 
@@ -29,8 +29,9 @@ with. What weighs on the choices:
    The availability route and the preview lock live in the same server.
 3. **Languages are keyed text files in the deployment's content,** one per language, with the
    language as the first URL segment. The templates read them as a typed object; numbers,
-   dates and plurals are formatted with the platform's `Intl`. No translation library and not
-   Angular's built-in i18n.
+   dates and plurals are formatted with the platform's `Intl`. Every key exists in both
+   languages; there is no fallback language. No translation library and not Angular's
+   built-in i18n.
 4. **Tailwind 4 for styling,** with the design tokens as CSS variables, so that a season is one
    attribute on the page.
 5. **spartan/ui for the components:** dialog, sheet, accordion, carousel and the like, each
@@ -60,9 +61,10 @@ running page. Guides, season texts and legal pages are content files in any case
 | Transloco | Much the same, with plugins for plural forms and for dates and currency. | The same string keys and wiring. Used less, and its page on server rendering still describes Angular Universal. | Not pursued. |
 | Keyed text files, read as a typed object | One mechanism for all wording. The schema checks that both languages have every key, and the compiler checks every key a template uses. Nothing to wire for hydration: the texts are part of the language's code. No dependency. | Three things are our own code, each a few lines: providing the language's texts, putting a value into a text, and choosing the plural form with `Intl.PluralRules`. No select or nested forms. | Chosen. |
 
-The files have the same shape for the chosen option and for ngx-translate. If the texts come
-to need more than a number and its plural form, the move is a change to how templates read
-them, not to the content.
+Plain texts have the same shape in the chosen option and in ngx-translate's files, so a later
+move would leave them as they are. Texts with a plural form would not carry over: here they
+are separate forms per key, there one string in message syntax. How much that is shows in the
+first slice.
 
 ## Components: options
 
@@ -102,6 +104,9 @@ Nothing has been built yet. On 2026-11-12:
   design the design round will want to change.
 
 ## Conditions
+
+The ADR is accepted with two points still to be confirmed by building, as ADR 1 was. Each
+result is added to this ADR when it is known.
 
 - **The week grid is decided by a spike,** once the scaffold exists and before its slice. It
   is a grid of weeks by apartment, which no library offers ready. The spike compares building
