@@ -16,6 +16,7 @@ deployment built from a public tag plus its own content. The demo is a deploymen
   and the OpenAPI file, and extend it when the wire shows something new.
 - **The app:** `src/`. **Beds24 client and mapping:** `src/beds24/`, the only place that knows
   wire shapes. **The simulator:** `sim/`, the demo's and the tests' Beds24.
+- **The reviewer agent:** its guidelines are `AGENTS.md`, its command `scripts/review.mjs`.
 - **A deployment's content:** `content/<deployment>/`, validated by one schema at build time.
 
 ## How we work
@@ -24,7 +25,8 @@ deployment built from a public tag plus its own content. The demo is a deploymen
    issue and waits for a go on anything that changes scope or a decision.
 2. Claude branches (`feat/12-week-grid`), commits with a co-author trailer, and opens a pull
    request with the screenshot matrix for UI work.
-3. A reviewer agent on another model reviews in the pull request. Claude answers or fixes there.
+3. Viktor starts the reviewer agent, which runs on another model and reviews in the pull
+   request. Claude answers or fixes there.
 4. Viktor accepts in the browser, reviews what carries risk, and merges. A merge deploys the
    demo; a tag is a release.
 
