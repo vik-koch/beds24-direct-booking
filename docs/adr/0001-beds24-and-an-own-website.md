@@ -36,8 +36,9 @@ developers. One developer builds and maintains the site.
 | Beds24 | Priced by usage, so cheap at this size. A complete read API: one call returns availability, daily prices and stay rules for every apartment. Its booking page opens by deep link, can be framed and restyled. | A dated control panel and a long setup. The API has gaps: no pictures, and one stay rule is not visible in the calendar. | Chosen. |
 | Software for professional managers, such as Guesty or Hostaway | Strong APIs and operations features. | Built and priced for dozens of properties and more. | Rejected. |
 
-The setup cost of Beds24 is paid once, by the developer. What the business uses day to day is
-the calendar and the price table.
+By its price list of November 2026, Beds24 costs about 18 euros a month for two apartments on
+one portal, and under 30 for four apartments on two. The setup cost is paid once, by the
+developer. What the business uses day to day is the calendar and the price table.
 
 What Beds24 really does was checked in a spike before the decision: see
 `../beds24-findings.md`.
