@@ -28,6 +28,24 @@ public.
 - **Debt is recorded in issues,** where it is public and can be planned, not in an agent's
   memory.
 
+## Reviews
+
+- **Viktor starts a review** when a pull request is ready for one, and again after changes:
+  `node scripts/review.mjs <pull request> --model <model> --effort <effort>`. The reviewer
+  reads the whole pull request at its head, with the issue and the earlier discussion, and
+  posts one review.
+- **A single question** goes the same way with `--ask "<question>"`; the answer replaces the
+  full review.
+- **The reviewer's guidelines** are `AGENTS.md`. What it should look for is changed there, not
+  in the command.
+- **The reviewer's tool** is the Codex CLI, logged in on the machine that runs the command. The
+  values for model and effort are that tool's; the review names them. Why it is a local
+  command, and what replacing the tool takes, is in ADR 2.
+- **The reviewer's identity** is a GitHub App without a webhook, installed on this repository
+  with read and write access to pull requests. `REVIEWER_APP_ID` holds its ID and
+  `REVIEWER_APP_KEY` the path to its private key, which is kept outside the repository.
+  Without them the command prints the review.
+
 ## Testing
 
 - **Every e2e test runs on three engines:** Chromium desktop, WebKit with an iPhone device and
