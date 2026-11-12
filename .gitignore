@@ -1,1 +1,4 @@
 .env
+
+# Impeccable downloads its platform binary on first run
+.claude/skills/impeccable/scripts/bin/
