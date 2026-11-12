@@ -10,7 +10,8 @@ deployment built from a public tag plus its own content. The demo is a deploymen
 
 ## Where things are
 
-- **What and why:** `docs/brief.md`; every decision with its alternatives in `docs/adr/`.
+- **What and why:** `docs/brief.md`; every decision with its alternatives in `docs/adr/`,
+  indexed by product, stack and process in its `README.md`.
 - **How we build, test and review, in full:** `docs/working-agreements.md`.
 - **What Beds24 really does:** `docs/beds24-findings.md`. Trust it over the Beds24 documentation
   and the OpenAPI file, and extend it when the wire shows something new.
@@ -43,7 +44,8 @@ before adding a dependency, a route, a content key or an environment variable.
 - A slice is cut by capability and is done when lint, unit tests and the e2e suite pass, its
   edge states (empty, partial, unavailable, Beds24 unreachable) are handled, and it works at
   320 px, by keyboard, in both languages and both seasons.
-- A decision that shapes the code gets a short ADR in the same pull request.
+- A decision that shapes the code gets a short ADR in the same pull request, with its group
+  and a line in the index.
 - Wording, pictures and theme values are content, never code. A picture without an alternative
   text fails the build.
 - The Beds24 token stays on the server. Guest data from the return URL is shown, then dropped:

@@ -1,6 +1,6 @@
 # ADR 3: Each agent has its own identity on GitHub
 
-Status: accepted, 2026-11-12.
+Status: accepted, 2026-11-12. Group: process.
 
 ## Context
 
