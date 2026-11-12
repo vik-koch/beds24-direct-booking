@@ -44,23 +44,38 @@ compared by their published prices and plans only.
 |---|---|---|---|
 | No system: an own booking form, calendars synchronised by iCal | No monthly fee. | iCal synchronises with a delay and carries no prices, so a week can be sold twice. Payments, guest data and persistence become ours. | Rejected. |
 | Beds24 | Priced by usage, without feature tiers. The spike showed what the site needs: two API calls return listings, availability, daily prices and stay rules for every apartment, and the weekly rule holds. Its guest form opens by deep link and can be framed and restyled. | A dated control panel that takes long to learn and to configure. The API has gaps: no pictures, and one stay rule is not visible in the calendar. Payment and the return to the site are not tested yet. | Chosen. |
-| Smoobu, Lodgify or Hospitable as the system behind an own site | Each publishes an API and covers the list above in one of its plans. Each also includes a website builder. | At least twice the price at this size, see below. Their APIs and booking steps were not tried, so whether they carry an own site is unknown. | Not pursued: Beds24 does the job at an acceptable price, and a second spike is not worth it at this size. |
+| Smoobu, Lodgify or Hospitable as the system behind an own site | Each publishes an API and advertises the core of the list above: portal connections, prices, a booking engine, guest messages. Each also includes a website builder. | At least twice the price at this size, see below. Their APIs, booking steps and weekly rules were not tried, so whether they meet each point and carry an own site is unknown. | Not pursued: Beds24 does the job at an acceptable price, and a second spike is not worth it at this size. |
 | Guesty or Hostaway | Aimed at professional managers, with plans that start at a few listings. | Not evaluated. Hostaway publishes no price for this size. | Not pursued, for the same reason. |
 
-Prices per month on 2026-11-12, from each vendor's price page, configurator or support pages,
-on monthly billing and without VAT:
+Prices per month on 2026-11-12, read from each vendor's price page or configurator, on monthly
+billing and without VAT:
 
 <!-- prettier-ignore -->
 | System | Two apartments, one portal | Four apartments, two portals | How it is made up |
 |---|---|---|---|
-| Beds24 | €19 | €28 | €12.90 base, €2.60 per apartment, €0.55 per apartment and portal. Optional extras such as SMS cost more. |
-| Smoobu Professional Prepaid | €47 | €71 | €35, and €12 per further apartment. The Flex plan has a lower monthly fee plus 0.9% of every booking. |
-| Lodgify Professional | €77 | €124 | Starter is €41 for two apartments, its limit, without custom message automation. |
-| Hospitable Professional | $59 | $89 | The plan that allows direct bookings, which add a fee of 1%. In US dollars. |
+| [Beds24](https://beds24.com/pricing.html) | €19.20 | €27.70 | €12.90 base, €2.60 per apartment, €0.55 per apartment and portal. |
+| [Smoobu](https://www.smoobu.com/en/pricing/) Professional Prepaid | €47 | €71 | €35, and €12 per further apartment. The Flex plan has a lower monthly fee plus 0.9% of every booking. |
+| [Lodgify](https://www.lodgify.com/pricing/) Professional | €77 | €124 | Starter is €41 for two apartments, its limit, without custom message automation. |
+| [Hospitable](https://hospitable.com/pricing) Professional | €59 | €89 | The plan that allows direct bookings. Its basic direct booking option adds a service fee of 1%. |
 
-Beds24 charges no commission on bookings. Against the list above: points 2 to 4 were verified
-in the spike, points 1 and 5 are taken from its documentation, and point 6 it does not offer, so
-reviews would be our own later work.
+These are base prices, not final totals:
+
+- **Payment processing** is charged by the payment provider with every system and is left out.
+- **The others include a hosted website.** With Beds24 the site runs on a server of our own,
+  which adds a few euros a month.
+- **Beds24 charges for extras by use:** €0.10 per SMS and €19 a month for a booking page under
+  an own subdomain. Neither is needed now.
+- **Growth is cheap with Beds24:** a further portal adds €0.55 per apartment a month.
+
+With the server and even the subdomain added, Beds24 stays below the others in both columns.
+
+Beds24 charges no commission on bookings. Against the list above:
+
+- **Verified in the spike:** the read API, the weekly rule, daily prices with a different direct
+  price, and the hand-over to the guest form.
+- **Taken from its documentation:** the portal connections, the payment gateway and the message
+  templates.
+- **Not offered:** reviews of direct stays, which would be our own later work.
 
 The effort of setting Beds24 up is spent once, by the developer. What the business uses day to
 day is the calendar and the price table.
@@ -87,8 +102,8 @@ The decision rests on a spike with a trial account. These are still open and mus
 - **A complete booking:** payment, confirmation and the return to the site, on a paid account.
 - **The framed guest form in Safari on a real iPhone,** where its session cookie is a
   third-party cookie. If it fails there, the same link opens as a full page.
-- **The weekly rule on the portals:** that closed arrival and departure days reach Booking.com
-  and Airbnb.
+- **The weekly rule on each portal, before that portal is switched on:** that closed arrival
+  and departure days arrive there. Booking.com before the release, Airbnb before it is added.
 
 If the hand-over cannot be made to work even as a full page, an own checkout is the remaining
 option. It reverses a boundary of this decision and needs a new ADR.
