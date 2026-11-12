@@ -54,9 +54,8 @@ without VAT:
 | Lodgify | €41 or €77 | €124 | Starter or Professional for two; Starter has no automated messages and is not offered for four. |
 | Hospitable | $39 | $89 | Host for two, its limit; Professional for four. |
 
-None of these charges a commission in the plans shown. Beds24 covers points 1 to 4 of the list
-in its one plan; point 5 it does not offer, and neither do the others in a form an own website
-could use, so reviews would be our own later work.
+Beds24 charges no commission on bookings. It covers points 1 to 4 of the list in its one plan;
+point 5 it does not offer, so reviews would be our own later work.
 
 The setup cost of Beds24 is paid once, by the developer. What the business uses day to day is
 the calendar and the price table.
