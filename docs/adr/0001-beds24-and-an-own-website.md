@@ -10,8 +10,15 @@ next, and a website that is its official page.
 
 That needs two things, and each could be bought or built:
 
-- **A system that holds the bookings:** one calendar across all portals so that no week is sold
-  twice, prices and stay rules in one place, and a way to take a booking and a payment.
+- **A system that holds the bookings.** It must do what the portal does for the business today,
+  for several portals and for the own website:
+  1. Connect Booking.com and Airbnb through their APIs, with one calendar, so that no week is
+     sold twice.
+  2. Serve an own website: an API to read from, and a booking step with a payment gateway.
+  3. Hold a price per day that follows the season, and a different price for direct bookings.
+  4. Send messages to the guest from templates, on confirmation and later with the check-in
+     details.
+  5. Later, and with low priority: collect reviews of direct stays.
 - **A website for the guest:** the free weeks with their prices, the apartments, the practical
   guides, in two languages, found by search engines and easy to use on a phone.
 
@@ -32,13 +39,27 @@ developers. One developer builds and maintains the site.
 | Option | For | Against | Result |
 |---|---|---|---|
 | No system: an own booking form, calendars synchronised by iCal | No monthly fee. | iCal synchronises with a delay and carries no prices, so a week can be sold twice. Payments, guest data and persistence become ours. | Rejected. |
-| Rental software with its own website builder, such as Lodgify or Smoobu | One product for calendar, portals and website. The fastest way to a bookable site. | The website is what the builder's templates allow. Chosen for their builders, these products are a weaker base for a site of our own. | Rejected with the builder; see below. |
-| Beds24 | Priced by usage, so cheap at this size. A complete read API: one call returns availability, daily prices and stay rules for every apartment. Its booking page opens by deep link, can be framed and restyled. | A dated control panel and a long setup. The API has gaps: no pictures, and one stay rule is not visible in the calendar. | Chosen. |
+| Rental software with its own website builder, such as Lodgify, Smoobu or Hospitable | One product for calendar, portals and website. The fastest way to a bookable site. | Two to four times the price at this size. Plans are tiered, and the entry plans leave out parts of the list above. The website is what the builder's templates allow. | Rejected with the builder; see below. |
+| Beds24 | Priced by usage, with every function in the one plan. A complete read API: one call returns availability, daily prices and stay rules for every apartment. Its booking page opens by deep link, can be framed and restyled. | A dated control panel and a long setup. The API has gaps: no pictures, and one stay rule is not visible in the calendar. | Chosen. |
 | Software for professional managers, such as Guesty or Hostaway | Strong APIs and operations features. | Built and priced for dozens of properties and more. | Rejected. |
 
-By its price list of November 2026, Beds24 costs about 19 euros a month for two apartments on
-one portal, and about 28 for four apartments on two, without a commission on bookings. The setup cost is paid once, by the
-developer. What the business uses day to day is the calendar and the price table.
+Prices per month in November 2026, from each vendor's own price page, on monthly billing and
+without VAT:
+
+<!-- prettier-ignore -->
+| System | Two apartments, one portal | Four apartments, two portals | Note |
+|---|---|---|---|
+| Beds24 | €19 | €28 | A base fee, a fee per apartment and a fee per apartment and portal. |
+| Smoobu | €47 | €71 | The Professional plan. A cheaper plan takes 0.9% of every booking instead. |
+| Lodgify | €41 or €77 | €124 | Starter or Professional for two; Starter has no automated messages and is not offered for four. |
+| Hospitable | $39 | $89 | Host for two, its limit; Professional for four. |
+
+None of these charges a commission in the plans shown. Beds24 covers points 1 to 4 of the list
+in its one plan; point 5 it does not offer, and neither do the others in a form an own website
+could use, so reviews would be our own later work.
+
+The setup cost of Beds24 is paid once, by the developer. What the business uses day to day is
+the calendar and the price table.
 
 What Beds24 really does was checked in a spike before the decision: see
 `../beds24-findings.md`.
