@@ -1,0 +1,149 @@
+#!/usr/bin/env node
+import { execFileSync } from 'node:child_process';
+import { createSign } from 'node:crypto';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { parseArgs } from 'node:util';
+
+const {
+  values: { model, effort, ask },
+  positionals: [number],
+} = parseArgs({
+  allowPositionals: true,
+  options: { model: { type: 'string' }, effort: { type: 'string' }, ask: { type: 'string' } },
+});
+if (!number || !model || !effort) {
+  console.error('Usage: node scripts/review.mjs <pull request> --model <model> --effort <effort> [--ask <question>]');
+  process.exit(1);
+}
+
+const schema = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['summary', 'findings'],
+  properties: {
+    summary: { type: 'string' },
+    findings: {
+      type: 'array',
+      items: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['path', 'line', 'body'],
+        properties: { path: { type: 'string' }, line: { type: 'integer' }, body: { type: 'string' } },
+      },
+    },
+  },
+};
+
+// The only place that knows the reviewer's tool: a prompt goes in, JSON of the schema's shape comes out.
+const tool = 'Codex CLI';
+function runReviewer(prompt, tree, tmp) {
+  writeFileSync(join(tmp, 'schema.json'), JSON.stringify(schema));
+  const files = ['--output-schema', join(tmp, 'schema.json'), '--output-last-message', join(tmp, 'answer.json')];
+  const args = ['exec', '--cd', tree, '--sandbox', 'read-only', '--model', model, '-c', `model_reasoning_effort="${effort}"`];
+  execFileSync('codex', [...args, ...files, '-'], { input: prompt, stdio: ['pipe', 'inherit', 'inherit'] });
+  return JSON.parse(readFileSync(join(tmp, 'answer.json'), 'utf8'));
+}
+
+const git = (...args) => execFileSync('git', args, { encoding: 'utf8', maxBuffer: 2 ** 28 });
+const repo = git('remote', 'get-url', 'origin').match(/github\.com[:/](.+?)(\.git)?\s*$/)[1];
+
+let token;
+async function github(path, body) {
+  const response = await fetch(`https://api.github.com${path}`, {
+    method: body ? 'POST' : 'GET',
+    headers: { accept: 'application/vnd.github+json', ...(token && { authorization: `Bearer ${token}` }) },
+    body: body && JSON.stringify(body),
+  });
+  if (!response.ok) throw new Error(`${path}: ${response.status} ${await response.text()}`);
+  return response.json();
+}
+
+const { REVIEWER_APP_ID: appId, REVIEWER_APP_KEY: appKey } = process.env;
+if (appId) {
+  const now = Math.floor(Date.now() / 1000);
+  const encode = (part) => Buffer.from(JSON.stringify(part)).toString('base64url');
+  const unsigned = `${encode({ alg: 'RS256', typ: 'JWT' })}.${encode({ iat: now - 60, exp: now + 540, iss: appId })}`;
+  token = `${unsigned}.${createSign('RSA-SHA256').update(unsigned).sign(readFileSync(appKey), 'base64url')}`;
+  const installation = await github(`/repos/${repo}/installation`);
+  ({ token } = await github(`/app/installations/${installation.id}/access_tokens`, {}));
+}
+
+const pull = await github(`/repos/${repo}/pulls/${number}`);
+const closes = pull.body?.match(/\b(?:close|fix|resolve)[sd]? #(\d+)/i)?.[1];
+const issue = closes && (await github(`/repos/${repo}/issues/${closes}`));
+const said = (
+  await Promise.all(
+    [`pulls/${number}/reviews`, `pulls/${number}/comments`, `issues/${number}/comments`].map((list) =>
+      github(`/repos/${repo}/${list}?per_page=100`),
+    ),
+  )
+)
+  .flat()
+  .filter((entry) => entry.body)
+  .map((entry) => ({ ...entry, at: entry.submitted_at ?? entry.created_at }))
+  .sort((a, b) => a.at.localeCompare(b.at))
+  .map((entry) => {
+    const place = entry.path ? ` on ${entry.path}:${entry.line ?? entry.original_line}` : '';
+    return `${entry.user.login}${place}:\n${entry.body}`;
+  });
+
+git('fetch', '--quiet', 'origin', pull.base.ref, `pull/${number}/head`);
+const diff = git('diff', `${pull.base.sha}...${pull.head.sha}`);
+
+// An added line can itself start with "++", so file headers count only before a file's first hunk.
+const inDiff = new Set();
+let path, line;
+for (const text of diff.split('\n')) {
+  if (text.startsWith('diff --git ')) line = null;
+  else if (text.startsWith('@@')) line = +text.match(/\+(\d+)/)[1];
+  else if (line === null) path = text.startsWith('+++ b/') ? text.slice(6) : path;
+  else if (text[0] === '+' || text[0] === ' ') inDiff.add(`${path}:${line++}`);
+}
+
+const prompt = [
+  ask
+    ? `Answer this question about the pull request, and nothing else, as AGENTS.md describes:\n${ask}`
+    : 'Review this pull request as AGENTS.md describes.',
+  `Pull request #${number} in ${repo}: ${pull.title}\n\n${pull.body ?? ''}`,
+  issue ? `The issue it closes, #${closes}: ${issue.title}\n\n${issue.body ?? ''}` : 'It names no issue.',
+  `Earlier reviews and comments, oldest first:\n\n${said.join('\n\n') || 'None.'}`,
+  `The working directory is a checkout of ${pull.head.sha}. Its diff against ${pull.base.ref}:\n\n${diff}`,
+].join('\n\n---\n\n');
+
+const tmp = mkdtempSync(join(tmpdir(), 'review-'));
+const tree = join(tmp, 'tree');
+git('worktree', 'add', '--quiet', '--detach', tree, pull.head.sha);
+let answer;
+try {
+  answer = runReviewer(prompt, tree, tmp);
+} finally {
+  git('worktree', 'remove', '--force', tree);
+  rmSync(tmp, { recursive: true });
+}
+
+// GitHub refuses a whole review when one comment's line is outside the diff, so those move into the text.
+const [inline, loose] = [true, false].map((wanted) =>
+  answer.findings.filter((finding) => inDiff.has(`${finding.path}:${finding.line}`) === wanted),
+);
+const body = [
+  ask && `> ${ask}`,
+  answer.summary,
+  ...loose.map((finding) => `\`${finding.path}:${finding.line}\`: ${finding.body}`),
+  `_${ask ? 'Answered' : 'Reviewed'} at ${pull.head.sha.slice(0, 7)} with ${tool}, model ${model}, effort ${effort}._`,
+]
+  .filter(Boolean)
+  .join('\n\n');
+
+if (token) {
+  const review = await github(`/repos/${repo}/pulls/${number}/reviews`, {
+    commit_id: pull.head.sha,
+    event: 'COMMENT',
+    body,
+    comments: inline.map((finding) => ({ ...finding, side: 'RIGHT' })),
+  });
+  console.log(review.html_url);
+} else {
+  console.log([body, ...inline.map((finding) => `${finding.path}:${finding.line}\n${finding.body}`)].join('\n\n'));
+}
