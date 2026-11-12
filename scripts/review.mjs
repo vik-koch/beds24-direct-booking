@@ -36,17 +36,24 @@ const schema = {
   },
 };
 
+const git = (...args) => execFileSync('git', args, { encoding: 'utf8', maxBuffer: 2 ** 28 });
+const { REVIEWER_APP_ID: appId, REVIEWER_APP_KEY: appKey, ...env } = process.env;
+
 // The only place that knows the reviewer's tool: a prompt goes in, JSON of the schema's shape comes out.
+// The pull request's text is untrusted and the answer is published, so the tool may read the checkout and
+// the repository's git directory, nothing else of this machine, and does not learn where the App's key is.
 const tool = 'Codex CLI';
 function runReviewer(prompt, tree, tmp) {
   writeFileSync(join(tmp, 'schema.json'), JSON.stringify(schema));
   const files = ['--output-schema', join(tmp, 'schema.json'), '--output-last-message', join(tmp, 'answer.json')];
-  const args = ['exec', '--cd', tree, '--sandbox', 'read-only', '--model', model, '-c', `model_reasoning_effort="${effort}"`];
-  execFileSync('codex', [...args, ...files, '-'], { input: prompt, stdio: ['pipe', 'inherit', 'inherit'] });
+  const gitDir = git('rev-parse', '--path-format=absolute', '--git-common-dir').trim();
+  const readable = `{":minimal"="read",":workspace_roots"={"."="read"},${JSON.stringify(gitDir)}="read"}`;
+  const config = [`model_reasoning_effort="${effort}"`, 'default_permissions="review"', `permissions.review.filesystem=${readable}`];
+  const args = ['exec', '--cd', tree, '--model', model, ...config.flatMap((entry) => ['-c', entry])];
+  execFileSync('codex', [...args, ...files, '-'], { input: prompt, env, stdio: ['pipe', 'inherit', 'inherit'] });
   return JSON.parse(readFileSync(join(tmp, 'answer.json'), 'utf8'));
 }
 
-const git = (...args) => execFileSync('git', args, { encoding: 'utf8', maxBuffer: 2 ** 28 });
 const repo = git('remote', 'get-url', 'origin').match(/github\.com[:/](.+?)(\.git)?\s*$/)[1];
 
 let token;
@@ -60,7 +67,6 @@ async function github(path, body) {
   return response.json();
 }
 
-const { REVIEWER_APP_ID: appId, REVIEWER_APP_KEY: appKey } = process.env;
 if (appId) {
   const now = Math.floor(Date.now() / 1000);
   const encode = (part) => Buffer.from(JSON.stringify(part)).toString('base64url');
