@@ -47,6 +47,10 @@ public.
 
 ## Reviews
 
+- **A pull request needs one approval before it can be merged,** by a rule on `main`. The
+  approval is Viktor's, after the reviewer agent's rounds and his own look at what carries
+  risk. He can give it because the developer agent opens the pull requests. The reviewer agent
+  comments and never approves.
 - **Viktor starts a review** when a pull request is ready for one, and again after changes:
   `node scripts/review.mjs <pull request> --model <model> --effort <effort>`. The reviewer
   reads the whole pull request at its head, with the issue and the earlier discussion, and

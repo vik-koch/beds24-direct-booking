@@ -30,7 +30,7 @@ deployment built from a public tag plus its own content. The demo is a deploymen
    `token=$(node scripts/app-token.mjs) && GH_TOKEN=$token gh …`.
 3. Viktor starts the reviewer agent, which runs on another model and reviews in the pull
    request. Claude answers or fixes there.
-4. Viktor accepts in the browser, reviews what carries risk, and merges. A merge deploys the
+4. Viktor accepts in the browser, reviews what carries risk, approves and merges. A merge deploys the
    demo; a tag is a release.
 
 Small batches: one issue, one branch, one pull request. Every bug and every piece of debt is its
