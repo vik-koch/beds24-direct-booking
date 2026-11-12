@@ -12,7 +12,10 @@ export async function appToken(appId, keyPath) {
   const unsigned = `${encode({ alg: 'RS256', typ: 'JWT' })}.${encode({ iat: now - 60, exp: now + 540, iss: appId })}`;
   const jwt = `${unsigned}.${createSign('RSA-SHA256').update(unsigned).sign(readFileSync(keyPath), 'base64url')}`;
   const call = async (path, method) => {
-    const response = await fetch(`https://api.github.com${path}`, { method, headers: { authorization: `Bearer ${jwt}` } });
+    const response = await fetch(`https://api.github.com${path}`, {
+      method,
+      headers: { authorization: `Bearer ${jwt}` },
+    });
     if (!response.ok) throw new Error(`${path}: ${response.status} ${await response.text()}`);
     return response.json();
   };
@@ -20,4 +23,5 @@ export async function appToken(appId, keyPath) {
   return (await call(`/app/installations/${installation.id}/access_tokens`, 'POST')).token;
 }
 
-if (import.meta.main) console.log(await appToken(process.env.DEVELOPER_APP_ID, process.env.DEVELOPER_APP_KEY));
+if (import.meta.main)
+  console.log(await appToken(process.env.DEVELOPER_APP_ID, process.env.DEVELOPER_APP_KEY));
