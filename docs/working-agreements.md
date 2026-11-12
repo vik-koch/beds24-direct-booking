@@ -35,10 +35,14 @@ public.
   ADR 3.
 - **The developer agent** opens pull requests, answers reviews and comments on issues as its
   App, which may write pull requests and issues and nothing else:
-  `GH_TOKEN=$(node scripts/app-token.mjs) gh …`. `DEVELOPER_APP_ID` holds the App's ID and
-  `DEVELOPER_APP_KEY` the path to its private key, outside the repository.
-- **Commits and pushes stay with Viktor's login,** with the agent as co-author. So do labels,
-  the milestone and the project board.
+  `token=$(node scripts/app-token.mjs) && GH_TOKEN=$token gh …`. The `&&` matters: with an
+  empty token the GitHub CLI falls back to the login it has stored, which is Viktor's.
+  `DEVELOPER_APP_ID` holds the App's ID and `DEVELOPER_APP_KEY` the path to its private key,
+  outside the repository.
+- **What an agent posts names its tool and model in its last line,** since the Apps' names
+  say neither.
+- **Commits and pushes stay with Viktor's login,** with the agent as co-author. So do the
+  milestone and the project board.
 - **The reviewer agent** posts as its own App, see below.
 
 ## Reviews

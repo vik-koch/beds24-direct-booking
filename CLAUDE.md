@@ -25,7 +25,8 @@ deployment built from a public tag plus its own content. The demo is a deploymen
    issue and waits for a go on anything that changes scope or a decision.
 2. Claude branches (`feat/12-week-grid`), commits with a co-author trailer, and opens a pull
    request with the screenshot matrix for UI work. On GitHub Claude writes as the developer
-   agent's App: `GH_TOKEN=$(node scripts/app-token.mjs) gh …`.
+   agent's App, and names its tool and model in the last line of what it posts:
+   `token=$(node scripts/app-token.mjs) && GH_TOKEN=$token gh …`.
 3. Viktor starts the reviewer agent, which runs on another model and reviews in the pull
    request. Claude answers or fixes there.
 4. Viktor accepts in the browser, reviews what carries risk, and merges. A merge deploys the

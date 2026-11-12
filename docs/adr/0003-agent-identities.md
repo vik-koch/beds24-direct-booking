@@ -1,6 +1,6 @@
 # ADR 3: Each agent has its own identity on GitHub
 
-Status: proposed, 2026-11-12.
+Status: accepted, 2026-11-12.
 
 ## Context
 
@@ -23,8 +23,8 @@ agent used the maintainer's login for everything, which has two costs:
 3. **Commits and pushes stay with the maintainer's login,** with the agent named as co-author
    in the commit message.
 4. **The Apps carry neutral names,** not a vendor's or a model's. Which tool and model wrote
-   something is said in the text: in each review's last line and in the commit's co-author
-   line.
+   something is said in the text: in the last line of each review, comment and pull request,
+   and in the commit's co-author line.
 
 ## Options
 
@@ -45,5 +45,9 @@ agent used the maintainer's login for everything, which has two costs:
   `DEVELOPER_APP_KEY`. They are no part of the site.
 - **The reviewer's tool sees neither App's variables:** the review command passes on no
   variable that names an App.
-- **Labels, the milestone and the project board stay with the maintainer's login.** Whether
-  the App could set them was not tried.
+- **A failed token must stop the command.** With an empty token the GitHub CLI falls back to
+  the login it has stored, the maintainer's, so the documented command runs the CLI only when
+  a token was signed.
+- **Tried with the App's token:** opening a pull request, replying to a review, setting an
+  assignee and a label work; creating a branch is refused. The milestone and the project board
+  were not tried and stay with the maintainer's login.
