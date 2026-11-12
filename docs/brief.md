@@ -54,13 +54,13 @@ real business goes into the public repository.
 | Cache | In memory, refreshed on a timer, with the last good responses also written to disk | Listings come from Beds24 now, so a start while it is unreachable would show an empty site. |
 | Other stay lengths | A contact address, no UI. Whole multiples of a week can be allowed in Beds24 through the maximum stay | Rare, and usually longer than a week. |
 | Content | Beds24 holds what describes and prices a listing: availability, prices, capacity, size, sleeping layout and feature codes, check-in times, coordinates, tourist tax, and the listing's texts per language. The content files hold what Beds24 cannot: per listing a room ID, a slug and the pictures; and the site itself: its wording, season content, guides, company and legal pages | The business edits a listing in one place and it shows after the next cache refresh, without a deployment. Pictures are not in the API. Rich text from Beds24 passes a sanitiser. |
-| Languages | Two per deployment, language in the URL (`/de/…`, `/en/…`), an explicit switch | One domain keeps the search ranking together. |
+| Languages | Two per deployment, language in the URL (`/de/…`, `/en/…`), an explicit switch; the texts are keyed files in the deployment's content (ADR 4) | One domain keeps the search ranking together. |
 | Seasons | A content dimension, switched like a colour scheme: both seasons' content is in the HTML, one attribute selects, the default follows the date. A deployment lists its seasons; one season means no switch. Phase 1: hero pictures, activity texts, accent colours, which weeks open first | A visitor looking at a July week should see summer. The distinctive feature, at a small cost. The restyled map waits. |
 | Page structure | One scrolling home page (hero, weeks, apartments, map, reviews, FAQ teaser); own routes for each apartment, the guides, the company page and the legal pages | Seamless browsing, and a URL per apartment for search. |
 | Map | An open map (MapLibre with open tiles is the candidate), restyled per season | No consent banner, no billing key. |
 | Reviews | Score, count and a quiet link to the listing; no review texts | Booking.com forbids publishing texts retrieved by its API. |
 | Tracking | None that needs consent | Goal: no cookie banner. |
-| UI | Tailwind with copy-in headless primitives (spartan/ui is the candidate) and one SVG icon set | No self-built components; two custom themes stay easy. |
+| UI | Tailwind, with Angular Aria for the behaviour of interactive controls and native elements for the rest (ADR 4); one SVG icon set | No library's look to override; two custom themes stay easy. |
 | Repo shape | One Angular app, no workspace tool, no libraries; the simulator in a second folder | The code is small. |
 | Beds24 simulator | Small own server that answers in the recorded response shapes from fictional data; it is the demo's runtime backend and the e2e tests' backend, and includes a fake booking page | The demo has no real Beds24 account or token; the booking flow needs state. The real recordings stay private as the reference. |
 | Name | Repository `beds24-direct-booking`; the demo at `beds24.vikkoch.com`, not indexed, its booking page plainly marked as simulated | Says what it is and is findable. The seasons go into the tagline: "seasonal rental" means something else. |
@@ -95,8 +95,6 @@ real business goes into the public repository.
 - **The real site's name, domain and logo.** `.com` as the main domain; the national domain
   redirects to its language.
 - **Icon set:** check coverage against the real feature list (ski, bike, family, no smoking, …).
-- **The language mechanism:** keyed text files per language read at build time, or Angular's
-  built-in i18n with one build per locale. Lean: keyed files. Settled in the stack ADR.
 - **The demo's place:** which fictional village, and with it the tourist tax and the texts.
 
 ## Later phases

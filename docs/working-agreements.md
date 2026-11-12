@@ -112,18 +112,10 @@ lint after edits. Added when one of these has become routine:
 | Auditor agents | Narrow agents for accessibility, SEO and performance before a release. |
 | Parallel worktrees | Independent slices built side by side, once the shell is stable. |
 
-## For the stack ADR
+## Noted for the scaffold and the first slices
 
-Agreed in outline, to be fixed there:
+The stack, with format, lint, tests and the content schema, is ADR 4. Agreed beside it:
 
-- **Format and lint:** Prettier with sorted imports, run by a hook; ESLint with angular-eslint
-  and the Tailwind class plugin.
-- **Tests:** Vitest for units, Playwright for e2e.
-- **Content:** one Zod schema for a deployment's content, checked at build time, so a bad
-  content set fails the build and not the page.
-- **Configuration is a build input.** Content, pictures and theme values are read at build time
-  from one directory per deployment. Only the Beds24 address and token, the preview password
-  and the indexing flag are runtime environment variables.
 - **Site notice:** an optional line above the header with an optional link, per language, from
   the deployment's content. It is in the first shell slice, so the demo says it is a demo from
   day one.
