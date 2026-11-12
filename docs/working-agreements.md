@@ -23,6 +23,10 @@ public.
 
 - **One issue, one branch, one pull request.** Every bug and every piece of debt is its own
   issue. A small pull request costs little with an agent committing and a fast suite.
+- **The history of `main` is one line.** A branch is rebased onto `main` right before it is
+  merged, so each pull request shows as its commits followed by one merge commit and no two
+  branches run side by side. Claude rebases when asked or when `main` has moved; with several
+  pull requests open, they are merged one at a time.
 - **Touching old code is the moment to question it.** Refactor in the same pull request if it
   stays small; otherwise open a `debt` issue.
 - **Debt is recorded in issues,** where it is public and can be planned, not in an agent's
