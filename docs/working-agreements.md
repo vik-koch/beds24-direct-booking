@@ -8,8 +8,8 @@ How the project is built, tested and reviewed. The rules an agent needs in every
 - **Viktor** writes each issue's intent and owns scope and what is left out, the design round
   and the design language, acceptance, the real business and its content, and calls on risk.
   Infrastructure he drives himself, with Claude as the reviewer.
-- **Claude** adds the plan to the issue, branches, commits with a co-author trailer and opens
-  the pull request, with the screenshot matrix for UI work.
+- **Claude,** the developer agent, adds the plan to the issue, branches, commits with a
+  co-author trailer and opens the pull request, with the screenshot matrix for UI work.
 - **A reviewer agent** comments in the pull request: correctness first, then simplification. It
   runs on another model than the author, so the two do not share blind spots. Claude answers or
   fixes there; nobody copies text between agents.
@@ -28,6 +28,23 @@ public.
 - **Debt is recorded in issues,** where it is public and can be planned, not in an agent's
   memory.
 
+## Identities on GitHub
+
+- **Each agent has a GitHub App as its identity,** without a webhook and installed on this
+  repository only, so that every comment shows who wrote it. Why, and what was left out, is in
+  ADR 3.
+- **The developer agent** opens pull requests, answers reviews and comments on issues as its
+  App, which may write pull requests and issues and nothing else:
+  `token=$(node scripts/app-token.mjs) && GH_TOKEN=$token gh …`. The `&&` matters: with an
+  empty token the GitHub CLI falls back to the login it has stored, which is Viktor's.
+  `DEVELOPER_APP_ID` holds the App's ID and `DEVELOPER_APP_KEY` the path to its private key,
+  outside the repository.
+- **What an agent posts names its tool and model in its last line,** since the Apps' names
+  say neither.
+- **Commits and pushes stay with Viktor's login,** with the agent as co-author. So do the
+  milestone and the project board.
+- **The reviewer agent** posts as its own App, see below.
+
 ## Reviews
 
 - **Viktor starts a review** when a pull request is ready for one, and again after changes:
@@ -41,8 +58,8 @@ public.
 - **The reviewer's tool** is the Codex CLI, logged in on the machine that runs the command. The
   values for model and effort are that tool's; the review names them. Why it is a local
   command, and what replacing the tool takes, is in ADR 2.
-- **The reviewer's identity** is a GitHub App without a webhook, installed on this repository
-  with read and write access to pull requests. `REVIEWER_APP_ID` holds its ID and
+- **The reviewer's identity** is an App that may write pull requests and nothing else.
+  `REVIEWER_APP_ID` holds its ID and
   `REVIEWER_APP_KEY` the path to its private key, which is kept outside the repository.
   Without them the command prints the review.
 
