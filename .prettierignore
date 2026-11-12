@@ -1,0 +1,10 @@
+/dist
+/.angular
+/.agents
+/.claude
+/licenses
+/spike
+/playwright-report
+/test-results
+package-lock.json
+skills-lock.json
