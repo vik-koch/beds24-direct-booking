@@ -18,7 +18,7 @@ export const dayClass =
   'h-10 w-full rounded-md text-center text-sm tabular-nums ' +
   'cursor-pointer hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground ' +
   'aria-disabled:cursor-default aria-disabled:text-muted-foreground aria-disabled:hover:bg-transparent ' +
-  'data-[state=booked]:line-through ' +
+  'data-[state=booked]:not-data-[range=end]:line-through ' +
   'data-[range=middle]:rounded-none data-[range=middle]:bg-muted data-[range=middle]:text-foreground ' +
   'data-[range=start]:bg-primary data-[range=start]:text-primary-foreground data-[range=start]:hover:bg-primary ' +
-  'data-[range=end]:bg-primary data-[range=end]:text-primary-foreground data-[range=end]:hover:bg-primary data-[range=end]:no-underline';
+  'data-[range=end]:bg-primary data-[range=end]:text-primary-foreground data-[range=end]:hover:bg-primary';
