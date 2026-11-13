@@ -28,3 +28,9 @@ jobs:
         with:
           name: playwright-report
           path: playwright-report
+
+  stack:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: scripts/check-stack.sh

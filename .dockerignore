@@ -1,0 +1,15 @@
+.git
+.angular
+.claude
+.agents
+.impeccable
+.env*
+node_modules
+dist
+docs
+e2e
+sim
+spike
+tmp
+playwright-report
+test-results

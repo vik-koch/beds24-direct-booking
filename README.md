@@ -33,6 +33,13 @@ Node 24 and npm. After `npm ci`:
 | `npm run e2e` | Builds, starts the simulator and the built server and runs the e2e suite on Chromium, WebKit with an iPhone device and Firefox. The browsers are installed once with `npx playwright install --with-deps`. |
 | `npm run build`, then `npm run serve` | The built server on `localhost:4000`. It answers only for the hosts in `NG_ALLOWED_HOSTS`, for example `NG_ALLOWED_HOSTS=localhost`. It reads the Beds24 address and token from `BEDS24_URL` and `BEDS24_TOKEN`; for the simulator these are `http://localhost:4300/v2` and `simulator`. |
 
+## Running it in containers
+
+`compose.yml` is one site: the app behind the machine's Traefik proxy, with the simulator beside
+it where the `sim` profile is set. Its settings are listed in [`.env.example`](.env.example).
+With Docker, `scripts/check-stack.sh` builds both images, starts the stack behind a throwaway
+proxy on `https://localhost:8443` and checks the page and its response headers.
+
 ## How it is built
 
 The site is written by an AI coding agent (Claude Code) and directed by me. I write each
