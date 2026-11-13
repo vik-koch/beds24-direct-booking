@@ -70,7 +70,9 @@ What these statements rest on, on 2026-11-12:
   must never be enough to merge; giving the App write access would end it. Verified on that
   day, on the pull request of this change: GitHub accepted a requested change from the App,
   the review decision stayed "review required", and the App is listed among the reviewers
-  whose approvals may not affect merge requirements. Not checked: an approval by the App.
+  whose approvals may not affect merge requirements. After the fix the App approved, and the
+  merge stayed blocked, with "at least 1 approving review is required by reviewers with write
+  access", until the maintainer approved.
 - **A re-review is the same command again.** The reviewer is given the earlier reviews and the
   replies, so it can see what was answered.
 - **Replacing the tool is a change to one function,** as long as the new tool can be run from a
