@@ -74,7 +74,7 @@ export const propertyList = (query: URLSearchParams) => {
       checkOutEnd: '10:00',
       bookingPageMultiplier,
       permit: '',
-      featureCodes: property.featureCodes,
+      featureCodes: property.featureCodes.map((code) => [code]),
       ...(has('includeTexts') && {
         texts: perLanguage({ ...property.texts, upsellItemName1: tax.name }, [
           'propertyDescription2',

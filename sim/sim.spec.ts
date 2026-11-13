@@ -180,6 +180,13 @@ describe('calendar', () => {
     expect((await get('inventory/rooms/calendar?startDate=2026-12-05')).status).toBe(400);
   });
 
+  it('skips the days that carry none of the fields asked for', async () => {
+    const path =
+      'inventory/rooms/calendar?roomId=9001012&startDate=2026-11-14&endDate=2026-12-18&includePrices=true';
+    const [{ calendar }] = (await (await get(path)).json()).data;
+    expect(calendar).toEqual([{ from: '2026-12-05', to: '2026-12-18', price1: 265 }]);
+  });
+
   it('holds every state the site has to handle', async () => {
     const weeks = await weeksOf(9001012);
     for (const state of ['bookable', 'booked', 'partly', 'unequal'] as const)

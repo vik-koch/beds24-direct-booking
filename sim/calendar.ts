@@ -1,4 +1,18 @@
-import { periods, properties, type Level, type Room } from './data.ts';
+import { properties, type Room } from './data.ts';
+
+type Level = 'off' | keyof Room['prices'];
+
+// Each period starts on the first Saturday on or after its day of the year.
+const periods: [month: number, day: number, level: Level][] = [
+  [1, 5, 'winter'],
+  [2, 1, 'peak'],
+  [3, 1, 'winter'],
+  [4, 12, 'off'],
+  [5, 25, 'summer'],
+  [10, 12, 'off'],
+  [12, 1, 'winter'],
+  [12, 20, 'peak'],
+];
 
 const day = 86_400_000;
 const iso = (time: number) => new Date(time).toISOString().slice(0, 10);
@@ -67,9 +81,8 @@ export const roomCalendars = (query: URLSearchParams) => {
           for (let time = start; time <= end; time += day) {
             const values = dayOf(room, time, has);
             const key = JSON.stringify(values);
-            if (key === '{}') break;
-            if (key === last) calendar.at(-1)!.to = iso(time);
-            else calendar.push({ from: iso(time), to: iso(time), ...values });
+            if (key === last && key !== '{}') calendar.at(-1)!.to = iso(time);
+            else if (key !== '{}') calendar.push({ from: iso(time), to: iso(time), ...values });
             last = key;
           }
           return { roomId: room.id, propertyId: property.id, name: room.name, calendar };

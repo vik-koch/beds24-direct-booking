@@ -1,7 +1,8 @@
 import { createServer } from 'node:http';
 import { roomCalendars } from './calendar.ts';
-import { token } from './data.ts';
 import { propertyList } from './properties.ts';
+
+const token = 'simulator';
 
 const routes: Record<
   string,
