@@ -30,7 +30,7 @@ describe('apartments', () => {
 
   it('reads in the browser what the server resolved', async () => {
     const list = [{ id: 11, propertyId: 1, name: 'One' }];
-    TestBed.inject(TransferState).set(makeStateKey('apartments'), list);
+    TestBed.inject(TransferState).set(makeStateKey<unknown>('apartments'), list);
     expect(await resolve([])).toEqual(list);
   });
 });
