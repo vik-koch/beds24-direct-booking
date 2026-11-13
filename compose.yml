@@ -1,0 +1,40 @@
+# One site behind the machine's Traefik proxy, which finds it by these labels.
+# Needs the external network "traefik" and the settings listed in .env.example.
+services:
+  web:
+    image: ${WEB_IMAGE:?}
+    build: .
+    restart: unless-stopped
+    environment:
+      NG_ALLOWED_HOSTS: ${APP_DOMAIN:?}
+      NODE_OPTIONS: --max-old-space-size=192
+      BEDS24_URL: ${BEDS24_URL:?}
+      BEDS24_TOKEN: ${BEDS24_TOKEN:?}
+    networks: [default, traefik]
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik
+      - traefik.http.routers.${STACK_NAME:?}.rule=Host(`${APP_DOMAIN:?}`)
+      - traefik.http.routers.${STACK_NAME:?}.entrypoints=websecure
+      - traefik.http.routers.${STACK_NAME:?}.tls.certresolver=letsencrypt
+      - traefik.http.routers.${STACK_NAME:?}.middlewares=${STACK_NAME:?}-headers
+      - traefik.http.services.${STACK_NAME:?}.loadbalancer.server.port=4000
+      # No includeSubdomains on HSTS: the domain may carry subdomains that are not HTTPS.
+      - traefik.http.middlewares.${STACK_NAME:?}-headers.headers.stsSeconds=31536000
+      - traefik.http.middlewares.${STACK_NAME:?}-headers.headers.contentTypeNosniff=true
+      - traefik.http.middlewares.${STACK_NAME:?}-headers.headers.contentSecurityPolicy=frame-ancestors 'none'
+      - traefik.http.middlewares.${STACK_NAME:?}-headers.headers.referrerPolicy=same-origin
+      - traefik.http.middlewares.${STACK_NAME:?}-headers.headers.permissionsPolicy=camera=(), microphone=(), geolocation=()
+      # Traefik drops a header whose value is empty, so ROBOTS_TAG= opens the site to indexing.
+      - traefik.http.middlewares.${STACK_NAME:?}-headers.headers.customResponseHeaders.X-Robots-Tag=${ROBOTS_TAG-noindex, nofollow}
+
+  # The demo's Beds24. It has no route from outside and starts only under the profile.
+  sim:
+    profiles: [sim]
+    image: ${SIM_IMAGE:-}
+    build: ./sim
+    restart: unless-stopped
+
+networks:
+  traefik:
+    external: true

@@ -1,0 +1,13 @@
+# For a local run and CI, on top of compose.yml: a throwaway Traefik with its self-signed
+# certificate on https://localhost:8443. Not for a machine that runs a real one.
+services:
+  proxy:
+    image: traefik:v3.6
+    command:
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --providers.docker.network=traefik
+      - --entrypoints.websecure.address=:443
+    ports: ['127.0.0.1:8443:443']
+    volumes: ['/var/run/docker.sock:/var/run/docker.sock:ro']
+    networks: [traefik]
