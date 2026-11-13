@@ -8,5 +8,9 @@ node_modules/
 # Impeccable downloads its platform binary on first run
 .claude/skills/impeccable/scripts/bin/
 
+# Impeccable's files of one machine; its shared configuration and design file are tracked
+.impeccable/config.local.json
+.impeccable/hook.*.json
+
 # Playwright CLI output (may contain credentials)
 .playwright-cli/
