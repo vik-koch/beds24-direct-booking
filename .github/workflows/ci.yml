@@ -34,3 +34,58 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - run: scripts/check-stack.sh
+
+  # From here on only for a merge to main: the images of this commit, then the demo.
+  images:
+    if: github.event_name == 'push'
+    needs: [check, stack]
+    # The demo machine is ARM, and so is this runner: no emulation, one architecture.
+    runs-on: ubuntu-24.04-arm
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v7
+      - run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          for name in web sim; do
+            image="ghcr.io/${GITHUB_REPOSITORY,,}-$name:sha-$GITHUB_SHA"
+            docker build -t "$image" "$([ "$name" = web ] && echo . || echo sim)"
+            docker push "$image"
+          done
+
+  deploy:
+    if: github.event_name == 'push'
+    needs: images
+    runs-on: ubuntu-latest
+    concurrency: deploy-demo
+    environment:
+      name: demo
+      url: https://${{ vars.DEMO_APP_DOMAIN }}
+    steps:
+      - uses: actions/checkout@v7
+      - env:
+          DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
+          DEPLOY_KNOWN_HOSTS: ${{ vars.DEPLOY_KNOWN_HOSTS }}
+          DEPLOY_SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+          APP_DOMAIN: ${{ vars.DEMO_APP_DOMAIN }}
+        run: |
+          : "${DEPLOY_HOST:?variable DEPLOY_HOST is not set}"
+          : "${DEPLOY_KNOWN_HOSTS:?variable DEPLOY_KNOWN_HOSTS is not set}"
+          : "${DEPLOY_SSH_PRIVATE_KEY:?secret DEPLOY_SSH_PRIVATE_KEY is not set}"
+          : "${APP_DOMAIN:?variable DEMO_APP_DOMAIN is not set}"
+          umask 077
+          printf '%s\n' "$DEPLOY_SSH_PRIVATE_KEY" > "$RUNNER_TEMP/key"
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > "$RUNNER_TEMP/known_hosts"
+          image="ghcr.io/${GITHUB_REPOSITORY,,}"
+          cat > "$RUNNER_TEMP/demo.env" <<EOF
+          STACK_NAME=beds24-demo
+          APP_DOMAIN=$APP_DOMAIN
+          WEB_IMAGE=$image-web:sha-$GITHUB_SHA
+          SIM_IMAGE=$image-sim:sha-$GITHUB_SHA
+          COMPOSE_PROFILES=sim
+          BEDS24_URL=http://sim:4300/v2
+          BEDS24_TOKEN=simulator
+          EOF
+          SSH_OPTS="-i $RUNNER_TEMP/key -o UserKnownHostsFile=$RUNNER_TEMP/known_hosts -o StrictHostKeyChecking=yes -o ConnectTimeout=10" \
+            scripts/deploy.sh "$DEPLOY_HOST" "$RUNNER_TEMP/demo.env"

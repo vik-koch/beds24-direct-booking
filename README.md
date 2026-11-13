@@ -40,6 +40,13 @@ it where the `sim` profile is set. Its settings are listed in [`.env.example`](.
 With Docker, `scripts/check-stack.sh` builds both images, starts the stack behind a throwaway
 proxy on `https://localhost:8443` and checks the page and its response headers.
 
+## Delivery
+
+A merge to `main` builds the two images and deploys the demo with
+[`scripts/deploy.sh`](scripts/deploy.sh); a `v*.*.*` tag names the images of its commit as a
+release. [ADR 7](docs/adr/0007-hosting-and-delivery.md) has the reasons and lists what a
+deployment needs.
+
 ## How it is built
 
 The site is written by an AI coding agent (Claude Code) and directed by me. I write each
