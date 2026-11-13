@@ -57,8 +57,9 @@ public.
   comments and never approves.
 - **Viktor starts a review** when a pull request is ready for one, and again after changes:
   `node scripts/review.mjs <pull request> --model <model> --effort <effort>`. The reviewer
-  reads the whole pull request at its head, with the issue and the earlier discussion, and
-  posts one review.
+  reads the whole pull request at its head, with the issue, the earlier discussion and the
+  results of its checks, and posts one review. It runs nothing itself, so a review is best
+  started when CI has finished.
 - **A single question** goes the same way with `--ask "<question>"`; the answer replaces the
   full review.
 - **The reviewer's guidelines** are `AGENTS.md`. What it should look for is changed there, not
