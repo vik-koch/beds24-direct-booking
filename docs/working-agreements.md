@@ -98,7 +98,8 @@ Built in from the first slice. A slice is not done while one of these fails:
   and desktop.
 - **Keyboard and focus:** every control reachable and operable by keyboard, a visible focus
   ring that meets contrast on both palettes, a skip link, focus moved sensibly after
-  navigation. The week grid is the hard case: its keyboard model is decided in the design round.
+  navigation. The stay picker is the hard case: its keyboard model was decided by a spike (ADR 4's
+  conditions).
 - **Structure:** one `h1` per page, landmarks, the page language and the language of
   foreign-language fragments, and alternative texts required by the content schema.
 - **Motion and zoom:** the season switch and any animation respect reduced motion; pages work

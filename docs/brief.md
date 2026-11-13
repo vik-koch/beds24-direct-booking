@@ -45,7 +45,7 @@ real business goes into the public repository.
 | Framework | Angular with SSR, content pages prerendered | Known framework; the new things are the workflow and the UI. |
 | Server | One Node process: the SSR server with one availability route and an in-memory cache | The API token stays on the server; Beds24 limits calls to 100 credits per 5 minutes; a refresh costs about 3. No Redis, no separate backend. |
 | Booking step | Own week view, then hand over to the Beds24 booking page with apartment and week preselected | Own checkout would bring payments and persistence. The hand-over is an iframe; see the open decisions for what is untested. |
-| Primary view | A grid of weeks by apartment with price or "booked" | Stays are Saturday to Saturday; not every week is bookable. A week with any night taken shows as unavailable. |
+| Primary view | A stay picker per apartment: a list of stays with price or "booked", and a calendar of months behind a switch. The home page shows the list with one price column per apartment | Stays are Saturday to Saturday; not every week is bookable. A week with any night taken shows as unavailable. |
 | Listing | A Beds24 room is the listing (one apartment); a property is the group above it that carries address, coordinates, check-in times and house rules. A property may hold one room or several | The real business uses one property per apartment; the demo can show both shapes. The API keys availability and prices by room, so this costs nothing. |
 | Bookable weeks | Derived from Beds24, not hard-coded: a week starts and ends on days without the "no check-in or out" override, has seven free, priced nights, and starts no sooner than the price rule's lead time | Verified in the spike; the weekday and the lead time stay Beds24 settings. The calendar does not apply the lead time, so the site does. |
 | Week price | The sum of the daily prices from the calendar call times the property's booking page multiplier (a string such as `*0.9`); cleaning is part of the daily price | Matches `offers` and the Beds24 form, which apply the multiplier; `calendar` does not. One call for the whole grid, checked against `offers` in a test. |
@@ -60,7 +60,7 @@ real business goes into the public repository.
 | Map | An open map (MapLibre with open tiles is the candidate), restyled per season | No consent banner, no billing key. |
 | Reviews | Score, count and a quiet link to the listing; no review texts | Booking.com forbids publishing texts retrieved by its API. |
 | Tracking | None that needs consent | Goal: no cookie banner. |
-| UI | Tailwind with spartan/ui's copy-in components (ADR 4) and one SVG icon set; the week grid's behaviour is decided by a spike | No self-built components; two custom themes stay easy. |
+| UI | Tailwind with spartan/ui's copy-in components (ADR 4) and one SVG icon set; the stay picker is built from native radio buttons and Angular Aria's grid, as a spike decided (ADR 4's conditions) | No self-built components; two custom themes stay easy. |
 | Repo shape | One Angular app, no workspace tool, no libraries; the simulator in a second folder | The code is small. |
 | Beds24 simulator | Small own server that answers in the recorded response shapes from fictional data; it is the demo's runtime backend and the e2e tests' backend, and includes a fake booking page | The demo has no real Beds24 account or token; the booking flow needs state. The real recordings stay private as the reference. |
 | Name | Repository `beds24-direct-booking`; the demo at `beds24.vikkoch.com`, not indexed, its booking page plainly marked as simulated | Says what it is and is findable. The seasons go into the tagline: "seasonal rental" means something else. |
@@ -72,17 +72,17 @@ real business goes into the public repository.
 | Preview lock | Basic auth in the Node server from one environment variable, off when unset | Lets the business review the real site before release and keeps crawlers out; behaves the same on every host. |
 | Private site | A private repository builds its own image from a public tag plus its content | Pages are prerendered, so content is needed at build time. Configuration, not a fork. |
 | Demo and real site | The demo is a deployment, never a mode: no demo-only features in the app. What differs is content, configuration and the Beds24 address (the simulator) | Keeps one scope and one code path. National differences (imprint, tax wording, registration numbers, mediation) are content and optional fields. |
-| Render modes | No client-only routes. Pages that show listings or the week grid (home, apartment) are rendered on the server per request from the cache; guides, company and legal pages are prerendered. The availability route stays for navigation inside the app | Prices and listing texts are in the HTML for search and without a late pop-in; one hydration path. |
-| Design first | A design round before the first slice: two or three directions for the home page and the week grid, phone first, both seasons; the chosen one becomes HTML mock-ups on the real Tailwind tokens and the design language | The UI is the new part. |
+| Render modes | No client-only routes. Pages that show listings or the stay picker (home, apartment) are rendered on the server per request from the cache; guides, company and legal pages are prerendered. The availability route stays for navigation inside the app | Prices and listing texts are in the HTML for search and without a late pop-in; one hydration path. |
+| Design first | A design round before the first slice: two or three directions for the home page and the stay picker, phone first, both seasons; the chosen one becomes HTML mock-ups on the real Tailwind tokens and the design language | The UI is the new part. |
 | Testing | Every e2e test on Chromium desktop, WebKit with an iPhone device and Firefox desktop; details in `working-agreements.md` | Small suite, phone visitors, Safari is where sites break. |
-| Accessibility | Built in from the first slice: contrast checked on both season palettes' tokens, axe in the e2e suite, keyboard and focus rules; details in `working-agreements.md` | Cheaper than a pass at the end, and it shapes the palettes and the week grid. |
+| Accessibility | Built in from the first slice: contrast checked on both season palettes' tokens, axe in the e2e suite, keyboard and focus rules; details in `working-agreements.md` | Cheaper than a pass at the end, and it shapes the palettes and the stay picker. |
 | Releases | Deployment from `main` only: a merge deploys the demo. No planned increments: issue by issue. A tag marks a state the private site can pin: `0.1.0` when CI/CD runs and the demo is live with the simulator, a `0.x.0` after a slice the private site wants, `1.0.0` when the real site is live | Slices are planned as issues in a milestone, not as versions. |
 | Agentic practices | From the start: the reviewer agent, the screenshot matrix (2 languages × 2 seasons × phone and desktop), and hooks for format and lint. Installed skills for Angular and for design work; a project skill of our own when a procedure has been done twice | Three to practise first; more when one has become routine. The list to choose from is in `working-agreements.md`. |
 | Working mode | Viktor writes an issue's intent, Claude plans in the issue, commits with co-authorship and opens the pull request; a reviewer agent on another model comments there; Viktor accepts and merges. Details in `working-agreements.md` | Honest authorship, no relaying between agents, and the process itself is part of what the project shows. |
 
 ## Open decisions
 
-- **The booking step** (decided as far as a trial account allows): own week grid and guest
+- **The booking step** (decided as far as a trial account allows): own stay picker and guest
   count, then the Beds24 guest form in an iframe by deep link, restyled through the booking
   engine's CSS and script settings, with an own confirmation page behind the return URL.
   Payment may leave the frame for Beds24's page. Untested until the account has paid: the
@@ -112,7 +112,7 @@ real business goes into the public repository.
 3. The simulator with fictional data in the recorded shapes, and the demo deployed from `main`:
    `0.1.0`.
 4. The design round.
-5. Slices: shell with languages, seasons and the notice; week grid with hand-over; apartment
+5. Slices: shell with languages, seasons and the notice; stay picker with hand-over; apartment
    pages; map; guides and FAQ; company and legal pages; SEO, accessibility and performance pass.
 6. Once the Beds24 account has paid: the confirmation, the payment and the return URL.
 7. The private deployment: real content, legal texts, domain: `1.0.0`.
