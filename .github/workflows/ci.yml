@@ -8,8 +8,8 @@ on:
 permissions:
   contents: read
 
-# One run per branch at a time. On main a run waits for the one before it, so the newest
-# commit is always deployed last; a run still waiting when a newer one arrives is dropped.
+# One run per branch at a time, so two deployments never overlap. The order of waiting runs is
+# not guaranteed: the deploy job checks for itself that its commit is still the head of main.
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
@@ -79,6 +79,12 @@ jobs:
           : "${DEPLOY_KNOWN_HOSTS:?variable DEPLOY_KNOWN_HOSTS is not set}"
           : "${DEPLOY_SSH_PRIVATE_KEY:?secret DEPLOY_SSH_PRIVATE_KEY is not set}"
           : "${APP_DOMAIN:?variable DEMO_APP_DOMAIN is not set}"
+          # An older commit must not replace a newer one: a slow or repeated run stops here.
+          head=$(git ls-remote origin refs/heads/main | cut -f1)
+          if [ "$head" != "$GITHUB_SHA" ]; then
+            echo "::notice::main is at $head now, so $GITHUB_SHA is not deployed"
+            exit 0
+          fi
           umask 077
           printf '%s\n' "$DEPLOY_SSH_PRIVATE_KEY" > "$RUNNER_TEMP/key"
           printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > "$RUNNER_TEMP/known_hosts"
