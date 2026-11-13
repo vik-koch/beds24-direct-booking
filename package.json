@@ -12,7 +12,7 @@
     "build": "ng build",
     "serve": "node dist/beds24-direct-booking/server/server.mjs",
     "test": "ng test --watch=false",
-    "lint": "ng lint",
+    "lint": "ng lint --max-warnings 0",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "e2e": "ng build && playwright test"
