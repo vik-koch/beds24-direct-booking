@@ -23,6 +23,7 @@ describe('properties', () => {
   it('refuses a call without the token as Beds24 does', async () => {
     const response = await get('properties', 'wrong');
     expect(response.status).toBe(401);
+    expect(response.headers.has('X-Request-Cost')).toBe(false);
     expect(await response.json()).toEqual({
       success: false,
       type: 'error',

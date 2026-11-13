@@ -20,8 +20,9 @@ business is described in [`data.json`](data.json); the decisions behind the simu
 | `GET /v2/properties` | The two houses with their three apartments. Rooms, texts, price rules and upsell items appear when their `include*` parameter is passed; `id` filters. |
 | `GET /v2/inventory/rooms/calendar` | Per room the compressed date ranges between `startDate` and `endDate`, with the fields whose `include*` parameter is passed; `roomId` and `propertyId` filter. |
 
-A call without the token answers 401 `Token not valid`, in the body Beds24 sends. Every answer
-carries the three rate limit headers; the budget is counted and never enforced.
+A call without the token answers 401 `Token not valid`, in the body Beds24 sends and, as there,
+without rate limit headers. Every successful answer carries the three headers; the budget is
+counted and never enforced.
 
 ## The data
 
