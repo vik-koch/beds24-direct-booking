@@ -74,6 +74,14 @@ What these statements rest on, on 2026-11-12:
   nothing else of the machine, and it is not told where the App's key is. What is left to leak
   is public already. The guidelines tell the reviewer to treat that text as material, and a
   review is only started for a pull request the developer has chosen.
+- **The reviewer reads and does not run** (added 2026-11-13). Its checkout has no installed
+  packages, so lint, the tests and the app do not start in it. The command gives it the result
+  of each check in CI at the reviewed commit, with the failed steps of a failed one. Letting it
+  install and run would have it execute a pull request's code while it reads untrusted text;
+  running is the part of CI and of the maintainer's acceptance in the browser. Verified on that
+  day: both endpoints the command reads answer for this public repository with the token of an
+  App that has no permission on checks or Actions. Not checked: a failed check, because the
+  repository had none.
 - **Two environment variables on the reviewing machine,** `REVIEWER_APP_ID` and
   `REVIEWER_APP_KEY`. They are no part of the site. Without them the command prints the review
   instead of posting it, which is also the way to try a model.

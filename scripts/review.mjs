@@ -125,6 +125,17 @@ const said = (
     return `${entry.user.login}${place}:\n${entry.body}`;
   });
 
+// Every check here is a job in GitHub Actions, so a check run's id is that job's id.
+const { check_runs: runs } = await github(`/repos/${repo}/commits/${pull.head.sha}/check-runs`);
+const checks = await Promise.all(
+  runs.map(async (run) => {
+    if (run.conclusion !== 'failure') return `${run.name}: ${run.conclusion ?? run.status}`;
+    const { steps } = await github(`/repos/${repo}/actions/jobs/${run.id}`);
+    const failed = steps.filter((step) => step.conclusion === 'failure').map((step) => step.name);
+    return `${run.name}: failure in ${failed.join(', ')}`;
+  }),
+);
+
 git('fetch', '--quiet', 'origin', pull.base.ref, `pull/${number}/head`);
 const diff = git('diff', `${pull.base.sha}...${pull.head.sha}`);
 
@@ -147,6 +158,7 @@ const prompt = [
     ? `The issue it closes, #${closes}: ${issue.title}\n\n${issue.body ?? ''}`
     : 'It names no issue.',
   `Earlier reviews and comments on the pull request and the issue, oldest first:\n\n${said.join('\n\n') || 'None.'}`,
+  `The checks of ${pull.head.sha} in CI:\n\n${checks.join('\n') || 'None have run.'}`,
   `The working directory is a checkout of ${pull.head.sha}. Its diff against ${pull.base.ref}:\n\n${diff}`,
 ].join('\n\n---\n\n');
 
