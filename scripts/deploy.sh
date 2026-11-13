@@ -20,6 +20,14 @@ dir=/srv/$stack
 # shellcheck disable=SC2086,SC2029
 run() { ssh ${SSH_OPTS:-} "deploy@$host" "$@"; }
 
+# Whatever step fails, the run ends by saying what is on the machine now.
+report() {
+  [ $? -eq 0 ] && return
+  echo "FAILED. On $host now:" >&2
+  run "cd $dir && docker compose ps -a --format 'table {{.Service}}\t{{.Image}}\t{{.Status}}' && docker compose logs --tail 20" >&2 || true
+}
+trap report EXIT
+
 echo "==> Copying the stack to deploy@$host:$dir"
 run "cat > $dir/compose.yml" <"$(dirname "$0")/../compose.yml"
 # The settings can hold a token, so the file is never readable by others.
@@ -43,6 +51,5 @@ for _ in $(seq 30); do
   sleep 5
 done
 
-echo "FAILED: https://$domain did not answer 200. On $host now:" >&2
-run "cd $dir && docker compose ps --format 'table {{.Service}}\t{{.Image}}\t{{.Status}}' && docker compose logs --tail 20" >&2 || true
+echo "https://$domain did not answer 200." >&2
 exit 1

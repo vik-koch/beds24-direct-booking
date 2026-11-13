@@ -53,8 +53,9 @@ decides how a commit gets from `main` onto the demo's machine. What weighs on it
 
 ## What this rests on
 
-- **Verified:** the script's three paths (success, a site that does not answer, a missing
-  setting) against stand-ins for `ssh` and `curl`; the stack itself by the `stack` job.
+- **Verified:** the script's paths (success, a start that fails on the machine, a site that
+  does not answer, a missing setting) against stand-ins for `ssh` and `curl`; the stack itself
+  by the `stack` job.
 - **Taken from the maintainer's other project,** which deploys to the same machine in this way:
   that the proxy finds a stack by its labels and that the `deploy` user can run Docker.
 - **Not run when this was written:** the image build on the ARM runner, the push to the
@@ -68,8 +69,12 @@ tag work as described. The result is added here when it is known.
 
 ## Consequences
 
-- **A merge to `main` is red when the demo does not answer** afterwards. The script then prints
-  what runs on the machine; it does not roll back by itself. Going back is a revert on `main`.
+- **A merge to `main` is red when the deployment fails** at any step or the demo does not
+  answer afterwards. The script then prints what runs on the machine; it does not roll back by
+  itself. Going back is a revert on `main`.
+- **Runs on `main` go one after the other,** so an older commit cannot be deployed over a newer
+  one. When merges follow each other quickly, a run that is still waiting is dropped for the
+  newer one: that commit gets no images and cannot be tagged as a release.
 - **The maintainer provides** the `demo` environment's secret `DEPLOY_SSH_PRIVATE_KEY` and
   variables `DEPLOY_HOST`, `DEPLOY_KNOWN_HOSTS` and `DEMO_APP_DOMAIN`, the directory
   `/srv/beds24-demo` owned by `deploy`, the DNS record, and public visibility for the two image

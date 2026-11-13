@@ -8,6 +8,12 @@ on:
 permissions:
   contents: read
 
+# One run per branch at a time. On main a run waits for the one before it, so the newest
+# commit is always deployed last; a run still waiting when a newer one arrives is dropped.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -58,7 +64,6 @@ jobs:
     if: github.event_name == 'push'
     needs: images
     runs-on: ubuntu-latest
-    concurrency: deploy-demo
     environment:
       name: demo
       url: https://${{ vars.DEMO_APP_DOMAIN }}
