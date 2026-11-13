@@ -36,7 +36,8 @@ with. What weighs on the choices:
    attribute on the page.
 5. **spartan/ui for the components:** dialog, sheet, accordion, carousel and the like, each
    copied into the project when it is first needed and themed through those variables.
-6. **The week grid's behaviour is decided by a spike** before its slice, see the conditions.
+6. **The week grid's behaviour is decided by a spike** before its slice, see the conditions
+   for its result.
 7. **Vitest for unit tests** through `ng test`, **Playwright for e2e** with axe, as the working
    agreements describe.
 8. **Prettier formats and ESLint lints.** Their plugins are set up in the scaffold.
@@ -113,6 +114,23 @@ result is added to this ADR when it is known.
   it from spartan/ui's calendar or table with Angular Aria's grid pattern, which is released
   with Angular and needs only the CDK that spartan/ui brings anyway. It is judged by keyboard,
   with VoiceOver on a real iPhone, and at 320 px. The result is recorded here.
+
+  **Result, 13 November 2026** (issue 37, the candidates are kept in pull request 38). The
+  control became a stay picker for one apartment. It is given stays, each with a start, an
+  end, a price and a state, and offers no free choice of dates. Two views share the selected
+  stay: a list of native radio buttons, which is the default, and a calendar of months built
+  as tables on Angular Aria's grid. spartan/ui's calendar was tried and not chosen: one
+  instance shows one month, it owns its selection, and it does not focus a disabled date, so
+  the arrow keys stop in front of a booked period.
+
+  - Verified in Chromium at 320 px and 1280 px, by keyboard and with axe.
+  - Tried by the maintainer with NVDA on Windows, by mouse and by keyboard: the focused and
+    the selected stay were announced in the list and in both calendars.
+  - Not tried: VoiceOver or any screen reader on a phone, because no iPhone was at hand;
+    Firefox and WebKit by hand.
+  - A known limit: the Aria grid removes an `aria-selected` that it did not set, so the
+    calendar carries the selection in the day's accessible name.
+
 - **The typed texts are confirmed in the first slice with a counted text.** If the three
   helpers grow beyond a few lines each, ngx-translate takes over.
 
