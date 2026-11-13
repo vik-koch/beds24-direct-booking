@@ -8,7 +8,9 @@ and the e2e tests' Beds24; the site itself never knows the difference. The wire 
 npm run sim   # http://localhost:4300/v2, header "token: simulator"
 ```
 
-Node runs the TypeScript files directly, so there is no build step and no dependency.
+Node runs the TypeScript files directly, so there is no build step and no dependency. The
+business is described in [`data.json`](data.json); the decisions behind the simulator are in
+[ADR 5](../docs/adr/0005-the-simulator.md).
 
 ## What it answers
 
@@ -42,5 +44,5 @@ the days pass:
 - **Left out:** the blocks of a property the site never reads (payment gateways, booking
   questions, vouchers, units and the like), every other call, and the booking page.
 - **Not recorded on the wire, so the simulator's own:** what `properties` returns when only
-  some `include*` parameters are passed, the calendar's answer without any, and every error
-  other than the 401.
+  some `include*` parameters are passed, the calendar's answer without any (a day that carries
+  none of the fields asked for is skipped), and every error other than the 401.
