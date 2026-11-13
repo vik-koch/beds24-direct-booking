@@ -9,7 +9,7 @@ container and, on the demo, a `sim` container, images built in CI, deployment fr
 and a version tag for a state a private site can pin. `compose.yml` is that stack. This ADR
 decides how a commit gets from `main` onto the demo's machine. What weighs on it:
 
-- **The demo's machine is shared.** It already runs a Traefik proxy and other stacks, on ARM.
+- **The demo's machine is shared.** It already runs a Traefik proxy and other stacks, on x64.
   The delivery must not touch them.
 - **The repository is public.** Whatever CI holds to reach the machine has to be worth little
   to anyone else and easy to withdraw.
@@ -19,8 +19,8 @@ decides how a commit gets from `main` onto the demo's machine. What weighs on it
 
 ## Decision
 
-1. **CI builds the two images on `main`,** once `check` and `stack` have passed, on an ARM
-   runner for the demo machine's architecture, and pushes them to the GitHub container registry
+1. **CI builds the two images on `main`,** once `check` and `stack` have passed, on a
+   runner of the demo machine's architecture (x64), and pushes them to the GitHub container registry
    tagged with the commit.
 2. **CI deploys by pushing over SSH** as the user `deploy`, with a key of
    this repository's own and the machine's host key pinned. One shell script does it:
@@ -47,8 +47,8 @@ decides how a commit gets from `main` onto the demo's machine. What weighs on it
 <!-- prettier-ignore -->
 | Option | For | Against | Result |
 |---|---|---|---|
-| Both architectures in one manifest | The same tag runs anywhere. | Two runners, a push by digest and a job that merges the manifests, for an image only the ARM demo machine pulls: a site of its own builds its own image, because its content is needed at build time. | Rejected. |
-| ARM only, built on an ARM runner | One job, no emulation. | The published image runs on ARM only. The pull request's `stack` job builds on x64, so a Dockerfile that works on one architecture alone still fails. | Chosen. |
+| Both architectures in one manifest | The same tag runs anywhere, and a change of the demo's machine needs no change here. | Two runners, a push by digest and a job that merges the manifests, for an image only the demo machine pulls: a site of its own builds its own image, because its content is needed at build time. | Rejected. |
+| One architecture, the demo machine's, built on a runner of that architecture | One job, no emulation. | The published image runs on that architecture only, and the choice has to follow the machine. The pull request's `stack` job builds on the other architecture, so a Dockerfile that works on one alone still fails. | Chosen: x64. |
 | Images tagged `latest` or `main` | Short settings. | The machine cannot tell what it runs, and a deployment is not repeatable. | Rejected: every deployment names the commit. |
 
 ## What this rests on
@@ -58,9 +58,12 @@ decides how a commit gets from `main` onto the demo's machine. What weighs on it
   by the `stack` job.
 - **Taken from the maintainer's other project,** which deploys to the same machine in this way:
   that the proxy finds a stack by its labels and that the `deploy` user can run Docker.
-- **Not run when this was written:** the image build on the ARM runner, the push to the
-  registry, the deployment and the release workflow. They run for the first time when this is
-  merged.
+- **Shown by the first deployment** (2026-11-13): the build, the push to the registry, the copy
+  to the machine, the pull and the start worked, and the script reported the failure with the
+  containers' state. The failure itself was an assumption nobody had checked: the images were
+  built for ARM and the machine is x64.
+- **Not run when this was written:** a deployment that ends with the demo answering, and the
+  release workflow.
 
 ## Condition
 
