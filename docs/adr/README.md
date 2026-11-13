@@ -21,6 +21,7 @@ The technology the site is built with and runs on.
 | ADR | Decision | Status |
 |---|---|---|
 | [4](0004-the-stack.md) | The stack: Angular with server rendering, keyed text files, spartan/ui and Tailwind | Accepted |
+| [5](0005-the-simulator.md) | The simulator: TypeScript run by Node, a computed calendar, the business as one JSON file | Accepted |
 
 ## Process
 

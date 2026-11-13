@@ -11,8 +11,9 @@
     "start": "ng serve",
     "build": "ng build",
     "serve": "node dist/beds24-direct-booking/server/server.mjs",
-    "test": "ng test --watch=false",
-    "lint": "ng lint --max-warnings 0",
+    "sim": "node sim/server.ts",
+    "test": "ng test --watch=false && vitest run --root sim --globals",
+    "lint": "ng lint --max-warnings 0 && tsc -p sim",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "e2e": "ng build && playwright test"

@@ -18,7 +18,7 @@ because they hold the account's data. Amounts here are example figures.
 - **Rate limit:** 100 credits per 5 minutes per account. A call costs 1 credit, the full
   `properties` call 1.6. The headers on the wire are `X-Request-Cost`,
   `X-Five-Min-Limit-Remaining` and `X-Five-Min-Limit-Resets-In`; the OpenAPI file names them
-  `X-FiveMinCreditLimit-*`.
+  `X-FiveMinCreditLimit-*`. A 401 carries none of them.
 - **One call covers every property** when no property filter is passed. A full refresh
   (`properties` and `calendar`) costs about 3 credits, whatever the number of apartments.
 

@@ -13,10 +13,11 @@ Beds24 is the property management system: it holds availability, prices and book
 the channels (Booking.com now, Airbnb next), and takes the booking and the payment. The website
 shows what Beds24 knows and hands over to it for checkout.
 
-The repository is public as a portfolio piece and carries a fictional demo only: apartments in an
-Austrian alpine village, in German and English. The real business (another country, its own two languages)
-is a private deployment that uses only what the public repository publishes. Nothing about the
-real business goes into the public repository.
+The repository is public as a portfolio piece and carries a fictional demo only: _Firn & Farn_,
+an invented business with three apartments in two houses in Saalbach in Austria, in German and
+English. The village is real; the houses, the prices and the tourist tax are made up. The real
+business (another country, its own two languages) is a private deployment that uses only what the
+public repository publishes. Nothing about the real business goes into the public repository.
 
 ## Goals
 
@@ -95,7 +96,6 @@ real business goes into the public repository.
 - **The real site's name, domain and logo.** `.com` as the main domain; the national domain
   redirects to its language.
 - **Icon set:** check coverage against the real feature list (ski, bike, family, no smoking, …).
-- **The demo's place:** which fictional village, and with it the tourist tax and the texts.
 
 ## Later phases
 
