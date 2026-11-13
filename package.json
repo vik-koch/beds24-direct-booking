@@ -8,7 +8,7 @@
     "node": ">=24.15"
   },
   "scripts": {
-    "start": "ng serve",
+    "start": "BEDS24_URL=http://localhost:4300/v2 BEDS24_TOKEN=simulator ng serve",
     "build": "ng build",
     "serve": "node dist/beds24-direct-booking/server/server.mjs",
     "sim": "node sim/server.ts",
