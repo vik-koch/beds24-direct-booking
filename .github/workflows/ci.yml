@@ -36,7 +36,8 @@ jobs:
           path: playwright-report
 
   stack:
-    runs-on: ubuntu-latest
+    # On ARM, the architecture the pushed images are not built for, so both stay buildable.
+    runs-on: ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@v7
       - run: scripts/check-stack.sh
@@ -45,8 +46,8 @@ jobs:
   images:
     if: github.event_name == 'push'
     needs: [check, stack]
-    # The demo machine is ARM, and so is this runner: no emulation, one architecture.
-    runs-on: ubuntu-24.04-arm
+    # The runner's architecture is the images': x64, as the demo machine.
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
