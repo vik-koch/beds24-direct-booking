@@ -62,11 +62,15 @@ What these statements rest on, on 2026-11-12:
   rule demands it; that stays a habit. The gate is elsewhere: since ADR 3 the maintainer can
   approve the developer agent's pull requests, and `main` requires that one approval.
 - **The reviewer's verdict is the state of its review** (added 2026-11-13; until then it
-  commented and did not approve). The tool returns a verdict next to the summary and the findings, and the
-  command posts the review as a requested change or as an approval; an answer to a question
-  stays a comment. The gate stays the maintainer's: `main` requires the approval of a code
-  owner, and `.github/CODEOWNERS` names the maintainer for every path. The reviewer reads
-  untrusted text, so its approval must never be enough to merge.
+  commented and did not approve). The tool returns a verdict next to the summary and
+  the findings, and the command posts the review as a requested change or as an approval; an
+  answer to a question stays a comment. The verdict is a signal and no gate: GitHub counts
+  reviews only from accounts that can write code, and the App can write pull requests and
+  nothing else. That is wanted, because the reviewer reads untrusted text and its approval
+  must never be enough to merge; giving the App write access would end it. Verified on that
+  day, on the pull request of this change: GitHub accepted a requested change from the App,
+  the review decision stayed "review required", and the App is listed among the reviewers
+  whose approvals may not affect merge requirements. Not checked: an approval by the App.
 - **A re-review is the same command again.** The reviewer is given the earlier reviews and the
   replies, so it can see what was answered.
 - **Replacing the tool is a change to one function,** as long as the new tool can be run from a

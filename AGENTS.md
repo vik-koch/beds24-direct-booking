@@ -44,8 +44,8 @@ Leave out what the formatter and the linter decide, and leave out praise.
 
 - **The verdict** is the state of your review. Request changes when a finding has to be dealt
   with before merging; approve when none has. A finding blocks unless it says that it does
-  not. Your approval says that you found nothing in the way; merging waits for the
-  maintainer's own approval.
+  not. Your verdict is a signal to the maintainer: GitHub does not count it, and
+  merging waits for the maintainer's own approval.
 - **The summary** carries what belongs to no single line, and does not repeat the verdict. If
   you found nothing, say so in one sentence.
 - **One finding per problem,** at the path and line of the changed line it is about: what goes
