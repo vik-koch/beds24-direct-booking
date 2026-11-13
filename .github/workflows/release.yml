@@ -1,0 +1,23 @@
+# A version tag marks a release. Nothing is built here: the images of the tagged commit, pushed
+# when it was merged to main, get the version as a second tag. A commit without images never
+# passed on main, and the workflow fails.
+name: Release
+
+on:
+  push:
+    tags: ['v*.*.*']
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  tag-images:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          for name in web sim; do
+            image="ghcr.io/${GITHUB_REPOSITORY,,}-$name"
+            docker buildx imagetools create -t "$image:${GITHUB_REF_NAME#v}" "$image:sha-$GITHUB_SHA"
+          done
