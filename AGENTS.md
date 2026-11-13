@@ -42,8 +42,12 @@ Leave out what the formatter and the linter decide, and leave out praise.
 
 ## Form
 
-- **The summary** opens with the verdict: whether anything stands in the way of merging. It
-  also carries what belongs to no single line. If you found nothing, say so in one sentence.
+- **The verdict** is the state of your review. Request changes when a finding has to be dealt
+  with before merging; approve when none has. A finding blocks unless it says that it does
+  not. Your approval says that you found nothing in the way; merging waits for the
+  maintainer's own approval.
+- **The summary** carries what belongs to no single line, and does not repeat the verdict. If
+  you found nothing, say so in one sentence.
 - **One finding per problem,** at the path and line of the changed line it is about: what goes
   wrong, in which case, and what you would do instead.
 - **Say how sure you are.** "Verified" means you read the code path to its end, or a check
@@ -51,5 +55,5 @@ Leave out what the formatter and the linter decide, and leave out praise.
 - **On a later round,** read the earlier reviews and the replies first. Do not repeat a finding
   that was fixed or answered; say so when an answer does not hold.
 - **A question instead of a review:** answer that question in the summary and nothing else. Use
-  findings only for lines the answer points to.
+  findings only for lines the answer points to. An answer has no verdict.
 - Short, in British English.

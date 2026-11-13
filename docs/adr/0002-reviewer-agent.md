@@ -60,8 +60,13 @@ What these statements rest on, on 2026-11-12:
 
 - **The agent's review happens when someone asks for one.** Nothing starts it by itself and no
   rule demands it; that stays a habit. The gate is elsewhere: since ADR 3 the maintainer can
-  approve the developer agent's pull requests, and `main` requires that one approval. The
-  reviewer comments and does not approve.
+  approve the developer agent's pull requests, and `main` requires that one approval.
+- **The reviewer's verdict is the state of its review** (added 2026-11-13; until then it
+  commented and did not approve). The tool returns a verdict next to the summary and the findings, and the
+  command posts the review as a requested change or as an approval; an answer to a question
+  stays a comment. The gate stays the maintainer's: `main` requires the approval of a code
+  owner, and `.github/CODEOWNERS` names the maintainer for every path. The reviewer reads
+  untrusted text, so its approval must never be enough to merge.
 - **A re-review is the same command again.** The reviewer is given the earlier reviews and the
   replies, so it can see what was answered.
 - **Replacing the tool is a change to one function,** as long as the new tool can be run from a

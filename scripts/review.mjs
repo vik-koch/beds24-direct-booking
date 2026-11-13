@@ -20,10 +20,12 @@ if (!number || !model || !effort) {
   process.exit(1);
 }
 
+// The verdict becomes the review's state; an answer to a question has none and stays a comment.
+const verdict = ask ? {} : { verdict: { type: 'string', enum: ['APPROVE', 'REQUEST_CHANGES'] } };
 const schema = {
   type: 'object',
   additionalProperties: false,
-  required: ['summary', 'findings'],
+  required: ['summary', 'findings', ...Object.keys(verdict)],
   properties: {
     summary: { type: 'string' },
     findings: {
@@ -39,6 +41,7 @@ const schema = {
         },
       },
     },
+    ...verdict,
   },
 };
 
@@ -189,15 +192,15 @@ const body = [
 if (token) {
   const review = await github(`/repos/${repo}/pulls/${number}/reviews`, {
     commit_id: pull.head.sha,
-    event: 'COMMENT',
+    event: answer.verdict ?? 'COMMENT',
     body,
     comments: inline.map((finding) => ({ ...finding, side: 'RIGHT' })),
   });
   console.log(review.html_url);
 } else {
   console.log(
-    [body, ...inline.map((finding) => `${finding.path}:${finding.line}\n${finding.body}`)].join(
-      '\n\n',
-    ),
+    [answer.verdict, body, ...inline.map((f) => `${f.path}:${f.line}\n${f.body}`)]
+      .filter(Boolean)
+      .join('\n\n'),
   );
 }

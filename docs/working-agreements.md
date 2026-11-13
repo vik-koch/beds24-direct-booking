@@ -53,8 +53,12 @@ public.
 
 - **A pull request needs one approval before it can be merged,** by a rule on `main`. The
   approval is Viktor's, after the reviewer agent's rounds and his own look at what carries
-  risk. He can give it because the developer agent opens the pull requests. The reviewer agent
-  comments and never approves.
+  risk. He can give it because the developer agent opens the pull requests. The rule asks for
+  the approval of a code owner, and `.github/CODEOWNERS` names him for every path.
+- **The reviewer agent's verdict is the state of its review:** it requests changes or
+  approves. Its approval says that it found nothing in the way and does not replace Viktor's.
+  A requested change is lifted by the agent's next review after the fix, or dismissed by
+  Viktor.
 - **Viktor starts a review** when a pull request is ready for one, and again after changes:
   `node scripts/review.mjs <pull request> --model <model> --effort <effort>`. The reviewer
   reads the whole pull request at its head, with the issue, the earlier discussion and the
