@@ -51,9 +51,8 @@ own choices to its issue. What weighs on them:
 ## What this rests on
 
 - **Verified by running it:** Node 24.18 starts the TypeScript files as they are on the
-  developer's machine, and the JSON file is type-checked on import. CI runs the simulator's
-  tests through Vitest and does not start it with Node yet; the e2e suite will, once the app
-  reads from it.
+  developer's machine and in CI, where the e2e suite starts the simulator for the app to read
+  from, and the JSON file is type-checked on import.
 - **Taken from `docs/beds24-findings.md`:** the response shapes, the 401 body and the rate limit
   headers.
 - **Not checked on the wire:** what Beds24 answers when only some `include*` parameters are

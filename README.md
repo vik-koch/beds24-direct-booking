@@ -5,8 +5,10 @@ property management system: it holds availability, prices and listing texts, and
 booking and the payment. The site shows the free weeks with their prices and hands over to the
 Beds24 guest form.
 
-**Status:** the application is an empty shell with its checks; the first slices come next. This repository carries a fictional
-demo only: apartments in an Austrian alpine village, in German and English.
+**Status:** the first path works end to end: the server asks Beds24 for the listings and the
+home page shows the apartments' names. This repository carries a fictional demo only: _Firn &
+Farn_, an invented business in Saalbach in Austria, in German and English. Its Beds24 is a
+[simulator](sim/README.md).
 
 ## Documents
 
@@ -24,11 +26,12 @@ Node 24 and npm. After `npm ci`:
 <!-- prettier-ignore -->
 | Command | What it does |
 |---|---|
-| `npm start` | The development server on `localhost:4200`. |
+| `npm run sim` | The Beds24 simulator on `localhost:4300`. The app needs it running. |
+| `npm start` | The development server on `localhost:4200`, pointed at the simulator. |
 | `npm run lint` and `npm run format:check` | ESLint and Prettier. `npm run format` rewrites. |
 | `npm test` | The unit tests, once. |
-| `npm run e2e` | Builds, starts the built server and runs the e2e suite on Chromium, WebKit with an iPhone device and Firefox. The browsers are installed once with `npx playwright install --with-deps`. |
-| `npm run build`, then `npm run serve` | The built server on `localhost:4000`. It answers only for the hosts in `NG_ALLOWED_HOSTS`, for example `NG_ALLOWED_HOSTS=localhost`. |
+| `npm run e2e` | Builds, starts the simulator and the built server and runs the e2e suite on Chromium, WebKit with an iPhone device and Firefox. The browsers are installed once with `npx playwright install --with-deps`. |
+| `npm run build`, then `npm run serve` | The built server on `localhost:4000`. It answers only for the hosts in `NG_ALLOWED_HOSTS`, for example `NG_ALLOWED_HOSTS=localhost`. It reads the Beds24 address and token from `BEDS24_URL` and `BEDS24_TOKEN`; for the simulator these are `http://localhost:4300/v2` and `simulator`. |
 
 ## How it is built
 
