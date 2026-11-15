@@ -94,7 +94,9 @@ release tag work as described. Both did, on 2026-11-13, and the condition is met
   variables `DEPLOY_HOST`, `DEPLOY_KNOWN_HOSTS` and `DEMO_APP_DOMAIN`, the directory
   `/srv/beds24-demo` owned by `deploy`, the DNS record, and public visibility for the two image
   packages, since the machine pulls without a login.
-- **Images pile up in the registry,** one pair per merge. Removing old ones is a job of its own.
+- **Images pile up in the registry,** one pair per merge. A weekly workflow removes them with
+  `scripts/prune-images.mjs`: it keeps every release and the newest ten commits of each image,
+  so a commit further back than that can no longer be tagged as a release.
 - **A site of its own** builds its image in a private repository from a released tag and its
   content, and calls the same script against its own machine, which then also needs the proxy.
   That delivery, with a machine set up from nothing, is a separate piece of work.

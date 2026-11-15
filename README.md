@@ -45,8 +45,10 @@ proxy on `https://localhost:8443` and checks the page and its response headers.
 
 A merge to `main` builds the two images and deploys the demo with
 [`scripts/deploy.sh`](scripts/deploy.sh); a `v*.*.*` tag names the images of its commit as a
-release. [ADR 7](docs/adr/0007-hosting-and-delivery.md) has the reasons and lists what a
-deployment needs.
+release. Once a week [`scripts/prune-images.mjs`](scripts/prune-images.mjs) removes the images
+of old commits from the registry and keeps the releases.
+[ADR 7](docs/adr/0007-hosting-and-delivery.md) has the reasons and lists what a deployment
+needs.
 
 ## How it is built
 
