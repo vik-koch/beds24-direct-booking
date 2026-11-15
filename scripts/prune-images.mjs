@@ -42,7 +42,8 @@ async function request(url, options) {
   return response.status === 204 ? undefined : response.json();
 }
 
-async function prune(owner, image, { token, keepCommits, dryRun }) {
+// Reads one image's versions and decides; nothing is deleted here.
+async function plan(owner, image, { token, keepCommits }) {
   // The owner is a user account here; an organization's packages are under /orgs instead.
   const api = `https://api.github.com/users/${owner}/packages/container/${encodeURIComponent(image)}/versions`;
   const headers = { authorization: `Bearer ${token}`, accept: 'application/vnd.github+json' };
@@ -62,8 +63,6 @@ async function prune(owner, image, { token, keepCommits, dryRun }) {
     'application/vnd.docker.distribution.manifest.list.v2+json',
     'application/vnd.docker.distribution.manifest.v2+json',
   ].join(', ');
-  // Everything is read before anything is deleted: a manifest that cannot be read ends the
-  // run here, with the registry untouched.
   const children = new Map();
   for (const version of versions) {
     if (version.metadata.container.tags.length === 0) continue;
@@ -76,7 +75,10 @@ async function prune(owner, image, { token, keepCommits, dryRun }) {
     );
   }
 
-  const { keep, remove } = select(versions, children, keepCommits, Date.now());
+  return { image, api, headers, ...select(versions, children, keepCommits, Date.now()) };
+}
+
+async function carryOut({ image, api, headers, keep, remove }, dryRun) {
   const line = (version) =>
     `  ${version.name.slice(0, 19)} ${version.created_at} ${version.metadata.container.tags.join(' ') || '(no tag)'}`;
   console.log(`${image}: keeping ${keep.length}, removing ${remove.length}`);
@@ -96,6 +98,10 @@ if (import.meta.main) {
   if (!Number.isInteger(keepCommits) || keepCommits < 1)
     throw new Error('KEEP_COMMITS must be a whole number, 1 or more');
   const dryRun = ['1', 'true'].includes(process.env.DRY_RUN ?? '');
+  // Both images are read and decided before anything is deleted: a list or a manifest that
+  // cannot be read ends the run here, with the registry untouched.
+  const plans = [];
   for (const image of [`${name}-web`, `${name}-sim`])
-    await prune(owner, image, { token, keepCommits, dryRun });
+    plans.push(await plan(owner, image, { token, keepCommits }));
+  for (const decided of plans) await carryOut(decided, dryRun);
 }

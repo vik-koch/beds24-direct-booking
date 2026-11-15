@@ -11,6 +11,13 @@ permissions:
   contents: read
   packages: write
 
+# Shared with the prune workflow: tagging waits until a run that removes old images is through,
+# and the other way round. Of several runs that wait, GitHub keeps the newest only; a release
+# run cancelled that way is started again by hand.
+concurrency:
+  group: registry-tags
+  cancel-in-progress: false
+
 jobs:
   tag-images:
     runs-on: ubuntu-latest

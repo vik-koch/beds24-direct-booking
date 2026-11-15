@@ -19,6 +19,12 @@ permissions:
   contents: read
   packages: write
 
+# Shared with the release workflow, so a release tag is never put on a version between the
+# moment this run lists the versions and the moment it deletes them.
+concurrency:
+  group: registry-tags
+  cancel-in-progress: false
+
 jobs:
   prune:
     runs-on: ubuntu-latest
