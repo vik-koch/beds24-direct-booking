@@ -6,9 +6,10 @@ booking and the payment. The site shows the free weeks with their prices and han
 Beds24 guest form.
 
 **Status:** the first path works end to end: the server asks Beds24 for the listings and the
-home page shows the apartments' names. This repository carries a fictional demo only: _Firn &
-Farn_, an invented business in Saalbach in Austria, in German and English. Its Beds24 is a
-[simulator](sim/README.md).
+home page shows the apartments' names. The demo is live at <https://beds24.vikkoch.com/> and
+follows `main`; `0.1.0` is the first release. This repository carries a fictional demo only:
+_Firn & Farn_, an invented business in Saalbach in Austria, in German and English. Its Beds24
+is a [simulator](sim/README.md).
 
 ## Documents
 
