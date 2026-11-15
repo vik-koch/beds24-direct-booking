@@ -10,7 +10,7 @@ demo's delivery.
 ## What is needed
 
 - **A VM with Ubuntu 24.04** and a public address, at a provider that takes cloud-init user
-  data. x64 or ARM. "The machine's size" below says what is known about memory and disk.
+  data. x64 or ARM. "The machine's size" below has the measured memory and disk.
 - **A host name** with an A record on the machine's address, and an AAAA record only if the
   machine answers on IPv6. With a proxying DNS service the record must go straight to the
   machine: the certificate is fetched over port 80.
@@ -99,17 +99,54 @@ later, ends without deploying.
 
 ## The machine's size
 
-Known without measuring: the app's memory for JavaScript objects is capped at 192 MB
-(`NODE_OPTIONS` in `compose.yml`), each container keeps at most 30 MB of logs, and the machine
-gets 1 GB of swap. What the proxy and the app use in memory and what the images take on disk is
-measured in the rehearsal and stated there.
+Measured in the rehearsal on the ARM machine, at rest shortly after a deployment, with release
+`0.1.0`:
+
+<!-- prettier-ignore -->
+| What | Figure |
+|---|---|
+| Memory of the app's container | 31 MiB |
+| Memory of the proxy's container | 19 MiB |
+| Memory in use on the whole machine, system included | 0.7 GiB of 3.7 GiB; swap unused |
+| The app's image on disk | 241 MB |
+| The proxy's image on disk | 230 MB |
+| Disk in use on the whole machine | 4.4 GB of 38 GB |
+
+Fixed by the set-up: the app's memory for JavaScript objects is capped at 192 MB (`NODE_OPTIONS`
+in `compose.yml`), each container keeps at most 30 MB of logs, and the machine has 1 GB of
+swap. During a deployment the machine holds the old and the new image at once.
+
+The rehearsal's machines had 4 GB of memory and 40 GB of disk, which the figures show to be far
+more than the site needs at rest. A smaller machine and memory under load were not tried.
 
 ## Rehearsal
 
-Not run yet. This section will say what was tried on a fresh VM, with the date and the
-figures, and what was not.
+Run by the maintainer on 2026-11-15 with two fresh Ubuntu 24.04 VMs at Hetzner and a private
+repository that holds the template with `VERSION` at `0.1.0`.
 
-Checked so far, without a machine: `infra/cloud-init.yml` against cloud-init's schema
+- **First machine, x64.** Set up from an earlier state of `infra/cloud-init.yml`, in which the
+  Let's Encrypt address was a value inside the proxy's Compose file. The set-up, the build,
+  the pull of the private image with the run's token and the start worked, and the site showed
+  the listings of a real Beds24 account. No certificate was issued: the address was mistyped,
+  and Let's Encrypt refused the account. The run ended red at the script's check of the
+  address, as it should. With the address corrected on the machine the certificate was issued,
+  and a second run was green. The address then became a setting of its own with the check in
+  the set-up.
+- **Second machine, ARM (CAX11).** Set up from the file as it is now. Everything worked at the
+  first attempt, the certificate included. The figures above are from this machine.
+
+**Tried** by these two runs: the machine from nothing on both architectures, with Docker from
+Ubuntu's archive, the firewall and the swap; the proxy with a certificate from Let's Encrypt
+and the redirect from HTTP; the template from a private repository with a private image; the
+site against a real Beds24 account; a failed check that turns the run red.
+
+**Not tried:** the set-up stopping on an address that was not filled in, beyond the check
+itself run by hand; the simulator beside the app (`SIM_IMAGE`); opening the site to search
+engines (`INDEXED`); a move to a new release and going back by a revert; a run for a commit
+that is no longer the head of `main`; a deployment by hand from a workstation; a restart of the
+machine; a certificate's renewal; a machine at another provider.
+
+Checked without a machine: `infra/cloud-init.yml` against cloud-init's schema
 (`cloud-init schema`, version 26.2), the proxy's and the site's Compose files with
 `docker compose config`, and the template's deploy step against stand-ins for `ssh` and
 `scripts/deploy.sh`: with a token, with the simulator, with a deployment that fails, and
