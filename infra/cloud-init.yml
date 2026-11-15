@@ -2,7 +2,8 @@
 # Turns a fresh Ubuntu 24.04 VM into the machine a site is deployed to: Docker, a firewall,
 # swap, the user "deploy" with its key, the directory /srv/site and the Traefik proxy that
 # compose.yml registers with. Paste it into the provider's user data when the VM is created,
-# with the two REPLACE_ values filled in. docs/deploying-a-site.md has the steps around it.
+# with the two REPLACE_ values filled in: the deploy key under "users" and the address under
+# "write_files". docs/deploying-a-site.md has the steps around it.
 
 # The group has to exist before the user: users are created before packages are installed.
 groups:
@@ -41,6 +42,11 @@ write_files:
         "log-driver": "json-file",
         "log-opts": { "max-size": "10m", "max-file": "3" }
       }
+  # The address of the Let's Encrypt account, which has to be a real one: without an account
+  # no certificate is issued.
+  - path: /srv/proxy/.env
+    content: |
+      ACME_EMAIL=REPLACE_WITH_AN_EMAIL_ADDRESS
   # The proxy: one per machine, started once. A site's stack joins the network "traefik" and
   # is found by its labels. Certificates come from Let's Encrypt over port 80, so the site's
   # name must point at this machine before the first deployment.
@@ -60,7 +66,7 @@ write_files:
             - --entrypoints.web.http.redirections.entrypoint.to=websecure
             - --entrypoints.web.http.redirections.entrypoint.scheme=https
             - --entrypoints.websecure.address=:443
-            - --certificatesresolvers.letsencrypt.acme.email=REPLACE_WITH_AN_EMAIL_ADDRESS
+            - --certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL:?}
             - --certificatesresolvers.letsencrypt.acme.storage=/acme/acme.json
             - --certificatesresolvers.letsencrypt.acme.httpchallenge=true
             - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web
@@ -82,6 +88,12 @@ runcmd:
   - ufw allow 443/tcp
   - ufw --force enable
   - systemctl enable --now docker
+  # Stops here, and shows in "cloud-init status", when the address above was not filled in.
+  - |
+    if grep -q REPLACE_WITH_ /srv/proxy/.env; then
+      echo "The address for Let's Encrypt in /srv/proxy/.env is not filled in" >&2
+      exit 1
+    fi
   - docker network create traefik
   - docker compose -f /srv/proxy/compose.yml up -d
   # Where scripts/deploy.sh puts a stack named "site".

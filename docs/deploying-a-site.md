@@ -23,7 +23,9 @@ demo's delivery.
    `ssh-keygen -t ed25519 -f site-deploy -N '' -C site-deploy`.
 2. **Fill in the machine's file.** In a copy of `infra/cloud-init.yml`, replace
    `REPLACE_WITH_THE_DEPLOY_PUBLIC_KEY` by the content of `site-deploy.pub` and
-   `REPLACE_WITH_AN_EMAIL_ADDRESS` by an address for the Let's Encrypt account.
+   `REPLACE_WITH_AN_EMAIL_ADDRESS` by a real address for the Let's Encrypt account. Without
+   a valid address no certificate is issued, and the set-up stops before it starts the proxy
+   when the value was left as it is.
 3. **Create the VM** with that file as its user data. If the provider has a firewall of its
    own, open the ports 22, 80 and 443 there too. The set-up takes a few minutes after the
    first start; `cloud-init status --wait` on the machine ends when it is through, and
@@ -66,6 +68,9 @@ machine and checks the address. A failure at any step ends the run red, with wha
 machine in the log; the version that ran before keeps running if the new image cannot be
 pulled.
 
+Only the head of `main` is deployed: a run for an older commit, also one that is started again
+later, ends without deploying.
+
 ## A new release, and going back
 
 - **A new release:** change `VERSION` in the workflow file and push.
@@ -79,9 +84,14 @@ pulled.
 
 ## The machine afterwards
 
-- **The proxy** is `/srv/proxy/compose.yml`, owned by root. A change to it, such as a new
-  Traefik version, is made in that file, followed by `docker compose up -d` in the directory.
-  The certificates are in the volume `proxy_acme` and are renewed by the proxy.
+- **The proxy** is `/srv/proxy/compose.yml` with the Let's Encrypt address in `/srv/proxy/.env`,
+  owned by root. A change, such as a new Traefik version, is made in these files, followed by
+  `docker compose up -d` in the directory. The certificates are in the volume `proxy_acme` and
+  are renewed by the proxy.
+- **When the browser warns about the certificate,** the proxy serves its own stand-in because
+  it got none. `docker compose logs` in `/srv/proxy` says why; the usual causes are a host name
+  that does not point at the machine yet, a closed port 80 and an address Let's Encrypt
+  refuses.
 - **Updates:** Ubuntu's unattended upgrades cover the system and Docker, which is installed
   from Ubuntu's archive. A new kernel waits for a restart of the machine.
 - **Watching it:** nothing on the machine reports an outage. An external uptime check on the
