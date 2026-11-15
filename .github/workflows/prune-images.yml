@@ -1,0 +1,41 @@
+# Removes image versions from the registry that nothing can deploy any more: every merge to
+# main pushes a pair. A workflow of its own, so a failure in tidying up never turns a merge red.
+name: Prune images
+
+on:
+  schedule:
+    - cron: '17 4 * * 1'
+  workflow_dispatch:
+    inputs:
+      keep-commits:
+        description: How many commit-tagged versions of each image stay
+        default: '10'
+      dry-run:
+        description: Print the decision and delete nothing
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+  packages: write
+
+# Shared with the release workflow, so a release tag is never put on a version between the
+# moment this run lists the versions and the moment it deletes them.
+concurrency:
+  group: registry-tags
+  cancel-in-progress: false
+
+jobs:
+  prune:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          KEEP_COMMITS: ${{ inputs.keep-commits || '10' }}
+          # The weekly run has no inputs and deletes; a run by hand deletes only when told to.
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry-run }}
+        run: node scripts/prune-images.mjs

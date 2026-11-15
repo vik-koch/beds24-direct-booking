@@ -51,6 +51,17 @@ decides how a commit gets from `main` onto the demo's machine. What weighs on it
 | One architecture, the demo machine's, built on a runner of that architecture | One job, no emulation. | The published image runs on that architecture only, and the choice has to follow the machine. The pull request's `stack` job builds on the other architecture, so a Dockerfile that works on one alone still fails. | Chosen: x64. |
 | Images tagged `latest` or `main` | Short settings. | The machine cannot tell what it runs, and a deployment is not repeatable. | Rejected: every deployment names the commit. |
 
+## When old images are removed: options
+
+<!-- prettier-ignore -->
+| Option | For | Against | Result |
+|---|---|---|---|
+| A job at the end of the run on `main`, beside the deployment | The registry is tidied the moment it grows, and no second workflow exists. | A failure in tidying up turns a merge red although the demo is deployed, or is hidden if the job may fail. A trial run by hand, with another number to keep or without deleting, still needs a trigger of its own. | Rejected. |
+| A workflow of its own, weekly and by hand | A merge's result says only whether the demo is deployed. A run by hand can show what would be removed before anything is. One concurrency group with the release workflow keeps tagging and removing apart. | Until the next run the registry holds up to a week's merges more than the ten commits it keeps. GitHub pauses a schedule after 60 days without activity in the repository, in which time nothing is pushed either. | Chosen. |
+
+The rule counts versions and not their age, so both options end in the same registry. Compute
+did not weigh: the job reads two lists and a few manifests and runs for seconds.
+
 ## What this rests on
 
 - **Verified:** the script's paths (success, a start that fails on the machine, a site that
@@ -94,7 +105,9 @@ release tag work as described. Both did, on 2026-11-13, and the condition is met
   variables `DEPLOY_HOST`, `DEPLOY_KNOWN_HOSTS` and `DEMO_APP_DOMAIN`, the directory
   `/srv/beds24-demo` owned by `deploy`, the DNS record, and public visibility for the two image
   packages, since the machine pulls without a login.
-- **Images pile up in the registry,** one pair per merge. Removing old ones is a job of its own.
+- **Images pile up in the registry,** one pair per merge. A weekly workflow removes them with
+  `scripts/prune-images.mjs`: it keeps every release and the newest ten commits of each image,
+  so a commit further back than that can no longer be tagged as a release.
 - **A site of its own** builds its image in a private repository from a released tag and its
   content, and calls the same script against its own machine, which then also needs the proxy.
   That delivery, with a machine set up from nothing, is a separate piece of work.

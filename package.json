@@ -12,7 +12,7 @@
     "build": "ng build",
     "serve": "node dist/beds24-direct-booking/server/server.mjs",
     "sim": "node sim/server.ts",
-    "test": "ng test --watch=false && vitest run --root sim --globals",
+    "test": "ng test --watch=false && vitest run --root sim --globals && node --test \"scripts/*.test.mjs\"",
     "lint": "ng lint --max-warnings 0 && tsc -p sim",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
