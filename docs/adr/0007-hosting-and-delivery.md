@@ -1,6 +1,6 @@
 # ADR 7: Hosting and delivery
 
-Status: accepted, 2026-11-13, on the condition below. Group: stack.
+Status: accepted, 2026-11-13. Group: stack.
 
 ## Context
 
@@ -62,13 +62,23 @@ decides how a commit gets from `main` onto the demo's machine. What weighs on it
   to the machine, the pull and the start worked, and the script reported the failure with the
   containers' state. The failure itself was an assumption nobody had checked: the images were
   built for ARM and the machine is x64.
-- **Not run when this was written:** a deployment that ends with the demo answering, and the
-  release workflow.
+- **Shown by the second deployment and the first release** (2026-11-13): a deployment that
+  ends with the demo answering, and the release workflow. The section below has the result.
 
-## Condition
+## Condition, and its result
 
-The ADR is accepted on the condition that the first deployment from `main` and the first release
-tag work as described. The result is added here when it is known.
+The ADR was accepted on the condition that the first deployment from `main` and the first
+release tag work as described. Both did, on 2026-11-13, and the condition is met:
+
+- **The deployment.** The first run on `main` failed at the start of the containers, as told
+  above. The run for the fix built and pushed the x64 images and deployed them. Afterwards
+  `https://beds24.vikkoch.com/` answered 200 with the simulator's apartments, the response
+  headers the stack sets and a certificate the proxy had fetched, and plain HTTP was redirected
+  to HTTPS.
+- **The release.** The tag `v0.1.0` on that commit ran the release workflow, and the registry
+  lists `0.1.0` beside the commit's tag for both images.
+- **Checked again on 2026-11-15:** the address, its headers, the redirect and the registry's
+  tags are as described.
 
 ## Consequences
 
