@@ -1,0 +1,89 @@
+#cloud-config
+# Turns a fresh Ubuntu 24.04 VM into the machine a site is deployed to: Docker, a firewall,
+# swap, the user "deploy" with its key, the directory /srv/site and the Traefik proxy that
+# compose.yml registers with. Paste it into the provider's user data when the VM is created,
+# with the two REPLACE_ values filled in. docs/deploying-a-site.md has the steps around it.
+
+# The group has to exist before the user: users are created before packages are installed.
+groups:
+  - docker
+
+users:
+  # The image's own admin user stays; without this line it would be dropped.
+  - default
+  - name: deploy
+    gecos: Deploys the site
+    groups: [docker]
+    shell: /bin/bash
+    lock_passwd: true
+    ssh_authorized_keys:
+      # The public half of a key made for this machine alone. The private half is the
+      # secret DEPLOY_SSH_PRIVATE_KEY of the site's repository.
+      - REPLACE_WITH_THE_DEPLOY_PUBLIC_KEY
+
+package_update: true
+package_upgrade: true
+# Docker from Ubuntu's own archive, so the machine's unattended upgrades cover it.
+packages:
+  - docker.io
+  - docker-compose-v2
+  - ufw
+
+swap:
+  filename: /swapfile
+  size: 1G
+
+write_files:
+  # A container's output on disk is capped, so logs cannot fill the machine.
+  - path: /etc/docker/daemon.json
+    content: |
+      {
+        "log-driver": "json-file",
+        "log-opts": { "max-size": "10m", "max-file": "3" }
+      }
+  # The proxy: one per machine, started once. A site's stack joins the network "traefik" and
+  # is found by its labels. Certificates come from Let's Encrypt over port 80, so the site's
+  # name must point at this machine before the first deployment.
+  - path: /srv/proxy/compose.yml
+    content: |
+      name: proxy
+      services:
+        traefik:
+          image: traefik:v3.6
+          restart: unless-stopped
+          ports: ['80:80', '443:443']
+          command:
+            - --providers.docker=true
+            - --providers.docker.exposedbydefault=false
+            - --providers.docker.network=traefik
+            - --entrypoints.web.address=:80
+            - --entrypoints.web.http.redirections.entrypoint.to=websecure
+            - --entrypoints.web.http.redirections.entrypoint.scheme=https
+            - --entrypoints.websecure.address=:443
+            - --certificatesresolvers.letsencrypt.acme.email=REPLACE_WITH_AN_EMAIL_ADDRESS
+            - --certificatesresolvers.letsencrypt.acme.storage=/acme/acme.json
+            - --certificatesresolvers.letsencrypt.acme.httpchallenge=true
+            - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web
+          volumes:
+            - /var/run/docker.sock:/var/run/docker.sock:ro
+            - acme:/acme
+          networks: [traefik]
+      networks:
+        traefik:
+          external: true
+      volumes:
+        acme:
+
+runcmd:
+  # Docker publishes 80 and 443 past ufw by itself; the rules below say what is meant and
+  # close everything else that may ever listen on the machine.
+  - ufw allow OpenSSH
+  - ufw allow 80/tcp
+  - ufw allow 443/tcp
+  - ufw --force enable
+  - systemctl enable --now docker
+  - docker network create traefik
+  - docker compose -f /srv/proxy/compose.yml up -d
+  # Where scripts/deploy.sh puts a stack named "site".
+  - mkdir -p /srv/site
+  - chown deploy:deploy /srv/site

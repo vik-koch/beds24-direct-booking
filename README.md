@@ -18,6 +18,8 @@ is a [simulator](sim/README.md).
   really do, from a spike against a real account.
 - [docs/working-agreements.md](docs/working-agreements.md): how the project is built, tested
   and reviewed.
+- [docs/deploying-a-site.md](docs/deploying-a-site.md): from an empty machine to a live site
+  of its own, built in a private repository from a release.
 - [CLAUDE.md](CLAUDE.md): the instructions the coding agent works under.
 
 ## Running it
