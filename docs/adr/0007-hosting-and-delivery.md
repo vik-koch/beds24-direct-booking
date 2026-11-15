@@ -62,6 +62,22 @@ decides how a commit gets from `main` onto the demo's machine. What weighs on it
 The rule counts versions and not their age, so both options end in the same registry. Compute
 did not weigh: the job reads two lists and a few manifests and runs for seconds.
 
+## The demo's delivery and a site's
+
+A site of its own reuses the stack and the script and differs in what it has to bring itself.
+[Deploying a site of its own](../deploying-a-site.md) has the steps.
+
+<!-- prettier-ignore -->
+| | The demo | A site of its own |
+|---|---|---|
+| Machine | Shared, exists, runs a proxy already. | Its own, set up from nothing by `infra/cloud-init.yml`, which also starts the proxy. |
+| Where the image is built | Here, on `main`. | In the site's private repository, from a released version and the site's content, because the pages are prerendered. The workflow is the template `infra/site-deploy.yml`. |
+| Architecture | x64, fixed here. | The runner the site's workflow names, to match its machine. |
+| Registry | Public packages, pulled without a login. | The private repository's packages. The machine is logged in with the run's own token for the length of the run, so no long-lived credential is stored on it. |
+| What deploys | A merge to `main` here. | A push to the site's `main`. A new release reaches the site when its workflow names it. |
+| Beds24 | The simulator beside the app. | The site's Beds24 account, with the token as a secret. |
+| Search engines | Kept out. | Let in by a variable. |
+
 ## What this rests on
 
 - **Verified:** the script's paths (success, a start that fails on the machine, a site that
@@ -109,5 +125,5 @@ release tag work as described. Both did, on 2026-11-13, and the condition is met
   `scripts/prune-images.mjs`: it keeps every release and the newest ten commits of each image,
   so a commit further back than that can no longer be tagged as a release.
 - **A site of its own** builds its image in a private repository from a released tag and its
-  content, and calls the same script against its own machine, which then also needs the proxy.
-  That delivery, with a machine set up from nothing, is a separate piece of work.
+  content, and calls the same script against its own machine, which it sets up with the
+  proxy from one cloud-init file. The section above says what differs.

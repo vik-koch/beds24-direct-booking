@@ -1,0 +1,108 @@
+# A template: the workflow of a site of its own. It does not run in this repository. A private
+# repository copies it to .github/workflows/deploy.yml and sets the secrets and variables that
+# docs/deploying-a-site.md lists. Every push to that repository's main builds the site's image
+# from a released version of beds24-direct-booking and deploys it to the site's machine.
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  # The released version this site is built from. A move to a new release is a change here.
+  VERSION: 0.1.0
+
+permissions:
+  contents: read
+  packages: write
+
+# One deployment at a time, and none is dropped half way.
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    # A run by hand deploys main too, never another branch.
+    if: github.ref == 'refs/heads/main'
+    # The image is built for the runner's architecture, which must be the machine's:
+    # ubuntu-latest for x64, ubuntu-24.04-arm for ARM.
+    runs-on: ubuntu-latest
+    environment:
+      name: site
+      url: https://${{ vars.APP_DOMAIN }}
+    steps:
+      # The site's own repository, then the released version beside it.
+      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7
+        with:
+          repository: vik-koch/beds24-direct-booking
+          ref: v${{ env.VERSION }}
+          path: app
+
+      # The site's content goes into app/ here, before the build: the pages are prerendered,
+      # so the image holds them. Releases up to 0.1.0 have no content files yet, and the
+      # image is built from the release as it is.
+
+      - name: Build and push the image
+        run: |
+          image="ghcr.io/${GITHUB_REPOSITORY,,}-web:sha-$GITHUB_SHA"
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          docker build -t "$image" app
+          docker push "$image"
+          echo "WEB_IMAGE=$image" >> "$GITHUB_ENV"
+
+      - name: Deploy
+        env:
+          DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
+          DEPLOY_KNOWN_HOSTS: ${{ vars.DEPLOY_KNOWN_HOSTS }}
+          DEPLOY_SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+          APP_DOMAIN: ${{ vars.APP_DOMAIN }}
+          BEDS24_TOKEN: ${{ secrets.BEDS24_TOKEN }}
+          INDEXED: ${{ vars.INDEXED }}
+          SIM_IMAGE: ${{ vars.SIM_IMAGE }}
+          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          : "${DEPLOY_HOST:?variable DEPLOY_HOST is not set}"
+          : "${DEPLOY_KNOWN_HOSTS:?variable DEPLOY_KNOWN_HOSTS is not set}"
+          : "${DEPLOY_SSH_PRIVATE_KEY:?secret DEPLOY_SSH_PRIVATE_KEY is not set}"
+          : "${APP_DOMAIN:?variable APP_DOMAIN is not set}"
+          # An older commit must not replace a newer one: a slow or repeated run stops here.
+          head=$(git ls-remote origin refs/heads/main | cut -f1)
+          if [ "$head" != "$GITHUB_SHA" ]; then
+            echo "::notice::main is at $head now, so $GITHUB_SHA is not deployed"
+            exit 0
+          fi
+          umask 077
+          printf '%s\n' "$DEPLOY_SSH_PRIVATE_KEY" > "$RUNNER_TEMP/key"
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > "$RUNNER_TEMP/known_hosts"
+          export SSH_OPTS="-i $RUNNER_TEMP/key -o UserKnownHostsFile=$RUNNER_TEMP/known_hosts -o StrictHostKeyChecking=yes -o ConnectTimeout=10"
+
+          {
+            echo "STACK_NAME=site"
+            echo "APP_DOMAIN=$APP_DOMAIN"
+            echo "WEB_IMAGE=$WEB_IMAGE"
+            if [ -n "$SIM_IMAGE" ]; then
+              # A site without a Beds24 account yet runs the simulator beside the app.
+              echo "SIM_IMAGE=$SIM_IMAGE"
+              echo "COMPOSE_PROFILES=sim"
+              echo "BEDS24_URL=http://sim:4300/v2"
+              echo "BEDS24_TOKEN=simulator"
+            else
+              : "${BEDS24_TOKEN:?secret BEDS24_TOKEN is not set}"
+              echo "BEDS24_URL=https://api.beds24.com/v2"
+              echo "BEDS24_TOKEN=$BEDS24_TOKEN"
+            fi
+            # Search engines are kept out until the variable INDEXED is "true".
+            if [ "$INDEXED" = true ]; then echo "ROBOTS_TAG="; fi
+          } > "$RUNNER_TEMP/site.env"
+
+          # The image is private, so the machine pulls with this run's token. The token ends
+          # with the run, and the login is removed again whatever happens.
+          # shellcheck disable=SC2086
+          machine() { ssh $SSH_OPTS "deploy@$DEPLOY_HOST" "$@"; }
+          trap 'machine docker logout ghcr.io' EXIT
+          machine docker login ghcr.io -u "${{ github.actor }}" --password-stdin <<<"$REGISTRY_TOKEN"
+
+          app/scripts/deploy.sh "$DEPLOY_HOST" "$RUNNER_TEMP/site.env"
