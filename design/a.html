@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="de" data-season="winter">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Direction A: Hüttenbuch · Firn & Farn</title>
+    <link rel="stylesheet" href="a.css" />
+  </head>
+  <body>
+    <a class="skip" href="#freie-wochen">Zu den freien Wochen</a>
+    <p class="notice">Demo: Firn &amp; Farn ist erfunden. Die Häuser und Preise gibt es nicht.</p>
+
+    <header class="top">
+      <a class="wordmark" href="#">Firn <span>&amp;</span> Farn</a>
+      <button class="menu-button" type="button" aria-controls="menu">Menü</button>
+      <nav id="menu" aria-label="Hauptmenü">
+        <a href="#freie-wochen">Freie Wochen</a>
+        <details>
+          <summary>Wohnungen</summary>
+          <div class="submenu">
+            <a href="#wohnungen">Alle im Überblick</a>
+            <a href="#">Zirbe</a>
+            <a href="#">Lärche</a>
+            <a href="#">Ahorn</a>
+          </div>
+        </details>
+        <a href="#lage">Lage</a>
+        <a href="#ueber-uns">Über uns</a>
+      </nav>
+      <div class="switches">
+        <div class="season-switch" role="group" aria-label="Saison">
+          <button type="button" data-go="winter">Winter</button>
+          <button type="button" data-go="summer">Sommer</button>
+        </div>
+        <div class="lang-switch" role="group" aria-label="Sprache">
+          <a href="#" aria-current="true" lang="de">DE</a>
+          <a href="#" lang="en">EN</a>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <img
+          class="hero-photo"
+          data-for="winter"
+          src="pictures/hero-winter.jpg"
+          alt="Blick von der Piste ins verschneite Glemmtal, über dem Tal liegt Nebel."
+        />
+        <img
+          class="hero-photo"
+          data-for="summer"
+          src="pictures/hero-summer.jpg"
+          alt="Blick über eine Almwiese und Fichten auf die grünen Hänge über Saalbach."
+        />
+        <div class="hero-copy">
+          <h1>Deine Woche in Saalbach</h1>
+          <p class="lead">Drei Ferienwohnungen mitten im Ort, direkt bei den Gastgebern gebucht.</p>
+          <ul class="features">
+            <li>
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M3 11 12 4l9 7M5 10v10h14V10M10 20v-6h4v6" />
+              </svg>
+              Für 2, 4 oder 6 Gäste
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M4 6h16v14H4zM4 10h16M8 3v5M16 3v5M8 14h3M13 14h3" />
+              </svg>
+              Samstag bis Samstag
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M3 12V4h8l10 10-8 8zM7.5 8.5h.01M10 15l5-5" />
+              </svg>
+              Ohne Portalprovision
+            </li>
+          </ul>
+          <a class="button" href="#freie-wochen">Freie Wochen ansehen</a>
+        </div>
+      </section>
+
+      <section class="weeks" id="freie-wochen">
+        <svg class="stamp" viewBox="0 0 200 200" aria-hidden="true">
+          <defs>
+            <path id="ring" d="M100 100m-74 0a74 74 0 1 1 148 0a74 74 0 1 1-148 0" />
+          </defs>
+          <circle cx="100" cy="100" r="96" />
+          <circle cx="100" cy="100" r="90" />
+          <circle cx="100" cy="100" r="54" />
+          <text><textPath href="#ring" startOffset="2%">SAALBACH · 1003 M ·</textPath></text>
+          <text>
+            <textPath href="#ring" startOffset="52%" data-season-name></textPath>
+          </text>
+          <text class="stamp-word" x="100" y="96" text-anchor="middle">FIRN</text>
+          <text class="stamp-word" x="100" y="124" text-anchor="middle">&amp; FARN</text>
+        </svg>
+
+        <div class="weeks-head">
+          <h2>Freie Wochen <span data-season-name></span></h2>
+          <div class="season-nav" role="group" aria-label="Saison der Liste">
+            <button type="button" data-go="winter">Winter 2026/27</button>
+            <button type="button" data-go="summer">Sommer 2027</button>
+          </div>
+        </div>
+
+        <fieldset class="room-tabs">
+          <legend>Wohnung</legend>
+          <label><input type="radio" name="room" value="zirbe" /><span>Zirbe</span></label>
+          <label
+            ><input type="radio" name="room" value="laerche" checked /><span>Lärche</span></label
+          >
+          <label><input type="radio" name="room" value="ahorn" /><span>Ahorn</span></label>
+        </fieldset>
+
+        <table data-room="laerche">
+          <thead>
+            <tr>
+              <th scope="col">Woche</th>
+              <th scope="col" data-room="zirbe">Zirbe <small>2 Gäste · 34 m²</small></th>
+              <th scope="col" data-room="laerche">Lärche <small>4 Gäste · 61 m²</small></th>
+              <th scope="col" data-room="ahorn">Ahorn <small>6 Gäste · 96 m²</small></th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+
+        <p class="weeks-empty">
+          Die Wochen für den <span data-season-name></span> sind noch nicht freigegeben. Sie
+          erscheinen hier, sobald die Preise feststehen.
+        </p>
+        <p class="weeks-note">
+          Preis pro Woche mit Endreinigung, zuzüglich Ortstaxe von 3,50 € pro Erwachsenem und Nacht.
+        </p>
+
+        <div class="pick" hidden>
+          <output aria-live="polite"></output>
+          <a class="button" href="#">Weiter zur Buchung</a>
+        </div>
+      </section>
+    </main>
+
+    <script src="mock.js"></script>
+  </body>
+</html>

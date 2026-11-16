@@ -1,0 +1,709 @@
+/* Direction B, "Preistafel": the price board at a lift's valley station. Slate is the board,
+   pale stone the ground around it, larch its frame, and the season is the colour of the
+   board's head. */
+
+@font-face {
+  font-family: Barlow;
+  src: url('fonts/barlow-latin-400-normal.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: Barlow;
+  src: url('fonts/barlow-latin-500-normal.woff2') format('woff2');
+  font-weight: 500;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: Barlow;
+  src: url('fonts/barlow-latin-600-normal.woff2') format('woff2');
+  font-weight: 600;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Barlow Condensed';
+  src: url('fonts/barlow-condensed-latin-500-normal.woff2') format('woff2');
+  font-weight: 500;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Barlow Condensed';
+  src: url('fonts/barlow-condensed-latin-600-normal.woff2') format('woff2');
+  font-weight: 600;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Barlow Condensed';
+  src: url('fonts/barlow-condensed-latin-700-normal.woff2') format('woff2');
+  font-weight: 700;
+  font-display: swap;
+}
+
+/* Tokens, named as Tailwind's theme names them. */
+:root {
+  --font-sans: Barlow, system-ui, sans-serif;
+  --font-display: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+
+  --color-stone: #dfddd7;
+  --color-on-stone: #1b2126;
+  --color-on-stone-soft: #4d555b;
+  --color-slate: #1e2429;
+  --color-slate-raised: #2b333a;
+  --color-grid: #46515a;
+  --color-edge: #86939d;
+  --color-on-slate: #f4f6f7;
+  --color-on-slate-soft: #b3bdc4;
+  --color-wood: #a8733f;
+
+  --color-accent: #8edcf8;
+  --color-on-accent: #07212d;
+
+  --radius-control: 0.125rem;
+}
+
+[data-season='summer'] {
+  --color-accent: #abe25e;
+  --color-on-accent: #122b08;
+}
+
+*,
+::before,
+::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 6.5rem;
+}
+
+body {
+  margin: 0;
+  background: var(--color-stone);
+  color: var(--color-on-stone);
+  font: 400 1rem/1.5 var(--font-sans);
+  font-variant-numeric: tabular-nums;
+}
+
+::selection {
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+}
+
+a {
+  color: inherit;
+  text-underline-offset: 0.2em;
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-on-slate);
+  outline-offset: 2px;
+}
+
+.skip {
+  position: absolute;
+  left: -100rem;
+}
+
+.skip:focus {
+  left: 0.5rem;
+  top: 0.5rem;
+  z-index: 30;
+  padding: 0.5rem 0.75rem;
+  background: var(--color-stone);
+}
+
+/* The board's lettering. */
+.wordmark,
+.menu-button,
+.season-switch button,
+.lang-switch a,
+.season-nav button,
+.room-tabs span,
+thead th,
+h1,
+h2,
+.button {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+}
+
+.notice {
+  margin: 0;
+  padding: 0.375rem 1rem;
+  background: var(--color-wood);
+  color: #1d1208;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  text-align: center;
+}
+
+.top {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1.5rem;
+  padding: 0.5rem 1rem;
+  background: var(--color-slate);
+  color: var(--color-on-slate);
+}
+
+.wordmark {
+  margin-right: auto;
+  font-size: 1.625rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+}
+
+.wordmark span {
+  color: var(--color-accent);
+}
+
+.menu-button,
+.season-switch button,
+.lang-switch a,
+.season-nav button {
+  min-height: 2.75rem;
+  padding: 0 0.875rem;
+  border: 1px solid var(--color-edge);
+  border-radius: var(--radius-control);
+  background: none;
+  color: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+}
+
+nav {
+  order: 3;
+  display: none;
+  flex-basis: 100%;
+  flex-direction: column;
+}
+
+[data-menu-open] nav {
+  display: flex;
+}
+
+nav a,
+nav summary {
+  display: block;
+  padding: 0.75rem 0;
+  border-top: 1px solid var(--color-grid);
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+nav .submenu a {
+  padding-left: 1rem;
+}
+
+/* On a phone the two switches take the header's second line, side by side. */
+.switches {
+  order: 2;
+  display: flex;
+  flex-basis: 100%;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.season-switch,
+.lang-switch,
+.season-nav {
+  display: flex;
+}
+
+.season-switch > *,
+.lang-switch > *,
+.season-nav > * {
+  display: grid;
+  place-items: center;
+  text-decoration: none;
+}
+
+.season-switch > * + *,
+.lang-switch > * + *,
+.season-nav > * + * {
+  border-left: 0;
+}
+
+.switches [aria-pressed='true'],
+.switches [aria-current],
+.season-nav [aria-pressed='true'] {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+}
+
+.hero {
+  display: grid;
+  grid-template-rows: clamp(16rem, 44svh, 34rem) auto;
+  max-width: 120rem;
+  margin: 0 auto;
+}
+
+.hero-photo {
+  grid-area: 1 / 1;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+html:not([data-season='winter']) [data-for='winter'],
+html:not([data-season='summer']) [data-for='summer'] {
+  display: none;
+}
+
+/* The gradient belongs to the text block, not to the photo. */
+.hero-copy {
+  grid-area: 1 / 1;
+  align-self: end;
+  padding: 3rem 1rem 1.25rem;
+  background: linear-gradient(
+    to top,
+    rgb(14 18 21 / 0.92),
+    rgb(14 18 21 / 0.74) calc(100% - 3rem),
+    rgb(14 18 21 / 0)
+  );
+  color: #fff;
+}
+
+h1 {
+  max-width: 22ch;
+  margin-block: 0 0.5rem;
+  font-size: clamp(2.125rem, 1.4rem + 3.4vw, 4rem);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 0.95;
+}
+
+.lead {
+  margin: 0;
+  font-size: clamp(1.0625rem, 1rem + 0.4vw, 1.3125rem);
+  font-weight: 500;
+}
+
+/* The strip under the photo is the board's first line: three facts and the way in. */
+.strip {
+  display: grid;
+  background: var(--color-slate);
+  color: var(--color-on-slate);
+}
+
+.features {
+  display: contents;
+  list-style: none;
+}
+
+.features li {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 1rem;
+  border-top: 1px solid var(--color-grid);
+  color: var(--color-on-slate-soft);
+}
+
+.features b {
+  color: var(--color-on-slate);
+  font-weight: 600;
+}
+
+.features svg {
+  flex: none;
+  width: 1.5rem;
+  height: 1.5rem;
+  fill: none;
+  stroke: var(--color-accent);
+  stroke-width: 1.75;
+  stroke-linecap: square;
+}
+
+.button {
+  display: grid;
+  place-items: center;
+  min-height: 3.5rem;
+  padding: 0 1.5rem;
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-decoration: none;
+  transition: background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.button:hover {
+  background: var(--color-on-slate);
+}
+
+.button:focus-visible {
+  outline-offset: -6px;
+  outline-color: var(--color-on-accent);
+}
+
+/* The board hangs in a larch frame on the stone. */
+.weeks {
+  max-width: 70rem;
+  margin: 1.5rem auto;
+  border-block: 0.375rem solid var(--color-wood);
+  background: var(--color-slate);
+  color: var(--color-on-slate);
+}
+
+.weeks-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1.5rem;
+  padding: 1rem;
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+}
+
+h2 {
+  margin: 0;
+  font-size: 1.375rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  line-height: 1;
+}
+
+h2 span {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: clamp(2.5rem, 1.6rem + 4.5vw, 4.5rem);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 0.9;
+}
+
+.season-nav button {
+  border-color: var(--color-on-accent);
+}
+
+.season-nav [aria-pressed='true'] {
+  border-color: var(--color-on-accent);
+  background: var(--color-on-accent);
+  color: var(--color-accent);
+}
+
+.weeks-head :focus-visible {
+  outline-color: var(--color-on-accent);
+}
+
+.room-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid var(--color-grid);
+}
+
+.room-tabs legend {
+  position: absolute;
+  clip-path: inset(50%);
+}
+
+.room-tabs input,
+.stay input {
+  position: absolute;
+  opacity: 0;
+}
+
+.room-tabs span {
+  display: grid;
+  place-items: center;
+  min-height: 3rem;
+  color: var(--color-on-slate-soft);
+  font-size: 1.125rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+}
+
+.room-tabs label + label span {
+  border-left: 1px solid var(--color-grid);
+}
+
+.room-tabs :checked + span {
+  background: var(--color-on-slate);
+  color: var(--color-slate);
+}
+
+.room-tabs :focus-visible + span,
+.stay :focus-visible + .price {
+  outline: 3px solid var(--color-on-slate);
+  outline-offset: -3px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 0;
+  border-bottom: 1px solid var(--color-grid);
+  text-align: left;
+}
+
+thead th {
+  padding: 0.625rem 1rem;
+  color: var(--color-on-slate);
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  line-height: 1.1;
+  vertical-align: bottom;
+}
+
+thead small {
+  display: block;
+  white-space: nowrap;
+  color: var(--color-on-slate-soft);
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+tbody th {
+  padding: 0 1rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+td {
+  width: 1%;
+  border-left: 1px solid var(--color-grid);
+  white-space: nowrap;
+}
+
+/* A price fills its cell of the board; choosing it turns the cell to the season's colour. */
+.price,
+.taken span {
+  display: grid;
+  align-items: center;
+  justify-items: end;
+  min-width: 7rem;
+  min-height: 3.25rem;
+  padding: 0 1rem;
+}
+
+.price {
+  font-family: var(--font-display);
+  font-size: 1.625rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+}
+
+.stay:hover .price {
+  background: var(--color-slate-raised);
+}
+
+.stay :checked + .price {
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+}
+
+.taken span {
+  color: var(--color-on-slate-soft);
+  font-size: 0.9375rem;
+}
+
+.weeks-empty {
+  display: none;
+  margin: 0;
+  padding: 2rem 1rem;
+  border-bottom: 1px solid var(--color-grid);
+  font-size: 1.125rem;
+}
+
+[data-empty] .weeks-empty {
+  display: block;
+}
+
+[data-empty] :is(table, .room-tabs, .weeks-note) {
+  display: none;
+}
+
+.weeks-note {
+  max-width: 46rem;
+  margin: 0;
+  padding: 0.875rem 1rem;
+  color: var(--color-on-slate-soft);
+  font-size: 0.875rem;
+}
+
+.pick {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  padding: 0.5rem 0.5rem 0.5rem 1rem;
+  background: var(--color-on-slate);
+  color: var(--color-slate);
+}
+
+.pick[hidden] {
+  display: none;
+}
+
+.pick output {
+  font-weight: 600;
+}
+
+.pick .button {
+  min-height: 3rem;
+  background: var(--color-slate);
+  color: var(--color-on-slate);
+}
+
+.pick .button:focus-visible {
+  outline-color: var(--color-on-slate);
+}
+
+@media (width < 48rem) {
+  table:not([data-room='zirbe']) [data-room='zirbe'],
+  table:not([data-room='laerche']) [data-room='laerche'],
+  table:not([data-room='ahorn']) [data-room='ahorn'] {
+    display: none;
+  }
+
+  thead th:first-child {
+    width: 100%;
+  }
+
+  .weeks {
+    margin-block: 0;
+  }
+}
+
+@media (width >= 48rem) {
+  .top {
+    flex-wrap: nowrap;
+    padding-inline: 2rem;
+  }
+
+  .menu-button,
+  .room-tabs {
+    display: none;
+  }
+
+  nav {
+    order: 0;
+    display: flex;
+    flex-basis: auto;
+    flex-direction: row;
+    align-items: center;
+    gap: 1.5rem;
+  }
+
+  nav a,
+  nav summary {
+    padding: 0.5rem 0;
+    border: 0;
+  }
+
+  nav details {
+    position: relative;
+  }
+
+  nav .submenu {
+    position: absolute;
+    top: 100%;
+    left: -1rem;
+    width: 13rem;
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--color-grid);
+    background: var(--color-slate-raised);
+  }
+
+  nav .submenu a {
+    padding-left: 0;
+  }
+
+  .switches {
+    order: 0;
+    flex-basis: auto;
+  }
+
+  .hero {
+    grid-template-rows: clamp(22rem, 60svh, 40rem) auto;
+  }
+
+  .hero-copy {
+    padding: 3rem 2rem 1.75rem;
+  }
+
+  .strip {
+    grid-template-columns: repeat(3, 1fr) auto;
+  }
+
+  .features li {
+    padding: 1rem 1.25rem 1rem 2rem;
+    border-top: 0;
+    border-right: 1px solid var(--color-grid);
+  }
+
+  .weeks {
+    margin-block: 2.5rem;
+    border: 0.5rem solid var(--color-wood);
+  }
+
+  .weeks-head {
+    padding: 1.25rem 1.5rem;
+  }
+
+  thead th,
+  tbody th,
+  .weeks-note {
+    padding-inline: 1.5rem;
+  }
+
+  td {
+    width: 21%;
+  }
+
+  .price,
+  .taken span {
+    padding-inline: 1.5rem;
+  }
+}
+
+/* A low window, or a page zoomed to 200%, has no room for a bar that stays in view. */
+@media (height < 30rem) {
+  .pick {
+    position: static;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .button {
+    transition: none;
+  }
+}
