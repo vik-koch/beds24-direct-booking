@@ -36,13 +36,14 @@ repository.
   are the home page's section anchors. An apartment's slug is the same in every language.
 - **The notice** (`notice` in a texts file) is an optional line above the header, with an
   optional link. Left out, no line is shown.
-- **The seasons** (`seasons` in `site.json`) are `winter`, `summer` or both, each with its
-  hero photo. With both, each names the day it starts as `MM-DD` and lasts until the other
-  starts; 29 February cannot be a start. A single season has no start and the site shows no
-  switch. A texts file names exactly the listed seasons in `seasons` (the switch's label and
-  each name) and in `hero` (each photo's alternative text), beside the hero's lead, its three
-  features and its button. A feature's icon is one of `house`, `calendar`, `tag`, `mountain`,
-  `users` and `key`. How the page picks its season is [ADR 8](adr/0008-the-season-in-the-page.md).
+- **The seasons** (`seasons` in `site.json`) are `winter`, `summer` or both, each with its hero
+  photo. With both, each names the day it starts as `MM-DD` and lasts until the other starts; 29
+  February cannot be a start. A single season has no start and the site shows no switch. A texts
+  file names exactly the listed seasons in `seasons` (the switch's label and each name) and in
+  `hero` (each photo's alternative text), beside the hero's lead, up to five features and its
+  button. A feature's icon is any [Lucide](https://lucide.dev/icons) icon by its name there,
+  such as `calendar-days`; only the icons the texts name go into the build. How the page picks
+  its season is [ADR 8](adr/0008-the-season-in-the-page.md).
 - **A picture** is a file in `pictures/` with an optional `credit`: its title, author, source
   address and licence with its address. The picture credits page lists every credited picture.
   Pictures are served at `/pictures/<file>` and kept by browsers for a year, like the fonts:
@@ -85,4 +86,5 @@ The variable `CONTENT_DIR` names the folder; without it the demo's is used.
 CONTENT_DIR=content/site .` with the folder copied there first, as
   [`infra/site-deploy.yml`](../infra/site-deploy.yml) does.
 - **In the tests,** [`e2e/content/`](../e2e/content/) is a second site with two other languages,
-  no notice, no font of its own, other colours and a single season without credits. The e2e suite builds it on port 4002.
+  no notice, no font of its own, other colours and a single season without credits. The e2e
+  suite builds it on port 4002.

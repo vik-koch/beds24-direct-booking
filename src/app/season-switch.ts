@@ -5,7 +5,8 @@ import { Season } from './season';
 import { TEXTS } from './texts';
 
 // A pill whose accent part glides to the chosen season; only the chosen one shows its name.
-// Both names sit in one hidden cell, so the pill is as wide as the longer one.
+// Both names sit in one hidden cell, so the pill is as wide as the longer one. A choice made
+// before the application has started is kept: hydration's event replay queues change events.
 @Component({
   selector: 'app-season-switch',
   imports: [NgIcon],

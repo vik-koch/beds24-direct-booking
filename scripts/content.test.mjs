@@ -92,3 +92,22 @@ test('a hero photo must exist', () => {
   const dir = changed('site.json', (site) => (site.seasons.winter.hero.file = 'pictures/gone.jpg'));
   assert.throws(() => readContent(dir), /seasons\.winter\.hero\.file: pictures\/gone\.jpg/);
 });
+
+test('a feature names any Lucide icon, and only those', () => {
+  const dir = changed(
+    'texts.de-AT.json',
+    (texts) => (texts.hero.features[0].icon = 'mountain-snow'),
+  );
+  assert.equal(readContent(dir).texts.de.hero.features[0].icon, 'mountain-snow');
+  const wrong = changed('texts.de-AT.json', (texts) => (texts.hero.features[0].icon = 'chalet'));
+  assert.throws(() => readContent(wrong), /hero\.features\.0\.icon: chalet is not a Lucide icon/);
+});
+
+test('the hero has up to five features, or none', () => {
+  const none = changed('texts.de-AT.json', (texts) => (texts.hero.features = []));
+  assert.deepEqual(readContent(none).texts.de.hero.features, []);
+  const six = changed('texts.de-AT.json', (texts) =>
+    texts.hero.features.push(...texts.hero.features),
+  );
+  assert.throws(() => readContent(six), /texts\.de-AT\.json\n {2}hero\.features/);
+});

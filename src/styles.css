@@ -382,7 +382,8 @@
       background-color 0.3s ease,
       backdrop-filter 0.3s ease;
 
-    &[data-over] {
+    /* Only where the script runs: without it nothing would bring the ground back on scroll. */
+    html[data-script] &[data-over] {
       background: transparent;
       backdrop-filter: none;
     }

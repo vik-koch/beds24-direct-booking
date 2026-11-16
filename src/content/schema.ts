@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import { featureIcons, seasonNames } from './names.ts';
+import { seasonNames } from './names.ts';
 
-export { featureIcons, seasonNames, type SeasonName } from './names.ts';
+export { lucideName, seasonNames, type SeasonName } from './names.ts';
 
 const segment = z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/);
 const text = z.string().min(1);
@@ -139,7 +139,8 @@ export const textsSchema = z.strictObject({
     winter: text.optional(),
     summer: text.optional(),
     lead: text,
-    features: z.array(z.strictObject({ icon: z.enum(featureIcons), text })).length(3),
+    // Each with a Lucide icon by its name on lucide.dev; the content script checks it exists.
+    features: z.array(z.strictObject({ icon: segment, text })).max(5),
     button: text,
   }),
   pages: z.strictObject({

@@ -1,42 +1,17 @@
 import { Component, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { NgIcon, provideIcons } from '@ng-icons/core';
-import {
-  lucideCalendarDays,
-  lucideHouse,
-  lucideKeyRound,
-  lucideMountain,
-  lucideTag,
-  lucideUsers,
-} from '@ng-icons/lucide';
 import type { Apartment } from '../beds24/client';
+import { icons } from '../content/generated/icons';
 import site from '../content/generated/site';
-import type { FeatureIcon } from '../content/names';
+import { lucideName } from '../content/names';
 import { Season } from './season';
 import { address, LANGUAGE, TEXTS } from './texts';
-
-const icons: Record<FeatureIcon, string> = {
-  house: 'lucideHouse',
-  calendar: 'lucideCalendarDays',
-  tag: 'lucideTag',
-  mountain: 'lucideMountain',
-  users: 'lucideUsers',
-  key: 'lucideKeyRound',
-};
 
 @Component({
   selector: 'app-home',
   imports: [NgIcon],
-  providers: [
-    provideIcons({
-      lucideCalendarDays,
-      lucideHouse,
-      lucideKeyRound,
-      lucideMountain,
-      lucideTag,
-      lucideUsers,
-    }),
-  ],
+  providers: [provideIcons(icons)],
   template: `
     <!-- Every season's photo is in the page; only the shown one is displayed and fetched. -->
     <section class="hero">
@@ -52,11 +27,15 @@ const icons: Record<FeatureIcon, string> = {
       <div class="hero-copy">
         <h1 class="display">{{ texts.home.title }}</h1>
         <p class="lead">{{ texts.hero.lead }}</p>
-        <ul class="features">
-          @for (feature of texts.hero.features; track $index) {
-            <li><ng-icon [name]="icons[feature.icon]" aria-hidden="true" />{{ feature.text }}</li>
-          }
-        </ul>
+        @if (texts.hero.features.length) {
+          <ul class="features">
+            @for (feature of texts.hero.features; track $index) {
+              <li>
+                <ng-icon [name]="lucideName(feature.icon)" aria-hidden="true" />{{ feature.text }}
+              </li>
+            }
+          </ul>
+        }
         <a class="button" [href]="weeks">{{ texts.hero.button }}</a>
       </div>
     </section>
@@ -82,7 +61,7 @@ export class Home {
   protected readonly texts = inject(TEXTS);
   private readonly language = inject(LANGUAGE);
   protected readonly anchors = this.language.anchors;
-  protected readonly icons = icons;
+  protected readonly lucideName = lucideName;
   protected readonly sections = ['weeks', 'apartments', 'location', 'about'] as const;
   protected readonly weeks = `${address(this.language, 'home')}#${this.anchors.weeks}`;
   protected readonly photos = inject(Season).names.map((name) => ({

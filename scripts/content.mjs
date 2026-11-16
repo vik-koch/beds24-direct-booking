@@ -9,7 +9,8 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { prefix, seasonNames, siteSchema, textsSchema } from '../src/content/schema.ts';
+import * as lucide from '@ng-icons/lucide';
+import { lucideName, prefix, seasonNames, siteSchema, textsSchema } from '../src/content/schema.ts';
 
 export function readContent(dir) {
   const read = (file, schema) => {
@@ -35,6 +36,13 @@ export function readContent(dir) {
             `${join(dir, `texts.${tag}.json`)}\n  ${part}.${name}: ${has ? 'a season site.json does not list' : 'missing'}`,
           );
       }
+  for (const tag of site.languages)
+    texts[prefix(tag)].hero.features.forEach(({ icon }, index) => {
+      if (!(lucideName(icon) in lucide))
+        throw new Error(
+          `${join(dir, `texts.${tag}.json`)}\n  hero.features.${index}.icon: ${icon} is not a Lucide icon`,
+        );
+    });
   for (const name of listed) {
     const file = site.seasons[name].hero.file;
     if (!existsSync(join(dir, file)))
@@ -77,6 +85,15 @@ export function writeContent(dir, out) {
   mkdirSync(join(out, 'fonts'));
   if (existsSync(join(dir, 'fonts')))
     cpSync(join(dir, 'fonts'), join(out, 'fonts'), { recursive: true });
+  // Only the icons the texts name are imported, so the bundle holds no others.
+  const icons = [
+    ...new Set(Object.values(texts).flatMap((value) => value.hero.features.map((f) => f.icon))),
+  ].map(lucideName);
+  writeFileSync(
+    join(out, 'icons.ts'),
+    (icons.length ? `import { ${icons.join(', ')} } from '@ng-icons/lucide';\n\n` : '') +
+      `export const icons: Record<string, string> = { ${icons.join(', ')} };\n`,
+  );
   // The pictures are served unhashed at /pictures/ too: give a changed picture a new name.
   mkdirSync(join(out, 'pictures'));
   if (existsSync(join(dir, 'pictures')))

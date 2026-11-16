@@ -111,9 +111,9 @@ public repository publishes. Nothing about the real business goes into the publi
 4. Done: the design round, the structure in `site-map.md`, then the visual direction in
    `DESIGN.md`.
 5. Slices, each building its part of `site-map.md`: shell with languages and the notice (done);
-   seasons with the switch, the hero and the picture credits (done);
-   stay picker with hand-over; apartment pages; map; guides and FAQ; company and legal pages; SEO,
-   accessibility and performance pass.
+   seasons with the switch, the hero and the picture credits (done); stay picker with hand-over;
+   apartment pages; map; guides and FAQ; company and legal pages; SEO, accessibility and
+   performance pass.
 6. Once the Beds24 account has paid: the confirmation, the payment and the return URL.
 7. The private deployment: real content, legal texts, domain: `1.0.0`.
 

@@ -186,13 +186,14 @@ so that amounts can be compared down a column.
   to 4rem on a phone and 10rem from 48rem up, so on a tall screen the card stands clear of the
   bottom. It scrolls with the photo.
 - **Rhythm:** 3.5rem above a section on a phone, 5rem from 48rem up; 1.5rem between a heading
-  and what follows. More space above a heading than below it. The section after the hero has 5.5rem above
-  it, so a jump to it places the heading below the header with the photo out of view.
+  and what follows. More space above a heading than below it. The section after the hero has
+  5.5rem above it, so a jump to it places the heading below the header with the photo out of
+  view.
 - **Header:** sticky, a light frosted bar (the ground colour at 72% with a blur). Over the hero
-  at the top of the home page it has no ground of its own until the page scrolls. Below 64rem, and on a screen
-  without hover such as a tablet, it holds the wordmark, the season switch and a menu button
-  that opens a sheet from the right with the links and the languages. From 64rem up with a
-  pointer that hovers, everything is in one line.
+  at the top of the home page it has no ground of its own until the page scrolls. Below 64rem,
+  and on a screen without hover such as a tablet, it holds the wordmark, the season switch and a
+  menu button that opens a sheet from the right with the links and the languages. From 64rem up
+  with a pointer that hovers, everything is in one line.
 - **List:** from 48rem up one price column per apartment. Below that one apartment at a
   time, chosen with three tabs above the list.
 - **Low windows:** under 30rem of height, bars that stay in view go back into the page.

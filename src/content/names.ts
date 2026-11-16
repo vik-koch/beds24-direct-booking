@@ -3,5 +3,7 @@
 export const seasonNames = ['winter', 'summer'] as const;
 export type SeasonName = (typeof seasonNames)[number];
 
-export const featureIcons = ['house', 'calendar', 'tag', 'mountain', 'users', 'key'] as const;
-export type FeatureIcon = (typeof featureIcons)[number];
+// A Lucide icon's name as lucide.dev shows it, such as calendar-days, and its name in
+// @ng-icons/lucide, lucideCalendarDays.
+export const lucideName = (name: string) =>
+  'lucide' + name.replace(/(^|-)([a-z0-9])/g, (_, _dash, char: string) => char.toUpperCase());

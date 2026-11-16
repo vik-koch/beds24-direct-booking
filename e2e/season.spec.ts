@@ -50,6 +50,31 @@ test('the season is chosen before the application starts', async ({ page }) => {
   await expect(page.getByRole('img', { name: /Glemmtal/ })).toBeHidden();
 });
 
+test('one click before the application starts is not lost', async ({ page }) => {
+  await page.clock.setFixedTime(november);
+  const { promise: held, resolve: release } = Promise.withResolvers<void>();
+  await page.route(/\/main-[\w-]+\.js$/, async (route) => {
+    await held;
+    await route.continue();
+  });
+  await page.goto('/de', { waitUntil: 'commit' });
+  await page.locator('.season-switch label[data-for=summer]').click();
+  release();
+  await expect(page.locator('html')).toHaveAttribute('data-season', 'summer');
+  await expect.poll(() => stored(page)).toContain('summer-2027');
+});
+
+test('without JavaScript the header keeps its ground over the hero', async ({ browser }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  const page = await context.newPage();
+  await page.goto('/de');
+  const ground = await page
+    .locator('app-header')
+    .evaluate((header) => getComputedStyle(header).backgroundColor);
+  expect(ground).not.toBe('rgba(0, 0, 0, 0)');
+  await context.close();
+});
+
 test('a switch changes the page, is remembered, and wins over the date', async ({ page }) => {
   await page.clock.setFixedTime(november);
   await page.goto('/de');
