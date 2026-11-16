@@ -65,4 +65,6 @@ public on purpose: the process is part of what this project shows.
 
 The code and the documents of this repository are under the [MIT licence](LICENSE). The agent
 skills in `.claude/skills/` and `.agents/skills/` are third-party files and keep their own
-licences.
+licences, as do the icons, the font and the photographs of the mock-up in `design/`. The
+licence texts of the skills, the icons and the font are in [`licenses/`](licenses/README.md);
+the photographs are credited in [`design/README.md`](design/README.md).

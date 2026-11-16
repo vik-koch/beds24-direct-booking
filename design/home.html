@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="de" data-season="winter">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Firn &amp; Farn: Entwurf der Startseite</title>
+    <link rel="stylesheet" href="home.css" />
+  </head>
+  <body>
+    <!-- Icons: Phosphor, regular weight. -->
+    <svg class="sprite">
+      <symbol id="i-snowflake" viewBox="0 0 256 256">
+        <path
+          d="M223.77,150.09a8,8,0,0,1-5.86,9.68l-24.64,6,6.46,24.11a8,8,0,0,1-5.66,9.8A8.25,8.25,0,0,1,192,200a8,8,0,0,1-7.72-5.93l-7.72-28.8L136,141.86v46.83l21.66,21.65a8,8,0,0,1-11.32,11.32L128,203.31l-18.34,18.35a8,8,0,0,1-11.32-11.32L120,188.69V141.86L79.45,165.27l-7.72,28.8A8,8,0,0,1,64,200a8.25,8.25,0,0,1-2.08-.27,8,8,0,0,1-5.66-9.8l6.46-24.11-24.64-6a8,8,0,0,1,3.82-15.54l29.45,7.23L112,128,71.36,104.54l-29.45,7.23A7.85,7.85,0,0,1,40,112a8,8,0,0,1-1.91-15.77l24.64-6L56.27,66.07a8,8,0,0,1,15.46-4.14l7.72,28.8L120,114.14V67.31L98.34,45.66a8,8,0,0,1,11.32-11.32L128,52.69l18.34-18.35a8,8,0,0,1,11.32,11.32L136,67.31v46.83l40.55-23.41,7.72-28.8a8,8,0,0,1,15.46,4.14l-6.46,24.11,24.64,6A8,8,0,0,1,216,112a7.85,7.85,0,0,1-1.91-.23l-29.45-7.23L144,128l40.64,23.46,29.45-7.23A8,8,0,0,1,223.77,150.09Z"
+        />
+      </symbol>
+      <symbol id="i-sun" viewBox="0 0 256 256">
+        <path
+          d="M120,40V16a8,8,0,0,1,16,0V40a8,8,0,0,1-16,0Zm72,88a64,64,0,1,1-64-64A64.07,64.07,0,0,1,192,128Zm-16,0a48,48,0,1,0-48,48A48.05,48.05,0,0,0,176,128ZM58.34,69.66A8,8,0,0,0,69.66,58.34l-16-16A8,8,0,0,0,42.34,53.66Zm0,116.68-16,16a8,8,0,0,0,11.32,11.32l16-16a8,8,0,0,0-11.32-11.32ZM192,72a8,8,0,0,0,5.66-2.34l16-16a8,8,0,0,0-11.32-11.32l-16,16A8,8,0,0,0,192,72Zm5.66,114.34a8,8,0,0,0-11.32,11.32l16,16a8,8,0,0,0,11.32-11.32ZM48,128a8,8,0,0,0-8-8H16a8,8,0,0,0,0,16H40A8,8,0,0,0,48,128Zm80,80a8,8,0,0,0-8,8v24a8,8,0,0,0,16,0V216A8,8,0,0,0,128,208Zm112-88H216a8,8,0,0,0,0,16h24a8,8,0,0,0,0-16Z"
+        />
+      </symbol>
+      <symbol id="i-house-line" viewBox="0 0 256 256">
+        <path
+          d="M240,208H224V136l2.34,2.34A8,8,0,0,0,237.66,127L139.31,28.68a16,16,0,0,0-22.62,0L18.34,127a8,8,0,0,0,11.32,11.31L32,136v72H16a8,8,0,0,0,0,16H240a8,8,0,0,0,0-16ZM48,120l80-80,80,80v88H160V152a8,8,0,0,0-8-8H104a8,8,0,0,0-8,8v56H48Zm96,88H112V160h32Z"
+        />
+      </symbol>
+      <symbol id="i-calendar-dots" viewBox="0 0 256 256">
+        <path
+          d="M208,32H184V24a8,8,0,0,0-16,0v8H88V24a8,8,0,0,0-16,0v8H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM72,48v8a8,8,0,0,0,16,0V48h80v8a8,8,0,0,0,16,0V48h24V80H48V48ZM208,208H48V96H208V208Zm-68-76a12,12,0,1,1-12-12A12,12,0,0,1,140,132Zm44,0a12,12,0,1,1-12-12A12,12,0,0,1,184,132ZM96,172a12,12,0,1,1-12-12A12,12,0,0,1,96,172Zm44,0a12,12,0,1,1-12-12A12,12,0,0,1,140,172Zm44,0a12,12,0,1,1-12-12A12,12,0,0,1,184,172Z"
+        />
+      </symbol>
+      <symbol id="i-tag" viewBox="0 0 256 256">
+        <path
+          d="M243.31,136,144,36.69A15.86,15.86,0,0,0,132.69,32H40a8,8,0,0,0-8,8v92.69A15.86,15.86,0,0,0,36.69,144L136,243.31a16,16,0,0,0,22.63,0l84.68-84.68a16,16,0,0,0,0-22.63Zm-96,96L48,132.69V48h84.69L232,147.31ZM96,84A12,12,0,1,1,84,72,12,12,0,0,1,96,84Z"
+        />
+      </symbol>
+      <symbol id="i-arrow-right" viewBox="0 0 256 256">
+        <path
+          d="M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L196.69,136H40a8,8,0,0,1,0-16H196.69L138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z"
+        />
+      </symbol>
+      <symbol id="i-arrow-left" viewBox="0 0 256 256">
+        <path
+          d="M224,128a8,8,0,0,1-8,8H59.31l58.35,58.34a8,8,0,0,1-11.32,11.32l-72-72a8,8,0,0,1,0-11.32l72-72a8,8,0,0,1,11.32,11.32L59.31,120H216A8,8,0,0,1,224,128Z"
+        />
+      </symbol>
+      <symbol id="i-list" viewBox="0 0 256 256">
+        <path
+          d="M224,128a8,8,0,0,1-8,8H40a8,8,0,0,1,0-16H216A8,8,0,0,1,224,128ZM40,72H216a8,8,0,0,0,0-16H40a8,8,0,0,0,0,16ZM216,184H40a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Z"
+        />
+      </symbol>
+      <symbol id="i-caret-down" viewBox="0 0 256 256">
+        <path
+          d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z"
+        />
+      </symbol>
+    </svg>
+    <a class="skip" href="#freie-wochen">Zu den freien Wochen</a>
+    <p class="notice">Demo: Firn &amp; Farn ist erfunden. Die Häuser und Preise gibt es nicht.</p>
+
+    <header class="top">
+      <a class="wordmark" href="#">Firn <span>&amp;</span> Farn</a>
+      <div class="season-switch" role="group" aria-label="Saison">
+        <button type="button" data-go="winter">
+          <svg class="icon" aria-hidden="true"><use href="#i-snowflake" /></svg><span>Winter</span>
+        </button>
+        <button type="button" data-go="summer">
+          <svg class="icon" aria-hidden="true"><use href="#i-sun" /></svg><span>Sommer</span>
+        </button>
+      </div>
+      <button class="menu-button" type="button" aria-controls="menu" aria-label="Menü">
+        <svg class="icon" aria-hidden="true"><use href="#i-list" /></svg>
+      </button>
+      <nav id="menu" aria-label="Hauptmenü">
+        <a href="#freie-wochen">Freie Wochen</a>
+        <details>
+          <summary>
+            Wohnungen <svg class="icon" aria-hidden="true"><use href="#i-caret-down" /></svg>
+          </summary>
+          <div class="submenu">
+            <a href="#wohnungen">Alle im Überblick</a>
+            <a href="#">Zirbe</a>
+            <a href="#">Lärche</a>
+            <a href="#">Ahorn</a>
+          </div>
+        </details>
+        <a href="#lage">Lage</a>
+        <a href="#ueber-uns">Über uns</a>
+        <div class="lang-switch" role="group" aria-label="Sprache">
+          <a href="#" aria-current="true" lang="de">Deutsch</a>
+          <a href="#" lang="en" aria-label="English">EN</a>
+        </div>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero">
+        <img
+          class="hero-photo"
+          data-for="winter"
+          src="pictures/hero-winter.jpg"
+          alt="Blick von der Piste ins verschneite Glemmtal, über dem Tal liegt Nebel."
+        />
+        <img
+          class="hero-photo"
+          data-for="summer"
+          src="pictures/hero-summer.jpg"
+          alt="Blick über eine Almwiese und Fichten auf die grünen Hänge über Saalbach."
+        />
+        <div class="hero-copy">
+          <h1>Deine Woche in Saalbach</h1>
+          <p class="lead">Drei Ferienwohnungen mitten im Ort, direkt bei den Gastgebern gebucht.</p>
+          <ul class="features">
+            <li>
+              <svg class="icon" aria-hidden="true"><use href="#i-house-line" /></svg> Für 2, 4 oder
+              6 Gäste
+            </li>
+            <li>
+              <svg class="icon" aria-hidden="true"><use href="#i-calendar-dots" /></svg> Samstag bis
+              Samstag
+            </li>
+            <li>
+              <svg class="icon" aria-hidden="true"><use href="#i-tag" /></svg> Ohne Portalprovision
+            </li>
+          </ul>
+          <a class="button" href="#freie-wochen">Freie Wochen ansehen</a>
+        </div>
+      </section>
+
+      <section class="weeks" id="freie-wochen">
+        <div class="weeks-head">
+          <h2>Freie Wochen <span data-season-name></span></h2>
+          <button class="other-season" type="button" data-other>
+            <svg class="icon" aria-hidden="true"><use href="#i-arrow-left" /></svg><span></span
+            ><svg class="icon" aria-hidden="true"><use href="#i-arrow-right" /></svg>
+          </button>
+        </div>
+
+        <fieldset class="room-tabs">
+          <legend>Wohnung</legend>
+          <label><input type="radio" name="room" value="zirbe" /><span>Zirbe</span></label>
+          <label
+            ><input type="radio" name="room" value="laerche" checked /><span>Lärche</span></label
+          >
+          <label><input type="radio" name="room" value="ahorn" /><span>Ahorn</span></label>
+        </fieldset>
+
+        <div class="sheet">
+          <table data-room="laerche">
+            <thead>
+              <tr>
+                <th scope="col">Woche</th>
+                <th scope="col" data-room="zirbe">Zirbe <small>2 Gäste · 34 m²</small></th>
+                <th scope="col" data-room="laerche">Lärche <small>4 Gäste · 61 m²</small></th>
+                <th scope="col" data-room="ahorn">Ahorn <small>6 Gäste · 96 m²</small></th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+          <p class="weeks-empty">
+            Die Wochen für den <span data-season-name></span> sind noch nicht freigegeben. Sie
+            erscheinen hier, sobald die Preise feststehen.
+          </p>
+        </div>
+
+        <p class="weeks-note">
+          Preis pro Woche mit Endreinigung, zuzüglich Ortstaxe von 3,50 € pro Erwachsenem und Nacht.
+        </p>
+
+        <div class="pick" hidden>
+          <output aria-live="polite"></output>
+          <a class="button" href="#">Weiter zur Buchung</a>
+        </div>
+      </section>
+    </main>
+
+    <script src="mock.js"></script>
+  </body>
+</html>
