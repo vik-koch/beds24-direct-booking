@@ -215,7 +215,7 @@ falls downwards, so it reads as lying on the page rather than floating.
 - **Borders are rare:** one pixel in the edge colour around a control without a fill, and a
   hairline between list rows. No frames around cards.
 - **Icons** come from one set with round line ends, at 1.375rem beside text: Lucide, the set
-  spartan/ui's components use, at its stroke width of 2. It has no skier or ski icon.
+  spartan/ui's components use, at its stroke width of 2.
 
 ## Components
 
@@ -263,15 +263,16 @@ takes the accent so that it stands apart from the white sheet behind it.
 
 Links in body text at weight 500 without underline; a pill of white behind the one under the
 pointer. The apartments entry opens a small white menu with the card shadow, on hover or by
-keyboard. In the sheet the apartments are listed under their entry.
+keyboard. In the sheet the apartments are indented under their entry at weight 400.
 
 ### Language menu
 
 One entry at the end of the header's line: a globe and the current language's name in its
 own language ("Deutsch"). It opens the same small menu as the apartments with the other
 languages, each a link to the same page in that language, so it takes any number of them. In
-the sheet the languages are a list under a heading, the current one in the accent. It is a
-menu, not a pill, so it is never mistaken for the season switch.
+the sheet the languages are a group like the apartments: the heading as an entry with the
+globe, the languages indented below it at weight 400, the current one in the accent. It is a
+menu, not a pill, so that the two switches are easy to tell apart.
 
 ## Do's and Don'ts
 

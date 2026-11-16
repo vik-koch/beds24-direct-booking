@@ -40,16 +40,16 @@ test('every page of the site map answers in both languages and names the other',
 }) => {
   for (const [de, en] of pages)
     for (const [path, lang] of [
-      [de, 'de'],
-      [en, 'en'],
+      [de, 'de-AT'],
+      [en, 'en-GB'],
     ]) {
       const response = await request.get(path);
       expect(response.status(), path).toBe(200);
       const html = await response.text();
       expect(html, path).toContain(`<html lang="${lang}"`);
       expect(html, path).toMatch(/<h1[^>]*>[^<]+<\/h1>/);
-      expect(html, path).toContain(`<link rel="alternate" hreflang="de" href="${de}">`);
-      expect(html, path).toContain(`<link rel="alternate" hreflang="en" href="${en}">`);
+      expect(html, path).toContain(`<link rel="alternate" hreflang="de-AT" href="${de}">`);
+      expect(html, path).toContain(`<link rel="alternate" hreflang="en-GB" href="${en}">`);
     }
 });
 
@@ -104,14 +104,39 @@ test('the language menu leads to the same page in the other language', async ({ 
   }
   await page.getByRole('link', { name: 'English' }).click();
   await expect(page).toHaveURL('/en/apartments/laerche');
-  await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en-GB');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Lärche');
+});
+
+test('a link to the home page from another page shows the apartments', async ({ page }) => {
+  await page.goto('/de/impressum');
+  await page.getByRole('link', { name: 'Firn & Farn', exact: true }).click();
+  await expect(page).toHaveURL('/de');
+  await expect(page.locator('#wohnungen li')).toHaveText(['Zirbe', 'Lärche', 'Ahorn']);
+});
+
+test('the heading follows from one apartment to the next', async ({ page }) => {
+  await page.goto('/de/wohnungen/zirbe');
+  const go = async (name: string) => {
+    if (await folded(page)) {
+      await page.getByRole('button', { name: 'Menü' }).click();
+      await page.getByRole('dialog').getByRole('link', { name }).click();
+    } else {
+      await open(page, 'Wohnungen');
+      await page.getByRole('link', { name }).click();
+    }
+  };
+  await go('Lärche');
+  await expect(page).toHaveURL('/de/wohnungen/laerche');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Lärche');
+  await expect(page).toHaveTitle('Lärche · Firn & Farn');
 });
 
 test('the apartments menu opens by keyboard and leads to an apartment', async ({ page }) => {
   await page.goto('/de');
   test.skip(await folded(page), 'the wide header only');
   const menu = await open(page, 'Wohnungen');
+  expect(await menu.evaluate((e) => getComputedStyle(e).outlineStyle)).toBe('solid');
   await expect(page.getByRole('link', { name: 'Zirbe' })).toBeVisible();
   await page.keyboard.press('Tab');
   await expect(page.getByRole('link', { name: 'Alle im Überblick' })).toBeFocused();
@@ -157,6 +182,7 @@ test('a second content folder changes languages, name, wording and theme', async
 
   await page.goto(`${other}/it`);
   await expect(page.locator('html')).toHaveAttribute('lang', 'it');
+  await expect(page.locator('link[hreflang="nl-BE"]')).toHaveAttribute('href', '/nl');
   await expect(page.getByRole('link', { name: 'Casa Prova' })).toBeVisible();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Appartamenti per le vacanze');
   await expect(page.getByText('Demo:')).toHaveCount(0);

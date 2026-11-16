@@ -153,13 +153,15 @@
     }
   }
 
-  .sheet-nav a {
+  .sheet-nav a,
+  .sheet-nav h3 {
     display: block;
     padding: 0.625rem 0;
     font-weight: 500;
     text-decoration: none;
   }
 
+  /* A group's entries: the apartments and the languages. */
   .sheet-nav ul ul a {
     padding: 0.375rem 0 0.375rem 1rem;
     font-weight: 400;
