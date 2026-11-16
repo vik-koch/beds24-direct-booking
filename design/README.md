@@ -28,12 +28,14 @@ its own.
 ## Font
 
 Jost, self-hosted in `fonts/`, © 2020 The Jost Project Authors,
-<https://github.com/indestructible-type/Jost>, under the SIL Open Font License 1.1.
+<https://github.com/indestructible-type/Jost>, under the SIL Open Font License 1.1. The
+licence text is in [`licenses/jost/OFL.txt`](../licenses/jost/OFL.txt).
 
 ## Icons
 
-From [Phosphor](https://phosphoricons.com) in the regular weight, under the MIT licence,
-copied into the page.
+From [Phosphor](https://phosphoricons.com) in the regular weight, © 2023 Phosphor Icons,
+under the MIT licence, copied into the page. The copyright and permission notice is in
+[`licenses/phosphor-icons/LICENSE`](../licenses/phosphor-icons/LICENSE).
 
 ## Pictures
 
