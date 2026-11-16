@@ -41,15 +41,15 @@ jobs:
           ref: v${{ env.VERSION }}
           path: app
 
-      # The site's content goes into app/ here, before the build: the pages are prerendered,
-      # so the image holds them. Releases up to 0.1.0 have no content files yet, and the
-      # image is built from the release as it is.
+      # The site's content is a build input: the pages are prerendered, so the image holds it.
+      - name: Put the site's content into the build
+        run: cp -r content app/content/site
 
       - name: Build and push the image
         run: |
           image="ghcr.io/${GITHUB_REPOSITORY,,}-web:sha-$GITHUB_SHA"
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
-          docker build -t "$image" app
+          docker build --build-arg CONTENT_DIR=content/site -t "$image" app
           docker push "$image"
           echo "WEB_IMAGE=$image" >> "$GITHUB_ENV"
 

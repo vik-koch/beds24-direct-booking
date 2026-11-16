@@ -186,9 +186,10 @@ so that amounts can be compared down a column.
   46rem.
 - **Rhythm:** 3.5rem above a section on a phone, 5rem from 48rem up; 1.5rem between a heading
   and what follows. More space above a heading than below it.
-- **Header:** sticky, on the ground colour with a slight blur. Below 64rem it holds the
-  wordmark, the season switch and a menu button; the links and the language switch are in the
-  menu. From 64rem up everything is in one line.
+- **Header:** sticky, on the ground colour with a slight blur. Below 64rem, and on a screen
+  without hover such as a tablet, it holds the wordmark, the season switch and a menu button
+  that opens a sheet from the right with the links and the languages. From 64rem up with a
+  pointer that hovers, everything is in one line.
 - **List:** from 48rem up one price column per apartment. Below that one apartment at a
   time, chosen with three tabs above the list.
 - **Low windows:** under 30rem of height, bars that stay in view go back into the page.
@@ -213,8 +214,8 @@ falls downwards, so it reads as lying on the page rather than floating.
   shape is round.
 - **Borders are rare:** one pixel in the edge colour around a control without a fill, and a
   hairline between list rows. No frames around cards.
-- **Icons** come from one set with round line ends, at 1.375rem beside text. The demo uses
-  Phosphor in its regular weight.
+- **Icons** come from one set with round line ends, at 1.375rem beside text: Lucide, the set
+  spartan/ui's components use, at its stroke width of 2.
 
 ## Components
 
@@ -260,9 +261,19 @@ takes the accent so that it stands apart from the white sheet behind it.
 
 ### Navigation
 
-Links in body text at weight 500 without underline. The apartments entry opens a small white
-menu with the card shadow. Below 64rem the links are a list under the header, opened by the
-menu button.
+Links in body text at weight 500 without underline; a pill of white behind the one under the
+pointer. The apartments entry opens a small white menu with the card shadow, on hover or by
+keyboard. In the sheet the apartments are indented under their entry at weight 400.
+
+### Language menu
+
+One entry at the end of the header's line: a globe and the current language's name in its
+own language ("Deutsch"). It opens the same small menu as the apartments with the other
+languages, each a link to the same page in that language, so it takes any number of them. In
+the sheet the languages are indented below a label like the apartments, at weight 400, the
+current one in the accent. The label, a globe and "Sprache", is in soft ink at label size, so it
+does not look like an entry that can be followed. It is a
+menu, not a pill, so that the two switches are easy to tell apart.
 
 ## Do's and Don'ts
 

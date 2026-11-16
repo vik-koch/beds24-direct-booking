@@ -61,7 +61,7 @@ public repository publishes. Nothing about the real business goes into the publi
 | Map | An open map (MapLibre with open tiles is the candidate), restyled per season | No consent banner, no billing key. |
 | Reviews | Score, count and a quiet link to the listing; no review texts | Booking.com forbids publishing texts retrieved by its API. |
 | Tracking | None that needs consent | Goal: no cookie banner. |
-| UI | Tailwind with spartan/ui's copy-in components (ADR 4) and one SVG icon set; the stay picker is built from native radio buttons and Angular Aria's grid, as a spike decided (ADR 4's conditions) | No self-built components; two custom themes stay easy. |
+| UI | Tailwind with spartan/ui's copy-in components (ADR 4) and Lucide, the icon set those components use; the stay picker is built from native radio buttons and Angular Aria's grid, as a spike decided (ADR 4's conditions) | No self-built components; two custom themes stay easy. |
 | Repo shape | One Angular app, no workspace tool, no libraries; the simulator in a second folder | The code is small. |
 | Beds24 simulator | Small own server that answers in the recorded response shapes from fictional data; it is the demo's runtime backend and the e2e tests' backend, and includes a fake booking page | The demo has no real Beds24 account or token; the booking flow needs state. The real recordings stay private as the reference. |
 | Name | Repository `beds24-direct-booking`; the demo at `beds24.vikkoch.com`, not indexed, its booking page plainly marked as simulated | Says what it is and is findable. The seasons go into the tagline: "seasonal rental" means something else. |
@@ -95,7 +95,6 @@ public repository publishes. Nothing about the real business goes into the publi
   whether both seasons' content is in the HTML for search.
 - **The real site's name, domain and logo.** `.com` as the main domain; the national domain
   redirects to its language.
-- **Icon set:** check coverage against the real feature list (ski, bike, family, no smoking, …).
 
 ## Later phases
 
@@ -111,8 +110,10 @@ public repository publishes. Nothing about the real business goes into the publi
    stack); the scaffold with lint, tests and CI.
 3. The simulator with fictional data in the recorded shapes, and the demo deployed from `main`:
    `0.1.0`.
-4. The design round: the structure first, in `site-map.md`, then the visual direction.
-5. Slices, each building its part of `site-map.md`: shell with languages, seasons and the notice;
+4. Done: the design round, the structure in `site-map.md`, then the visual direction in
+   `DESIGN.md`.
+5. Slices, each building its part of `site-map.md`: shell with languages and the notice (done);
+   seasons;
    stay picker with hand-over; apartment pages; map; guides and FAQ; company and legal pages; SEO,
    accessibility and performance pass.
 6. Once the Beds24 account has paid: the confirmation, the payment and the return URL.

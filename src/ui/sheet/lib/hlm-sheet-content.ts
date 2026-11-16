@@ -1,0 +1,52 @@
+import type { BooleanInput } from '@angular/cdk/coercion';
+import { booleanAttribute, ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
+import { NgIcon, provideIcons } from '@ng-icons/core';
+import { lucideX } from '@ng-icons/lucide';
+import { BrnDialogRef } from '@spartan-ng/brain/dialog';
+import { BrnSheet } from '@spartan-ng/brain/sheet';
+
+import { classes } from '@spartan-ng/helm/utils';
+import { HlmSheetClose } from './hlm-sheet-close';
+
+@Component({
+	selector: 'hlm-sheet-content',
+	exportAs: 'hlmSheetContent',
+	imports: [HlmSheetClose, NgIcon],
+	providers: [provideIcons({ lucideX })],
+	changeDetection: ChangeDetectionStrategy.OnPush,
+	host: {
+		'data-slot': 'sheet-content',
+		'[attr.data-side]': '_sheet.sideState()',
+		'[attr.data-state]': 'state()',
+	},
+	template: `
+		<ng-content />
+
+		@if (showCloseButton()) {
+			<button class="spartan-sheet-close" hlmSheetClose>
+				<span class="sr-only">{{ closeLabel() }}</span>
+				<ng-icon name="lucideX" />
+			</button>
+		}
+	`,
+})
+export class HlmSheetContent {
+	private readonly _dialogRef = inject(BrnDialogRef);
+	protected readonly _sheet = inject(BrnSheet);
+
+	public readonly state = this._dialogRef.state;
+
+	public readonly showCloseButton = input<boolean, BooleanInput>(true, { transform: booleanAttribute });
+	public readonly closeLabel = input<string>('Close');
+
+	constructor() {
+		classes(() => [
+			'spartan-sheet-content',
+			'data-open:animate-in data-closed:animate-out',
+			'data-[side=top]:data-closed:slide-out-to-top data-[side=top]:data-open:slide-in-from-top',
+			'data-[side=bottom]:data-closed:slide-out-to-bottom data-[side=bottom]:data-open:slide-in-from-bottom',
+			'data-[side=left]:data-closed:slide-out-to-left data-[side=left]:data-open:slide-in-from-left',
+			'data-[side=right]:data-closed:slide-out-to-right data-[side=right]:data-open:slide-in-from-right',
+		]);
+	}
+}

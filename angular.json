@@ -23,9 +23,22 @@
               {
                 "glob": "**/*",
                 "input": "public"
+              },
+              {
+                "glob": "**/*",
+                "input": "src/content/generated/fonts",
+                "output": "fonts"
               }
             ],
             "styles": ["src/styles.css"],
+            "optimization": {
+              "scripts": true,
+              "styles": {
+                "minify": true,
+                "inlineCritical": false
+              },
+              "fonts": true
+            },
             "server": "src/main.server.ts",
             "outputMode": "server",
             "security": {

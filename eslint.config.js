@@ -5,6 +5,8 @@ const tseslint = require('typescript-eslint');
 const angular = require('angular-eslint');
 
 module.exports = defineConfig([
+  // Generated from the content folder, and spartan/ui's components as they are copied in.
+  { ignores: ['src/content/generated/', 'src/ui/'] },
   {
     files: ['**/*.ts'],
     extends: [

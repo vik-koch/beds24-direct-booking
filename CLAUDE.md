@@ -64,6 +64,8 @@ before adding a dependency, a route, a content key or an environment variable.
 - **Few comments.** Only a trap, an ordering constraint or an invariant the code cannot show,
   in one line. No restating, no history, no section banners. If a comment explains what the
   code does, rewrite the code.
+- **One file per component:** the template inline, also when it is long. A reader sees the
+  markup beside the code that feeds it. Copied spartan/ui code in `src/ui/` keeps its shape.
 - Names in code are US English; prose is British. Pull requests and commits say what changed
   and why in a few lines.
 

@@ -33,9 +33,9 @@ licence text is in [`licenses/jost/OFL.txt`](../licenses/jost/OFL.txt).
 
 ## Icons
 
-From [Phosphor](https://phosphoricons.com) in the regular weight, © 2023 Phosphor Icons,
-under the MIT licence, copied into the page. The copyright and permission notice is in
-[`licenses/phosphor-icons/LICENSE`](../licenses/phosphor-icons/LICENSE).
+From [Lucide](https://lucide.dev), © Lucide Icons and Contributors, under the ISC licence
+(and MIT for the icons derived from Feather), copied into the page. The licence text is in
+[`licenses/lucide/LICENSE`](../licenses/lucide/LICENSE).
 
 ## Pictures
 
