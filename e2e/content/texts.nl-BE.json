@@ -1,4 +1,21 @@
 {
+  "paths": {
+    "apartments": "appartementen",
+    "book": "boeken",
+    "confirmation": "bevestiging",
+    "faq": "vragen",
+    "about": "over-ons",
+    "imprint": "colofon",
+    "privacy": "privacy",
+    "terms": "voorwaarden",
+    "credits": "fotoverantwoording"
+  },
+  "anchors": {
+    "weeks": "vrije-weken",
+    "apartments": "appartementen",
+    "location": "ligging",
+    "about": "over-ons"
+  },
   "skip": "Naar de inhoud",
   "nav": {
     "label": "Hoofdmenu",

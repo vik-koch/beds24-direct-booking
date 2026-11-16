@@ -1,6 +1,25 @@
 {
+  "paths": {
+    "apartments": "wohnungen",
+    "book": "buchen",
+    "confirmation": "buchungsbestaetigung",
+    "faq": "haeufige-fragen",
+    "about": "ueber-uns",
+    "imprint": "impressum",
+    "privacy": "datenschutz",
+    "terms": "agb",
+    "credits": "bildnachweis"
+  },
+  "anchors": {
+    "weeks": "freie-wochen",
+    "apartments": "wohnungen",
+    "location": "lage",
+    "about": "ueber-uns"
+  },
   "skip": "Zum Inhalt",
-  "notice": { "text": "Demo: Firn & Farn ist erfunden. Die Häuser und Preise gibt es nicht." },
+  "notice": {
+    "text": "Demo: Firn & Farn ist erfunden. Die Häuser und Preise gibt es nicht."
+  },
   "nav": {
     "label": "Hauptmenü",
     "weeks": "Freie Wochen",
@@ -12,7 +31,9 @@
     "menu": "Menü",
     "close": "Schließen"
   },
-  "home": { "title": "Ferienwohnungen mitten in Saalbach" },
+  "home": {
+    "title": "Ferienwohnungen mitten in Saalbach"
+  },
   "pages": {
     "book": "Buchen",
     "confirmation": "Buchungsbestätigung",
@@ -29,5 +50,9 @@
     "text": "Unter dieser Adresse gibt es nichts.",
     "home": "Zur Startseite"
   },
-  "footer": { "label": "Fußzeile", "contact": "Kontakt", "more": "Mehr" }
+  "footer": {
+    "label": "Fußzeile",
+    "contact": "Kontakt",
+    "more": "Mehr"
+  }
 }

@@ -1,7 +1,7 @@
 // Validates a deployment's content folder and writes it as typed modules for the build.
 import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { siteSchema, textsSchema } from '../src/content/schema.ts';
+import { prefix, siteSchema, textsSchema } from '../src/content/schema.ts';
 
 export function readContent(dir) {
   const read = (file, schema) => {
@@ -14,9 +14,15 @@ export function readContent(dir) {
   };
   const site = read('site.json', siteSchema);
   const texts = Object.fromEntries(
-    site.languages.map(({ code }) => [code, read(`texts.${code}.json`, textsSchema)]),
+    site.languages.map((tag) => [prefix(tag), read(`texts.${tag}.json`, textsSchema)]),
   );
-  return { site, texts };
+  const languages = site.languages.map((tag) => {
+    const code = prefix(tag);
+    const name = new Intl.DisplayNames([tag], { type: 'language' }).of(code);
+    const { paths, anchors } = texts[code];
+    return { tag, code, name: name[0].toLocaleUpperCase(tag) + name.slice(1), paths, anchors };
+  });
+  return { site: { ...site, languages }, texts };
 }
 
 export function writeContent(dir, out) {

@@ -1,4 +1,21 @@
 {
+  "paths": {
+    "apartments": "appartamenti",
+    "book": "prenota",
+    "confirmation": "conferma",
+    "faq": "domande",
+    "about": "chi-siamo",
+    "imprint": "note-legali",
+    "privacy": "privacy",
+    "terms": "condizioni",
+    "credits": "crediti"
+  },
+  "anchors": {
+    "weeks": "settimane-libere",
+    "apartments": "appartamenti",
+    "location": "posizione",
+    "about": "chi-siamo"
+  },
   "skip": "Vai al contenuto",
   "nav": {
     "label": "Menu principale",

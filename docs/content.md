@@ -10,16 +10,21 @@ repository.
 <!-- prettier-ignore -->
 | File | What it holds |
 |---|---|
-| `site.json` | The site's name, its languages in order, each language's address parts and anchors, the apartments (slug, Beds24 room ID, name) and the contact. |
-| `texts.<code>.json` | The wording in one language, one file per language listed in `site.json`. |
+| `site.json` | The site's name, its languages in order as language tags, the apartments (slug, Beds24 room ID, name) and the contact. |
+| `texts.<tag>.json` | Everything one language says: the wording, the address parts and the anchors. One file per language listed in `site.json`, such as `texts.en-GB.json`. |
 | `theme.css` | The palette and the typeface as custom properties on `:root`, and the typeface's `@font-face`. |
 | `fonts/` | Optional: the font files `theme.css` refers to, as `fonts/<file>`. |
 
+- **A language is a BCP 47 tag** in its canonical form, such as `de-AT` or `en-GB`. The page's
+  `lang` and its `hreflang` links use the tag, so dates and numbers follow the region. The
+  address prefix is the tag's language (`/de`, `/en`), so two tags with the same language are
+  refused. The language menu names each language in its own language, taken from the tag
+  ("Deutsch", "English").
 - **The first language** is the one the bare address leads to when the browser asks for none
   of the site's languages.
-- **The address parts** are the translated fixed parts of [`site-map.md`](site-map.md)'s
-  addresses, such as `wohnungen` for `apartments`. An apartment's slug is the same in every
-  language.
+- **The address parts** (`paths` in a texts file) are the translated fixed parts of
+  [`site-map.md`](site-map.md)'s addresses, such as `wohnungen` for `apartments`; `anchors`
+  are the home page's section anchors. An apartment's slug is the same in every language.
 - **The notice** (`notice` in a texts file) is an optional line above the header, with an
   optional link. Left out, no line is shown.
 - **The theme's names** are the ones in [`DESIGN.md`](../DESIGN.md): `--font-sans` and the
@@ -32,7 +37,8 @@ repository.
 [`src/content/schema.ts`](../src/content/schema.ts) and writes it into
 `src/content/generated/`, which is not committed. It runs before every `start`, `build`, `test`
 and `lint`. A key that is missing in one language, a key the schema does not know, a missing
-texts file and a language listed twice each stop the build with the file and the key named.
+texts file, a tag that is not canonical and two tags with one language each stop the build
+with the file and the key named.
 The schema, not the demo's files, defines the keys, so the compiler checks every template
 against the same keys for every site.
 

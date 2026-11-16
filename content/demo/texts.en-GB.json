@@ -1,6 +1,25 @@
 {
+  "paths": {
+    "apartments": "apartments",
+    "book": "book",
+    "confirmation": "booking-confirmation",
+    "faq": "faq",
+    "about": "about",
+    "imprint": "imprint",
+    "privacy": "privacy",
+    "terms": "terms",
+    "credits": "picture-credits"
+  },
+  "anchors": {
+    "weeks": "free-weeks",
+    "apartments": "apartments",
+    "location": "location",
+    "about": "about"
+  },
   "skip": "Skip to the content",
-  "notice": { "text": "Demo: Firn & Farn is invented. The houses and prices do not exist." },
+  "notice": {
+    "text": "Demo: Firn & Farn is invented. The houses and prices do not exist."
+  },
   "nav": {
     "label": "Main menu",
     "weeks": "Free weeks",
@@ -12,7 +31,9 @@
     "menu": "Menu",
     "close": "Close"
   },
-  "home": { "title": "Holiday apartments in the middle of Saalbach" },
+  "home": {
+    "title": "Holiday apartments in the middle of Saalbach"
+  },
   "pages": {
     "book": "Book",
     "confirmation": "Booking confirmation",
@@ -29,5 +50,9 @@
     "text": "There is nothing at this address.",
     "home": "To the home page"
   },
-  "footer": { "label": "Footer", "contact": "Contact", "more": "More" }
+  "footer": {
+    "label": "Footer",
+    "contact": "Contact",
+    "more": "More"
+  }
 }

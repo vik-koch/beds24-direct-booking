@@ -1,49 +1,6 @@
 {
   "name": "Casa Prova",
-  "languages": [
-    {
-      "code": "it",
-      "name": "Italiano",
-      "paths": {
-        "apartments": "appartamenti",
-        "book": "prenota",
-        "confirmation": "conferma",
-        "faq": "domande",
-        "about": "chi-siamo",
-        "imprint": "note-legali",
-        "privacy": "privacy",
-        "terms": "condizioni",
-        "credits": "crediti"
-      },
-      "anchors": {
-        "weeks": "settimane-libere",
-        "apartments": "appartamenti",
-        "location": "posizione",
-        "about": "chi-siamo"
-      }
-    },
-    {
-      "code": "nl",
-      "name": "Nederlands",
-      "paths": {
-        "apartments": "appartementen",
-        "book": "boeken",
-        "confirmation": "bevestiging",
-        "faq": "vragen",
-        "about": "over-ons",
-        "imprint": "colofon",
-        "privacy": "privacy",
-        "terms": "voorwaarden",
-        "credits": "fotoverantwoording"
-      },
-      "anchors": {
-        "weeks": "vrije-weken",
-        "apartments": "appartementen",
-        "location": "ligging",
-        "about": "over-ons"
-      }
-    }
-  ],
+  "languages": ["it", "nl-BE"],
   "apartments": [
     {
       "slug": "zirbe",

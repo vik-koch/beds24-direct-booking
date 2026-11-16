@@ -19,8 +19,7 @@ import { address, LANGUAGE, TEXTS, type Page } from './texts';
 const leaf = (route: ActivatedRouteSnapshot): ActivatedRouteSnapshot =>
   route.firstChild ? leaf(route.firstChild) : route;
 
-const slugOf = (route: ActivatedRouteSnapshot): string | undefined =>
-  route.params['slug'] ?? route.parent?.params['slug'];
+const slugOf = (route: ActivatedRouteSnapshot): string | undefined => route.params['slug'];
 
 export function heading(texts: Texts, route: ActivatedRouteSnapshot): string {
   const page: Page = route.data['page'];
@@ -60,7 +59,7 @@ export class Shell {
   protected alternates: Record<string, string> = {};
 
   constructor() {
-    this.document.documentElement.lang = this.language.code;
+    this.document.documentElement.lang = this.language.tag;
     // A jump from a link lands below the sticky header, with a little air.
     inject(ViewportScroller).setOffset(() => [
       0,
@@ -96,11 +95,11 @@ export class Shell {
     const head = this.document.head;
     head.querySelectorAll('link[rel=alternate]').forEach((link) => link.remove());
     if (page === 'notFound') return;
-    for (const [code, path] of Object.entries(this.alternates)) {
+    for (const { code, tag } of site.languages) {
       const link = this.document.createElement('link');
       link.rel = 'alternate';
-      link.hreflang = code;
-      link.href = path;
+      link.hreflang = tag;
+      link.href = this.alternates[code];
       head.appendChild(link);
     }
   }
