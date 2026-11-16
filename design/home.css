@@ -90,7 +90,11 @@ a {
   flex: none;
   width: 1.375rem;
   height: 1.375rem;
-  fill: currentcolor;
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .notice {
