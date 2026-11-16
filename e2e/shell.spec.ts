@@ -48,6 +48,8 @@ test('every page of the site map answers in both languages and names the other',
       const html = await response.text();
       expect(html, path).toContain(`<html lang="${lang}"`);
       expect(html, path).toMatch(/<h1[^>]*>[^<]+<\/h1>/);
+      // A stylesheet loaded after the first paint makes the text change its font.
+      expect(html, path).not.toContain('media="print"');
       expect(html, path).toContain(`<link rel="alternate" hreflang="de-AT" href="${de}">`);
       expect(html, path).toContain(`<link rel="alternate" hreflang="en-GB" href="${en}">`);
     }
