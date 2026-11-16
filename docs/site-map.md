@@ -28,8 +28,9 @@ apartment's slug is the same in both languages and comes from the deployment's c
 - **The address without a prefix** (`/`) redirects to the home page in the browser's language
   if the deployment has it, and in the deployment's first language otherwise.
 - **The booking step** belongs to one apartment and takes the stay as query parameters, which
-  are not translated. Opened without a stay, or with one that is not free, it redirects to the
-  apartment's page and its stay picker.
+  are not translated. The stay is in the address so that a reload or a shared link keeps it.
+  Opened without a stay, or with one that is not free, it redirects to the apartment's page
+  and its stay picker.
 - **The confirmation** has one address per language, because Beds24 returns the guest to it.
 - **The FAQ** is one page for all apartments and keeps its address once it is published, so a
   printed QR code can point to it. Further guest guides (self check-in, waste) get their
