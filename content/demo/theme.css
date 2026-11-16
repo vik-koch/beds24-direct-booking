@@ -21,3 +21,9 @@
   --color-accent-soft: #e2e8f0;
   --color-on-accent: #ffffff;
 }
+
+/* Winter's accent is the default above; summer replaces it. */
+[data-season='summer'] {
+  --color-accent: #2c7060;
+  --color-accent-soft: #deede8;
+}

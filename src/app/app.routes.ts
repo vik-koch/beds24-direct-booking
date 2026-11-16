@@ -3,6 +3,7 @@ import site from '../content/generated/site';
 import { loadTexts } from '../content/generated/texts';
 import type { Language } from '../content/schema';
 import { apartments } from './apartments';
+import { Credits } from './credits';
 import { Home } from './home';
 import { NotFound } from './not-found';
 import { Placeholder } from './placeholder';
@@ -29,7 +30,11 @@ const pages = ({ paths }: Language): Routes => [
       { path: paths.book, component: Placeholder, data: { page: 'book' } },
     ],
   },
-  ...simplePages.map((page) => ({ path: paths[page], component: Placeholder, data: { page } })),
+  ...simplePages.map((page) => ({
+    path: paths[page],
+    component: page === 'credits' ? Credits : Placeholder,
+    data: { page },
+  })),
   { path: '**', component: NotFound, data: { page: 'notFound' } },
 ];
 

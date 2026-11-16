@@ -1,0 +1,169 @@
+import AxeBuilder from '@axe-core/playwright';
+import { expect, test, type Page } from '@playwright/test';
+
+const axe = async (page: Page) => (await new AxeBuilder({ page }).analyze()).violations;
+const season = (page: Page) => page.locator('html').getAttribute('data-season');
+const stored = (page: Page) => page.evaluate(() => localStorage.getItem('season'));
+const store = (page: Page, value: string) =>
+  page.addInitScript((v) => localStorage.setItem('season', v), value);
+
+// The demo: winter from 1 September, summer from 1 April. Noon, so no time zone moves the day.
+const november = new Date(2026, 10, 16, 12);
+const july = new Date(2027, 6, 1, 12);
+
+// Switches by clicking the season's side of the pill. A click during hydration can be lost,
+// so it is repeated until the page follows.
+async function switchTo(page: Page, name: 'winter' | 'summer') {
+  await expect(async () => {
+    await page.locator(`.season-switch label[data-for=${name}]`).click();
+    await expect(page.locator('html')).toHaveAttribute('data-season', name, { timeout: 500 });
+  }).toPass();
+}
+
+test('the season follows the date, on server-rendered and prerendered pages', async ({ page }) => {
+  await page.clock.setFixedTime(july);
+  for (const path of ['/de', '/de/bildnachweis']) {
+    await page.goto(path);
+    expect(await season(page)).toBe('summer');
+  }
+  await page.clock.setFixedTime(november);
+  await page.goto('/en');
+  expect(await season(page)).toBe('winter');
+  await expect(page.getByRole('radio', { name: 'Winter' })).toBeChecked();
+});
+
+test('the season is chosen before the application starts', async ({ page }) => {
+  await page.clock.setFixedTime(july);
+  // Hold the application's scripts back: only the inline script in the head runs.
+  await page.route(/\/(main|chunk)-[\w-]+\.js$/, () => undefined);
+  // Module scripts hold DOMContentLoaded back, so wait for the answer only.
+  await page.goto('/de', { waitUntil: 'commit' });
+  await expect(page.locator('html')).toHaveAttribute('data-season', 'summer');
+  await expect(page.locator('html')).toHaveAttribute('data-script', '');
+  // The server checked winter by its own date; the pill must show summer all the same.
+  await expect(page.locator('label[data-for=summer] .season-name')).toHaveCSS('opacity', '1');
+  await expect(page.locator('label[data-for=winter] .season-name')).toHaveCSS('opacity', '0');
+  await expect(page.getByRole('img', { name: /Almwiese/ })).toBeVisible();
+  await expect(page.getByRole('img', { name: /Glemmtal/ })).toBeHidden();
+});
+
+test('a switch changes the page, is remembered, and wins over the date', async ({ page }) => {
+  await page.clock.setFixedTime(november);
+  await page.goto('/de');
+  await expect(page.getByRole('img', { name: /Glemmtal/ })).toBeVisible();
+  await switchTo(page, 'summer');
+  await expect(page.getByRole('img', { name: /Almwiese/ })).toBeVisible();
+  await expect(page.getByRole('img', { name: /Glemmtal/ })).toBeHidden();
+  await expect(page.getByRole('radio', { name: 'Sommer' })).toBeChecked();
+  expect(JSON.parse((await stored(page))!)).toEqual({ season: 'summer-2027', on: '2026-11-16' });
+
+  // Another page, and the other language, open in the chosen season.
+  await page.goto('/en/picture-credits');
+  expect(await season(page)).toBe('summer');
+  await expect(page.getByRole('radio', { name: 'Summer' })).toBeChecked();
+});
+
+test('the switch works by keyboard', async ({ page }) => {
+  await page.clock.setFixedTime(november);
+  await page.goto('/en');
+  const winter = page.getByRole('radio', { name: 'Winter' });
+  await expect(async () => {
+    await winter.focus();
+    await page.keyboard.press('ArrowRight');
+    await expect(page.locator('html')).toHaveAttribute('data-season', 'summer', { timeout: 500 });
+  }).toPass();
+  await expect(page.getByRole('radio', { name: 'Summer' })).toBeFocused();
+  expect(await axe(page)).toEqual([]);
+});
+
+test('a link that names a season wins and lasts for the visit', async ({ page }) => {
+  await page.clock.setFixedTime(november);
+  await store(page, JSON.stringify({ season: 'winter-2026', on: '2026-11-15' }));
+  await page.goto('/de?season=summer');
+  expect(await season(page)).toBe('summer');
+  await expect.poll(() => stored(page)).toContain('summer-2027');
+
+  // A switch takes the link's season out of the address, or a reload would bring it back.
+  await switchTo(page, 'winter');
+  await expect(page).toHaveURL('/de');
+  await page.reload();
+  expect(await season(page)).toBe('winter');
+});
+
+test('a stored choice ends after 30 days, or when its season is no longer shown', async ({
+  page,
+}) => {
+  await page.clock.setFixedTime(november);
+  await store(page, JSON.stringify({ season: 'summer-2027', on: '2026-10-17' }));
+  await page.goto('/de');
+  expect(await season(page)).toBe('summer');
+
+  await page.clock.setFixedTime(new Date(2026, 10, 17, 12));
+  await page.reload();
+  expect(await season(page)).toBe('winter');
+  await expect.poll(() => stored(page)).toBeNull();
+});
+
+test('a summer chosen in August is over in September', async ({ page }) => {
+  await page.clock.setFixedTime(november);
+  await store(page, JSON.stringify({ season: 'summer-2026', on: '2026-08-20' }));
+  await page.goto('/de');
+  expect(await season(page)).toBe('winter');
+});
+
+test('only the shown season’s photo is fetched, the other one on approach', async ({ page }) => {
+  const photos: string[] = [];
+  page.on('request', (request) => {
+    const path = new URL(request.url()).pathname;
+    if (path.startsWith('/pictures/')) photos.push(path);
+  });
+  await page.clock.setFixedTime(november);
+  await page.goto('/de');
+  await page.waitForLoadState('networkidle');
+  expect(photos).toEqual(['/pictures/hero-winter.jpg']);
+  await expect(async () => {
+    await page.getByRole('radio', { name: 'Sommer' }).focus();
+    expect(photos).toContain('/pictures/hero-summer.jpg');
+  }).toPass();
+});
+
+test('both seasons pass axe, and the pill keeps its width', async ({ page }) => {
+  await page.clock.setFixedTime(november);
+  await page.goto('/de');
+  const width = async () => (await page.locator('.season-switch').boundingBox())!.width;
+  const before = await width();
+  expect(await axe(page)).toEqual([]);
+  await switchTo(page, 'summer');
+  // The colour fades; axe measures the final one.
+  await page.waitForTimeout(600);
+  expect(await width()).toBe(before);
+  expect(await axe(page)).toEqual([]);
+});
+
+test('the picture credits name each photo’s author, source and licence', async ({ page }) => {
+  await page.goto('/en/picture-credits');
+  await expect(page.getByRole('link', { name: 'Saalbach (8450786397).jpg' })).toHaveAttribute(
+    'href',
+    'https://commons.wikimedia.org/wiki/File:Saalbach_(8450786397).jpg',
+  );
+  await expect(page.getByText('Ian Gratton')).toBeVisible();
+  await expect(page.getByRole('link', { name: 'CC BY-SA 4.0' })).toHaveAttribute(
+    'href',
+    'https://creativecommons.org/licenses/by-sa/4.0',
+  );
+  expect(await axe(page)).toEqual([]);
+});
+
+test('a site with a single season has no switch and no credits', async ({ page }) => {
+  const other = 'http://localhost:4002';
+  await page.clock.setFixedTime(november);
+  await store(page, JSON.stringify({ season: 'winter-2026', on: '2026-11-15' }));
+  await page.goto(`${other}/it?season=winter`);
+  expect(await season(page)).toBe('summer');
+  await expect(page.getByRole('radiogroup')).toHaveCount(0);
+  await expect(page.getByRole('img', { name: /sfumatura/ })).toBeVisible();
+  await expect.poll(() => stored(page)).toBeNull();
+
+  await page.goto(`${other}/it/crediti`);
+  await expect(page.getByText('Questo sito non mostra foto di altri.')).toBeVisible();
+});

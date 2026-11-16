@@ -60,3 +60,35 @@ test('a language is named in its own language, from its tag', () => {
   ]);
   assert.deepEqual(names('e2e/content')[0], ['it', 'it', 'Italiano']);
 });
+
+test('a third season is refused', () => {
+  const dir = changed('site.json', (site) => (site.seasons.autumn = site.seasons.winter));
+  assert.throws(() => readContent(dir), /site\.json\n {2}seasons: Unrecognized key/);
+});
+
+test('a season cannot start on 29 February', () => {
+  const dir = changed('site.json', (site) => (site.seasons.summer.start = '02-29'));
+  assert.throws(() => readContent(dir), /seasons\.summer\.start: not a day of every year/);
+});
+
+test('two seasons need a start each, a single season none', () => {
+  const both = changed('site.json', (site) => delete site.seasons.summer.start);
+  assert.throws(() => readContent(both), /seasons\.summer\.start: two seasons need a start/);
+  const one = changed('site.json', (site) => delete site.seasons.summer);
+  assert.throws(() => readContent(one), /seasons\.winter\.start: a single season covers/);
+});
+
+test('the texts name exactly the seasons the site lists', () => {
+  const extra = changed('site.json', (site) => {
+    delete site.seasons.summer;
+    delete site.seasons.winter.start;
+  });
+  assert.throws(() => readContent(extra), /texts\.de-AT\.json\n {2}seasons\.summer: a season/);
+  const missing = changed('texts.en-GB.json', (texts) => delete texts.hero.summer);
+  assert.throws(() => readContent(missing), /texts\.en-GB\.json\n {2}hero\.summer: missing/);
+});
+
+test('a hero photo must exist', () => {
+  const dir = changed('site.json', (site) => (site.seasons.winter.hero.file = 'pictures/gone.jpg'));
+  assert.throws(() => readContent(dir), /seasons\.winter\.hero\.file: pictures\/gone\.jpg/);
+});

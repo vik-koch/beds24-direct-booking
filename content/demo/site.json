@@ -18,6 +18,38 @@
       "name": "Ahorn"
     }
   ],
+  "seasons": {
+    "winter": {
+      "start": "09-01",
+      "hero": {
+        "file": "pictures/hero-winter.jpg",
+        "credit": {
+          "title": "Saalbach (8450786397).jpg",
+          "author": "Ian Gratton",
+          "source": "https://commons.wikimedia.org/wiki/File:Saalbach_(8450786397).jpg",
+          "licence": {
+            "name": "CC BY 2.0",
+            "url": "https://creativecommons.org/licenses/by/2.0"
+          }
+        }
+      }
+    },
+    "summer": {
+      "start": "04-01",
+      "hero": {
+        "file": "pictures/hero-summer.jpg",
+        "credit": {
+          "title": "Saalbach, 2014 (02).JPG",
+          "author": "Bahnfrend",
+          "source": "https://commons.wikimedia.org/wiki/File:Saalbach,_2014_(02).JPG",
+          "licence": {
+            "name": "CC BY-SA 4.0",
+            "url": "https://creativecommons.org/licenses/by-sa/4.0"
+          }
+        }
+      }
+    }
+  },
   "contact": {
     "name": "Firn & Farn Appartements",
     "address": ["Musterweg 0", "5753 Saalbach", "Österreich"],

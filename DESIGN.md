@@ -242,6 +242,17 @@ One pill on white with an edge. The chosen season is an accent-filled pill insid
 icon and its name; the other season shows its icon only and keeps its name for screen
 readers. The list does not repeat this switch: it has the text button.
 
+- **One width:** both names share one hidden cell, so the pill is as wide as the longer name
+  in the page's language and does not change when the season does. Below 22.5rem it is a
+  little smaller, so the wordmark keeps one line beside it.
+- **The glide:** on a change the accent part moves to the other side by its two edges, the
+  leading edge first and the trailing one 0.09 s later, so it stretches as it goes (0.32 s,
+  ease in and out). The accent colour of the whole page fades to the other season's over
+  0.45 s, the names fade, and the hero photos cross-fade over 0.6 s. Nothing moves on a page's
+  first paint, and with reduced motion everything changes at once.
+- **Winter on the left,** summer on the right, a snowflake and a sun.
+- **Semantics:** a labelled radio group; the arrow keys change the season.
+
 ### Free-weeks list
 
 - **Sheet:** a white card holding a table. No vertical lines; a hairline between rows.

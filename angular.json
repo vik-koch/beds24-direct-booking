@@ -28,6 +28,11 @@
                 "glob": "**/*",
                 "input": "src/content/generated/fonts",
                 "output": "fonts"
+              },
+              {
+                "glob": "**/*",
+                "input": "src/content/generated/pictures",
+                "output": "pictures"
               }
             ],
             "styles": ["src/styles.css"],

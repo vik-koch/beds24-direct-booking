@@ -6,19 +6,22 @@ import { lucideGlobe, lucideMenu } from '@ng-icons/lucide';
 import { HlmNavigationMenuImports } from '@spartan-ng/helm/navigation-menu';
 import { HlmSheetImports } from '@spartan-ng/helm/sheet';
 import site from '../content/generated/site';
+import { SeasonSwitch } from './season-switch';
 import { address, LANGUAGE, TEXTS } from './texts';
 
 // Links to the home page load it in full: in the browser, only the server's answer carries
 // the apartments (ADR 6), until the availability route exists.
 @Component({
   selector: 'app-header',
-  imports: [RouterLink, NgIcon, HlmNavigationMenuImports, HlmSheetImports],
+  imports: [RouterLink, NgIcon, HlmNavigationMenuImports, HlmSheetImports, SeasonSwitch],
   providers: [provideIcons({ lucideGlobe, lucideMenu })],
   template: `
-    <header class="column flex min-h-[4.5rem] items-center gap-3">
-      <a class="mr-auto text-2xl font-medium tracking-[-0.01em] no-underline" [href]="home">{{
-        site.name
-      }}</a>
+    <header class="column flex min-h-[4.5rem] items-center gap-3 max-[22.5rem]:gap-1.5">
+      <a
+        class="mr-auto text-2xl font-medium tracking-[-0.01em] no-underline max-[22.5rem]:text-xl"
+        [href]="home"
+        >{{ site.name }}</a
+      >
 
       <nav hlmNavigationMenu class="header-wide" [attr.aria-label]="texts.nav.label">
         <ul hlmNavigationMenuList>
@@ -77,6 +80,8 @@ import { address, LANGUAGE, TEXTS } from './texts';
           </li>
         </ul>
       </nav>
+
+      <app-season-switch />
 
       <hlm-sheet #menu="hlmSheet" side="right" class="header-narrow" (closed)="settle()">
         <button class="icon-button" hlmSheetTrigger [attr.aria-label]="texts.nav.menu">
