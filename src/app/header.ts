@@ -18,7 +18,7 @@ import { address, LANGUAGE, TEXTS } from './texts';
   template: `
     <header class="column flex min-h-[4.5rem] items-center gap-3 max-[22.5rem]:gap-1.5">
       <a
-        class="-ml-3.5 mr-auto inline-flex h-11 items-center rounded-full px-3.5 text-2xl font-medium tracking-[-0.01em] no-underline max-[22.5rem]:text-xl"
+        class="mr-auto -ml-3.5 inline-flex h-11 items-center rounded-full px-3.5 text-2xl font-medium tracking-[-0.01em] no-underline max-[22.5rem]:text-xl"
         [href]="home"
         >{{ site.name }}</a
       >
