@@ -180,10 +180,11 @@ so that amounts can be compared down a column.
 - **Column:** content sits in a centred column of 66rem with a gutter of 1rem on a phone and
   2rem from 48rem up. The hero photo and, later, the map run edge to edge up to 120rem.
 - **Hero:** the photo fills the first screen, the header lying over its top, which fades to
-  the ground colour behind the header's text. The text is a white card at the bottom of the
-  screen, 1rem from the edges on a phone; from 48rem up 2rem above the bottom, with its left
-  edge on the column's left edge and a width of up to 46rem. The card keeps to the bottom of
-  the screen even where a notice above the header pushes the photo's end below it.
+  the ground colour behind the header's text. The text is a white card near the bottom of the
+  screen, 1rem from the sides on a phone and with its left edge on the column's left edge and
+  a width of up to 46rem from 48rem up. The space below it grows with the screen's height, up
+  to 4rem on a phone and 10rem from 48rem up, so on a tall screen the card stands clear of the
+  bottom. It scrolls with the photo.
 - **Rhythm:** 3.5rem above a section on a phone, 5rem from 48rem up; 1.5rem between a heading
   and what follows. More space above a heading than below it. The section after the hero has 5.5rem above
   it, so a jump to it places the heading below the header with the photo out of view.
@@ -253,7 +254,8 @@ readers. The list does not repeat this switch: it has the text button.
   ease in and out). The accent colour of the whole page fades to the other season's over
   0.45 s, the names fade, and the hero photos cross-fade over 0.6 s. Nothing moves on a page's
   first paint, and with reduced motion everything changes at once.
-- **Winter on the left,** summer on the right, a snowflake and a sun.
+- **Winter on the left,** summer on the right, a snowflake and a sun. The icons never move:
+  the snowflake sits left of its name, the sun right of its name, each at the outer edge.
 - **Semantics:** a labelled radio group; the arrow keys change the season. The focus ring goes
   round the whole switch, which stays still while the chosen side glides.
 

@@ -245,6 +245,17 @@
     }
   }
 
+  /* Each icon keeps its place: summer's sits right of its name, at the edge that does not
+     move, as winter's sits at the left one. */
+  .season-switch label[data-for='summer'] {
+    flex-direction: row-reverse;
+    padding: 0 0.5rem 0 0.875rem;
+
+    @media (width < 22.5rem) {
+      padding: 0 0.4375rem 0 0.625rem;
+    }
+  }
+
   .season-sizer {
     grid-column: 2;
     visibility: hidden;
@@ -377,8 +388,9 @@
     }
   }
 
-  /* The hero fills the first screen, the header lying over its top. Its card keeps to the
-     bottom of the screen even where the notice above pushes the hero's own end below it. */
+  /* The hero fills the first screen, the header lying over its top. The card stands well
+     above the bottom where the screen is tall enough, so a notice above the header, which
+     pushes the hero's end below the screen, does not push the card out of it. */
   .hero {
     display: grid;
     /* A long word in the headline must not widen the page. */
@@ -431,24 +443,21 @@
   }
 
   .hero-copy {
-    position: sticky;
-    bottom: 1rem;
     z-index: 2;
     grid-area: 1 / 1;
     align-self: end;
     /* Below the header, however short the screen. */
-    margin: 5.5rem 1rem 1rem;
+    margin: 5.5rem 1rem clamp(1rem, 100svh - 36rem, 4rem);
     padding: 1.5rem 1.25rem;
     border-radius: var(--radius-card);
     background: var(--color-surface);
     box-shadow: var(--shadow-card);
 
     @media (min-width: 48rem) {
-      bottom: 2rem;
       justify-self: start;
       max-width: 46rem;
       /* The card's left edge is the edge of the page's centred column. */
-      margin: 6.5rem 2rem 2rem max(2rem, calc(50% - 31rem));
+      margin: 6.5rem 2rem clamp(2rem, 100svh - 40rem, 10rem) max(2rem, calc(50% - 31rem));
       padding: 2.25rem 2.5rem 2.5rem;
     }
 

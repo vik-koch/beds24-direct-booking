@@ -178,7 +178,7 @@ test('the hero fills the first screen, and the jump to the weeks hides it', asyn
   const card = (await page.locator('.hero-copy').boundingBox())!;
   const height = page.viewportSize()!.height;
   expect(card.y + card.height).toBeLessThanOrEqual(height);
-  expect(card.y + card.height).toBeGreaterThan(height - 48);
+  expect(card.y + card.height).toBeGreaterThan(height / 2);
 
   await expect(async () => {
     await page.getByRole('link', { name: 'See the free weeks' }).click();
