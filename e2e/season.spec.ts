@@ -170,3 +170,24 @@ test('a site with a single season has no switch and no credits', async ({ page }
   await page.goto(`${other}/it/crediti`);
   await expect(page.getByText('Questo sito non mostra foto di altri.')).toBeVisible();
 });
+
+test('the hero fills the first screen, and the jump to the weeks hides it', async ({ page }) => {
+  await page.goto('/en');
+  const header = page.locator('app-header');
+  await expect(header).toHaveAttribute('data-over', '');
+  const card = (await page.locator('.hero-copy').boundingBox())!;
+  const height = page.viewportSize()!.height;
+  expect(card.y + card.height).toBeLessThanOrEqual(height);
+  expect(card.y + card.height).toBeGreaterThan(height - 48);
+
+  await expect(async () => {
+    await page.getByRole('link', { name: 'See the free weeks' }).click();
+    await expect(page).toHaveURL('/en#free-weeks', { timeout: 500 });
+  }).toPass();
+  await expect(header).not.toHaveAttribute('data-over');
+  await expect
+    .poll(() =>
+      page.evaluate(() => document.querySelector('.hero')!.getBoundingClientRect().bottom),
+    )
+    .toBeLessThanOrEqual(0);
+});

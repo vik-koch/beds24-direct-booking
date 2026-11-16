@@ -1,5 +1,5 @@
 import { DOCUMENT, ViewportScroller } from '@angular/common';
-import { Component, inject, input } from '@angular/core';
+import { afterNextRender, Component, DestroyRef, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideGlobe, lucideMenu } from '@ng-icons/lucide';
@@ -137,14 +137,15 @@ import { address, LANGUAGE, TEXTS } from './texts';
       </hlm-sheet>
     </header>
   `,
-  host: {
-    class:
-      'sticky top-0 z-20 block bg-[color-mix(in_srgb,var(--color-ground)_92%,transparent)] backdrop-blur-md',
-  },
+  host: { class: 'site-header', '[attr.data-over]': 'overHero() && !scrolled() ? "" : null' },
 })
 export class Header {
   // The same page in every language, by address prefix.
   readonly alternates = input.required<Record<string, string>>();
+  // On the home page the header lies over the hero photo, without its own ground, until the
+  // page is scrolled.
+  readonly overHero = input(false);
+  protected readonly scrolled = signal(false);
 
   protected readonly texts = inject(TEXTS);
   protected readonly language = inject(LANGUAGE);
@@ -163,6 +164,17 @@ export class Header {
   private readonly document = inject(DOCUMENT);
   private readonly scroller = inject(ViewportScroller);
   private followed = false;
+
+  constructor() {
+    const destroyRef = inject(DestroyRef);
+    afterNextRender(() => {
+      const window = this.document.defaultView!;
+      const update = () => this.scrolled.set(window.scrollY > 0);
+      update();
+      window.addEventListener('scroll', update, { passive: true });
+      destroyRef.onDestroy(() => window.removeEventListener('scroll', update));
+    });
+  }
 
   protected follow(menu: { close: () => void }) {
     this.followed = true;

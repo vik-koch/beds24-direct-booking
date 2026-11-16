@@ -75,8 +75,8 @@ Top to bottom. Each section other than the hero has an anchor that the header li
 | Who we are | `#ueber-uns` | `#about` |
 
 1. **Hero:** a season photo edge to edge, a headline that says what and where, three features
-   with icons, and a button to the free weeks. Sized by the screen but shorter than it, so the
-   next section shows.
+   with icons, and a button to the free weeks. It fills the first screen, with the header over
+   its top.
 2. **Free weeks:** the list of one dated season ("Winter 2026/27") with a price per apartment,
    and buttons to the previous and the next season where there is one. The list's season and
    the header's season switch are one state: changing either changes the list and the theme.

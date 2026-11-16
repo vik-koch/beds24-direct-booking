@@ -61,8 +61,10 @@ const icons: Record<FeatureIcon, string> = {
       </div>
     </section>
     @for (section of sections; track section) {
-      <section class="column pt-14 md:pt-20" [id]="anchors[section]">
-        <h2 class="headline">{{ texts.nav[section] }}</h2>
+      <!-- The anchor is the heading: a jump places it below the header, and the space above
+           the first section then hides the hero completely. -->
+      <section class="column" [class]="$first ? 'pt-[5.5rem]' : 'pt-14 md:pt-20'">
+        <h2 class="headline" [id]="anchors[section]">{{ texts.nav[section] }}</h2>
         @if (section === 'apartments' && apartments?.length) {
           <ul class="mt-6">
             @for (apartment of apartments; track apartment.id) {
