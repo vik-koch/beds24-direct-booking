@@ -601,15 +601,15 @@ td {
   }
 }
 
-@media (width >= 48rem) {
+/* The menu needs more room than the list before it can sit in one line. */
+@media (width >= 64rem) {
   .top {
     flex-wrap: nowrap;
     gap: 2rem;
     padding: 1rem 2rem;
   }
 
-  .menu-button,
-  .room-tabs {
+  .menu-button {
     display: none;
   }
 
@@ -658,6 +658,12 @@ td {
     align-self: center;
     margin: 0;
   }
+}
+
+@media (width >= 48rem) {
+  .room-tabs {
+    display: none;
+  }
 
   .hero-photo {
     height: clamp(26rem, 68svh, 42rem);
@@ -667,8 +673,9 @@ td {
     grid-area: 1 / 1;
     align-self: end;
     justify-self: start;
-    max-width: 36rem;
-    margin: 0 0 2rem 2rem;
+    max-width: 46rem;
+    /* The card's left edge is the edge of the page's centred column. */
+    margin: 0 2rem 2rem max(2rem, calc(50% - 31rem));
     padding: 2.25rem 2.5rem 2.5rem;
   }
 
