@@ -1,0 +1,38 @@
+{
+  "skip": "Naar de inhoud",
+  "nav": {
+    "label": "Hoofdmenu",
+    "weeks": "Vrije weken",
+    "apartments": "Appartementen",
+    "allApartments": "Alle in het kort",
+    "location": "Ligging",
+    "about": "Over ons",
+    "language": "Taal",
+    "menu": "Menu",
+    "close": "Sluiten"
+  },
+  "home": {
+    "title": "Vakantieappartementen"
+  },
+  "pages": {
+    "book": "Boeken",
+    "confirmation": "Boekingsbevestiging",
+    "faq": "Veelgestelde vragen",
+    "about": "Over ons",
+    "imprint": "Colofon",
+    "privacy": "Privacy",
+    "terms": "Voorwaarden",
+    "credits": "Fotoverantwoording"
+  },
+  "placeholder": "Deze pagina wordt nog gemaakt.",
+  "notFound": {
+    "title": "Pagina niet gevonden",
+    "text": "Op dit adres staat niets.",
+    "home": "Naar de startpagina"
+  },
+  "footer": {
+    "label": "Voettekst",
+    "contact": "Contact",
+    "more": "Meer"
+  }
+}

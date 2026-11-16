@@ -1,0 +1,38 @@
+{
+  "skip": "Vai al contenuto",
+  "nav": {
+    "label": "Menu principale",
+    "weeks": "Settimane libere",
+    "apartments": "Appartamenti",
+    "allApartments": "Tutti in breve",
+    "location": "Posizione",
+    "about": "Chi siamo",
+    "language": "Lingua",
+    "menu": "Menu",
+    "close": "Chiudi"
+  },
+  "home": {
+    "title": "Appartamenti per le vacanze"
+  },
+  "pages": {
+    "book": "Prenota",
+    "confirmation": "Conferma della prenotazione",
+    "faq": "Domande frequenti",
+    "about": "Chi siamo",
+    "imprint": "Note legali",
+    "privacy": "Privacy",
+    "terms": "Condizioni",
+    "credits": "Crediti fotografici"
+  },
+  "placeholder": "Questa pagina è in costruzione.",
+  "notFound": {
+    "title": "Pagina non trovata",
+    "text": "A questo indirizzo non c'è niente.",
+    "home": "Alla pagina iniziale"
+  },
+  "footer": {
+    "label": "Piè di pagina",
+    "contact": "Contatti",
+    "more": "Altro"
+  }
+}

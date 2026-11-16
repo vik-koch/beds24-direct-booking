@@ -8,17 +8,23 @@
     "node": ">=24.15"
   },
   "scripts": {
+    "content": "node scripts/content.mjs",
+    "prestart": "npm run content",
     "start": "BEDS24_URL=http://localhost:4300/v2 BEDS24_TOKEN=simulator ng serve",
+    "prebuild": "npm run content",
     "build": "ng build",
     "serve": "node dist/beds24-direct-booking/server/server.mjs",
     "sim": "node sim/server.ts",
+    "pretest": "npm run content",
     "test": "ng test --watch=false && vitest run --root sim --globals && node --test \"scripts/*.test.mjs\"",
+    "prelint": "npm run content",
     "lint": "ng lint --max-warnings 0 && tsc -p sim",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "e2e": "ng build && playwright test"
+    "e2e": "npm run build && playwright test"
   },
   "dependencies": {
+    "@angular/cdk": "^22.2.7",
     "@angular/common": "^22.2.0",
     "@angular/compiler": "^22.2.0",
     "@angular/core": "^22.2.0",
@@ -27,9 +33,16 @@
     "@angular/platform-server": "^22.2.0",
     "@angular/router": "^22.2.0",
     "@angular/ssr": "^22.2.7",
+    "@ng-icons/core": "^36.1.0",
+    "@ng-icons/lucide": "^36.1.0",
+    "@spartan-ng/brain": "^1.9.0",
+    "clsx": "^2.1.1",
     "express": "^5.1.0",
     "rxjs": "~7.8.0",
-    "tslib": "^2.3.0"
+    "tailwind-merge": "^3.7.0",
+    "tslib": "^2.3.0",
+    "tw-animate-css": "^1.4.0",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@angular/build": "^22.2.7",

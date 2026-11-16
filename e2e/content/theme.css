@@ -1,0 +1,16 @@
+/* A second site for the tests: no font of its own, no notice, other colours. */
+:root {
+  --font-sans: system-ui, sans-serif;
+
+  --color-ground: #f4f1ea;
+  --color-surface: #ffffff;
+  --color-oak: #e6dcc8;
+  --color-ink: #2b2a26;
+  --color-ink-soft: #5e5b52;
+  --color-line: #e5e0d4;
+  --color-edge: #7d796d;
+
+  --color-accent: #8a3b2e;
+  --color-accent-soft: #f1e1dd;
+  --color-on-accent: #ffffff;
+}

@@ -1,0 +1,33 @@
+{
+  "skip": "Zum Inhalt",
+  "notice": { "text": "Demo: Firn & Farn ist erfunden. Die Häuser und Preise gibt es nicht." },
+  "nav": {
+    "label": "Hauptmenü",
+    "weeks": "Freie Wochen",
+    "apartments": "Wohnungen",
+    "allApartments": "Alle im Überblick",
+    "location": "Lage",
+    "about": "Über uns",
+    "language": "Sprache",
+    "menu": "Menü",
+    "close": "Schließen"
+  },
+  "home": { "title": "Ferienwohnungen mitten in Saalbach" },
+  "pages": {
+    "book": "Buchen",
+    "confirmation": "Buchungsbestätigung",
+    "faq": "Häufige Fragen",
+    "about": "Über uns",
+    "imprint": "Impressum",
+    "privacy": "Datenschutz",
+    "terms": "AGB",
+    "credits": "Bildnachweis"
+  },
+  "placeholder": "Diese Seite entsteht noch.",
+  "notFound": {
+    "title": "Seite nicht gefunden",
+    "text": "Unter dieser Adresse gibt es nichts.",
+    "home": "Zur Startseite"
+  },
+  "footer": { "label": "Fußzeile", "contact": "Kontakt", "more": "Mehr" }
+}

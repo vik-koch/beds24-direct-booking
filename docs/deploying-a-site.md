@@ -35,10 +35,11 @@ demo's delivery.
 5. **Pin the machine's host key.** `ssh-keyscan <address>` prints it. Compare its fingerprint
    (`ssh-keyscan <address> | ssh-keygen -lf -`) with the one in the provider's console log of
    the first start, then keep the output for the variable `DEPLOY_KNOWN_HOSTS`.
-6. **Set up the repository.** Copy `infra/site-deploy.yml` to `.github/workflows/deploy.yml`,
-   set `VERSION` in it to the release the site is built from, and on an ARM machine change
-   `runs-on` to `ubuntu-24.04-arm`. Create the environment `site` with the secrets and
-   variables below.
+6. **Set up the repository.** Put the site's content into the folder `content/` of the
+   repository, as [`content.md`](content.md) describes it. Copy `infra/site-deploy.yml` to
+   `.github/workflows/deploy.yml`, set `VERSION` in it to the release the site is built from,
+   and on an ARM machine change `runs-on` to `ubuntu-24.04-arm`. Create the environment
+   `site` with the secrets and variables below.
 7. **Push to `main`.** The run builds the image, deploys it and ends green when the site
    answers 200 at its address. The first request makes the proxy fetch the certificate, which
    can take a minute.

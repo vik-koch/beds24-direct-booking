@@ -15,11 +15,12 @@ compose up -d --build
 
 url=https://localhost:8443
 for _ in $(seq 30); do
-  curl -ksf -o /dev/null "$url" && break
+  curl -ksfL -o /dev/null "$url" && break
   sleep 2
 done
 
-answer=$(curl -ksfi "$url")
+# The bare address redirects to a language; the headers of both answers are checked.
+answer=$(curl -ksfiL "$url")
 expect() { grep -qiF "$1" <<<"$answer" || { echo "MISSING: $1" >&2; exit 1; }; }
 expect '<li>Zirbe</li>'
 expect 'strict-transport-security: max-age=31536000'

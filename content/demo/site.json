@@ -1,0 +1,58 @@
+{
+  "name": "Firn & Farn",
+  "languages": [
+    {
+      "code": "de",
+      "name": "Deutsch",
+      "paths": {
+        "apartments": "wohnungen",
+        "book": "buchen",
+        "confirmation": "buchungsbestaetigung",
+        "faq": "haeufige-fragen",
+        "about": "ueber-uns",
+        "imprint": "impressum",
+        "privacy": "datenschutz",
+        "terms": "agb",
+        "credits": "bildnachweis"
+      },
+      "anchors": {
+        "weeks": "freie-wochen",
+        "apartments": "wohnungen",
+        "location": "lage",
+        "about": "ueber-uns"
+      }
+    },
+    {
+      "code": "en",
+      "name": "English",
+      "paths": {
+        "apartments": "apartments",
+        "book": "book",
+        "confirmation": "booking-confirmation",
+        "faq": "faq",
+        "about": "about",
+        "imprint": "imprint",
+        "privacy": "privacy",
+        "terms": "terms",
+        "credits": "picture-credits"
+      },
+      "anchors": {
+        "weeks": "free-weeks",
+        "apartments": "apartments",
+        "location": "location",
+        "about": "about"
+      }
+    }
+  ],
+  "apartments": [
+    { "slug": "zirbe", "roomId": 9001011, "name": "Zirbe" },
+    { "slug": "laerche", "roomId": 9001012, "name": "Lärche" },
+    { "slug": "ahorn", "roomId": 9001021, "name": "Ahorn" }
+  ],
+  "contact": {
+    "name": "Firn & Farn Appartements",
+    "address": ["Musterweg 0", "5753 Saalbach", "Österreich"],
+    "phone": "+43 000 0000000",
+    "email": "hallo@firn-und-farn.example"
+  }
+}

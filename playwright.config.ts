@@ -23,6 +23,15 @@ export default defineConfig({
       env: { ...app('refused'), PORT: '4001' },
       ...reuse,
     },
+    // A second site, built from other content: two other languages, no notice, its own theme.
+    {
+      command:
+        'CONTENT_DIR=e2e/content npm run content && ng build --output-path dist/other && npm run content && node dist/other/server/server.mjs',
+      url: 'http://localhost:4002/favicon.ico',
+      env: { ...app('simulator'), PORT: '4002' },
+      timeout: 180_000,
+      ...reuse,
+    },
   ],
   projects: [
     { name: 'chromium', use: devices['Desktop Chrome'] },

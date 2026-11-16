@@ -3,7 +3,9 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
-RUN npm run build
+# A site's own content folder, relative to the build context; the demo's by default.
+ARG CONTENT_DIR=content/demo
+RUN CONTENT_DIR=$CONTENT_DIR npm run build
 
 # The server bundle carries its dependencies and serves the browser files beside it.
 FROM node:24-alpine

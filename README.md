@@ -5,8 +5,10 @@ property management system: it holds availability, prices and listing texts, and
 booking and the payment. The site shows the free weeks with their prices and hands over to the
 Beds24 guest form.
 
-**Status:** the first path works end to end: the server asks Beds24 for the listings and the
-home page shows the apartments' names. The demo is live at <https://beds24.vikkoch.com/> and
+**Status:** the site's frame stands: every page of the site map in both languages, the header
+with its menus, the footer and the demo notice, all from a deployment's
+[content folder](docs/content.md). Most pages are placeholders until their slice; the home page
+shows the apartments' names from Beds24. The demo is live at <https://beds24.vikkoch.com/> and
 follows `main`; `0.1.0` is the first release. This repository carries a fictional demo only:
 _Firn & Farn_, an invented business in Saalbach in Austria, in German and English. Its Beds24
 is a [simulator](sim/README.md).
@@ -16,6 +18,7 @@ is a [simulator](sim/README.md).
 - [docs/brief.md](docs/brief.md): goals, non-goals, and every decision with its reason.
 - [docs/site-map.md](docs/site-map.md): the pages and their addresses, the header and footer,
   and the sections of the home page.
+- [docs/content.md](docs/content.md): a site's content folder: wording, languages, theme.
 - [docs/beds24-findings.md](docs/beds24-findings.md): what the Beds24 API and booking page
   really do, from a spike against a real account.
 - [docs/working-agreements.md](docs/working-agreements.md): how the project is built, tested

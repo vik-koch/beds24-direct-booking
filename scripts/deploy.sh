@@ -44,7 +44,7 @@ run "docker images --format '{{.Repository}}:{{.Tag}}' | grep -F '${web%-web:*}-
 # The first request also makes the proxy fetch the certificate, which can take a minute.
 echo "==> Checking https://$domain"
 for _ in $(seq 30); do
-  if [ "$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 "https://$domain/")" = 200 ]; then
+  if [ "$(curl -sL -o /dev/null -w '%{http_code}' --max-time 10 "https://$domain/")" = 200 ]; then
     echo "OK: https://$domain serves $web"
     exit 0
   fi

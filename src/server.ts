@@ -6,9 +6,15 @@ import {
   writeResponseToNodeResponse,
 } from '@angular/ssr/node';
 import express from 'express';
+import site from './content/generated/site';
 
 const app = express();
 const angularApp = new AngularNodeAppEngine();
+
+const languages = site.languages.map(({ code }) => code);
+app.get('/', (req, res) => {
+  res.vary('Accept-Language').redirect(`/${req.acceptsLanguages(languages) || languages[0]}`);
+});
 
 app.use(
   express.static(join(import.meta.dirname, '../browser'), {

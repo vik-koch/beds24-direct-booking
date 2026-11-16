@@ -1,0 +1,33 @@
+{
+  "skip": "Skip to the content",
+  "notice": { "text": "Demo: Firn & Farn is invented. The houses and prices do not exist." },
+  "nav": {
+    "label": "Main menu",
+    "weeks": "Free weeks",
+    "apartments": "Apartments",
+    "allApartments": "All at a glance",
+    "location": "Location",
+    "about": "About us",
+    "language": "Language",
+    "menu": "Menu",
+    "close": "Close"
+  },
+  "home": { "title": "Holiday apartments in the middle of Saalbach" },
+  "pages": {
+    "book": "Book",
+    "confirmation": "Booking confirmation",
+    "faq": "Frequently asked questions",
+    "about": "About us",
+    "imprint": "Imprint",
+    "privacy": "Privacy",
+    "terms": "Rental terms",
+    "credits": "Picture credits"
+  },
+  "placeholder": "This page is still being built.",
+  "notFound": {
+    "title": "Page not found",
+    "text": "There is nothing at this address.",
+    "home": "To the home page"
+  },
+  "footer": { "label": "Footer", "contact": "Contact", "more": "More" }
+}
