@@ -31,8 +31,33 @@
     "menu": "Menü",
     "close": "Schließen"
   },
+  "seasons": {
+    "label": "Saison",
+    "winter": "Winter",
+    "summer": "Sommer"
+  },
   "home": {
     "title": "Ferienwohnungen mitten in Saalbach"
+  },
+  "hero": {
+    "winter": "Blick von der Piste ins verschneite Glemmtal, über dem Tal liegt Nebel.",
+    "summer": "Blick über eine Almwiese und Fichten auf die grünen Hänge über Saalbach.",
+    "lead": "Drei Ferienwohnungen mitten im Ort, direkt bei den Gastgebern gebucht.",
+    "features": [
+      {
+        "icon": "house",
+        "text": "Für 2, 4 oder 6 Gäste"
+      },
+      {
+        "icon": "calendar-days",
+        "text": "Samstag bis Samstag"
+      },
+      {
+        "icon": "tag",
+        "text": "Ohne Portalprovision"
+      }
+    ],
+    "button": "Freie Wochen ansehen"
   },
   "pages": {
     "book": "Buchen",
@@ -43,6 +68,12 @@
     "privacy": "Datenschutz",
     "terms": "AGB",
     "credits": "Bildnachweis"
+  },
+  "credits": {
+    "lead": "Die Fotos auf dieser Website und wem sie zu verdanken sind.",
+    "author": "Von",
+    "licence": "Lizenz",
+    "none": "Auf dieser Website sind keine Fotos anderer zu sehen."
   },
   "placeholder": "Diese Seite entsteht noch.",
   "notFound": {

@@ -9,7 +9,8 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { prefix, siteSchema, textsSchema } from '../src/content/schema.ts';
+import * as lucide from '@ng-icons/lucide';
+import { lucideName, prefix, seasonNames, siteSchema, textsSchema } from '../src/content/schema.ts';
 
 export function readContent(dir) {
   const read = (file, schema) => {
@@ -24,6 +25,31 @@ export function readContent(dir) {
   const texts = Object.fromEntries(
     site.languages.map((tag) => [prefix(tag), read(`texts.${tag}.json`, textsSchema)]),
   );
+  // The texts name exactly the seasons site.json lists, in the switch and in the hero.
+  const listed = seasonNames.filter((name) => site.seasons[name]);
+  for (const tag of site.languages)
+    for (const part of ['seasons', 'hero'])
+      for (const name of seasonNames) {
+        const has = texts[prefix(tag)][part][name] !== undefined;
+        if (has !== listed.includes(name))
+          throw new Error(
+            `${join(dir, `texts.${tag}.json`)}\n  ${part}.${name}: ${has ? 'a season site.json does not list' : 'missing'}`,
+          );
+      }
+  for (const tag of site.languages)
+    texts[prefix(tag)].hero.features.forEach(({ icon }, index) => {
+      if (!(lucideName(icon) in lucide))
+        throw new Error(
+          `${join(dir, `texts.${tag}.json`)}\n  hero.features.${index}.icon: ${icon} is not a Lucide icon`,
+        );
+    });
+  for (const name of listed) {
+    const file = site.seasons[name].hero.file;
+    if (!existsSync(join(dir, file)))
+      throw new Error(
+        `${join(dir, 'site.json')}\n  seasons.${name}.hero.file: ${file} does not exist`,
+      );
+  }
   const languages = site.languages.map((tag) => {
     const code = prefix(tag);
     const name = new Intl.DisplayNames([tag], { type: 'language' }).of(code);
@@ -59,6 +85,19 @@ export function writeContent(dir, out) {
   mkdirSync(join(out, 'fonts'));
   if (existsSync(join(dir, 'fonts')))
     cpSync(join(dir, 'fonts'), join(out, 'fonts'), { recursive: true });
+  // Only the icons the texts name are imported, so the bundle holds no others.
+  const icons = [
+    ...new Set(Object.values(texts).flatMap((value) => value.hero.features.map((f) => f.icon))),
+  ].map(lucideName);
+  writeFileSync(
+    join(out, 'icons.ts'),
+    (icons.length ? `import { ${icons.join(', ')} } from '@ng-icons/lucide';\n\n` : '') +
+      `export const icons: Record<string, string> = { ${icons.join(', ')} };\n`,
+  );
+  // The pictures are served unhashed at /pictures/ too: give a changed picture a new name.
+  mkdirSync(join(out, 'pictures'));
+  if (existsSync(join(dir, 'pictures')))
+    cpSync(join(dir, 'pictures'), join(out, 'pictures'), { recursive: true });
   const fonts = readdirSync(join(out, 'fonts'))
     .filter((file) => file.endsWith('.woff2'))
     .map((file) => `/fonts/${file}`);

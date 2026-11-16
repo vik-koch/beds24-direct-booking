@@ -25,10 +25,23 @@ are kept here.
 ## Design mock-up
 
 The mock-up in `design/` contains third-party files and copies. Their licence texts are kept
-here; the photographs are credited in `design/README.md`.
+here. The hero photographs it shows are the demo's content, below.
 
 <!-- prettier-ignore -->
 | Work | Source | Licence | What is here |
 |---|---|---|---|
 | Lucide icons | [lucide-icons/lucide](https://github.com/lucide-icons/lucide) | ISC, and MIT for the icons derived from Feather | `lucide/LICENSE` from the branch `main`, with both copyright lines. Nine icons are copied into `design/home.html`; the application takes the same set from the package `@ng-icons/lucide`. |
 | Jost | [indestructible-type/Jost](https://github.com/indestructible-type/Jost) | SIL Open Font License 1.1 | `jost/OFL.txt` from the branch `master`, with its copyright line. The font file is `design/fonts/jost-latin-wght-normal.woff2`. |
+
+## The demo's content
+
+The two hero photographs in `content/demo/pictures/` are from Wikimedia Commons, scaled down to
+2000 px width. They are not covered by this repository's licence. Each is credited with its
+author, source and licence in `content/demo/site.json`, which the site shows on its picture
+credits page.
+
+<!-- prettier-ignore -->
+| File | Title on Commons | Author | Licence |
+|---|---|---|---|
+| `hero-winter.jpg` | [Saalbach (8450786397).jpg](<https://commons.wikimedia.org/wiki/File:Saalbach_(8450786397).jpg>) | Ian Gratton | [CC BY 2.0](https://creativecommons.org/licenses/by/2.0) |
+| `hero-summer.jpg` | [Saalbach, 2014 (02).JPG](<https://commons.wikimedia.org/wiki/File:Saalbach,_2014_(02).JPG>) | Bahnfrend | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0) |

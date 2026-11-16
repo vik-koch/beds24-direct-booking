@@ -1,4 +1,7 @@
 import { z } from 'zod';
+import { seasonNames } from './names.ts';
+
+export { lucideName, seasonNames, type SeasonName } from './names.ts';
 
 const segment = z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/);
 const text = z.string().min(1);
@@ -18,6 +21,61 @@ const tag = z.string().refine((value) => {
 // The address prefix: the tag's language, de for de-AT.
 export const prefix = (value: string) => new Intl.Locale(value).language;
 
+// A day of the year as MM-DD. 29 February is refused: a season would start only in leap years.
+const day = z
+  .string()
+  .regex(/^(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/, 'not a day as MM-DD')
+  .refine((value) => {
+    const [month, date] = value.split('-').map(Number);
+    return value !== '02-29' && date <= new Date(Date.UTC(2025, month, 0)).getUTCDate();
+  }, 'not a day of every year');
+
+// A file in the content folder's pictures/, and who to credit for it.
+const picture = z.strictObject({
+  file: z.string().regex(/^pictures\/[\w.-]+$/, 'not a file in pictures/'),
+  credit: z
+    .strictObject({
+      title: text,
+      author: text,
+      source: z.url(),
+      licence: z.strictObject({ name: text, url: z.url() }),
+    })
+    .optional(),
+});
+
+// With two seasons each starts on its day and lasts until the other starts; a single season
+// covers the year and has no start.
+const seasons = z
+  .strictObject({
+    winter: z.strictObject({ start: day.optional(), hero: picture }).optional(),
+    summer: z.strictObject({ start: day.optional(), hero: picture }).optional(),
+  })
+  .superRefine((value, context) => {
+    const listed = seasonNames.filter((name) => value[name]);
+    if (listed.length === 0) context.addIssue({ code: 'custom', message: 'no season is listed' });
+    for (const name of listed) {
+      const start = value[name]?.start;
+      if (listed.length === 2 && !start)
+        context.addIssue({
+          code: 'custom',
+          path: [name, 'start'],
+          message: 'two seasons need a start each',
+        });
+      if (listed.length === 1 && start)
+        context.addIssue({
+          code: 'custom',
+          path: [name, 'start'],
+          message: 'a single season covers the year and has no start',
+        });
+    }
+    if (listed.length === 2 && value.winter?.start === value.summer?.start)
+      context.addIssue({
+        code: 'custom',
+        path: ['summer', 'start'],
+        message: 'both seasons start on one day',
+      });
+  });
+
 export const siteSchema = z.strictObject({
   name: text,
   languages: z
@@ -31,6 +89,7 @@ export const siteSchema = z.strictObject({
   apartments: z
     .array(z.strictObject({ slug: segment, roomId: z.number().int(), name: text }))
     .refine((list) => unique(list, (a) => a.slug), 'an apartment slug is listed twice'),
+  seasons,
   contact: z.strictObject({
     name: text,
     address: z.array(text).min(1),
@@ -72,7 +131,18 @@ export const textsSchema = z.strictObject({
     menu: text,
     close: text,
   }),
+  // The names of the seasons site.json lists, and no other; the content script checks it.
+  seasons: z.strictObject({ label: text, winter: text.optional(), summer: text.optional() }),
   home: z.strictObject({ title: text }),
+  hero: z.strictObject({
+    // The photo's alternative text per season.
+    winter: text.optional(),
+    summer: text.optional(),
+    lead: text,
+    // Each with a Lucide icon by its name on lucide.dev; the content script checks it exists.
+    features: z.array(z.strictObject({ icon: segment, text })).max(5),
+    button: text,
+  }),
   pages: z.strictObject({
     book: text,
     confirmation: text,
@@ -83,6 +153,7 @@ export const textsSchema = z.strictObject({
     terms: text,
     credits: text,
   }),
+  credits: z.strictObject({ lead: text, author: text, licence: text, none: text }),
   placeholder: text,
   notFound: z.strictObject({ title: text, text, home: text }),
   footer: z.strictObject({ label: text, contact: text, more: text }),

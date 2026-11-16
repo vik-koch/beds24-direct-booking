@@ -117,7 +117,7 @@ test('a link to the home page from another page shows the apartments', async ({ 
   await page.goto('/de/impressum');
   await page.getByRole('link', { name: 'Firn & Farn', exact: true }).click();
   await expect(page).toHaveURL('/de');
-  await expect(page.locator('#wohnungen li')).toHaveText(['Zirbe', 'Lärche', 'Ahorn']);
+  await expect(page.locator('section:has(#wohnungen) li')).toHaveText(['Zirbe', 'Lärche', 'Ahorn']);
 });
 
 test('the heading follows from one apartment to the next', async ({ page }) => {
@@ -168,7 +168,7 @@ test('at 320 px nothing scrolls sideways and a jump lands below the header', asy
     .poll(() =>
       page.evaluate(() => {
         const header = document.querySelector('app-header')!.getBoundingClientRect().bottom;
-        const heading = document.querySelector('#lage h2')!.getBoundingClientRect().top;
+        const heading = document.querySelector('#lage')!.getBoundingClientRect().top;
         return heading >= header && heading < header + 120;
       }),
     )

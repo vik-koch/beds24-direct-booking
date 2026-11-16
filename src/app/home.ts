@@ -1,17 +1,49 @@
 import { Component, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import { NgIcon, provideIcons } from '@ng-icons/core';
 import type { Apartment } from '../beds24/client';
-import { LANGUAGE, TEXTS } from './texts';
+import { icons } from '../content/generated/icons';
+import site from '../content/generated/site';
+import { lucideName } from '../content/names';
+import { Season } from './season';
+import { address, LANGUAGE, TEXTS } from './texts';
 
 @Component({
   selector: 'app-home',
+  imports: [NgIcon],
+  providers: [provideIcons(icons)],
   template: `
-    <div class="column pt-14 md:pt-20">
-      <h1 class="display">{{ texts.home.title }}</h1>
-    </div>
+    <!-- Every season's photo is in the page; only the shown one is displayed and fetched. -->
+    <section class="hero">
+      @for (photo of photos; track photo.name) {
+        <div
+          class="hero-photo"
+          role="img"
+          [attr.data-for]="photo.name"
+          [attr.aria-label]="texts.hero[photo.name]"
+          [style.background-image]="photo.url"
+        ></div>
+      }
+      <div class="hero-copy">
+        <h1 class="display">{{ texts.home.title }}</h1>
+        <p class="lead">{{ texts.hero.lead }}</p>
+        @if (texts.hero.features.length) {
+          <ul class="features">
+            @for (feature of texts.hero.features; track $index) {
+              <li>
+                <ng-icon [name]="lucideName(feature.icon)" aria-hidden="true" />{{ feature.text }}
+              </li>
+            }
+          </ul>
+        }
+        <a class="button" [href]="weeks">{{ texts.hero.button }}</a>
+      </div>
+    </section>
     @for (section of sections; track section) {
-      <section class="column pt-14 md:pt-20" [id]="anchors[section]">
-        <h2 class="headline">{{ texts.nav[section] }}</h2>
+      <!-- The anchor is the heading: a jump places it below the header, and the space above
+           the first section then hides the hero completely. -->
+      <section class="column" [class]="$first ? 'pt-[5.5rem]' : 'pt-14 md:pt-20'">
+        <h2 class="headline" [id]="anchors[section]">{{ texts.nav[section] }}</h2>
         @if (section === 'apartments' && apartments?.length) {
           <ul class="mt-6">
             @for (apartment of apartments; track apartment.id) {
@@ -27,8 +59,15 @@ import { LANGUAGE, TEXTS } from './texts';
 })
 export class Home {
   protected readonly texts = inject(TEXTS);
-  protected readonly anchors = inject(LANGUAGE).anchors;
+  private readonly language = inject(LANGUAGE);
+  protected readonly anchors = this.language.anchors;
+  protected readonly lucideName = lucideName;
   protected readonly sections = ['weeks', 'apartments', 'location', 'about'] as const;
+  protected readonly weeks = `${address(this.language, 'home')}#${this.anchors.weeks}`;
+  protected readonly photos = inject(Season).names.map((name) => ({
+    name,
+    url: `url('/${site.seasons[name]!.hero.file}')`,
+  }));
   protected readonly apartments: Apartment[] | null =
     inject(ActivatedRoute).snapshot.data['apartments'];
 }

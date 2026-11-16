@@ -15,6 +15,7 @@ import site from '../content/generated/site';
 import type { Texts } from '../content/schema';
 import { Footer } from './footer';
 import { Header } from './header';
+import { Season } from './season';
 import { address, LANGUAGE, TEXTS, type Page } from './texts';
 
 const leaf = (route: ActivatedRouteSnapshot): ActivatedRouteSnapshot =>
@@ -44,7 +45,7 @@ export function heading(texts: Texts, route: ActivatedRouteSnapshot): string {
         }
       </aside>
     }
-    <app-header [alternates]="alternates" />
+    <app-header [alternates]="alternates" [overHero]="home" />
     <main id="content" tabindex="-1" class="grow outline-none"><router-outlet /></main>
     <app-footer />
   `,
@@ -58,9 +59,12 @@ export class Shell {
   private readonly title = inject(Title);
   private readonly router = inject(Router);
   protected alternates: Record<string, string> = {};
+  protected home = false;
 
   constructor() {
     this.document.documentElement.lang = this.language.tag;
+    // Sets the season on the page, and on the server writes the script that chooses it.
+    inject(Season);
     this.preloadFonts();
     // A jump from a link lands below the sticky header, with a little air.
     inject(ViewportScroller).setOffset(() => [
@@ -97,12 +101,14 @@ export class Shell {
   private describe() {
     const route = leaf(this.route.snapshot);
     const page: Page = route.data['page'];
+    this.home = page === 'home';
     const text = heading(this.texts, route);
     this.title.setTitle(page === 'home' ? `${site.name}: ${text}` : `${text} · ${site.name}`);
 
-    const query = this.router.url.includes('?')
-      ? this.router.url.slice(this.router.url.indexOf('?')).split('#')[0]
-      : '';
+    // The season travels in storage, so the other language does not need the link's.
+    const params = new URLSearchParams(this.router.url.split('#')[0].split('?')[1] ?? '');
+    params.delete('season');
+    const query = params.size ? `?${params}` : '';
     this.alternates = Object.fromEntries(
       site.languages.map((l) => [l.code, address(l, page, slugOf(route)) + query]),
     );

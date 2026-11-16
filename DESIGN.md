@@ -17,7 +17,7 @@ colors:
 typography:
   display:
     fontFamily: 'Jost, system-ui, sans-serif'
-    fontSize: 'clamp(2.125rem, 1.5rem + 3vw, 3.75rem)'
+    fontSize: 'clamp(2.125rem, 1.5rem + 3vw, 3.5rem)'
     fontWeight: 500
     lineHeight: 1.05
     letterSpacing: '-0.025em'
@@ -158,7 +158,7 @@ make the hierarchy; weight barely does.
 
 ### Hierarchy
 
-- **Display** (500, clamp(2.125rem, 1.5rem + 3vw, 3.75rem), 1.05): the page's one headline,
+- **Display** (500, clamp(2.125rem, 1.5rem + 3vw, 3.5rem), 1.05): the page's one headline,
   on the hero card.
 - **Headline** (500, clamp(1.875rem, 1.5rem + 1.6vw, 2.75rem), 1.1): a section's heading. Its
   second line may carry the season's name in the accent at weight 400.
@@ -179,17 +179,21 @@ so that amounts can be compared down a column.
 
 - **Column:** content sits in a centred column of 66rem with a gutter of 1rem on a phone and
   2rem from 48rem up. The hero photo and, later, the map run edge to edge up to 120rem.
-- **Hero:** the photo is 36% of the screen's height on a phone and 68% from 48rem up, always
-  shorter than the screen so the next section shows. The text is a white card: on a phone it
-  overlaps the photo's lower edge by 2.5rem; from 48rem up it sits inside the photo, 2rem
-  above its lower edge, with its left edge on the column's left edge and a width of up to
-  46rem.
+- **Hero:** the photo fills the first screen, the header lying over its top, which fades to
+  the ground colour behind the header's text. The text is a white card near the bottom of the
+  screen, 1rem from the sides on a phone and with its left edge on the column's left edge and
+  a width of up to 46rem from 48rem up. The space below it grows with the screen's height, up
+  to 4rem on a phone and 10rem from 48rem up, so on a tall screen the card stands clear of the
+  bottom. It scrolls with the photo.
 - **Rhythm:** 3.5rem above a section on a phone, 5rem from 48rem up; 1.5rem between a heading
-  and what follows. More space above a heading than below it.
-- **Header:** sticky, on the ground colour with a slight blur. Below 64rem, and on a screen
-  without hover such as a tablet, it holds the wordmark, the season switch and a menu button
-  that opens a sheet from the right with the links and the languages. From 64rem up with a
-  pointer that hovers, everything is in one line.
+  and what follows. More space above a heading than below it. The section after the hero has
+  5.5rem above it, so a jump to it places the heading below the header with the photo out of
+  view.
+- **Header:** sticky, a light frosted bar (the ground colour at 72% with a blur). Over the hero
+  at the top of the home page it has no ground of its own until the page scrolls. Below 64rem,
+  and on a screen without hover such as a tablet, it holds the wordmark, the season switch and a
+  menu button that opens a sheet from the right with the links and the languages. From 64rem up
+  with a pointer that hovers, everything is in one line.
 - **List:** from 48rem up one price column per apartment. Below that one apartment at a
   time, chosen with three tabs above the list.
 - **Low windows:** under 30rem of height, bars that stay in view go back into the page.
@@ -238,9 +242,23 @@ falls downwards, so it reads as lying on the page rather than floating.
 
 ### Season switch
 
-One pill on white with an edge. The chosen season is an accent-filled pill inside it with its
+One white pill without an edge, as tall as a menu entry's hover pill beside it (2.75rem). The
+chosen season is an accent-filled pill inside it with its
 icon and its name; the other season shows its icon only and keeps its name for screen
 readers. The list does not repeat this switch: it has the text button.
+
+- **One width:** both names share one hidden cell, so the pill is as wide as the longer name
+  in the page's language and does not change when the season does. Below 22.5rem it is a
+  little smaller, so the wordmark keeps one line beside it.
+- **The glide:** on a change the accent part moves to the other side by its two edges, the
+  leading edge first and the trailing one 0.09 s later, so it stretches as it goes (0.32 s,
+  ease in and out). The accent colour of the whole page fades to the other season's over
+  0.45 s, the names fade, and the hero photos cross-fade over 0.6 s. Nothing moves on a page's
+  first paint, and with reduced motion everything changes at once.
+- **Winter on the left,** summer on the right, a snowflake and a sun. The icons never move:
+  the snowflake sits left of its name, the sun right of its name, each at the outer edge.
+- **Semantics:** a labelled radio group; the arrow keys change the season. The focus ring goes
+  round the whole switch, which stays still while the chosen side glides.
 
 ### Free-weeks list
 

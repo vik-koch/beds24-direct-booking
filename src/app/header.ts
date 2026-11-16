@@ -1,24 +1,27 @@
 import { DOCUMENT, ViewportScroller } from '@angular/common';
-import { Component, inject, input } from '@angular/core';
+import { afterNextRender, Component, DestroyRef, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideGlobe, lucideMenu } from '@ng-icons/lucide';
 import { HlmNavigationMenuImports } from '@spartan-ng/helm/navigation-menu';
 import { HlmSheetImports } from '@spartan-ng/helm/sheet';
 import site from '../content/generated/site';
+import { SeasonSwitch } from './season-switch';
 import { address, LANGUAGE, TEXTS } from './texts';
 
 // Links to the home page load it in full: in the browser, only the server's answer carries
 // the apartments (ADR 6), until the availability route exists.
 @Component({
   selector: 'app-header',
-  imports: [RouterLink, NgIcon, HlmNavigationMenuImports, HlmSheetImports],
+  imports: [RouterLink, NgIcon, HlmNavigationMenuImports, HlmSheetImports, SeasonSwitch],
   providers: [provideIcons({ lucideGlobe, lucideMenu })],
   template: `
-    <header class="column flex min-h-[4.5rem] items-center gap-3">
-      <a class="mr-auto text-2xl font-medium tracking-[-0.01em] no-underline" [href]="home">{{
-        site.name
-      }}</a>
+    <header class="column flex min-h-[4.5rem] items-center gap-3 max-[22.5rem]:gap-1.5">
+      <a
+        class="mr-auto -ml-3.5 inline-flex h-11 items-center rounded-full px-3.5 text-2xl font-medium tracking-[-0.01em] no-underline max-[22.5rem]:text-xl"
+        [href]="home"
+        >{{ site.name }}</a
+      >
 
       <nav hlmNavigationMenu class="header-wide" [attr.aria-label]="texts.nav.label">
         <ul hlmNavigationMenuList>
@@ -78,6 +81,8 @@ import { address, LANGUAGE, TEXTS } from './texts';
         </ul>
       </nav>
 
+      <app-season-switch />
+
       <hlm-sheet #menu="hlmSheet" side="right" class="header-narrow" (closed)="settle()">
         <button class="icon-button" hlmSheetTrigger [attr.aria-label]="texts.nav.menu">
           <ng-icon name="lucideMenu" aria-hidden="true" />
@@ -132,14 +137,15 @@ import { address, LANGUAGE, TEXTS } from './texts';
       </hlm-sheet>
     </header>
   `,
-  host: {
-    class:
-      'sticky top-0 z-20 block bg-[color-mix(in_srgb,var(--color-ground)_92%,transparent)] backdrop-blur-md',
-  },
+  host: { class: 'site-header', '[attr.data-over]': 'overHero() && !scrolled() ? "" : null' },
 })
 export class Header {
   // The same page in every language, by address prefix.
   readonly alternates = input.required<Record<string, string>>();
+  // On the home page the header lies over the hero photo, without its own ground, until the
+  // page is scrolled.
+  readonly overHero = input(false);
+  protected readonly scrolled = signal(false);
 
   protected readonly texts = inject(TEXTS);
   protected readonly language = inject(LANGUAGE);
@@ -158,6 +164,17 @@ export class Header {
   private readonly document = inject(DOCUMENT);
   private readonly scroller = inject(ViewportScroller);
   private followed = false;
+
+  constructor() {
+    const destroyRef = inject(DestroyRef);
+    afterNextRender(() => {
+      const window = this.document.defaultView!;
+      const update = () => this.scrolled.set(window.scrollY > 0);
+      update();
+      window.addEventListener('scroll', update, { passive: true });
+      destroyRef.onDestroy(() => window.removeEventListener('scroll', update));
+    });
+  }
 
   protected follow(menu: { close: () => void }) {
     this.followed = true;

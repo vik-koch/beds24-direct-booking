@@ -28,8 +28,31 @@
     "menu": "Menu",
     "close": "Chiudi"
   },
+  "seasons": {
+    "label": "Stagione",
+    "summer": "Estate"
+  },
   "home": {
     "title": "Appartamenti per le vacanze"
+  },
+  "hero": {
+    "summer": "Una sfumatura dal sabbia al rosso.",
+    "lead": "Tre appartamenti di prova.",
+    "features": [
+      {
+        "icon": "users",
+        "text": "Fino a 6 ospiti"
+      },
+      {
+        "icon": "key-round",
+        "text": "Chiavi in mano"
+      },
+      {
+        "icon": "mountain",
+        "text": "Vicino ai monti"
+      }
+    ],
+    "button": "Vedi le settimane libere"
   },
   "pages": {
     "book": "Prenota",
@@ -40,6 +63,12 @@
     "privacy": "Privacy",
     "terms": "Condizioni",
     "credits": "Crediti fotografici"
+  },
+  "credits": {
+    "lead": "Le foto di questo sito e i loro autori.",
+    "author": "Di",
+    "licence": "Licenza",
+    "none": "Questo sito non mostra foto di altri."
   },
   "placeholder": "Questa pagina è in costruzione.",
   "notFound": {
