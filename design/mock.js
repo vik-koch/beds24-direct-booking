@@ -57,6 +57,14 @@ function render(season) {
   document
     .querySelectorAll('[data-go]')
     .forEach((el) => el.setAttribute('aria-pressed', String(el.dataset.go === season)));
+  // Direction C's list has one button that leads to the other season.
+  document.querySelectorAll('[data-other]').forEach((el) => {
+    const other = season === 'winter' ? 'summer' : 'winter';
+    el.dataset.go = other;
+    el.removeAttribute('aria-pressed');
+    el.querySelector('span').textContent =
+      (other === 'summer' ? 'Nächste Saison: ' : 'Aktuelle Saison: ') + seasons[other].name;
+  });
   pick.hidden = true;
   table.tBodies[0].innerHTML = (closed ? [] : weeks)
     .map((prices, i) => {
