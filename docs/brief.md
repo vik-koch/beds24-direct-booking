@@ -57,7 +57,7 @@ public repository publishes. Nothing about the real business goes into the publi
 | Content | Beds24 holds what describes and prices a listing: availability, prices, capacity, size, sleeping layout and feature codes, check-in times, coordinates, tourist tax, and the listing's texts per language. The content files hold what Beds24 cannot: per listing a room ID, a slug and the pictures; and the site itself: its wording, season content, guides, company and legal pages | The business edits a listing in one place and it shows after the next cache refresh, without a deployment. Pictures are not in the API. Rich text from Beds24 passes a sanitiser. |
 | Languages | Two per deployment, language in the URL (`/de/…`, `/en/…`), an explicit switch; the texts are keyed files in the deployment's content (ADR 4) | One domain keeps the search ranking together. |
 | Seasons | A content dimension, switched like a colour scheme: both seasons' content is in the HTML, one attribute selects, the default follows the date. A deployment lists its seasons; one season means no switch. Phase 1: hero pictures, activity texts, accent colours, which weeks open first | A visitor looking at a July week should see summer. The distinctive feature, at a small cost. The restyled map waits. |
-| Page structure | One scrolling home page (hero, weeks, apartments, map, reviews, FAQ teaser); own routes for each apartment, the guides, the company page and the legal pages | Seamless browsing, and a URL per apartment for search. |
+| Page structure | One scrolling home page (hero, free weeks, apartments, map, who we are); own routes for each apartment, the booking step, the FAQ, the company page and the legal pages. Every page and its address is in `site-map.md` | Seamless browsing, and a URL per apartment for search. |
 | Map | An open map (MapLibre with open tiles is the candidate), restyled per season | No consent banner, no billing key. |
 | Reviews | Score, count and a quiet link to the listing; no review texts | Booking.com forbids publishing texts retrieved by its API. |
 | Tracking | None that needs consent | Goal: no cookie banner. |
@@ -111,9 +111,10 @@ public repository publishes. Nothing about the real business goes into the publi
    stack); the scaffold with lint, tests and CI.
 3. The simulator with fictional data in the recorded shapes, and the demo deployed from `main`:
    `0.1.0`.
-4. The design round.
-5. Slices: shell with languages, seasons and the notice; stay picker with hand-over; apartment
-   pages; map; guides and FAQ; company and legal pages; SEO, accessibility and performance pass.
+4. The design round: the structure first, in `site-map.md`, then the visual direction.
+5. Slices, each building its part of `site-map.md`: shell with languages, seasons and the notice;
+   stay picker with hand-over; apartment pages; map; guides and FAQ; company and legal pages; SEO,
+   accessibility and performance pass.
 6. Once the Beds24 account has paid: the confirmation, the payment and the return URL.
 7. The private deployment: real content, legal texts, domain: `1.0.0`.
 

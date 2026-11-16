@@ -14,6 +14,8 @@ is a [simulator](sim/README.md).
 ## Documents
 
 - [docs/brief.md](docs/brief.md): goals, non-goals, and every decision with its reason.
+- [docs/site-map.md](docs/site-map.md): the pages and their addresses, the header and footer,
+  and the sections of the home page.
 - [docs/beds24-findings.md](docs/beds24-findings.md): what the Beds24 API and booking page
   really do, from a spike against a real account.
 - [docs/working-agreements.md](docs/working-agreements.md): how the project is built, tested
