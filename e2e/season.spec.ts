@@ -4,6 +4,9 @@ import { expect, test, type Page } from '@playwright/test';
 const axe = async (page: Page) => (await new AxeBuilder({ page }).analyze()).violations;
 const season = (page: Page) => page.locator('html').getAttribute('data-season');
 const stored = (page: Page) => page.evaluate(() => localStorage.getItem('season'));
+// The glide and the fades have ended, so axe measures the final colours.
+const settled = (page: Page) =>
+  expect.poll(() => page.evaluate(() => document.getAnimations().length)).toBe(0);
 const store = (page: Page, value: string) =>
   page.addInitScript((v) => localStorage.setItem('season', v), value);
 
@@ -73,6 +76,7 @@ test('the switch works by keyboard', async ({ page }) => {
     await expect(page.locator('html')).toHaveAttribute('data-season', 'summer', { timeout: 500 });
   }).toPass();
   await expect(page.getByRole('radio', { name: 'Summer' })).toBeFocused();
+  await settled(page);
   expect(await axe(page)).toEqual([]);
 });
 
@@ -134,8 +138,7 @@ test('both seasons pass axe, and the pill keeps its width', async ({ page }) => 
   const before = await width();
   expect(await axe(page)).toEqual([]);
   await switchTo(page, 'summer');
-  // The colour fades; axe measures the final one.
-  await page.waitForTimeout(600);
+  await settled(page);
   expect(await width()).toBe(before);
   expect(await axe(page)).toEqual([]);
 });
