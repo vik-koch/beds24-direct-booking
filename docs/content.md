@@ -15,6 +15,14 @@ repository.
 | `theme.css` | The palette and the typeface as custom properties on `:root`, and the typeface's `@font-face`. |
 | `fonts/` | Optional: the font files `theme.css` refers to, as `fonts/<file>`. |
 
+- **Fonts are served at `/fonts/<file>`** under their own names, and every page preloads each
+  `.woff2` file, so the font arrives with the stylesheet instead of after it. Browsers keep them
+  for a year: give a changed font file a new name.
+- **`font-display: fallback`** in the `@font-face` rule, as the demo has it: the text waits up
+  to 100 ms for the preloaded font instead of being painted in the fallback font first, and a
+  slow connection still gets the fallback. `swap` makes the text change its font on every
+  first visit.
+
 - **A language is a BCP 47 tag** in its canonical form, such as `de-AT` or `en-GB`. The page's
   `lang` and its `hreflang` links use the tag, so dates and numbers follow the region. The
   address prefix is the tag's language (`/de`, `/en`), so two tags with the same language are

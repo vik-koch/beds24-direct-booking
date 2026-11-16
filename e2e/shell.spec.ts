@@ -50,6 +50,9 @@ test('every page of the site map answers in both languages and names the other',
       expect(html, path).toMatch(/<h1[^>]*>[^<]+<\/h1>/);
       // A stylesheet loaded after the first paint makes the text change its font.
       expect(html, path).not.toContain('media="print"');
+      expect(html, path).toContain(
+        '<link rel="preload" as="font" type="font/woff2" href="/fonts/jost-latin-wght-normal.woff2" crossorigin="">',
+      );
       expect(html, path).toContain(`<link rel="alternate" hreflang="de-AT" href="${de}">`);
       expect(html, path).toContain(`<link rel="alternate" hreflang="en-GB" href="${en}">`);
     }

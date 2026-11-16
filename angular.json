@@ -23,6 +23,11 @@
               {
                 "glob": "**/*",
                 "input": "public"
+              },
+              {
+                "glob": "**/*",
+                "input": "src/content/generated/fonts",
+                "output": "fonts"
               }
             ],
             "styles": ["src/styles.css"],

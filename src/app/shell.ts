@@ -10,6 +10,7 @@ import {
   RouterOutlet,
 } from '@angular/router';
 import { filter } from 'rxjs';
+import { fonts } from '../content/generated/fonts';
 import site from '../content/generated/site';
 import type { Texts } from '../content/schema';
 import { Footer } from './footer';
@@ -60,6 +61,7 @@ export class Shell {
 
   constructor() {
     this.document.documentElement.lang = this.language.tag;
+    this.preloadFonts();
     // A jump from a link lands below the sticky header, with a little air.
     inject(ViewportScroller).setOffset(() => [
       0,
@@ -78,6 +80,18 @@ export class Shell {
   protected skip(event: Event) {
     event.preventDefault();
     this.document.getElementById('content')?.focus();
+  }
+
+  // Without this the font is only requested once the stylesheet is parsed, and the text is
+  // painted in the fallback font until it arrives.
+  private preloadFonts() {
+    for (const href of fonts) {
+      if (this.document.head.querySelector(`link[rel=preload][href="${href}"]`)) continue;
+      const link = this.document.createElement('link');
+      const attributes = { rel: 'preload', as: 'font', type: 'font/woff2', href, crossorigin: '' };
+      for (const [name, value] of Object.entries(attributes)) link.setAttribute(name, value);
+      this.document.head.appendChild(link);
+    }
   }
 
   private describe() {
