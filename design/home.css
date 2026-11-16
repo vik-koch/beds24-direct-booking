@@ -1,4 +1,4 @@
-/* Direction C, "Stube": the apartment's own living room. A light grey ground, white surfaces,
+/* "Stube": the apartment's own living room. A light grey ground, white surfaces,
    pale oak, round corners and room to breathe; the season is one muted colour. */
 
 @font-face {
@@ -224,19 +224,17 @@ nav .submenu a {
   margin-top: 0.5rem;
 }
 
-/* The photo is a picture on the wall, the text a card leaning against it. */
+/* The photo runs edge to edge with a plain lower edge; the text is a card in front of it. */
 .hero {
   display: grid;
-  max-width: 90rem;
+  max-width: 120rem;
   margin: 0 auto;
-  padding: 0 1rem;
 }
 
 .hero-photo {
   grid-area: 1 / 1;
   width: 100%;
   height: clamp(13rem, 36svh, 40rem);
-  border-radius: var(--radius-card);
   object-fit: cover;
 }
 
@@ -247,7 +245,7 @@ html:not([data-season='summer']) [data-for='summer'] {
 
 .hero-copy {
   z-index: 1;
-  margin: -2.5rem 0.75rem 0;
+  margin: -2.5rem 1rem 0;
   padding: 1.5rem 1.25rem 1.5rem;
   border-radius: var(--radius-card);
   background: var(--color-surface);
@@ -472,12 +470,11 @@ td {
 
 .price {
   display: inline-grid;
-  place-items: center;
-  min-width: 6.5rem;
+  align-items: center;
   min-height: 2.75rem;
-  padding: 0 1rem;
+  margin-right: -0.75rem;
+  padding: 0 0.75rem;
   border-radius: var(--radius-control);
-  background: var(--color-accent-soft);
   color: var(--color-accent);
   font-size: 1.1875rem;
   font-weight: 500;
@@ -486,7 +483,7 @@ td {
 }
 
 .stay:hover .price {
-  background: color-mix(in srgb, var(--color-accent) 22%, var(--color-surface));
+  background: var(--color-accent-soft);
 }
 
 .stay :checked + .price {
@@ -496,9 +493,10 @@ td {
 
 .taken span {
   display: inline-grid;
-  place-items: center;
-  min-width: 6.5rem;
+  align-items: center;
   min-height: 2.75rem;
+  margin-right: -0.75rem;
+  padding: 0 0.75rem;
   color: var(--color-ink-soft);
 }
 
@@ -537,10 +535,18 @@ td {
   margin-top: 1.25rem;
   padding: 0.75rem 0.75rem 0.75rem 1.25rem;
   border-radius: var(--radius-card);
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+  box-shadow: var(--shadow-card);
+}
+
+.pick .button {
   background: var(--color-surface);
-  box-shadow:
-    0 0 0 1px var(--color-line),
-    var(--shadow-card);
+  color: var(--color-accent);
+}
+
+.pick :focus-visible {
+  outline-color: var(--color-on-accent);
 }
 
 .pick[hidden] {
@@ -568,11 +574,6 @@ td {
 
   td {
     padding-left: 0.5rem;
-  }
-
-  .price,
-  .taken span {
-    min-width: 5.5rem;
   }
 }
 
@@ -656,10 +657,6 @@ td {
   .lang-switch {
     align-self: center;
     margin: 0;
-  }
-
-  .hero {
-    padding: 0 2rem;
   }
 
   .hero-photo {

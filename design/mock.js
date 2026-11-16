@@ -1,4 +1,4 @@
-// Invented demo data and the little behaviour both directions share. Not application code.
+// Invented demo data and the little behaviour the mock-up needs. Not application code.
 const rooms = ['zirbe', 'laerche', 'ahorn'];
 const roomNames = { zirbe: 'Zirbe', laerche: 'Lärche', ahorn: 'Ahorn' };
 const seasons = {
@@ -57,7 +57,7 @@ function render(season) {
   document
     .querySelectorAll('[data-go]')
     .forEach((el) => el.setAttribute('aria-pressed', String(el.dataset.go === season)));
-  // Direction C's list has one button that leads to the other season.
+  // The list has one button that leads to the other season.
   document.querySelectorAll('[data-other]').forEach((el) => {
     const other = season === 'winter' ? 'summer' : 'winter';
     el.dataset.go = other;
