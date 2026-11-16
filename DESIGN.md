@@ -270,8 +270,9 @@ keyboard. In the sheet the apartments are indented under their entry at weight 4
 One entry at the end of the header's line: a globe and the current language's name in its
 own language ("Deutsch"). It opens the same small menu as the apartments with the other
 languages, each a link to the same page in that language, so it takes any number of them. In
-the sheet the languages are a group like the apartments: the heading as an entry with the
-globe, the languages indented below it at weight 400, the current one in the accent. It is a
+the sheet the languages are indented below a label like the apartments, at weight 400, the
+current one in the accent. The label, a globe and "Sprache", is in soft ink at label size, so it
+does not look like an entry that can be followed. It is a
 menu, not a pill, so that the two switches are easy to tell apart.
 
 ## Do's and Don'ts

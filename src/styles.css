@@ -153,8 +153,7 @@
     }
   }
 
-  .sheet-nav a,
-  .sheet-nav h3 {
+  .sheet-nav a {
     display: block;
     padding: 0.625rem 0;
     font-weight: 500;
