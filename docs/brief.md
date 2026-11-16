@@ -1,7 +1,7 @@
 # Project brief
 
-Status: the working brief, last revised 2026-11-12. A decision that shapes the code also gets a
-short ADR in `docs/adr/`.
+Status: the working brief, last revised 2026-11-16. A decision that weighed real alternatives
+and would be costly to change also gets a short ADR in `docs/adr/`.
 
 ## What it is
 
