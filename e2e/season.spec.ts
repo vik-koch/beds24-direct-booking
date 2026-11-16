@@ -64,6 +64,27 @@ test('one click before the application starts is not lost', async ({ page }) => 
   await expect.poll(() => stored(page)).toContain('summer-2027');
 });
 
+// The server checks its own day's season. When the script chooses the other one, the radio
+// the visitor clicks is still checked from the server, so the click brings no change event.
+test('a click on the season the server checked is not lost either', async ({ page, request }) => {
+  const served = (await (await request.get('/de')).text()).match(/data-season="(\w+)"/)![1];
+  const other = served === 'winter' ? 'summer' : 'winter';
+  await page.clock.setFixedTime(other === 'summer' ? july : november);
+  const { promise: held, resolve: release } = Promise.withResolvers<void>();
+  await page.route(/\/main-[\w-]+\.js$/, async (route) => {
+    await held;
+    await route.continue();
+  });
+  await page.goto('/de', { waitUntil: 'commit' });
+  await expect(page.locator('html')).toHaveAttribute('data-season', other);
+  await page.locator(`.season-switch label[data-for=${served}]`).click();
+  release();
+  await expect(
+    page.getByRole('radio', { name: served === 'winter' ? 'Winter' : 'Sommer' }),
+  ).toBeChecked();
+  await expect(page.locator('html')).toHaveAttribute('data-season', served);
+});
+
 test('without JavaScript the header keeps its ground over the hero', async ({ browser }) => {
   const context = await browser.newContext({ javaScriptEnabled: false });
   const page = await context.newPage();
