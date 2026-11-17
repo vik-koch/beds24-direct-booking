@@ -265,3 +265,27 @@ test('the hero fills the first screen, and the jump to the weeks ends it at the 
     );
   await expect.poll(async () => new Set(await edges()).size).toBe(1);
 });
+
+test('over the hero the header takes its ground while the menu is open', async ({ page }) => {
+  const header = page.locator('app-header');
+  const ground = () => header.evaluate((element) => getComputedStyle(element).backgroundColor);
+  for (const width of [320, 768]) {
+    for (const season of ['winter', 'summer']) {
+      await page.setViewportSize({ width, height: 700 });
+      await page.goto(`/en?season=${season}`);
+      await expect(header).toHaveAttribute('data-over', '');
+      // Found by place: while the sheet is open, the page behind it has no names.
+      const menu = page.locator('.header-narrow > button');
+      // A click during hydration can be undone by it.
+      await expect(async () => {
+        if ((await menu.getAttribute('aria-expanded')) !== 'true') await menu.click();
+        await expect(menu).toHaveAttribute('aria-expanded', 'true', { timeout: 500 });
+      }).toPass();
+      await expect(header).not.toHaveAttribute('data-over');
+      await expect.poll(ground).not.toBe('rgba(0, 0, 0, 0)');
+      await page.keyboard.press('Escape');
+      await expect(menu).toHaveAttribute('aria-expanded', 'false');
+      await expect(header).toHaveAttribute('data-over', '');
+    }
+  }
+});
