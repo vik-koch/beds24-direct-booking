@@ -238,8 +238,8 @@ falls downwards, so it reads as lying on the page rather than floating.
   focus, following the control's shape. Every tab stop shows it, on the control or on what it
   draws for a hidden input; an e2e test walks the home page's tab stops and checks each.
 - **Text button:** a sentence in the accent with an arrow, underlined on hover. Its focus ring
-  is a pill round the label with air at its sides (0.875rem, 0.5rem on a phone), kept within the
-  card's edges; below 22.5rem the label is at label size, so it keeps one line. Used above
+  is a pill round the label with air at its sides (0.875rem); the label stays in line with the
+  column and the ring may reach past it; below 22.5rem the label is at label size, so it keeps one line. Used above
   the list to reach the other season ("Nächste Saison: Sommer 2027 →").
 
 ### Cards / Containers

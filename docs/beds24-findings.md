@@ -76,17 +76,26 @@ Traps:
   an empty Max Stay row.
 - **The price does not depend on the guest count** (`priceFor: maxCapacity`).
 
-How the site reads it (the free-weeks list, 17 November 2026), checked against the simulator
-only:
+Checked on 17 November 2026 against a real account with two properties of one room each,
+with the read-only token, for the free-weeks list:
 
-- **A week not open yet** is one whose nights have no `price1`. The site treats a season
-  without any fully priced week as not open yet, unless it has begun; then it says no week is
-  free. Not checked on a real account: what `calendar` returns for nights an owner has not
-  priced (no `price1`, or `0`, which the site reads alike), and whether an owner's default
-  price fills them.
-- **The lead time's boundary:** the site lets a week start exactly `minDaysUntilCheckin` days
-  after the server's today, and takes the smallest value among the rules that carry one.
-- **A day the calendar does not list** counts as closed and unpriced.
+- **Nights an owner has not priced** come back without a `price1` field (never as `0`), with
+  `numAvail` 0 and, at the start of the calendar, `override` `none` on every day. So an
+  unopened week looks taken by its availability and is told apart only by its missing prices.
+  The site treats a season without any fully priced week as not open yet, unless it has
+  begun; then it says no week is free. It reads a `price1` of `0` like a missing one.
+- **One `calendar` call covers a year** (today plus 372 days, both rooms): one page, every day
+  listed, 1 credit. The `properties` call with rooms, price rules and upsell items cost 1.3.
+- **The lead time's boundary:** a week arriving exactly `minDaysUntilCheckin` days after today
+  is offered, one a week earlier is not (checked with `offers` at a lead time of 25 days, in
+  the evening, Central European Time). The site counts from the server's today and takes the
+  smallest value among the rules that carry one; the two rooms had different lead times.
+- **The site's week prices equal `offers`** to the cent for sixteen weeks of both rooms (the
+  sum of the nights times `*0.9`, rounded to the cent). The account had no bookings, so a
+  taken week was checked against the simulator only.
+- **The tourist tax** was an upsell item of type `obligatory` on one property and
+  `obligatoryTax` on the other, both per adult and night; the site reads both.
+- **A day the calendar does not list** counts as closed and unpriced (not seen on the wire).
 
 ## Prices
 
@@ -212,7 +221,6 @@ proxy that injected what the settings below would carry):
 - **The frame's session cookie in Safari:** a third-party cookie there. The proxy made it
   first-party, so it showed nothing. Fallbacks: the deep link as a full page, then an own form
   on `POST /bookings`.
-- **The lead time's boundary:** whether the day exactly `minDaysUntilCheckin` away is bookable,
-  and in which time zone the days are counted.
+- **The time zone of the lead time's days,** near midnight.
 - **Whether the override reaches the channels** as closed to arrival and departure.
 - **A property with several rooms:** known from the API's structure only.

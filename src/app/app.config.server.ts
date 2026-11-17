@@ -11,7 +11,8 @@ import { dayOf, seasonState, starts } from './season';
 
 const minute = 60_000;
 // Two calls cost about 3 of Beds24's 100 credits per 5 minutes. The last good answer is
-// served for a day while Beds24 cannot be reached.
+// served for a day while Beds24 cannot be reached, which is asked again a minute after a
+// failure at the soonest.
 const inventory = cached(
   () => {
     const today = dayOf(new Date());
@@ -20,6 +21,7 @@ const inventory = cached(
   },
   2 * minute,
   24 * 60 * minute,
+  minute,
 );
 
 // The two dated seasons, or a year from today for a site with a single season.

@@ -254,8 +254,10 @@ export class FreeWeeksList {
     return tax ? `${note} ${fill(taxes[tax.per], { amount: this.money(tax.amount) })}` : note;
   }
 
+  // A site with one season has no dated seasons: its name stands alone.
   protected dated(season: SeasonWeeks) {
-    return `${this.texts.seasons[season.name]} ${season.years}`;
+    const name = this.texts.seasons[season.name]!;
+    return season.years ? `${name} ${season.years}` : name;
   }
 
   // The season the list's button leads to from the given one.

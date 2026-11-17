@@ -550,12 +550,13 @@
 
   /* The way to the other season: a sentence with an arrow, not a second switch. Underlined on
      hover like a link; the line is drawn on the label, since a flex box does not take its
-     parent's. The focus ring is drawn round the shown label as a pill, kept within the card's
-     edges; the button is as wide as the longer label, so the shown one keeps to the side the
-     button stands on. */
+     parent's. The focus ring is drawn round the shown label as a pill with air at its sides;
+     the margins keep the text in line with the column, and the ring may reach past it. The
+     button is as wide as the longer label, so the shown one keeps to the side the button
+     stands on. */
   .other-season {
-    /* The ring's width and offset. */
-    margin-inline: 0.3125rem;
+    --air: 0.875rem;
+    margin-inline: calc(-1 * var(--air));
     justify-items: start;
     align-items: center;
     color: var(--color-accent);
@@ -572,7 +573,7 @@
       display: flex;
       align-items: baseline;
       gap: 0.5rem;
-      padding: calc((var(--size-control) - 1lh) / 2) 0.875rem;
+      padding: calc((var(--size-control) - 1lh) / 2) var(--air);
       border-radius: var(--radius-control);
       text-decoration: underline;
       text-decoration-color: transparent;
@@ -593,14 +594,7 @@
       align-self: center;
     }
 
-    /* On a phone it stands under the heading: less air in the ring keeps it near the heading's
-       edge, and on the narrowest screens a smaller size keeps the longer label on one line. */
-    @media (max-width: 47.9375rem) {
-      > span {
-        padding-inline: 0.5rem;
-      }
-    }
-
+    /* On the narrowest screens a smaller size keeps the longer label on one line. */
     @media (max-width: 22.4375rem) {
       font-size: 0.9375rem;
     }
@@ -710,9 +704,11 @@
     padding-inline: var(--pad);
   }
 
+  /* Each season's rows keep their own height, also while the leaving ones share the place:
+     the card's move is measured from it. */
   .weeks-body {
     grid-row: 1;
-    align-content: start;
+    align-self: start;
   }
 
   /* Every other month lies on a light ground, to the card's edges. */

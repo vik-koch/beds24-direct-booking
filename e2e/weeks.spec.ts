@@ -151,6 +151,27 @@ test('the next season slides in from the right, and back from the left', async (
     .toEqual([expect.stringMatching(/^0/), expect.stringMatching(/^[1-9][\d.]*px/)]);
 });
 
+test('the card moves to the new rows’ own height, so nothing jumps at the end', async ({
+  page,
+}) => {
+  await page.goto('/en');
+  await toOtherSeason(page);
+  const bodies = page.locator('.weeks-bodies');
+  // Both ways, so that one of them shrinks; the application runs by now.
+  const size = () => bodies.evaluate((box) => box.getBoundingClientRect().height);
+  for (let i = 0; i < 2; i++) {
+    const before = await size();
+    await button(page).click();
+    const end = await bodies.evaluate((box) => {
+      const resize = box.getAnimations().at(-1);
+      return resize ? (resize.effect as KeyframeEffect).getKeyframes().at(-1)?.['height'] : null;
+    });
+    await settled(page);
+    const after = await size();
+    if (Math.abs(after - before) > 1) expect(parseFloat(String(end))).toBeCloseTo(after, 0);
+  }
+});
+
 test('with reduced motion the season changes at once', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/en');

@@ -30,11 +30,12 @@ What weighs on it:
    a call is made. The demo, the tests and development point them at the simulator.
 6. **An in-memory cache sits between the loading function and Beds24** (added on 17 November
    2026 with the free-weeks list). One refresh is two calls, `properties` and `calendar` for a
-   year from today, about 3 of the 100 credits Beds24 allows per 5 minutes. An answer is
+   year from today, about 2.3 of the 100 credits Beds24 allows per 5 minutes. An answer is
    served as it is for 2 minutes; after that it is still served while a refresh runs behind
    it. When Beds24 cannot be reached, the last good answer is served for up to 24 hours, then
-   the page answers 503. Requests that arrive together share one refresh. The cache is empty
-   after a start, so the first page waits for Beds24.
+   the page answers 503. Requests that arrive together share one refresh, and after a failed
+   one Beds24 is not asked again for a minute, so an outage does not spend its credits on
+   every page view. The cache is empty after a start, so the first page waits for Beds24.
 
 ## Options
 
@@ -51,11 +52,14 @@ What weighs on it:
   a refused token gives a 503 without them, and the built browser bundle does not contain the
   token's variable name.
 - **Verified by unit tests:** the resolver's three paths and the client's mapping.
-- **Verified by unit tests:** the cache's four cases (fresh, stale while refreshing, Beds24
-  failing within and beyond the 24 hours, callers sharing one refresh).
+- **Verified by unit tests:** the cache's cases (fresh, stale while refreshing, Beds24 failing
+  within and beyond the 24 hours, callers sharing one refresh, the minute's pause after a
+  failure, also behind a stale answer).
+- **Verified on a real account** (17 November 2026, read-only token): one `calendar` call
+  answers a whole year in one page for 1 credit, and the `properties` call costs 1.3
+  (`docs/beds24-findings.md`).
 - **Not checked:** how often a real account's prices and bookings change compared with the
-  2 minutes, and whether Beds24 answers a `calendar` call over a whole year in one page. The
-  simulator does both.
+  2 minutes.
 - **Not built yet:** the availability route, and keeping the last good answer on disk across
   a restart, which `docs/beds24-findings.md` suggests.
 
