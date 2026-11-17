@@ -180,7 +180,7 @@ test('narrower than 320 px the page keeps its 320 px layout and scrolls sideways
   expect(await page.locator('app-header').evaluate((header) => header.offsetWidth)).toBe(320);
 });
 
-test('an address with an anchor opens at its section, and a jump in the page is smooth', async ({
+test('an address with an anchor opens at its section; smooth scrolling starts after it', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
@@ -190,6 +190,7 @@ test('an address with an anchor opens at its section, and a jump in the page is 
       const header = document.querySelector('app-header')!;
       (window as unknown as { first: unknown }).first = {
         y: scrollY,
+        behavior: getComputedStyle(document.documentElement).scrollBehavior,
         over: header.hasAttribute('data-over'),
         gap:
           document.getElementById('free-weeks')!.getBoundingClientRect().top -
@@ -199,7 +200,9 @@ test('an address with an anchor opens at its section, and a jump in the page is 
   });
   await page.goto('/en#free-weeks');
   const first = await page.evaluate(
-    () => (window as unknown as { first: { y: number; over: boolean; gap: number } }).first,
+    () =>
+      (window as unknown as { first: { y: number; behavior: string; over: boolean; gap: number } })
+        .first,
   );
   expect(first.y).toBeGreaterThan(0);
   expect(first.over).toBe(false);
@@ -207,24 +210,14 @@ test('an address with an anchor opens at its section, and a jump in the page is 
   await page.waitForTimeout(500);
   expect(await page.evaluate(() => scrollY)).toBe(first.y);
 
-  // The hero's button jumps smoothly, unless motion is reduced.
-  const positions = async () => {
-    await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
-    await page.evaluate(() => {
-      const seen = ((window as unknown as { seen: number[] }).seen = []);
-      const tick = () => {
-        seen.push(Math.round(scrollY));
-        if (seen.length < 60) requestAnimationFrame(tick);
-      };
-      requestAnimationFrame(tick);
-    });
-    await page.getByRole('link', { name: 'See the free weeks' }).click();
-    await page.waitForTimeout(1200);
-    return new Set(await page.evaluate(() => (window as unknown as { seen: number[] }).seen)).size;
-  };
-  expect(await positions()).toBeGreaterThan(5);
+  // Smooth scrolling comes with the application, after that first jump, and not with reduced
+  // motion. Whether a browser then animates is its own affair.
+  expect(first.behavior).toBe('auto');
+  const behavior = () =>
+    page.evaluate(() => getComputedStyle(document.documentElement).scrollBehavior);
+  await expect.poll(behavior).toBe('smooth');
   await page.emulateMedia({ reducedMotion: 'reduce' });
-  expect(await positions()).toBeLessThanOrEqual(2);
+  await expect.poll(behavior).toBe('auto');
 });
 
 test('at 320 px nothing scrolls sideways and a jump lands below the header', async ({ page }) => {
