@@ -50,11 +50,10 @@ repository.
   The picture credits page lists every credited picture, with the changes in parentheses
   after its title. Pictures are served at `/pictures/<file>` as they are and kept by browsers
   for a year, like the fonts: give a changed picture a new name. WebP keeps a photo smaller
-  than JPEG at the same quality; the demo's hero photos are 2000 px wide WebP files at quality
-  80.
-- **The contact** in `site.json` needs a name and an email address; the address lines and the
-  phone number are optional. The footer shows what is listed, so a site can keep its footer
-  short and give the full details on its imprint page.
+  than JPEG at the same quality; the demo's hero photos are 2000 px wide WebP files at quality 80.
+- **The contact** in `site.json` lists any of a name, address lines, a phone number and an
+  email address. The footer shows what is listed, and no contact column without `contact`, so
+  a site can keep its footer short and give the full details on its imprint page.
 - **The season's colours:** `theme.css` sets one season's accents on `:root` and, with two
   seasons, the other's under its attribute, as the demo does with
   `[data-season='summer'] { --color-accent: …; --color-accent-soft: …; }`.

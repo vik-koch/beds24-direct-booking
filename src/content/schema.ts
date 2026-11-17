@@ -98,13 +98,17 @@ export const siteSchema = z.strictObject({
     .array(z.strictObject({ slug: segment, roomId: z.number().int(), name: text }))
     .refine((list) => unique(list, (a) => a.slug), 'an apartment slug is listed twice'),
   seasons,
-  // The footer shows what is listed: a site may keep its address and phone for its imprint.
-  contact: z.strictObject({
-    name: text,
-    address: z.array(text).min(1).optional(),
-    phone: text.optional(),
-    email: z.email(),
-  }),
+  // The footer shows what is listed, and no contact without one: a site may give its details
+  // on its imprint page instead.
+  contact: z
+    .strictObject({
+      name: text.optional(),
+      address: z.array(text).min(1).optional(),
+      phone: text.optional(),
+      email: z.email().optional(),
+    })
+    .refine((value) => Object.keys(value).length > 0, 'lists nothing: leave the contact out')
+    .optional(),
 });
 
 export const textsSchema = z.strictObject({
