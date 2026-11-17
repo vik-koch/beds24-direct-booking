@@ -43,6 +43,14 @@ export function readContent(dir) {
           `${join(dir, `texts.${tag}.json`)}\n  hero.features.${index}.icon: ${icon} is not a Lucide icon`,
         );
     });
+  // Every change a credit lists is named in every language.
+  for (const name of listed)
+    for (const change of site.seasons[name].hero.credit?.changes ?? [])
+      for (const tag of site.languages)
+        if (!texts[prefix(tag)].credits.changes?.[change])
+          throw new Error(
+            `${join(dir, `texts.${tag}.json`)}\n  credits.changes.${change}: missing`,
+          );
   for (const name of listed) {
     const file = site.seasons[name].hero.file;
     if (!existsSync(join(dir, file)))

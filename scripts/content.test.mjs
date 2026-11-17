@@ -111,3 +111,27 @@ test('the hero has up to five features, or none', () => {
   );
   assert.throws(() => readContent(six), /texts\.de-AT\.json\n {2}hero\.features/);
 });
+
+test('the contact may leave out its address and phone', () => {
+  const dir = changed('site.json', (site) => {
+    delete site.contact.address;
+    delete site.contact.phone;
+  });
+  assert.equal(readContent(dir).site.contact.phone, undefined);
+});
+
+test('a change the schema does not know is refused', () => {
+  const dir = changed(
+    'site.json',
+    (site) => (site.seasons.winter.hero.credit.changes = ['tinted']),
+  );
+  assert.throws(() => readContent(dir), /seasons\.winter\.hero\.credit\.changes\.0/);
+});
+
+test('a change without its text in one language is named', () => {
+  const dir = changed('texts.en-GB.json', (texts) => delete texts.credits.changes.scaled);
+  assert.throws(
+    () => readContent(dir),
+    /texts\.en-GB\.json\n {2}credits\.changes\.scaled: missing/,
+  );
+});

@@ -30,6 +30,9 @@ const day = z
     return value !== '02-29' && date <= new Date(Date.UTC(2025, month, 0)).getUTCDate();
   }, 'not a day of every year');
 
+// What was done to a credited picture; each language's texts name them.
+export const changeNames = ['cropped', 'scaled'] as const;
+
 // A file in the content folder's pictures/, and who to credit for it.
 const picture = z.strictObject({
   file: z.string().regex(/^pictures\/[\w.-]+$/, 'not a file in pictures/'),
@@ -39,6 +42,11 @@ const picture = z.strictObject({
       author: text,
       source: z.url(),
       licence: z.strictObject({ name: text, url: z.url() }),
+      changes: z
+        .array(z.enum(changeNames))
+        .min(1)
+        .refine((list) => unique(list, (change) => change), 'a change is listed twice')
+        .optional(),
     })
     .optional(),
 });
@@ -90,10 +98,11 @@ export const siteSchema = z.strictObject({
     .array(z.strictObject({ slug: segment, roomId: z.number().int(), name: text }))
     .refine((list) => unique(list, (a) => a.slug), 'an apartment slug is listed twice'),
   seasons,
+  // The footer shows what is listed: a site may keep its address and phone for its imprint.
   contact: z.strictObject({
     name: text,
-    address: z.array(text).min(1),
-    phone: text,
+    address: z.array(text).min(1).optional(),
+    phone: text.optional(),
     email: z.email(),
   }),
 });
@@ -153,7 +162,14 @@ export const textsSchema = z.strictObject({
     terms: text,
     credits: text,
   }),
-  credits: z.strictObject({ lead: text, author: text, licence: text, none: text }),
+  credits: z.strictObject({
+    lead: text,
+    author: text,
+    licence: text,
+    none: text,
+    // The content script checks that each change a credit lists is named here.
+    changes: z.strictObject({ cropped: text.optional(), scaled: text.optional() }).optional(),
+  }),
   placeholder: text,
   notFound: z.strictObject({ title: text, text, home: text }),
   footer: z.strictObject({ label: text, contact: text, more: text }),

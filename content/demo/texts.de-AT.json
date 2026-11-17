@@ -73,7 +73,11 @@
     "lead": "Die Fotos auf dieser Website und wem sie zu verdanken sind.",
     "author": "Von",
     "licence": "Lizenz",
-    "none": "Auf dieser Website sind keine Fotos anderer zu sehen."
+    "none": "Auf dieser Website sind keine Fotos anderer zu sehen.",
+    "changes": {
+      "cropped": "zugeschnitten",
+      "scaled": "verkleinert"
+    }
   },
   "placeholder": "Diese Seite entsteht noch.",
   "notFound": {

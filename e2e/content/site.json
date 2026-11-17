@@ -27,8 +27,6 @@
   },
   "contact": {
     "name": "Casa Prova",
-    "address": ["Via Esempio 0", "00000 Prova"],
-    "phone": "+00 000 0000000",
     "email": "ciao@casa-prova.example"
   }
 }

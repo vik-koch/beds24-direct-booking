@@ -16,6 +16,9 @@ import { TEXTS } from './texts';
           @for (credit of credits; track credit.source) {
             <li>
               <a class="font-medium" [href]="credit.source">{{ credit.title }}</a>
+              @if (credit.changes) {
+                <span class="text-ink-soft"> ({{ credit.changes }})</span>
+              }
               <dl class="text-ink-soft mt-1 grid grid-cols-[auto_1fr] gap-x-3 text-base">
                 <dt>{{ texts.credits.author }}</dt>
                 <dd>{{ credit.author }}</dd>
@@ -37,6 +40,9 @@ export class Credits {
   protected readonly texts = inject(TEXTS);
   protected readonly credits = seasonNames.flatMap((name) => {
     const credit = site.seasons[name]?.hero.credit;
-    return credit ? [credit] : [];
+    if (!credit) return [];
+    // What was changed, in the page's language, after the title and outside its link.
+    const changes = credit.changes?.map((change) => this.texts.credits.changes?.[change]);
+    return [{ ...credit, changes: changes?.join(', ') }];
   });
 }

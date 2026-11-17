@@ -91,6 +91,7 @@ test('the home page comes from the server with the apartments, the notice and th
     '/de/impressum',
   );
   await expect(footer.getByText('5753 Saalbach')).toBeVisible();
+  await expect(footer.getByRole('link', { name: '+43 000 0000000' })).toBeVisible();
   expect(await axe(page)).toEqual([]);
 
   await page.goto('/en/privacy');
@@ -191,6 +192,10 @@ test('a second content folder changes languages, name, wording and theme', async
   await expect(page.getByRole('link', { name: 'Casa Prova' })).toBeVisible();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Appartamenti per le vacanze');
   await expect(page.getByText('Demo:')).toHaveCount(0);
+  // This site lists no address and no phone: the footer shows the name and the email.
+  const footer = page.getByRole('contentinfo');
+  await expect(footer.getByRole('link', { name: 'ciao@casa-prova.example' })).toBeVisible();
+  await expect(footer.locator('a[href^="tel:"]')).toHaveCount(0);
   expect(await page.evaluate(() => getComputedStyle(document.body).backgroundColor)).toBe(
     'rgb(244, 241, 234)',
   );

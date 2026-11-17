@@ -18,7 +18,9 @@ import { address, LANGUAGE, TEXTS } from './texts';
           @for (line of contact.address; track $index) {
             {{ line }}<br />
           }
-          <a [href]="'tel:' + contact.phone.replaceAll(' ', '')">{{ contact.phone }}</a><br />
+          @if (contact.phone; as phone) {
+            <a [href]="'tel:' + phone.replaceAll(' ', '')">{{ phone }}</a><br />
+          }
           <a [href]="'mailto:' + contact.email">{{ contact.email }}</a>
         </address>
       </div>
