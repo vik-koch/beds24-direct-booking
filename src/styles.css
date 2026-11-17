@@ -45,6 +45,9 @@
 
 @layer base {
   html {
+    /* The narrowest layout; narrower, the page scrolls sideways. In px, so that zoom up to
+       400% at 1280 px still reflows. */
+    min-width: 320px;
     scroll-behavior: smooth;
     /* For focus moved by the keyboard; a jump from a link is placed by the router. */
     scroll-padding-top: 5.5rem;

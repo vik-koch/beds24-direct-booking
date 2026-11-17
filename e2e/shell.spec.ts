@@ -171,6 +171,15 @@ test('the apartments menu opens by keyboard and leads to an apartment', async ({
   await expect(page).toHaveURL('/de/wohnungen/zirbe');
 });
 
+test('narrower than 320 px the page keeps its 320 px layout and scrolls sideways', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 280, height: 480 });
+  await page.goto('/de');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(320);
+  expect(await page.locator('app-header').evaluate((header) => header.offsetWidth)).toBe(320);
+});
+
 test('at 320 px nothing scrolls sideways and a jump lands below the header', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 480 });
   await page.goto('/de/impressum');
