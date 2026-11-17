@@ -251,8 +251,9 @@ icon and its name; the other season shows its icon only and keeps its name for s
 readers. The list does not repeat this switch: it has the text button.
 
 - **One width:** both names share one hidden cell, so the pill is as wide as the longer name
-  in the page's language and does not change when the season does. Below 22.5rem it is a
-  little smaller, so the wordmark keeps one line beside it.
+  in the page's language and does not change when the season does. The accent part is as
+  wide as the chosen season's icon and name, so beside the shorter name the white part
+  grows. Below 22.5rem it is a little smaller, so the wordmark keeps one line beside it.
 - **The glide:** on a change the accent part moves to the other side by its two edges, the
   leading edge first and the trailing one 0.09 s later, so it stretches as it goes (0.32 s,
   ease in and out). The accent colour of the whole page fades to the other season's over

@@ -177,15 +177,36 @@ test('only the shown season’s photo is fetched, the other one on approach', as
   }).toPass();
 });
 
-test('both seasons pass axe, and the pill keeps its width', async ({ page }) => {
+test('both seasons pass axe; the switch keeps its width, the accent part fits the name', async ({
+  page,
+}) => {
   await page.clock.setFixedTime(november);
   await page.goto('/de');
   const width = async () => (await page.locator('.season-switch').boundingBox())!.width;
+  // The chosen label carries the accent. Its width against the sum of its padding, icon, gap
+  // and name: a label stretched to the other season's longer name would be wider.
+  const accent = (name: 'winter' | 'summer') =>
+    page.locator(`.season-switch label[data-for=${name}]`).evaluate((label) => {
+      const style = getComputedStyle(label);
+      const parts = [label.querySelector('ng-icon')!, label.querySelector('.season-name')!];
+      const content =
+        parseFloat(style.paddingLeft) +
+        parseFloat(style.paddingRight) +
+        parseFloat(style.columnGap) +
+        parts.reduce((sum, part) => sum + part.getBoundingClientRect().width, 0);
+      return { width: label.getBoundingClientRect().width, content };
+    });
   const before = await width();
+  const winter = await accent('winter');
+  expect(winter.width).toBeCloseTo(winter.content, 0);
   expect(await axe(page)).toEqual([]);
   await switchTo(page, 'summer');
   await settled(page);
   expect(await width()).toBe(before);
+  const summer = await accent('summer');
+  expect(summer.width).toBeCloseTo(summer.content, 0);
+  // The demo's names differ in length, so the two accent parts do too.
+  expect(Math.abs(summer.width - winter.width)).toBeGreaterThan(4);
   expect(await axe(page)).toEqual([]);
 });
 
