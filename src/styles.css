@@ -484,14 +484,23 @@
 
     li {
       display: flex;
-      align-items: center;
+      /* The icon starts on the first line's baseline, also when the text wraps. */
+      align-items: baseline;
       gap: 0.5rem;
     }
 
     ng-icon {
-      /* Lucide's own grid, where its strokes are sharpest. */
-      --ng-icon__size: 1.5rem;
+      /* A smaller icon on a phone, where the features stand in a column; Lucide's own grid
+         from 48rem up, where its strokes are sharpest. */
+      --ng-icon__size: 1.25rem;
       color: var(--color-accent);
+      /* Centred on 0.7 of the font's cap height: centred on the line box, the icon looks
+         low next to text with few descenders. */
+      translate: 0 calc(var(--ng-icon__size) / 2 - 0.7cap);
+
+      @media (min-width: 48rem) {
+        --ng-icon__size: 1.5rem;
+      }
     }
   }
 }
