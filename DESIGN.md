@@ -327,7 +327,7 @@ bar's edge as the other; below 22.5rem its text is 1rem, so the button keeps one
 
 One week is chosen at a time, in either season: choosing another replaces it. The bar belongs
 to the chosen week's season, so it is hidden while the other season is shown and returns with
-its own. A second click on the chosen price, Enter on it, or the cross clears it; the cross
+its own, fading in (0.25 s) once the season's colours have changed. A second click on the chosen price, Enter on it, or the cross clears it; the cross
 then returns the focus to that price.
 
 ### Navigation

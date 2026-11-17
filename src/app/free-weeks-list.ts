@@ -203,6 +203,7 @@ export class FreeWeeksList {
   });
   protected readonly announced = signal('');
   private readonly panels = viewChild<ElementRef<HTMLElement>>('panels');
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
   private readonly dates = new Intl.DateTimeFormat(this.language.tag, {
     weekday: 'short',
@@ -384,34 +385,45 @@ export class FreeWeeksList {
         duration: length,
         delay,
         easing: 'cubic-bezier(0.65, 0, 0.35, 1)',
-        fill: 'backwards' as const,
+        fill: 'both' as const,
       });
       // A whole width, the rows' grounds that reach the card's edges included.
       const width = box.offsetWidth;
-      const moves = (this.moves = [
-        ...(direction
-          ? [
-              old.animate({ translate: ['0', `${-direction * width}px 0`] }, timing(duration, 0)),
-              next.animate({ translate: [`${direction * width}px 0`, '0'] }, timing(duration, 0)),
-            ]
-          : [
-              old.animate({ opacity: [1, 0] }, timing(duration, 0)),
-              next.animate({ opacity: [0, 1] }, timing(duration, 0)),
-            ]),
-        ...(resize
-          ? [
-              box.animate(
-                { height: [`${before}px`, `${after}px`] },
-                timing(resize, grows ? 0 : duration),
-              ),
-            ]
-          : []),
-      ]);
-      Promise.all(moves.map((one) => one.finished)).then(
-        () => old.removeAttribute('data-leaving'),
-        // Cancelled by the next change, which starts from where things are.
-        () => undefined,
-      );
+      const rows = direction
+        ? [
+            old.animate({ translate: ['0', `${-direction * width}px 0`] }, timing(duration, 0)),
+            next.animate({ translate: [`${direction * width}px 0`, '0'] }, timing(duration, 0)),
+          ]
+        : [
+            old.animate({ opacity: [1, 0] }, timing(duration, 0)),
+            next.animate({ opacity: [0, 1] }, timing(duration, 0)),
+          ];
+      const card = resize
+        ? [
+            box.animate(
+              { height: [`${before}px`, `${after}px`] },
+              timing(resize, grows ? 0 : duration),
+            ),
+          ]
+        : [];
+      this.moves = [...rows, ...card];
+      // The leaving rows stay where their move ended until they are gone, which is as soon as
+      // they have moved, not once the card has shrunk after them.
+      const end = (parts: Animation[], then: () => void) =>
+        Promise.all(parts.map((one) => one.finished)).then(
+          () => {
+            then();
+            parts.forEach((one) => one.cancel());
+          },
+          // Cancelled by the next change, which starts from where things are.
+          () => undefined,
+        );
+      end(rows, () => old.removeAttribute('data-leaving'));
+      end(card, () => undefined);
+      // A chosen week's bar returns with its season once the colours have changed: shown during
+      // the change, Edge drew its button's label in white.
+      const bar = this.host.nativeElement.querySelector<HTMLElement>(`.pick[data-for=${to}]`);
+      bar?.animate({ opacity: [0, 1] }, { duration: 250, delay: 450, fill: 'backwards' });
     };
   }
 }
