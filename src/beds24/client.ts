@@ -9,7 +9,9 @@ interface Properties {
 }
 
 export const listApartments = async (): Promise<Apartment[]> => {
-  const response = await fetch(`${process.env['BEDS24_URL']}/properties?includeAllRooms=true`, {
+  const url = process.env['BEDS24_URL'];
+  if (!url) throw new Error('BEDS24_URL is not set: the address of Beds24 or the simulator');
+  const response = await fetch(`${url}/properties?includeAllRooms=true`, {
     headers: { token: process.env['BEDS24_TOKEN'] ?? '' },
     signal: AbortSignal.timeout(5000),
   });

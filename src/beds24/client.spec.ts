@@ -10,7 +10,10 @@ describe('listApartments', () => {
     vi.stubEnv('BEDS24_URL', 'http://beds24.test/v2');
     vi.stubEnv('BEDS24_TOKEN', 'secret');
   });
-  afterEach(() => vi.unstubAllGlobals());
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
+  });
 
   it('maps every room of every property into an apartment', async () => {
     answer(200, {
@@ -43,5 +46,12 @@ describe('listApartments', () => {
   it('fails when Beds24 refuses the token', async () => {
     answer(401, { success: false, type: 'error', code: 401, error: 'Token not valid' });
     await expect(listApartments()).rejects.toThrow('Beds24 answered 401');
+  });
+
+  it('names the missing address instead of fetching', async () => {
+    answer(200, { data: [] });
+    vi.stubEnv('BEDS24_URL', undefined);
+    await expect(listApartments()).rejects.toThrow('BEDS24_URL is not set');
+    expect(fetch).not.toHaveBeenCalled();
   });
 });
