@@ -126,6 +126,44 @@ test('the switch works by keyboard', async ({ page }) => {
   expect(await axe(page)).toEqual([]);
 });
 
+test('a switch on a scrolled page keeps its place, and focus in the page lands below the header', async ({
+  page,
+}) => {
+  await page.clock.setFixedTime(november);
+  const at = () => page.evaluate(() => Math.round(window.scrollY));
+  const scrollTo = (top: number) =>
+    page.evaluate((y) => window.scrollTo({ top: y, behavior: 'instant' }), top);
+  for (const width of [1280, 320]) {
+    await page.setViewportSize({ width, height: 700 });
+    await page.goto('/en');
+    await scrollTo(832);
+    await switchTo(page, 'summer');
+    await settled(page);
+    expect(await at(), `click at ${width}`).toBe(832);
+
+    await page.getByRole('radio', { name: 'Summer' }).focus();
+    await page.keyboard.press('ArrowLeft');
+    await expect(page.locator('html')).toHaveAttribute('data-season', 'winter');
+    await settled(page);
+    expect(await at(), `keyboard at ${width}`).toBe(832);
+
+    // A control in the page that lies under the header comes out below it when focused.
+    const control = page.getByRole('link', { name: 'See the free weeks' });
+    const top = await control.evaluate((element) => element.getBoundingClientRect().top);
+    await scrollTo((await at()) + top - 20);
+    await control.focus();
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () =>
+            document.activeElement!.getBoundingClientRect().top >=
+            document.querySelector('app-header')!.getBoundingClientRect().bottom,
+        ),
+      )
+      .toBe(true);
+  }
+});
+
 test('a link that names a season wins and lasts for the visit', async ({ page }) => {
   await page.clock.setFixedTime(november);
   await store(page, JSON.stringify({ season: 'winter-2026', on: '2026-11-15' }));
