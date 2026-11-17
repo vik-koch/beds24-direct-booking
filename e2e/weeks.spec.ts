@@ -32,9 +32,8 @@ test('the next season lists its weeks with a price or "booked" per apartment', a
   const table = page.getByRole('table');
   for (const name of ['Zirbe', 'Lärche', 'Ahorn'])
     await expect(table.getByRole('columnheader', { name })).toContainText(/\d guests · \d+\sm²/);
-  await expect(panel(page).getByRole('rowheader').first()).toHaveText(
-    /^Sat \d\d\/\d\d – Sat \d\d\/\d\d$/,
-  );
+  const dates = await panel(page).getByRole('rowheader').first().innerText();
+  expect(dates.replace(/\s+/g, ' ').trim()).toMatch(/^Sat \d\d\/\d\d – Sat \d\d\/\d\d$/);
   await expect(panel(page).getByRole('radio').first()).toHaveAccessibleName(
     /^(Zirbe|Lärche|Ahorn) · Sat .+ · €[\d,.]+$/,
   );
@@ -64,7 +63,7 @@ test('a chosen week leads to its apartment with the stay', async ({ page }) => {
   expect(days).toBe(7);
 });
 
-test('a chosen week is cleared by a second click or by the bar, and stays over a season change', async ({
+test('a chosen week is cleared by a second click, Enter or the bar, and waits for its season', async ({
   page,
 }) => {
   await page.goto('/en');
@@ -76,15 +75,21 @@ test('a chosen week is cleared by a second click or by the bar, and stays over a
   await stay.click();
   await expect(radio).not.toBeChecked();
   await expect(page.locator('.pick')).toHaveCount(0);
+  await radio.focus();
+  await page.keyboard.press('Enter');
+  await expect(radio).toBeChecked();
+  await page.keyboard.press('Enter');
+  await expect(radio).not.toBeChecked();
 
   await stay.click();
   const chosen = await page.locator('.pick output').textContent();
-  // One week at a time: it stays chosen while the other season is shown.
+  // The bar belongs to its season: hidden while the other one is shown, back with its own.
+  await button(page).click();
+  await settled(page);
+  await expect(page.locator('.pick')).toBeHidden();
   await button(page).click();
   await settled(page);
   await expect(page.locator('.pick output')).toHaveText(chosen!);
-  await button(page).click();
-  await settled(page);
   await page.getByRole('button', { name: 'Clear the chosen week' }).click();
   await expect(page.locator('.pick')).toHaveCount(0);
   await expect(radio).not.toBeChecked();

@@ -46,7 +46,7 @@ export function heading(texts: Texts, route: ActivatedRouteSnapshot): string {
       </aside>
     }
     <app-header [alternates]="alternates" [overHero]="home" />
-    <main id="content" tabindex="-1" class="grow outline-none"><router-outlet /></main>
+    <main id="content" class="grow outline-none"><router-outlet /></main>
     <app-footer />
   `,
   host: { class: 'flex min-h-svh flex-col' },
@@ -86,9 +86,14 @@ export class Shell {
   }
 
   // The fragment would be resolved against the base address, not the page's.
+  // The main element takes the focus only from here: focusable all the time, it would take it
+  // from every click on the page's text, and the browser would scroll to it.
   protected skip(event: Event) {
     event.preventDefault();
-    this.document.getElementById('content')?.focus();
+    const main = this.document.getElementById('content');
+    main?.setAttribute('tabindex', '-1');
+    main?.focus();
+    main?.addEventListener('blur', () => main.removeAttribute('tabindex'), { once: true });
   }
 
   // Without this the font is only requested once the stylesheet is parsed, and the text is

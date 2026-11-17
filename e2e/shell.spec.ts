@@ -215,3 +215,43 @@ test('the browser bundle does not know the token', () => {
   for (const file of scripts)
     expect(readFileSync(`${browser}/${file}`, 'utf8')).not.toContain('BEDS24_TOKEN');
 });
+
+// Every tab stop shows the ring: on the element, or on what it draws for a hidden input.
+test('every tab stop on the home page shows a focus ring', async ({ page, browserName }) => {
+  test.skip(browserName === 'webkit', 'Safari tabs only to fields unless told otherwise');
+  await page.goto('/en');
+  const seen: string[] = [];
+  for (let i = 0; i < 80; i++) {
+    await page.keyboard.press('Tab');
+    const stop = await page.evaluate(() => {
+      const element = document.activeElement as HTMLElement | null;
+      if (!element || element === document.body) return null;
+      const parts = [
+        element,
+        element.nextElementSibling,
+        element.closest('.season-switch'),
+        ...element.children,
+      ].filter(Boolean) as Element[];
+      const ring = parts.some((part) => {
+        const style = getComputedStyle(part);
+        return style.outlineStyle !== 'none' && parseFloat(style.outlineWidth) >= 2;
+      });
+      const name = `${element.tagName.toLowerCase()} ${element.textContent?.trim().slice(0, 30) || element.getAttribute('aria-label') || ''}`;
+      return { name, ring };
+    });
+    if (!stop || seen.includes(stop.name)) break;
+    seen.push(stop.name);
+    expect(stop.ring, stop.name).toBe(true);
+  }
+  expect(seen.length).toBeGreaterThan(5);
+});
+
+test('a click on the page does not take the focus to the main element', async ({ page }) => {
+  await page.goto('/en');
+  await page.getByRole('heading', { name: /^Free weeks/ }).click();
+  expect(await page.evaluate(() => document.activeElement?.tagName)).not.toBe('MAIN');
+  // The skip link still takes it there.
+  await page.getByRole('link', { name: 'Skip to the content' }).focus();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('main')).toBeFocused();
+});

@@ -97,7 +97,14 @@ type SeasonWeeks = FreeWeeks['seasons'][number];
                         <span class="weeks-month-name" aria-hidden="true">{{ month.name }}</span>
                         @for (week of month.weeks; track week.arrival) {
                           <div class="weeks-row" role="row">
-                            <span role="rowheader">{{ stay(week) }}</span>
+                            @let span = days(week);
+                            <span role="rowheader"
+                              ><span class="weekday">{{ span[0].weekday }}</span
+                              >{{ span[0].date }} –
+                              <span class="weekday">{{ span[1].weekday }}</span>{{
+                                span[1].date
+                              }}</span
+                            >
                             @for (price of week.prices; track $index) {
                               <span role="cell" [class.elsewhere]="$index !== tab()">
                                 @if (price === null) {
@@ -111,6 +118,7 @@ type SeasonWeeks = FreeWeeks['seasons'][number];
                                       [attr.aria-label]="describe(season, $index, week.row)"
                                       [attr.data-pick]="$index + '-' + week.row"
                                       (click)="again(season.name, $index, week.row)"
+                                      (keydown.enter)="toggle(season.name, $index, week.row)"
                                       (change)="choose(season.name, $index, week.row)"
                                     />
                                     <span class="price">{{ money(price) }}</span>
@@ -137,20 +145,25 @@ type SeasonWeeks = FreeWeeks['seasons'][number];
           </div>
         </div>
         <p class="weeks-note">{{ note }}</p>
-        <!-- One week at a time, in either season; the bar stays through a change of season. -->
+        <!-- One week at a time, in either season. The bar belongs to its season and is hidden
+             while the other one is shown, so a change of season does not rebuild it. -->
         @if (picked(); as pick) {
-          <div class="pick">
-            <output>{{ describe(pick.season, pick.apartment, pick.row) }}</output>
+          <div class="pick" [attr.data-for]="pick.season.name">
+            <output>
+              <span class="pick-name">{{ pick.name }}</span>
+              <span class="pick-dot" aria-hidden="true"> · </span>
+              <span>{{ pick.stay }} · {{ pick.price }}</span>
+            </output>
             <div class="pick-actions">
               <button
                 type="button"
-                class="pick-clear"
+                class="icon-button pick-clear"
                 [attr.aria-label]="texts.weeks.clear"
                 (click)="clear()"
               >
                 <ng-icon name="lucideX" aria-hidden="true" />
               </button>
-              <a class="button" [href]="link(pick.season, pick.apartment, pick.row)">
+              <a class="button" [href]="pick.link">
                 {{ texts.weeks.continue }}
               </a>
             </div>
@@ -178,7 +191,15 @@ export class FreeWeeksList {
   protected readonly picked = computed(() => {
     const pick = this.chosen();
     const season = pick && this.weeks()?.seasons.find(({ name }) => name === pick.season);
-    return season ? { ...pick!, season } : null;
+    if (!pick || !season) return null;
+    const week = season.weeks[pick.row];
+    return {
+      season,
+      name: this.weeks()!.apartments[pick.apartment].name,
+      stay: this.stay(week),
+      price: this.money(week.prices[pick.apartment]!),
+      link: this.link(season, pick.apartment, pick.row),
+    };
   });
   protected readonly announced = signal('');
   private readonly panels = viewChild<ElementRef<HTMLElement>>('panels');
@@ -248,6 +269,20 @@ export class FreeWeeksList {
     return `${count} · ${new Intl.NumberFormat(this.language.tag).format(size)}\u00a0m²`;
   }
 
+  // A row's two days, each with its weekday apart, which the narrowest screens leave out.
+  protected days({ arrival, departure }: { arrival: string; departure: string }) {
+    return [arrival, departure].map((day) => {
+      const parts = this.dates.formatToParts(new Date(day));
+      const end = parts.findIndex(({ type }) => type === 'weekday') + 2;
+      const text = (from: number, to?: number) =>
+        parts
+          .slice(from, to)
+          .map(({ value }) => value)
+          .join('');
+      return { weekday: text(0, end), date: text(end) };
+    });
+  }
+
   protected stay({ arrival, departure }: { arrival: string; departure: string }) {
     // Not formatRange: across the turn of the year it adds both years.
     return `${this.dates.format(new Date(arrival))} – ${this.dates.format(new Date(departure))}`;
@@ -290,6 +325,12 @@ export class FreeWeeksList {
     if (this.isChosen(season, apartment, row)) this.chosen.set(null);
   }
 
+  // Enter chooses a week or clears it, as a second click does.
+  protected toggle(season: SeasonName, apartment: number, row: number) {
+    if (this.isChosen(season, apartment, row)) this.chosen.set(null);
+    else this.choose(season, apartment, row);
+  }
+
   // The bar goes with its button, so the focus returns to the week that was chosen.
   protected clear() {
     const pick = this.chosen();
@@ -330,13 +371,13 @@ export class FreeWeeksList {
         .forEach((body) => body.removeAttribute('data-leaving'));
       if (!box || !old || !next || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
       old.setAttribute('data-leaving', '');
-      // The card grows before the rows move, or shrinks after they have, so that rows are
-      // never cut off and the page below moves once, apart from the rows.
+      // The card grows while the rows move, and shrinks only after they have, so that the
+      // leaving rows are not cut off.
       const before = height!;
       const after = next.offsetHeight;
-      const resize = Math.abs(after - before) < 1 ? 0 : 250;
       const duration = direction ? 450 : 600;
-      const [rows, card] = after > before ? [resize, 0] : [0, duration];
+      const grows = after > before;
+      const resize = Math.abs(after - before) < 1 ? 0 : grows ? duration : 250;
       const timing = (length: number, delay: number) => ({
         duration: length,
         delay,
@@ -348,21 +389,20 @@ export class FreeWeeksList {
       const moves = (this.moves = [
         ...(direction
           ? [
-              old.animate(
-                { translate: ['0', `${-direction * width}px 0`] },
-                timing(duration, rows),
-              ),
-              next.animate(
-                { translate: [`${direction * width}px 0`, '0'] },
-                timing(duration, rows),
-              ),
+              old.animate({ translate: ['0', `${-direction * width}px 0`] }, timing(duration, 0)),
+              next.animate({ translate: [`${direction * width}px 0`, '0'] }, timing(duration, 0)),
             ]
           : [
-              old.animate({ opacity: [1, 0] }, timing(duration, rows)),
-              next.animate({ opacity: [0, 1] }, timing(duration, rows)),
+              old.animate({ opacity: [1, 0] }, timing(duration, 0)),
+              next.animate({ opacity: [0, 1] }, timing(duration, 0)),
             ]),
         ...(resize
-          ? [box.animate({ height: [`${before}px`, `${after}px`] }, timing(resize, card))]
+          ? [
+              box.animate(
+                { height: [`${before}px`, `${after}px`] },
+                timing(resize, grows ? 0 : duration),
+              ),
+            ]
           : []),
       ]);
       Promise.all(moves.map((one) => one.finished)).then(
