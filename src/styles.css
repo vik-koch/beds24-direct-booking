@@ -496,6 +496,12 @@
     display: block;
   }
 
+  /* A jump lands with the section's top at the header's lower edge, so the header covers the
+     hero's last strip: 1rem less than the page's scroll-padding of header and air. */
+  .weeks-section {
+    scroll-margin-top: -1rem;
+  }
+
   .weeks-head {
     display: flex;
     flex-wrap: wrap;
@@ -513,26 +519,48 @@
     white-space: nowrap;
   }
 
+  /* Both seasons' versions lie in one cell; the other one keeps its place, unseen. */
+  .weeks .stack {
+    display: inline-grid;
+
+    > * {
+      grid-area: 1 / 1;
+    }
+  }
+
+  html:not([data-season='winter']) .weeks .stack > [data-for='winter'],
+  html:not([data-season='summer']) .weeks .stack > [data-for='summer'] {
+    display: flex;
+    visibility: hidden;
+  }
+
   /* The way to the other season is a sentence with an arrow, not a second switch. */
+  /* Underlined on hover like a link; the line is drawn on the label, since a flex box does not
+     take its parent's. The label stands on its text's baseline, the arrow centred beside it. */
   .other-season {
     min-height: 2.75rem;
+    align-items: center;
     color: var(--color-accent);
     font-weight: 500;
     text-align: left;
-    text-decoration: underline;
-    text-decoration-color: transparent;
-    text-underline-offset: 0.3em;
     cursor: pointer;
-    transition: text-decoration-color 0.2s;
 
-    &:hover {
+    > span {
+      display: flex;
+      align-items: baseline;
+      gap: 0.5rem;
+      text-decoration: underline;
+      text-decoration-color: transparent;
+      text-underline-offset: 0.3em;
+      transition: text-decoration-color 0.2s;
+    }
+
+    &:hover > span {
       text-decoration-color: currentcolor;
     }
 
-    > span {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
+    ng-icon {
+      align-self: center;
     }
   }
 
@@ -559,6 +587,10 @@
       line-height: 1.25;
       text-align: center;
       cursor: pointer;
+      transition:
+        background-color 0.2s,
+        border-color 0.2s,
+        color 0.2s;
     }
 
     :checked + span {
@@ -589,9 +621,11 @@
 
   /* The card stays; only its rows move. Without the application every apartment is listed,
      so a narrow screen scrolls the card sideways. */
+  /* The last month's ground reaches the card's lower edge, so the space below it is part of it. */
   .sheet {
     --pad: 0.875rem;
-    padding: 0.5rem var(--pad) 1rem;
+    --end: 1rem;
+    padding: 0.5rem var(--pad) 0;
     overflow-x: auto;
     border-radius: var(--radius-card);
     background: var(--color-surface);
@@ -603,7 +637,8 @@
 
     @media (min-width: 48rem) {
       --pad: 2.5rem;
-      padding-block: 1rem 1.5rem;
+      --end: 1.5rem;
+      padding-top: 1rem;
     }
   }
 
@@ -639,7 +674,11 @@
     padding: 0.25rem var(--pad);
 
     &:nth-child(even) {
-      background: color-mix(in srgb, var(--color-ground) 70%, var(--color-surface));
+      background: color-mix(in srgb, var(--color-ground) 50%, var(--color-surface));
+    }
+
+    &:last-child {
+      padding-bottom: var(--end);
     }
   }
 
@@ -702,7 +741,6 @@
 
   .weeks-empty {
     grid-column: 1 / -1;
-    max-width: 36rem;
     padding: 1.5rem 0;
     text-align: left;
     white-space: normal;

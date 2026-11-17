@@ -69,12 +69,17 @@ test('the season button goes both ways, shares the season with the header and ke
 }) => {
   await page.goto('/en');
   const start = await season(page);
+  const card = () =>
+    page.locator('.sheet').evaluate((element) => element.getBoundingClientRect().top + scrollY);
+  const top = await card();
   // innerText leaves out the other season's hidden name.
   const heading = () => page.locator('.weeks h2').innerText();
   const first = await heading();
   await toOtherSeason(page);
   await expect(button(page)).toBeFocused();
   await expect(button(page)).toHaveAccessibleName(/^Current season: /);
+  // The heading and the button keep their size, so the card does not move.
+  expect(await card()).toBe(top);
   await expect.poll(heading).not.toBe(first);
   await expect(
     page.getByRole('radio', { name: start === 'winter' ? 'Summer' : 'Winter' }),

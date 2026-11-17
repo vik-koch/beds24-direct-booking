@@ -191,8 +191,8 @@ so that amounts can be compared down a column.
   bottom. It scrolls with the photo.
 - **Rhythm:** 3.5rem above a section on a phone, 5rem from 48rem up; 1.5rem between a heading
   and what follows. More space above a heading than below it. The section after the hero has
-  5.5rem above it, so a jump to it places the heading below the header with the photo out of
-  view.
+  2.75rem above it, and a jump to it places the section's top at the header's lower edge, so
+  the header covers the photo's last strip.
 - **Header:** sticky, a light frosted bar (the ground colour at 72% with a blur). Over the hero
   at the top of the home page it has no ground of its own until the page scrolls. Below 64rem,
   and on a screen without hover such as a tablet, it holds the wordmark, the season switch and a
@@ -271,15 +271,16 @@ readers. The list does not repeat this switch: it has the text button.
   of a month. The card and its header row stay in place for every season and every state.
 - **Heading:** "Free weeks" and the dated season in the accent at weight 400, on one line
   where it fits and on two where it does not. The text button stands on the heading's last
-  line.
+  line. Both seasons' names, and both of the button's labels, take the space of the longer
+  one, so the heading, the button and the card stay where they are on a change of season.
 - **Columns:** they share the card's width evenly, none narrower than its content. A column's
   head is the apartment's name with its guests and size below, right-aligned over the prices.
   On a phone the one apartment shown takes the whole header row: its name on the left, its
   facts on the right.
 - **Months:** the weeks are grouped by the month they arrive in (a week from 26 December
   belongs to December). Each group starts with the month's name in soft ink at 0.875rem, and
-  every other group lies on a light ground (the page's ground mixed 70% into white) that
-  reaches the card's edges.
+  every other group lies on a light ground (the page's ground mixed 50% into white) that
+  reaches the card's edges; the last month's reaches its lower edge too.
 - **Row:** the stay's dates on the left in body text (weekday, day and month in figures, so a
   row fits at 320 px), one cell per apartment on the right.
 - **Free week:** the price in the accent at title size, as a radio button without a visible
@@ -289,15 +290,18 @@ readers. The list does not repeat this switch: it has the text button.
 - **Not open yet, or no week free:** a short sentence below the header row, in the card.
 - **Below the sheet:** a note in soft ink on what the price includes, and the tourist tax.
 - **Apartment tabs (narrow):** a pill with an edge per apartment, all of one width and one
-  height, in as many lines as their names need; the chosen one is filled with ink. A change of
+  height, in as many lines as their names need; the chosen one is filled with ink, its colours
+  changing over 0.2 s like a price's hover tint. A change of
   tab clears the chosen week. Without the application the tabs are not shown and the sheet
   scrolls sideways instead.
 - **The other season:** the text button above the list. The next season's rows slide in from
   the right while the shown ones leave to the left, and back the other way (0.45 s, ease in
   and out), each by the card's whole width; the card, its header row, the heading and the
   button stay still and the button keeps the focus. The header's switch glides with it. A
-  change from the header's switch cross-fades the rows over 0.6 s, like the hero photos. The
-  card's height follows the new rows during the move instead of jumping at its end. With
+  change from the header's switch cross-fades the rows over 0.6 s, like the hero photos. When
+  the new season has more rows, the card grows first (0.25 s) and the rows move after; when it
+  has fewer, the rows move first and the card shrinks after, so rows are never cut off. A
+  chosen week stays chosen in its season, and the booking bar shows the shown season's. With
   reduced motion the list changes at once.
 
 ### Booking bar

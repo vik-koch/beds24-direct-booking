@@ -66,11 +66,16 @@ export class Shell {
     // Sets the season on the page, and on the server writes the script that chooses it.
     inject(Season);
     this.preloadFonts();
-    // A jump from a link lands below the sticky header, with a little air.
-    inject(ViewportScroller).setOffset(() => [
-      0,
-      (this.document.querySelector<HTMLElement>('app-header')?.offsetHeight ?? 0) + 16,
-    ]);
+    // A jump from a link lands below the sticky header, with a little air, moved by the
+    // target's scroll-margin as the browser's own jump is.
+    inject(ViewportScroller).setOffset(() => {
+      const header = this.document.querySelector<HTMLElement>('app-header')?.offsetHeight ?? 0;
+      const target = this.document.getElementById(
+        decodeURIComponent(this.document.location.hash.slice(1)),
+      );
+      const margin = target ? parseFloat(getComputedStyle(target).scrollMarginTop) : 0;
+      return [0, header + 16 + margin];
+    });
     this.describe();
     this.router.events
       .pipe(

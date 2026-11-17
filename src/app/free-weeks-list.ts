@@ -17,17 +17,21 @@ type SeasonWeeks = FreeWeeks['seasons'][number];
   providers: [provideIcons({ lucideArrowLeft, lucideArrowRight })],
   template: `
     <div class="weeks-head">
-      <h2 class="headline" [id]="anchor">
+      <!-- The seasons' names, and the button's labels, lie over each other: the heading and the
+           button keep the size of the longer one, so nothing below moves on a change. -->
+      <h2 class="headline">
         {{ texts.nav.weeks }}&ngsp;
-        @for (season of weeks()?.seasons; track season.name) {
-          @if (season.years) {
-            <span class="weeks-season" [attr.data-for]="season.name">{{ dated(season) }}</span>
-          }
+        @if (weeks()?.seasons?.[0]?.years) {
+          <span class="weeks-season stack">
+            @for (season of weeks()!.seasons; track season.name) {
+              <span [attr.data-for]="season.name">{{ dated(season) }}</span>
+            }
+          </span>
         }
       </h2>
       @if (weeks()?.seasons?.length === 2) {
         <!-- One button whose label follows the season, so that it keeps the focus. -->
-        <button type="button" class="other-season" (click)="slide()">
+        <button type="button" class="other-season stack" (click)="slide()">
           @for (season of weeks()!.seasons; track season.name) {
             <span [attr.data-for]="season.name">
               @if ($first) {
@@ -144,7 +148,6 @@ export class FreeWeeksList {
   private readonly season = inject(Season);
   // The season the page shows, for the booking bar.
   protected readonly shown = this.season.current;
-  protected readonly anchor = this.language.anchors.weeks;
   protected readonly fill = fill;
   // On a phone the list shows one apartment, the one of the chosen tab.
   protected readonly tab = signal(0);
@@ -272,18 +275,40 @@ export class FreeWeeksList {
         .forEach((body) => body.removeAttribute('data-leaving'));
       if (!box || !old || !next || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
       old.setAttribute('data-leaving', '');
-      const timing = { duration: direction ? 450 : 600, easing: 'cubic-bezier(0.65, 0, 0.35, 1)' };
+      // The card grows before the rows move, or shrinks after they have, so that rows are
+      // never cut off and the page below moves once, apart from the rows.
+      const before = height!;
+      const after = next.offsetHeight;
+      const resize = Math.abs(after - before) < 1 ? 0 : 250;
+      const duration = direction ? 450 : 600;
+      const [rows, card] = after > before ? [resize, 0] : [0, duration];
+      const timing = (length: number, delay: number) => ({
+        duration: length,
+        delay,
+        easing: 'cubic-bezier(0.65, 0, 0.35, 1)',
+        fill: 'backwards' as const,
+      });
       // A whole width, the rows' grounds that reach the card's edges included.
       const width = box.offsetWidth;
       const moves = (this.moves = [
         ...(direction
           ? [
-              old.animate({ translate: ['0', `${-direction * width}px 0`] }, timing),
-              next.animate({ translate: [`${direction * width}px 0`, '0'] }, timing),
+              old.animate(
+                { translate: ['0', `${-direction * width}px 0`] },
+                timing(duration, rows),
+              ),
+              next.animate(
+                { translate: [`${direction * width}px 0`, '0'] },
+                timing(duration, rows),
+              ),
             ]
-          : [old.animate({ opacity: [1, 0] }, timing), next.animate({ opacity: [0, 1] }, timing)]),
-        // The page below follows the height smoothly instead of jumping at the end.
-        box.animate({ height: [`${height}px`, `${next.offsetHeight}px`] }, timing),
+          : [
+              old.animate({ opacity: [1, 0] }, timing(duration, rows)),
+              next.animate({ opacity: [0, 1] }, timing(duration, rows)),
+            ]),
+        ...(resize
+          ? [box.animate({ height: [`${before}px`, `${after}px`] }, timing(resize, card))]
+          : []),
       ]);
       Promise.all(moves.map((one) => one.finished)).then(
         () => old.removeAttribute('data-leaving'),

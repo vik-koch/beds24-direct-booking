@@ -40,12 +40,13 @@ import { address, LANGUAGE, TEXTS } from './texts';
         <a class="button" [href]="weeksLink">{{ texts.hero.button }}</a>
       </div>
     </section>
-    <!-- The anchor is a section's heading: a jump places it below the header, and the space
-         above the first section then hides the hero completely. -->
-    <section class="column pt-[5.5rem]">
+    <!-- A jump to the free weeks places the section's top below the header, which then covers
+         the hero's last strip; the other sections' anchors are their headings. -->
+    <section class="column weeks-section pt-11" [id]="anchors.weeks">
       <app-free-weeks [weeks]="weeks" />
     </section>
     @for (section of sections; track section) {
+      <!-- The anchor is the heading: a jump places it below the header. -->
       <section class="column pt-14 md:pt-20">
         <h2 class="headline" [id]="anchors[section]">{{ texts.nav[section] }}</h2>
         @if (section === 'apartments' && weeks?.apartments?.length) {
