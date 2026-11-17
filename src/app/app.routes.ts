@@ -1,3 +1,5 @@
+import { DOCUMENT } from '@angular/common';
+import { inject, REQUEST_CONTEXT } from '@angular/core';
 import { Routes } from '@angular/router';
 import site from '../content/generated/site';
 import { loadTexts } from '../content/generated/texts';
@@ -38,20 +40,33 @@ const pages = ({ paths }: Language): Routes => [
   { path: '**', component: NotFound, data: { page: 'notFound' } },
 ];
 
-export const routes: Routes = site.languages.map((language) => ({
-  path: language.code,
-  loadChildren: async () => {
-    const texts = await loadTexts[language.code]();
-    return [
-      {
-        path: '',
-        component: Shell,
-        providers: [
-          { provide: TEXTS, useValue: texts },
-          { provide: LANGUAGE, useValue: language },
-        ],
-        children: pages(language),
-      },
-    ];
+const shell = (language: Language, children: Routes) => async (): Promise<Routes> => [
+  {
+    path: '',
+    component: Shell,
+    providers: [
+      { provide: TEXTS, useValue: await loadTexts[language.code]() },
+      { provide: LANGUAGE, useValue: language },
+    ],
+    children,
   },
-}));
+];
+
+// Outside every language's prefix: the language the server chose from the browser's, and in
+// the browser the one the server rendered.
+const preferred = (): string =>
+  (inject(REQUEST_CONTEXT, { optional: true }) as { language?: string } | null)?.language ??
+  site.languages.find(({ tag }) => tag === inject(DOCUMENT).documentElement.lang)?.code ??
+  site.languages[0].code;
+
+export const routes: Routes = [
+  ...site.languages.map((language) => ({
+    path: language.code,
+    loadChildren: shell(language, pages(language)),
+  })),
+  ...site.languages.map((language) => ({
+    path: '**',
+    canMatch: [() => preferred() === language.code],
+    loadChildren: shell(language, [{ path: '', component: NotFound, data: { page: 'notFound' } }]),
+  })),
+];

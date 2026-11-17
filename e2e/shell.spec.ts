@@ -75,6 +75,22 @@ test('an unknown address and an unknown apartment answer 404', async ({ request 
   }
 });
 
+test('an unknown language answers the not-found page in the browser language, else the first', async ({
+  browser,
+}) => {
+  for (const [locale, title, home, href] of [
+    ['en-GB', 'Page not found', 'To the home page', '/en'],
+    ['fr-FR', 'Seite nicht gefunden', 'Zur Startseite', '/de'],
+  ]) {
+    const context = await browser.newContext({ locale });
+    const page = await context.newPage();
+    expect((await page.goto('/fr/quelque-chose'))?.status()).toBe(404);
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(title);
+    await expect(page.getByRole('link', { name: home })).toHaveAttribute('href', href);
+    await context.close();
+  }
+});
+
 test('the home page comes from the server with the apartments, the notice and the footer', async ({
   page,
   request,
