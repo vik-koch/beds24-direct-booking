@@ -35,7 +35,7 @@ Node 24 and npm. After `npm ci`:
 | Command | What it does |
 |---|---|
 | `npm run sim` | The Beds24 simulator on `localhost:4300`. The app needs it running. |
-| `npm start` | The development server on `localhost:4200`, pointed at the simulator. |
+| `npm start` | The development server on `localhost:4200`, pointed at the simulator unless `BEDS24_URL` and `BEDS24_TOKEN` are set. |
 | `npm run lint` and `npm run format:check` | ESLint and Prettier. `npm run format` rewrites. |
 | `npm test` | The unit tests, once. |
 | `npm run e2e` | Builds, starts the simulator and the built server and runs the e2e suite on Chromium, WebKit with an iPhone device and Firefox. The browsers are installed once with `npx playwright install --with-deps`. |

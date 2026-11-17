@@ -71,16 +71,15 @@ against the same keys for every site.
 
 The variable `CONTENT_DIR` names the folder; without it the demo's is used.
 
-- **Locally,** for example against the real Beds24 with a site's own content beside this
-  repository:
+- **Locally,** for example with a site's own content beside this repository, against the
+  simulator (`npm run sim`) or, with both Beds24 variables set, against the real Beds24:
 
   ```sh
-  CONTENT_DIR=../my-site/content npm run content
-  BEDS24_URL=https://api.beds24.com/v2 BEDS24_TOKEN=<token> NG_ALLOWED_HOSTS=localhost npx ng serve
+  CONTENT_DIR=../my-site/content npm start
+  CONTENT_DIR=../my-site/content BEDS24_URL=https://api.beds24.com/v2 BEDS24_TOKEN=<token> npm start
   ```
 
-  `npm start` would write the demo's content again and point at the simulator. Run
-  `npm run content` without the variable to go back to the demo.
+  Run `npm start` without the variable to go back to the demo.
 
 - **In an image,** the folder must be inside the build context: `docker build --build-arg
 CONTENT_DIR=content/site .` with the folder copied there first, as
