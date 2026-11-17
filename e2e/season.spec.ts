@@ -128,7 +128,6 @@ test('the switch works by keyboard', async ({ page }) => {
 
 test('a switch on a scrolled page keeps its place, and focus in the page lands below the header', async ({
   page,
-  browserName,
 }) => {
   await page.clock.setFixedTime(november);
   const at = () => page.evaluate(() => Math.round(window.scrollY));
@@ -151,15 +150,11 @@ test('a switch on a scrolled page keeps its place, and focus in the page lands b
     await settled(page);
     expect(await at(), `click at ${width}`).toBe(832);
 
-    // WebKit ignores the header's negative scroll margin when it reveals a focused element, so
-    // a focus moved into the switch by keyboard still scrolls there.
-    if (browserName !== 'webkit') {
-      await page.getByRole('radio', { name: 'Summer' }).focus();
-      await page.keyboard.press('ArrowLeft');
-      await expect(page.locator('html')).toHaveAttribute('data-season', 'winter');
-      await settled(page);
-      expect(await at(), `keyboard at ${width}`).toBe(832);
-    }
+    await page.getByRole('radio', { name: 'Summer' }).focus();
+    await page.keyboard.press('ArrowLeft');
+    await expect(page.locator('html')).toHaveAttribute('data-season', 'winter');
+    await settled(page);
+    expect(await at(), `keyboard at ${width}`).toBe(832);
 
     // A control in the page that lies under the header comes out below it when focused.
     const control = page.getByRole('link', { name: 'See the free weeks' });
