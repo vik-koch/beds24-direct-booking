@@ -45,3 +45,16 @@ credits page.
 |---|---|---|---|
 | `hero-winter.webp` | [Saalbach (8450786397).jpg](<https://commons.wikimedia.org/wiki/File:Saalbach_(8450786397).jpg>) | Ian Gratton | [CC BY 2.0](https://creativecommons.org/licenses/by/2.0) |
 | `hero-summer.webp` | [Saalbach, 2014 (02).JPG](<https://commons.wikimedia.org/wiki/File:Saalbach,_2014_(02).JPG>) | Bahnfrend | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0) |
+
+## Generated apartment pictures
+
+The 14 pictures in `design/generated/` show the demo's invented apartments. They are
+AI-generated with OpenAI's image generation, directed through Codex, from the prompts in
+`design/apartment-pictures.md`; no photographs went in. They are supplied under this
+repository's licence to the extent that copyright or other rights exist in them. OpenAI's
+[Europe Terms of Use](https://openai.com/policies/eu-terms-of-use/) assign its rights in the
+output, if any, to the user; similar output may be generated for others. Its
+[sharing and publication policy](https://openai.com/policies/sharing-publication-policy/) asks
+for a review before sharing and an AI disclosure no viewer could miss, so a site that shows
+them labels each as generated. Both were checked on 17 November 2026; each apartment's note in
+`design/generated/` has the details.
