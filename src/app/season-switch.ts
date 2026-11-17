@@ -21,7 +21,13 @@ import { TEXTS } from './texts';
       <div #box class="season-switch" role="radiogroup" [attr.aria-label]="texts.seasons.label">
         <span #pill class="season-pill" aria-hidden="true"></span>
         @for (name of season.names; track name) {
-          <label [attr.data-for]="name" (pointerenter)="season.preload(name)">
+          <!-- A click chooses without taking the focus: WebKit would scroll the page to show the
+               focused radio inside the page's scroll padding (styles.css, .site-header). -->
+          <label
+            [attr.data-for]="name"
+            (pointerenter)="season.preload(name)"
+            (mousedown)="$event.preventDefault()"
+          >
             <input
               type="radio"
               name="season"
