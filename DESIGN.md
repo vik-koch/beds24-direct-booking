@@ -197,6 +197,8 @@ so that amounts can be compared down a column.
   and what follows. More space above a heading than below it. The section after the hero has
   2.75rem above it, and a jump to it places the section's top at the header's lower edge, so
   the header covers the photo's last strip.
+- **Jumps:** a jump within the page scrolls smoothly, at once with reduced motion. An address
+  with a section's anchor opens at that section, with no scroll to be seen.
 - **Header:** sticky, a light frosted bar (the ground colour at 72% with a blur). Over the hero
   at the top of the home page it has no ground of its own until the page scrolls or the menu
   opens. Below 64rem, and on a screen without hover such as a tablet, it holds the wordmark, the

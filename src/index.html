@@ -9,5 +9,14 @@
   </head>
   <body>
     <app-root></app-root>
+    <!-- Chromium jumps to an address's anchor only once the application's scripts have run, so
+         the page would first be painted at its top. This places it at the first paint, with the
+         header's ground, which it has below the top. -->
+    <script>
+      if (location.hash) {
+        document.getElementById(decodeURIComponent(location.hash.slice(1)))?.scrollIntoView();
+        if (scrollY > 0) document.querySelector('app-header')?.removeAttribute('data-over');
+      }
+    </script>
   </body>
 </html>

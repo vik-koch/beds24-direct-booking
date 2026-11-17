@@ -1,5 +1,5 @@
 import { DOCUMENT, ViewportScroller } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { afterNextRender, Component, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Title } from '@angular/platform-browser';
 import {
@@ -76,6 +76,7 @@ export class Shell {
       const margin = target ? parseFloat(getComputedStyle(target).scrollMarginTop) : 0;
       return [0, header + 16 + margin];
     });
+    afterNextRender(() => this.document.documentElement.setAttribute('data-smooth', ''));
     this.describe();
     this.router.events
       .pipe(
