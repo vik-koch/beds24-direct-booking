@@ -46,8 +46,9 @@ repository.
   its season is [ADR 8](adr/0008-the-season-in-the-page.md).
 - **A picture** is a file in `pictures/` with an optional `credit`: its title, author, source
   address and licence with its address. The picture credits page lists every credited picture.
-  Pictures are served at `/pictures/<file>` and kept by browsers for a year, like the fonts:
-  give a changed picture a new name.
+  Pictures are served at `/pictures/<file>` as they are and kept by browsers for a year, like
+  the fonts: give a changed picture a new name. WebP keeps a photo smaller than JPEG at the
+  same quality; the demo's hero photos are 2000 px wide WebP files at quality 80.
 - **The season's colours:** `theme.css` sets one season's accents on `:root` and, with two
   seasons, the other's under its attribute, as the demo does with
   `[data-season='summer'] { --color-accent: …; --color-accent-soft: …; }`.

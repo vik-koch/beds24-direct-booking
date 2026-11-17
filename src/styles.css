@@ -469,6 +469,8 @@
 
   .lead {
     margin-bottom: 1.25rem;
+    /* A step above the body text, so the headline does not carry the card alone. */
+    font-size: clamp(1.1875rem, 1rem + 0.5vw, 1.375rem);
     color: var(--color-ink-soft);
     text-wrap: pretty;
   }
@@ -487,6 +489,8 @@
     }
 
     ng-icon {
+      /* Lucide's own grid, where its strokes are sharpest. */
+      --ng-icon__size: 1.5rem;
       color: var(--color-accent);
     }
   }

@@ -36,12 +36,12 @@ here. The hero photographs it shows are the demo's content, below.
 ## The demo's content
 
 The two hero photographs in `content/demo/pictures/` are from Wikimedia Commons, scaled down to
-2000 px width. They are not covered by this repository's licence. Each is credited with its
+2000 px width and saved as WebP. They are not covered by this repository's licence. Each is credited with its
 author, source and licence in `content/demo/site.json`, which the site shows on its picture
 credits page.
 
 <!-- prettier-ignore -->
 | File | Title on Commons | Author | Licence |
 |---|---|---|---|
-| `hero-winter.jpg` | [Saalbach (8450786397).jpg](<https://commons.wikimedia.org/wiki/File:Saalbach_(8450786397).jpg>) | Ian Gratton | [CC BY 2.0](https://creativecommons.org/licenses/by/2.0) |
-| `hero-summer.jpg` | [Saalbach, 2014 (02).JPG](<https://commons.wikimedia.org/wiki/File:Saalbach,_2014_(02).JPG>) | Bahnfrend | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0) |
+| `hero-winter.webp` | [Saalbach (8450786397).jpg](<https://commons.wikimedia.org/wiki/File:Saalbach_(8450786397).jpg>) | Ian Gratton | [CC BY 2.0](https://creativecommons.org/licenses/by/2.0) |
+| `hero-summer.webp` | [Saalbach, 2014 (02).JPG](<https://commons.wikimedia.org/wiki/File:Saalbach,_2014_(02).JPG>) | Bahnfrend | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0) |
