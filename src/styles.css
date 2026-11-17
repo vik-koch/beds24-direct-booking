@@ -469,6 +469,8 @@
 
   .lead {
     margin-bottom: 1.25rem;
+    /* A step above the body text, so the headline does not carry the card alone. */
+    font-size: clamp(1.1875rem, 1rem + 0.5vw, 1.375rem);
     color: var(--color-ink-soft);
     text-wrap: pretty;
   }
@@ -482,12 +484,26 @@
 
     li {
       display: flex;
-      align-items: center;
+      /* The icon starts on the first line's baseline, also when the text wraps. */
+      align-items: baseline;
       gap: 0.5rem;
     }
 
     ng-icon {
+      /* A smaller icon on a phone, where the features stand in a column; Lucide's own grid
+         from 48rem up, where its strokes are sharpest. */
+      --ng-icon__size: 1.25rem;
+      /* The icon's centre as a share of the font's cap height above the baseline: centred on
+         the line box, an icon looks low next to text with few descenders. The larger icon
+         sits a little higher to look centred. */
+      --lift: 0.5cap;
       color: var(--color-accent);
+      translate: 0 calc(var(--ng-icon__size) / 2 - var(--lift));
+
+      @media (min-width: 48rem) {
+        --ng-icon__size: 1.5rem;
+        --lift: 0.6cap;
+      }
     }
   }
 }

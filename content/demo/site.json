@@ -22,7 +22,7 @@
     "winter": {
       "start": "09-01",
       "hero": {
-        "file": "pictures/hero-winter.jpg",
+        "file": "pictures/hero-winter.webp",
         "credit": {
           "title": "Saalbach (8450786397).jpg",
           "author": "Ian Gratton",
@@ -37,7 +37,7 @@
     "summer": {
       "start": "04-01",
       "hero": {
-        "file": "pictures/hero-summer.jpg",
+        "file": "pictures/hero-summer.webp",
         "credit": {
           "title": "Saalbach, 2014 (02).JPG",
           "author": "Bahnfrend",

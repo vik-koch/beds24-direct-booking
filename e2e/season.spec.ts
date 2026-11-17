@@ -170,10 +170,10 @@ test('only the shown season’s photo is fetched, the other one on approach', as
   await page.clock.setFixedTime(november);
   await page.goto('/de');
   await page.waitForLoadState('networkidle');
-  expect(photos).toEqual(['/pictures/hero-winter.jpg']);
+  expect(photos).toEqual(['/pictures/hero-winter.webp']);
   await expect(async () => {
     await page.getByRole('radio', { name: 'Sommer' }).focus();
-    expect(photos).toContain('/pictures/hero-summer.jpg');
+    expect(photos).toContain('/pictures/hero-summer.webp');
   }).toPass();
 });
 

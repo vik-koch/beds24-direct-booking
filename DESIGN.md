@@ -162,6 +162,9 @@ make the hierarchy; weight barely does.
   on the hero card.
 - **Headline** (500, clamp(1.875rem, 1.5rem + 1.6vw, 2.75rem), 1.1): a section's heading. Its
   second line may carry the season's name in the accent at weight 400.
+- **Lead** (400, clamp(1.1875rem, 1rem + 0.5vw, 1.375rem), 1.5, ink-soft): the line under
+  the display headline on the hero card. The feature icons below it are 1.25rem on a phone and
+  1.5rem from 48rem up, their centre at 0.5 and 0.6 of the cap height above the baseline.
 - **Title** (500, 1.1875rem, 1.2): a column's name, a price.
 - **Body** (400, 1.125rem, 1.5): running text and list rows. Paragraphs stay under about
   45rem.
