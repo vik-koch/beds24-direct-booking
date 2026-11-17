@@ -659,12 +659,12 @@
     }
   }
 
-  :is(.room-tabs, .stay) input {
+  .room-tabs input {
     position: absolute;
     opacity: 0;
   }
 
-  :is(.room-tabs, .stay) :focus-visible + span {
+  .room-tabs :focus-visible + span {
     outline: 2px solid var(--color-accent);
     outline-offset: 3px;
   }
@@ -790,7 +790,7 @@
     }
   }
 
-  [role='cell'] {
+  [role='gridcell'] {
     padding-left: 1rem;
     text-align: right;
     white-space: nowrap;
@@ -834,7 +834,7 @@
         }
       }
 
-      [role='cell']:not(.weeks-empty) {
+      [role='gridcell']:not(.weeks-empty) {
         padding-left: 0.5rem;
       }
     }
@@ -862,9 +862,19 @@
       background: var(--color-accent-soft);
     }
 
-    .stay :checked + & {
+    .stay[aria-selected='true'] & {
       background: var(--color-accent);
       color: var(--color-on-accent);
+    }
+  }
+
+  /* The ring goes round the price's or the word's pill, not the whole cell. */
+  :is(.stay, .booked):focus-visible {
+    outline: none;
+
+    > * {
+      outline: 2px solid var(--color-accent);
+      outline-offset: 3px;
     }
   }
 

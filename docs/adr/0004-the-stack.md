@@ -131,6 +131,21 @@ result is added to this ADR when it is known.
   - A known limit: the Aria grid removes an `aria-selected` that it did not set, so the
     calendar carries the selection in the day's accessible name.
 
+  **The free-weeks list, 17 November 2026** (issue 88). The list on the home page moved from
+  native radio buttons to Angular Aria's grid, so that it and the calendar share one keyboard
+  model. Its cells that are not shown, the other season's and on a phone the other
+  apartments', are disabled with `softDisabled` off, so the arrows pass them by; booked weeks
+  stay reachable but cannot be chosen. The grid owns `aria-selected` here, so the known limit
+  above does not arise. Page Up and Page Down, which the grid does not offer, move by a month
+  in the list's own code. Enter or Space on a booked cell is stopped before the grid, which
+  would otherwise clear the chosen week. Two points follow the grid rather than the issue:
+  after a change of season Tab enters at the first week shown, not at a week chosen there, and
+  with nothing chosen it can enter on a booked week.
+
+  - Verified in Chromium and Firefox by keyboard at 375 px and 1280 px, with axe, and in the
+    e2e suite on all three browsers.
+  - Not tried: NVDA, VoiceOver on a Mac or an iPhone.
+
 - **The typed texts are confirmed in the first slice with a counted text.** If the three
   helpers grow beyond a few lines each, ngx-translate takes over.
 

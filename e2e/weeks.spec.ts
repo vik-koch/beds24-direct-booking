@@ -29,13 +29,16 @@ test('the next season lists its weeks with a price or "booked" per apartment', a
     /^Next season: (Winter \d{4}\/\d\d|Summer \d{4})$/,
   );
   await toOtherSeason(page);
-  const table = page.getByRole('table');
+  const grid = page.getByRole('grid', { name: 'Free weeks' });
   for (const name of ['Zirbe', 'Lärche', 'Ahorn'])
-    await expect(table.getByRole('columnheader', { name })).toContainText(/\d guests · \d+\sm²/);
+    await expect(grid.getByRole('columnheader', { name })).toContainText(/\d guests · \d+\sm²/);
   const dates = await panel(page).getByRole('rowheader').first().innerText();
   expect(dates.replace(/\s+/g, ' ').trim()).toMatch(/^Sat \d\d\/\d\d – Sat \d\d\/\d\d$/);
-  await expect(panel(page).getByRole('radio').first()).toHaveAccessibleName(
+  await expect(panel(page).locator('.stay').first()).toHaveAccessibleName(
     /^(Zirbe|Lärche|Ahorn) · Sat .+ · €[\d,.]+$/,
+  );
+  await expect(panel(page).locator('.booked').first()).toHaveAccessibleName(
+    /^(Zirbe|Lärche|Ahorn) · Sat .+ · booked$/,
   );
   await expect(panel(page).getByText('booked').first()).toBeVisible();
   await expect(page.locator('.weeks-note')).toHaveText(
@@ -46,10 +49,10 @@ test('the next season lists its weeks with a price or "booked" per apartment', a
 test('a chosen week leads to its apartment with the stay', async ({ page }) => {
   await page.goto('/de');
   await toOtherSeason(page);
-  const first = panel(page).locator('.stay:visible').first().getByRole('radio');
+  const first = panel(page).locator('.stay:visible').first();
   const name = await first.getAttribute('aria-label');
-  await panel(page).locator('.stay:visible').first().click();
-  await expect(first).toBeChecked();
+  await first.click();
+  await expect(first).toHaveAttribute('aria-selected', 'true');
   await expect(page.locator('.pick output')).toHaveText(name!);
   await page.getByRole('link', { name: 'Weiter zur Buchung' }).click();
   await expect(page).toHaveURL(
@@ -63,23 +66,26 @@ test('a chosen week leads to its apartment with the stay', async ({ page }) => {
   expect(days).toBe(7);
 });
 
-test('a chosen week is cleared by a second click, Enter or the bar, and waits for its season', async ({
+test('a chosen week is cleared by a second click, Enter, Space or the bar, and waits for its season', async ({
   page,
 }) => {
   await page.goto('/en');
   await toOtherSeason(page);
   const stay = panel(page).locator('.stay:visible').first();
-  const radio = stay.getByRole('radio');
+  const selected = () => expect(stay).toHaveAttribute('aria-selected', 'true');
+  const unselected = () => expect(stay).toHaveAttribute('aria-selected', 'false');
   await stay.click();
   await expect(page.locator('.pick')).toBeVisible();
   await stay.click();
-  await expect(radio).not.toBeChecked();
+  await unselected();
   await expect(page.locator('.pick')).toHaveCount(0);
-  await radio.focus();
-  await page.keyboard.press('Enter');
-  await expect(radio).toBeChecked();
-  await page.keyboard.press('Enter');
-  await expect(radio).not.toBeChecked();
+  await stay.focus();
+  for (const key of ['Enter', ' ']) {
+    await page.keyboard.press(key);
+    await selected();
+    await page.keyboard.press(key);
+    await unselected();
+  }
 
   await stay.click();
   const chosen = await page.locator('.pick output').textContent();
@@ -92,8 +98,79 @@ test('a chosen week is cleared by a second click, Enter or the bar, and waits fo
   await expect(page.locator('.pick output')).toHaveText(chosen!);
   await page.getByRole('button', { name: 'Clear the chosen week' }).click();
   await expect(page.locator('.pick')).toHaveCount(0);
-  await expect(radio).not.toBeChecked();
-  await expect(radio).toBeFocused();
+  await unselected();
+  await expect(stay).toBeFocused();
+});
+
+// The grid pattern of the WAI-ARIA Authoring Practices: one tab stop, arrows that move without
+// choosing, Home and End in a row, Page Up and Page Down by a month.
+test('the list is one tab stop that the keys move through as a grid', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/en');
+  await toOtherSeason(page);
+  const cells = panel(page).locator('[data-pick]');
+  const at = () => page.evaluate(() => document.activeElement?.getAttribute('data-pick'));
+  const press = async (key: string, pick: string) => {
+    await page.keyboard.press(key);
+    await expect.poll(at, key).toBe(pick);
+  };
+  await expect(page.locator('.weeks-grid [tabindex="0"]')).toHaveCount(1);
+
+  await button(page).focus();
+  await page.keyboard.press('Tab');
+  await expect.poll(at).toBe('0-0');
+  await press('ArrowRight', '1-0');
+  await press('ArrowDown', '1-1');
+  await press('End', '2-1');
+  await press('Home', '0-1');
+  await press('ArrowUp', '0-0');
+  await expect(panel(page).locator('[aria-selected=true]')).toHaveCount(0);
+
+  // Page Down goes to the next month's week at the same place in it.
+  const months = await panel(page)
+    .locator('.weeks-month')
+    .evaluateAll((groups) =>
+      groups.map((group) =>
+        [...group.querySelectorAll('[data-pick^="0-"]')].map(
+          (cell) => (cell as HTMLElement).dataset['pick'],
+        ),
+      ),
+    );
+  await press('PageDown', months[1][0]!);
+  await press('PageUp', months[0][0]!);
+  await press('Control+End', (await cells.last().getAttribute('data-pick'))!);
+  await press('Control+Home', '0-0');
+
+  // A booked week can be reached, but Enter on it leaves the chosen week alone.
+  const free = panel(page).locator('.stay').first();
+  const booked = panel(page).locator('.booked').first();
+  await free.focus();
+  await page.keyboard.press('Enter');
+  await expect(free).toHaveAttribute('aria-selected', 'true');
+  await booked.focus();
+  await page.keyboard.press('Enter');
+  await page.keyboard.press(' ');
+  await expect(free).toHaveAttribute('aria-selected', 'true');
+
+  // Tab leaves the list for the bar, Shift+Tab returns to where the focus was.
+  await page.keyboard.press('Tab');
+  await expect(page.getByRole('button', { name: 'Clear the chosen week' })).toBeFocused();
+  await page.keyboard.press('Shift+Tab');
+  await expect(booked).toBeFocused();
+});
+
+test('on a phone the arrows stay in the shown apartment', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 800 });
+  await page.goto('/en');
+  await toOtherSeason(page);
+  const at = () => page.evaluate(() => document.activeElement?.getAttribute('data-pick'));
+  await panel(page).locator('[data-pick="0-0"]').focus();
+  await page.keyboard.press('ArrowRight');
+  await expect.poll(at).toBe('0-0');
+  await page.keyboard.press('ArrowDown');
+  await expect.poll(at).toBe('0-1');
+  await page.locator('.room-tabs').getByText('Ahorn').click();
+  await expect(page.locator('.weeks-grid [tabindex="0"]')).toHaveAttribute('data-pick', /^2-/);
 });
 
 test('the season button goes both ways, shares the season with the header and keeps the focus', async ({
@@ -219,7 +296,7 @@ test('a site with one season lists a year of weeks without a season button', asy
   await page.goto('http://localhost:4002/it');
   await expect(page.getByRole('heading', { name: 'Settimane libere', exact: true })).toBeVisible();
   await expect(button(page)).toHaveCount(0);
-  await expect(panel(page).getByRole('radio').first()).toBeAttached();
+  await expect(panel(page).getByRole('gridcell').first()).toBeAttached();
 });
 
 test('the list passes axe in both seasons', async ({ page }) => {

@@ -296,10 +296,19 @@ readers. The list does not repeat this switch: it has the text button.
   row fits at 320 px), one cell per apartment on the right. Below 22.5rem the rows leave the
   weekday out, since every week starts on the same one; each price's label still names it.
   On a phone the card has 1.25rem at its sides, room for a chosen price's pill.
-- **Free week:** the price in the accent at title size, as a radio button without a visible
+- **Free week:** the price in the accent at title size, as a cell of a grid without a visible
   box. Hover puts a soft tint behind it.
 - **Chosen week:** an accent-filled pill with white figures.
 - **Booked week:** the word in soft ink, no decoration.
+- **Keyboard:** the list is one grid, after the WAI-ARIA Authoring Practices' grid pattern.
+  Tab enters it once: before the list has been used at the chosen week, else at the season's
+  first week; after that where the focus last was, and after a change of season or of tab at
+  the first week shown. The arrow keys move by week and apartment without
+  choosing, Home and End to the row's first and last apartment, Page Up and Page Down to the
+  same place in the month before or after, Ctrl+Home and Ctrl+End to the first and last week.
+  Enter or Space chooses a free week or clears the chosen one. A booked week can be reached and
+  is announced as booked, but not chosen. On a phone the arrows stay in the one apartment shown.
+  The focus ring goes round the price's or the word's pill.
 - **Not open yet, or no week free:** a short sentence below the header row, in the card, on the
   line where the first week's dates would be.
 - **Below the sheet:** a note in soft ink on what the price includes, and the tourist tax, in
@@ -331,7 +340,7 @@ bar's edge as the other; below 22.5rem its text is 1rem, so the button keeps one
 
 One week is chosen at a time, in either season: choosing another replaces it. The bar belongs
 to the chosen week's season, so it is hidden while the other season is shown and returns with
-its own, fading in (0.25 s) once the season's colours have changed. A second click on the chosen price, Enter on it, or the cross clears it; the cross
+its own, fading in (0.25 s) once the season's colours have changed. A second click on the chosen price, Enter or Space on it, or the cross clears it; the cross
 then returns the focus to that price.
 
 ### Navigation

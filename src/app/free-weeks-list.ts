@@ -1,4 +1,6 @@
+import { Grid, GridCell, GridRow } from '@angular/aria/grid';
 import {
+  afterNextRender,
   Component,
   computed,
   DestroyRef,
@@ -22,7 +24,7 @@ type SeasonWeeks = FreeWeeks['seasons'][number];
 // comes from the list's own button and cross-fades them when it comes from the header.
 @Component({
   selector: 'app-free-weeks',
-  imports: [NgIcon],
+  imports: [NgIcon, Grid, GridRow, GridCell],
   providers: [provideIcons({ lucideArrowLeft, lucideArrowRight, lucideX })],
   template: `
     <div class="weeks-head">
@@ -75,14 +77,30 @@ type SeasonWeeks = FreeWeeks['seasons'][number];
       }
       <!-- The booking bar keeps to this part, so it never covers the heading or the tabs. -->
       <div class="weeks-list">
-        <!-- A grid with a table's roles: both seasons' rows lie in one place, so one can slide
-           over the other below a header row that stays. -->
+        <!-- A CSS grid with the roles of a keyboard grid: both seasons' rows lie in one place,
+           so one can slide over the other below a header row that stays. The cells that are
+           not shown, the other season's and on a phone the other apartments', are disabled,
+           so the arrows pass them by. -->
         <div class="sheet">
-          <div class="weeks-grid" role="table" [style.--columns]="weeks.apartments.length + 1">
-            <div class="weeks-row weeks-columns" role="row">
-              <span role="columnheader">{{ texts.weeks.week }}</span>
+          <div
+            class="weeks-grid"
+            ngGrid
+            enableSelection
+            selectionMode="explicit"
+            [softDisabled]="false"
+            rowWrap="nowrap"
+            colWrap="nowrap"
+            [attr.aria-label]="texts.nav.weeks"
+            [style.--columns]="weeks.apartments.length + 1"
+          >
+            <div class="weeks-row weeks-columns" role="row" aria-rowindex="1">
+              <span role="columnheader" aria-colindex="1">{{ texts.weeks.week }}</span>
               @for (apartment of weeks.apartments; track apartment.slug) {
-                <span role="columnheader" [class.elsewhere]="$index !== tab()">
+                <span
+                  role="columnheader"
+                  [attr.aria-colindex]="$index + 2"
+                  [class.elsewhere]="$index !== tab()"
+                >
                   <span class="weeks-name">{{ apartment.name }}</span>
                   <small>{{ facts(apartment) }}</small>
                 </span>
@@ -96,9 +114,9 @@ type SeasonWeeks = FreeWeeks['seasons'][number];
                       <div class="weeks-month" role="rowgroup">
                         <span class="weeks-month-name" aria-hidden="true">{{ month.name }}</span>
                         @for (week of month.weeks; track week.arrival) {
-                          <div class="weeks-row" role="row">
+                          <div class="weeks-row" ngGridRow [rowIndex]="week.row + 2">
                             @let span = days(week);
-                            <span role="rowheader"
+                            <span role="rowheader" aria-colindex="1"
                               ><span class="weekday">{{ span[0].weekday }}</span
                               >{{ span[0].date }} –
                               <span class="weekday">{{ span[1].weekday }}</span>{{
@@ -106,23 +124,30 @@ type SeasonWeeks = FreeWeeks['seasons'][number];
                               }}</span
                             >
                             @for (price of week.prices; track $index) {
-                              <span role="cell" [class.elsewhere]="$index !== tab()">
+                              <!-- A booked cell can be reached but not chosen: Enter, Space or
+                                   a click on it would clear the chosen week. -->
+                              <span
+                                ngGridCell
+                                role="gridcell"
+                                [class]="price === null ? 'booked' : 'stay'"
+                                [class.elsewhere]="$index !== tab()"
+                                [colIndex]="$index + 2"
+                                [disabled]="!shown(season.name, $index)"
+                                [selectable]="price !== null"
+                                [selected]="isChosen(season.name, $index, week.row)"
+                                (selectedChange)="select($event, season.name, $index, week.row)"
+                                [attr.aria-label]="describe(season, $index, week.row)"
+                                [attr.data-pick]="$index + '-' + week.row"
+                                (click)="price === null && $event.stopPropagation()"
+                                (keydown.enter)="price === null && $event.stopPropagation()"
+                                (keydown.space)="price === null && hold($event)"
+                                (keydown.pageup)="byMonth($event, -1)"
+                                (keydown.pagedown)="byMonth($event, 1)"
+                              >
                                 @if (price === null) {
                                   <span class="taken">{{ texts.weeks.taken }}</span>
                                 } @else {
-                                  <label class="stay">
-                                    <input
-                                      type="radio"
-                                      [name]="'stay-' + season.name"
-                                      [checked]="isChosen(season.name, $index, week.row)"
-                                      [attr.aria-label]="describe(season, $index, week.row)"
-                                      [attr.data-pick]="$index + '-' + week.row"
-                                      (click)="again(season.name, $index, week.row)"
-                                      (keydown.enter)="toggle(season.name, $index, week.row)"
-                                      (change)="choose(season.name, $index, week.row)"
-                                    />
-                                    <span class="price">{{ money(price) }}</span>
-                                  </label>
+                                  <span class="price">{{ money(price) }}</span>
                                 }
                               </span>
                             }
@@ -133,7 +158,7 @@ type SeasonWeeks = FreeWeeks['seasons'][number];
                   } @else {
                     <div class="weeks-month" role="rowgroup">
                       <div class="weeks-row" role="row">
-                        <span class="weeks-empty" role="cell">
+                        <span class="weeks-empty" role="gridcell">
                           {{ fill(texts.weeks[season.state], { season: dated(season) }) }}
                         </span>
                       </div>
@@ -202,6 +227,8 @@ export class FreeWeeksList {
     };
   });
   protected readonly announced = signal('');
+  // From 48rem up every apartment has its column; below, only the chosen tab's is shown.
+  private readonly wide = signal(true);
   private readonly panels = viewChild<ElementRef<HTMLElement>>('panels');
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
@@ -226,7 +253,15 @@ export class FreeWeeksList {
   private moves: Animation[] = [];
 
   constructor() {
-    inject(DestroyRef).onDestroy(this.season.watch((name) => this.move(name)));
+    const destroyRef = inject(DestroyRef);
+    destroyRef.onDestroy(this.season.watch((name) => this.move(name)));
+    afterNextRender(() => {
+      const query = matchMedia('(min-width: 48rem)');
+      const update = () => this.wide.set(query.matches);
+      update();
+      query.addEventListener('change', update);
+      destroyRef.onDestroy(() => query.removeEventListener('change', update));
+    });
   }
 
   // The weeks by the month they arrive in; a week keeps its row in the season. The year is
@@ -304,7 +339,8 @@ export class FreeWeeksList {
   protected describe(season: SeasonWeeks, apartment: number, row: number) {
     const week = season.weeks[row];
     const { name } = this.weeks()!.apartments[apartment];
-    return `${name} · ${this.stay(week)} · ${this.money(week.prices[apartment]!)}`;
+    const price = week.prices[apartment];
+    return `${name} · ${this.stay(week)} · ${price === null ? this.texts.weeks.taken : this.money(price)}`;
   }
 
   protected link(season: SeasonWeeks, apartment: number, row: number) {
@@ -319,19 +355,40 @@ export class FreeWeeksList {
     return pick?.season === season && pick.apartment === apartment && pick.row === row;
   }
 
-  protected choose(season: SeasonName, apartment: number, row: number) {
-    this.chosen.set({ season, apartment, row });
+  // The grid chooses and clears: a click, Enter or Space on a week, again on the chosen one.
+  protected select(selected: boolean, season: SeasonName, apartment: number, row: number) {
+    if (selected) this.chosen.set({ season, apartment, row });
+    else if (this.isChosen(season, apartment, row)) this.chosen.set(null);
   }
 
-  // A click on the chosen week clears it; a radio button alone cannot be unchecked.
-  protected again(season: SeasonName, apartment: number, row: number) {
-    if (this.isChosen(season, apartment, row)) this.chosen.set(null);
+  protected shown(season: SeasonName, apartment: number) {
+    return season === this.season.current() && (this.wide() || apartment === this.tab());
   }
 
-  // Enter chooses a week or clears it, as a second click does.
-  protected toggle(season: SeasonName, apartment: number, row: number) {
-    if (this.isChosen(season, apartment, row)) this.chosen.set(null);
-    else this.choose(season, apartment, row);
+  protected hold(event: Event) {
+    event.stopPropagation();
+    event.preventDefault();
+  }
+
+  // Page Up and Page Down: the same apartment's week in the month before or after, at the same
+  // place in it as far as that month reaches.
+  protected byMonth(event: Event, by: -1 | 1) {
+    const cell = event.target as HTMLElement;
+    const season = this.weeks()?.seasons.find(({ name }) => name === this.season.current());
+    if (!season) return;
+    event.preventDefault();
+    const [apartment, row] = cell.dataset['pick']!.split('-').map(Number);
+    const months = this.months(season);
+    const from = months.findIndex(({ weeks }) => weeks.some((week) => week.row === row));
+    const to = months[from + by];
+    if (!to) return;
+    const place = months[from].weeks.findIndex((week) => week.row === row);
+    const target = to.weeks[Math.min(place, to.weeks.length - 1)].row;
+    this.panels()
+      ?.nativeElement.querySelector<HTMLElement>(
+        `[data-for=${season.name}] [data-pick="${apartment}-${target}"]`,
+      )
+      ?.focus();
   }
 
   // The bar goes with its button, so the focus returns to the week that was chosen.
