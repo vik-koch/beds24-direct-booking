@@ -171,6 +171,23 @@ test('the apartments menu opens by keyboard and leads to an apartment', async ({
   await expect(page).toHaveURL('/de/wohnungen/zirbe');
 });
 
+test('the wordmark keeps one line on a phone', async ({ page }) => {
+  for (const width of [320, 340, 360, 375]) {
+    for (const path of ['/de', '/en/picture-credits']) {
+      await page.setViewportSize({ width, height: 600 });
+      await page.goto(path);
+      const wordmark = page.locator('app-header a').first();
+      const lines = await wordmark.evaluate((element) => {
+        const range = document.createRange();
+        range.selectNodeContents(element);
+        return range.getClientRects().length;
+      });
+      expect(lines, `${path} at ${width}`).toBe(1);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
+    }
+  }
+});
+
 test('narrower than 320 px the page keeps its 320 px layout and scrolls sideways', async ({
   page,
 }) => {
