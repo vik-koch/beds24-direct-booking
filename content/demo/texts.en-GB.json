@@ -73,7 +73,11 @@
     "lead": "The photographs on this site and whom they are owed to.",
     "author": "By",
     "licence": "Licence",
-    "none": "This site shows no one else's photographs."
+    "none": "This site shows no one else's photographs.",
+    "changes": {
+      "cropped": "cropped",
+      "scaled": "scaled down"
+    }
   },
   "placeholder": "This page is still being built.",
   "notFound": {

@@ -111,3 +111,31 @@ test('the hero has up to five features, or none', () => {
   );
   assert.throws(() => readContent(six), /texts\.de-AT\.json\n {2}hero\.features/);
 });
+
+test('the contact may list any of its lines, or be left out', () => {
+  const name = changed('site.json', (site) => (site.contact = { name: 'Only a name' }));
+  assert.deepEqual(readContent(name).site.contact, { name: 'Only a name' });
+  const none = changed('site.json', (site) => delete site.contact);
+  assert.equal(readContent(none).site.contact, undefined);
+});
+
+test('a contact that lists nothing is refused', () => {
+  const dir = changed('site.json', (site) => (site.contact = {}));
+  assert.throws(() => readContent(dir), /contact: lists nothing/);
+});
+
+test('a change the schema does not know is refused', () => {
+  const dir = changed(
+    'site.json',
+    (site) => (site.seasons.winter.hero.credit.changes = ['tinted']),
+  );
+  assert.throws(() => readContent(dir), /seasons\.winter\.hero\.credit\.changes\.0/);
+});
+
+test('a change without its text in one language is named', () => {
+  const dir = changed('texts.en-GB.json', (texts) => delete texts.credits.changes.scaled);
+  assert.throws(
+    () => readContent(dir),
+    /texts\.en-GB\.json\n {2}credits\.changes\.scaled: missing/,
+  );
+});

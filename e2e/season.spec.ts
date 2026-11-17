@@ -217,6 +217,8 @@ test('the picture credits name each photo’s author, source and licence', async
     'https://commons.wikimedia.org/wiki/File:Saalbach_(8450786397).jpg',
   );
   await expect(page.getByText('Ian Gratton')).toBeVisible();
+  // The changes follow the title, outside its link.
+  await expect(page.getByText('(scaled down)')).toHaveCount(2);
   await expect(page.getByRole('link', { name: 'CC BY-SA 4.0' })).toHaveAttribute(
     'href',
     'https://creativecommons.org/licenses/by-sa/4.0',
