@@ -22,6 +22,8 @@ async function toOtherSeason(page: Page) {
 }
 
 test('the next season lists its weeks with a price or "booked" per apartment', async ({ page }) => {
+  // Every apartment's column, as from 48rem up.
+  await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto('/en');
   await expect(button(page)).toHaveAccessibleName(
     /^Next season: (Winter \d{4}\/\d\d|Summer \d{4})$/,
@@ -45,9 +47,9 @@ test('the next season lists its weeks with a price or "booked" per apartment', a
 test('a chosen week leads to its apartment with the stay', async ({ page }) => {
   await page.goto('/de');
   await toOtherSeason(page);
-  const first = panel(page).getByRole('radio').first();
+  const first = panel(page).locator('.stay:visible').first().getByRole('radio');
   const name = await first.getAttribute('aria-label');
-  await panel(page).locator('.stay').first().click();
+  await panel(page).locator('.stay:visible').first().click();
   await expect(first).toBeChecked();
   await expect(panel(page).locator('.pick output')).toHaveText(name!);
   await panel(page).getByRole('link', { name: 'Weiter zur Buchung' }).click();
@@ -102,10 +104,10 @@ test('the next season slides in from the right, and back from the left', async (
     );
   // The application runs by now, so a click is not lost.
   await button(page).click();
-  expect(await moves()).toEqual([expect.stringMatching(/^0/), expect.stringMatching(/^-100%/)]);
+  await expect.poll(moves).toEqual([expect.stringMatching(/^0/), expect.stringMatching(/^-100%/)]);
   await settled(page);
   await button(page).click();
-  expect(await moves()).toEqual([expect.stringMatching(/^0/), expect.stringMatching(/^100%/)]);
+  await expect.poll(moves).toEqual([expect.stringMatching(/^0/), expect.stringMatching(/^100%/)]);
 });
 
 test('with reduced motion the season changes at once', async ({ page }) => {
