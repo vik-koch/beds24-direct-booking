@@ -1,4 +1,5 @@
-import { dayOf, seasonScript, seasonState, type Starts } from './season';
+import { TestBed } from '@angular/core/testing';
+import { dayOf, Season, seasonScript, seasonState, type Starts } from './season';
 
 describe('seasonState', () => {
   const demo: Starts = { winter: '09-01', summer: '04-01' };
@@ -92,5 +93,24 @@ describe('seasonScript', () => {
     vi.useRealTimers();
     expect(document.documentElement.dataset['season']).toBe('summer');
     expect(document.documentElement.dataset['script']).toBe('');
+  });
+});
+
+describe('Season', () => {
+  it('lets a watcher measure before a switch and act once the page shows it', () => {
+    const season = TestBed.inject(Season);
+    const html = document.documentElement;
+    const start = season.current();
+    const other = start === 'winter' ? 'summer' : 'winter';
+    html.setAttribute('data-season', start);
+    const seen: string[] = [];
+    const stop = season.watch((name) => {
+      seen.push(`before ${name}: ${html.getAttribute('data-season')}`);
+      return () => seen.push(`after: ${html.getAttribute('data-season')}`);
+    });
+    season.switch(other);
+    stop();
+    season.switch(start);
+    expect(seen).toEqual([`before ${other}: ${start}`, `after: ${other}`]);
   });
 });

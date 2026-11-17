@@ -3,7 +3,7 @@ import { expect, test, type Page } from '@playwright/test';
 
 // The server dates the seasons by today, so these tests take the seasons from the page. The
 // simulator prices every season ahead of today, so the next season always has free weeks.
-const panel = (page: Page) => page.locator('.weeks-panel:visible');
+const panel = (page: Page) => page.locator('.weeks-body:visible');
 const button = (page: Page) => page.locator('.other-season');
 const season = (page: Page) => page.locator('html').getAttribute('data-season');
 const settled = (page: Page) =>
@@ -29,17 +29,17 @@ test('the next season lists its weeks with a price or "booked" per apartment', a
     /^Next season: (Winter \d{4}\/\d\d|Summer \d{4})$/,
   );
   await toOtherSeason(page);
-  const table = panel(page).locator('table');
+  const table = page.getByRole('table');
   for (const name of ['Zirbe', 'Lärche', 'Ahorn'])
     await expect(table.getByRole('columnheader', { name })).toContainText(/\d guests · \d+\sm²/);
-  await expect(table.getByRole('rowheader').first()).toHaveText(
+  await expect(panel(page).getByRole('rowheader').first()).toHaveText(
     /^Sat \d\d\/\d\d – Sat \d\d\/\d\d$/,
   );
-  await expect(table.getByRole('radio').first()).toHaveAccessibleName(
+  await expect(panel(page).getByRole('radio').first()).toHaveAccessibleName(
     /^(Zirbe|Lärche|Ahorn) · Sat .+ · €[\d,.]+$/,
   );
-  await expect(table.getByText('booked').first()).toBeVisible();
-  await expect(panel(page).locator('.weeks-note')).toHaveText(
+  await expect(panel(page).getByText('booked').first()).toBeVisible();
+  await expect(page.locator('.weeks-note')).toHaveText(
     'Price per week including the final cleaning. Plus a local tax of €3.50 per adult and night.',
   );
 });
@@ -51,8 +51,8 @@ test('a chosen week leads to its apartment with the stay', async ({ page }) => {
   const name = await first.getAttribute('aria-label');
   await panel(page).locator('.stay:visible').first().click();
   await expect(first).toBeChecked();
-  await expect(panel(page).locator('.pick output')).toHaveText(name!);
-  await panel(page).getByRole('link', { name: 'Weiter zur Buchung' }).click();
+  await expect(page.locator('.pick output')).toHaveText(name!);
+  await page.getByRole('link', { name: 'Weiter zur Buchung' }).click();
   await expect(page).toHaveURL(
     /\/de\/wohnungen\/(zirbe|laerche|ahorn)\?arrival=\d{4}-\d\d-\d\d&departure=\d{4}-\d\d-\d\d$/,
   );
@@ -104,10 +104,14 @@ test('the next season slides in from the right, and back from the left', async (
     );
   // The application runs by now, so a click is not lost.
   await button(page).click();
-  await expect.poll(moves).toEqual([expect.stringMatching(/^0/), expect.stringMatching(/^-100%/)]);
+  await expect
+    .poll(moves)
+    .toEqual([expect.stringMatching(/^0/), expect.stringMatching(/^-[\d.]+px/)]);
   await settled(page);
   await button(page).click();
-  await expect.poll(moves).toEqual([expect.stringMatching(/^0/), expect.stringMatching(/^100%/)]);
+  await expect
+    .poll(moves)
+    .toEqual([expect.stringMatching(/^0/), expect.stringMatching(/^[1-9][\d.]*px/)]);
 });
 
 test('with reduced motion the season changes at once', async ({ page }) => {
@@ -125,14 +129,15 @@ test('on a phone the tabs choose one apartment and clear the chosen week', async
   await page.setViewportSize({ width: 320, height: 700 });
   await page.goto('/en');
   await toOtherSeason(page);
-  const headers = panel(page).locator('thead th:visible');
-  await expect(headers).toHaveCount(2);
-  await expect(headers.nth(1)).toContainText('Zirbe');
+  // The chosen apartment's name and facts take the header row.
+  const header = page.locator('.weeks-columns > :not(:first-child):visible');
+  await expect(header).toHaveCount(1);
+  await expect(header).toContainText('Zirbe');
   await panel(page).locator('.stay:visible').first().click();
-  await expect(panel(page).locator('.pick')).toBeVisible();
+  await expect(page.locator('.pick')).toBeVisible();
   await page.locator('.room-tabs').getByText('Ahorn').click();
-  await expect(headers.nth(1)).toContainText('Ahorn');
-  await expect(panel(page).locator('.pick')).toHaveCount(0);
+  await expect(header).toContainText('Ahorn');
+  await expect(page.locator('.pick')).toHaveCount(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(320);
 });
 
@@ -145,7 +150,6 @@ test('a season without prices is not open yet, and a season that has begun is fu
   await expect(panel(page)).toHaveText(
     /The weeks of (Winter|Summer) [\d/]+ are not open yet\. They appear here as soon as their prices are set\./,
   );
-  await expect(page.locator('.room-tabs')).toBeHidden();
 });
 
 test('without Beds24 the list says it cannot be shown', async ({ page }) => {

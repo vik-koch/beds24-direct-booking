@@ -116,7 +116,8 @@ and rejected.
 - One muted accent, and it is the season: navy in winter, emerald in summer.
 - Regular and medium weights only.
 - Round controls and cards, but a photo keeps its straight edges.
-- Few lines: space separates, a hairline only between the rows of a list.
+- Few lines: space separates, a hairline only between the rows of a list, and a light
+  ground behind every other group of rows.
 
 ## Colors
 
@@ -160,8 +161,8 @@ make the hierarchy; weight barely does.
 
 - **Display** (500, clamp(2.125rem, 1.5rem + 3vw, 3.5rem), 1.05): the page's one headline,
   on the hero card.
-- **Headline** (500, clamp(1.875rem, 1.5rem + 1.6vw, 2.75rem), 1.1): a section's heading. Its
-  second line may carry the season's name in the accent at weight 400.
+- **Headline** (500, clamp(1.875rem, 1.5rem + 1.6vw, 2.75rem), 1.1): a section's heading. It
+  may carry the season's name in the accent at weight 400, after it or on a second line.
 - **Lead** (400, clamp(1.1875rem, 1rem + 0.5vw, 1.375rem), 1.5, ink-soft): the line under
   the display headline on the hero card. The feature icons below it are 1.25rem on a phone and
   1.5rem from 48rem up, their centre at 0.5 and 0.6 of the cap height above the baseline.
@@ -198,7 +199,7 @@ so that amounts can be compared down a column.
   menu button that opens a sheet from the right with the links and the languages. From 64rem up
   with a pointer that hovers, everything is in one line.
 - **List:** from 48rem up one price column per apartment. Below that one apartment at a
-  time, chosen with three tabs above the list.
+  time, chosen with tabs above the list.
 - **Low windows:** under 30rem of height, bars that stay in view go back into the page.
 
 ## Elevation & Depth
@@ -266,26 +267,38 @@ readers. The list does not repeat this switch: it has the text button.
 
 ### Free-weeks list
 
-- **Sheet:** a white card holding a table. No vertical lines; a hairline between rows.
-- **Heading:** "Free weeks" with the dated season on a second line in the accent.
+- **Sheet:** a white card holding the list. No vertical lines; a hairline between the weeks
+  of a month. The card and its header row stay in place for every season and every state.
+- **Heading:** "Free weeks" and the dated season in the accent at weight 400, on one line
+  where it fits and on two where it does not. The text button stands on the heading's last
+  line.
+- **Columns:** they share the card's width evenly, none narrower than its content. A column's
+  head is the apartment's name with its guests and size below, right-aligned over the prices.
+  On a phone the one apartment shown takes the whole header row: its name on the left, its
+  facts on the right.
+- **Months:** the weeks are grouped by the month they arrive in (a week from 26 December
+  belongs to December). Each group starts with the month's name in soft ink at 0.875rem, and
+  every other group lies on a light ground (the page's ground mixed 70% into white) that
+  reaches the card's edges.
 - **Row:** the stay's dates on the left in body text (weekday, day and month in figures, so a
-  row fits at 320 px), one cell per apartment on the right. A column's head is the apartment's
-  name with its guests and size below.
+  row fits at 320 px), one cell per apartment on the right.
 - **Free week:** the price in the accent at title size, as a radio button without a visible
   box. Hover puts a soft tint behind it.
 - **Chosen week:** an accent-filled pill with white figures.
 - **Booked week:** the word in soft ink, no decoration.
-- **Not open yet, or no week free:** a short sentence in place of the table, and no tabs.
+- **Not open yet, or no week free:** a short sentence below the header row, in the card.
 - **Below the sheet:** a note in soft ink on what the price includes, and the tourist tax.
-- **Apartment tabs (narrow):** a pill with an edge per apartment; the chosen one is filled
-  with ink. A change of tab clears the chosen week. Without the application the tabs are not
-  shown and the sheet scrolls sideways instead.
-- **The other season:** the text button above the list. The next season's list slides in from
-  the right while the shown one leaves to the left, and back the other way (0.45 s, ease in and
-  out); the heading and the button stay still and the button keeps the focus. A change from
-  the header's switch cross-fades the lists over 0.6 s, like the hero photos. The space below
-  follows the list's new height during the move instead of jumping at its end. With reduced
-  motion the list changes at once.
+- **Apartment tabs (narrow):** a pill with an edge per apartment, all of one width and one
+  height, in as many lines as their names need; the chosen one is filled with ink. A change of
+  tab clears the chosen week. Without the application the tabs are not shown and the sheet
+  scrolls sideways instead.
+- **The other season:** the text button above the list. The next season's rows slide in from
+  the right while the shown ones leave to the left, and back the other way (0.45 s, ease in
+  and out), each by the card's whole width; the card, its header row, the heading and the
+  button stay still and the button keeps the focus. The header's switch glides with it. A
+  change from the header's switch cross-fades the rows over 0.6 s, like the hero photos. The
+  card's height follows the new rows during the move instead of jumping at its end. With
+  reduced motion the list changes at once.
 
 ### Booking bar
 

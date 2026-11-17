@@ -1,13 +1,4 @@
-import {
-  Component,
-  effect,
-  ElementRef,
-  inject,
-  input,
-  signal,
-  untracked,
-  viewChild,
-} from '@angular/core';
+import { Component, DestroyRef, ElementRef, inject, input, signal, viewChild } from '@angular/core';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideArrowLeft, lucideArrowRight } from '@ng-icons/lucide';
 import type { FreeWeeks } from '../beds24/weeks';
@@ -17,8 +8,8 @@ import { address, fill, LANGUAGE, TEXTS } from './texts';
 
 type SeasonWeeks = FreeWeeks['seasons'][number];
 
-// Both seasons' lists are in the page and the page's season attribute shows one, as with the
-// hero photos, so the first paint needs no script. A change of season slides the lists when it
+// Both seasons' rows are in the page and the page's season attribute shows one, as with the
+// hero photos, so the first paint needs no script. A change of season slides the rows when it
 // comes from the list's own button and cross-fades them when it comes from the header.
 @Component({
   selector: 'app-free-weeks',
@@ -27,7 +18,7 @@ type SeasonWeeks = FreeWeeks['seasons'][number];
   template: `
     <div class="weeks-head">
       <h2 class="headline" [id]="anchor">
-        {{ texts.nav.weeks }}
+        {{ texts.nav.weeks }}&ngsp;
         @for (season of weeks()?.seasons; track season.name) {
           @if (season.years) {
             <span class="weeks-season" [attr.data-for]="season.name">{{ dated(season) }}</span>
@@ -69,67 +60,76 @@ type SeasonWeeks = FreeWeeks['seasons'][number];
           }
         </fieldset>
       }
-      <div #panels class="weeks-panels">
-        @for (season of weeks.seasons; track season.name) {
-          <div class="weeks-panel" [attr.data-for]="season.name">
-            @if (season.state === 'open') {
-              <div class="sheet">
-                <table>
-                  <thead>
-                    <tr>
-                      <th scope="col">{{ texts.weeks.week }}</th>
-                      @for (apartment of weeks.apartments; track apartment.slug) {
-                        <th scope="col" [class.elsewhere]="$index !== tab()">
-                          {{ apartment.name }}
-                          <small>{{ facts(apartment) }}</small>
-                        </th>
-                      }
-                    </tr>
-                  </thead>
-                  <tbody>
-                    @for (week of season.weeks; track week.arrival; let row = $index) {
-                      <tr>
-                        <th scope="row">{{ stay(week) }}</th>
-                        @for (price of week.prices; track $index) {
-                          <td [class.elsewhere]="$index !== tab()">
-                            @if (price === null) {
-                              <span class="taken">{{ texts.weeks.taken }}</span>
-                            } @else {
-                              <label class="stay">
-                                <input
-                                  type="radio"
-                                  [name]="'stay-' + season.name"
-                                  [checked]="isChosen(season.name, $index, row)"
-                                  [attr.aria-label]="describe(season, $index, row)"
-                                  (change)="choose(season.name, $index, row)"
-                                />
-                                <span class="price">{{ money(price) }}</span>
-                              </label>
-                            }
-                          </td>
-                        }
-                      </tr>
-                    }
-                  </tbody>
-                </table>
-              </div>
-              <p class="weeks-note">{{ note }}</p>
-              @if (chosen()[season.name]; as pick) {
-                <div class="pick">
-                  <output>{{ describe(season, pick.apartment, pick.row) }}</output>
-                  <a class="button" [href]="link(season, pick.apartment, pick.row)">
-                    {{ texts.weeks.continue }}
-                  </a>
-                </div>
-              }
-            } @else {
-              <p class="weeks-empty">
-                {{ fill(texts.weeks[season.state], { season: dated(season) }) }}
-              </p>
+      <!-- A grid with a table's roles: both seasons' rows lie in one place, so one can slide
+           over the other below a header row that stays. -->
+      <div class="sheet">
+        <div class="weeks-grid" role="table" [style.--columns]="weeks.apartments.length + 1">
+          <div class="weeks-row weeks-columns" role="row">
+            <span role="columnheader">{{ texts.weeks.week }}</span>
+            @for (apartment of weeks.apartments; track apartment.slug) {
+              <span role="columnheader" [class.elsewhere]="$index !== tab()">
+                <span class="weeks-name">{{ apartment.name }}</span>
+                <small>{{ facts(apartment) }}</small>
+              </span>
             }
           </div>
-        }
+          <div #panels class="weeks-bodies">
+            @for (season of weeks.seasons; track season.name) {
+              <div class="weeks-body" [attr.data-for]="season.name">
+                @if (season.state === 'open') {
+                  @for (month of months(season); track month.name) {
+                    <div class="weeks-month" role="rowgroup">
+                      <span class="weeks-month-name" aria-hidden="true">{{ month.name }}</span>
+                      @for (week of month.weeks; track week.arrival) {
+                        <div class="weeks-row" role="row">
+                          <span role="rowheader">{{ stay(week) }}</span>
+                          @for (price of week.prices; track $index) {
+                            <span role="cell" [class.elsewhere]="$index !== tab()">
+                              @if (price === null) {
+                                <span class="taken">{{ texts.weeks.taken }}</span>
+                              } @else {
+                                <label class="stay">
+                                  <input
+                                    type="radio"
+                                    [name]="'stay-' + season.name"
+                                    [checked]="isChosen(season.name, $index, week.row)"
+                                    [attr.aria-label]="describe(season, $index, week.row)"
+                                    (change)="choose(season.name, $index, week.row)"
+                                  />
+                                  <span class="price">{{ money(price) }}</span>
+                                </label>
+                              }
+                            </span>
+                          }
+                        </div>
+                      }
+                    </div>
+                  }
+                } @else {
+                  <div class="weeks-month" role="rowgroup">
+                    <div class="weeks-row" role="row">
+                      <span class="weeks-empty" role="cell">
+                        {{ fill(texts.weeks[season.state], { season: dated(season) }) }}
+                      </span>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </div>
       </div>
+      <p class="weeks-note">{{ note }}</p>
+      @for (season of weeks.seasons; track season.name) {
+        @if (season.name === shown() && chosen()[season.name]; as pick) {
+          <div class="pick">
+            <output>{{ describe(season, pick.apartment, pick.row) }}</output>
+            <a class="button" [href]="link(season, pick.apartment, pick.row)">
+              {{ texts.weeks.continue }}
+            </a>
+          </div>
+        }
+      }
     } @else {
       <p class="text-ink-soft mt-6">{{ texts.weeks.unavailable }}</p>
     }
@@ -142,6 +142,8 @@ export class FreeWeeksList {
   protected readonly texts = inject(TEXTS);
   private readonly language = inject(LANGUAGE);
   private readonly season = inject(Season);
+  // The season the page shows, for the booking bar.
+  protected readonly shown = this.season.current;
   protected readonly anchor = this.language.anchors.weeks;
   protected readonly fill = fill;
   // On a phone the list shows one apartment, the one of the chosen tab.
@@ -158,18 +160,29 @@ export class FreeWeeksList {
     month: 'numeric',
     timeZone: 'UTC',
   });
+  private readonly monthName = new Intl.DateTimeFormat(this.language.tag, {
+    month: 'long',
+    timeZone: 'UTC',
+  });
   private readonly plural = new Intl.PluralRules(this.language.tag);
   // Set by the list's button: the next season comes from the right, the current from the left.
   private direction: 1 | -1 | 0 = 0;
   private moves: Animation[] = [];
 
   constructor() {
-    let before = this.season.current();
-    effect(() => {
-      const now = this.season.current();
-      if (now !== before) untracked(() => this.move(before, now));
-      before = now;
+    inject(DestroyRef).onDestroy(this.season.watch((name) => this.move(name)));
+  }
+
+  // The weeks by the month they arrive in; a week keeps its row in the season.
+  protected months(season: SeasonWeeks) {
+    const months: { name: string; weeks: (SeasonWeeks['weeks'][number] & { row: number })[] }[] =
+      [];
+    season.weeks.forEach((week, row) => {
+      const name = this.monthName.format(new Date(week.arrival));
+      if (months.at(-1)?.name !== name) months.push({ name, weeks: [] });
+      months.at(-1)!.weeks.push({ ...week, row });
     });
+    return months;
   }
 
   protected get note() {
@@ -243,38 +256,40 @@ export class FreeWeeksList {
     this.season.switch(to.name);
   }
 
-  // The season's attribute has changed already; the old list is held in view while it leaves.
-  private move(from: SeasonName, to: SeasonName) {
+  // Before the change: the rows shown now and their height. After it, the old rows are held in
+  // view while they leave.
+  private move(to: SeasonName) {
     const direction = this.direction;
     this.direction = 0;
     const box = this.panels()?.nativeElement;
-    const old = box?.querySelector<HTMLElement>(`[data-for=${from}]`);
-    const next = box?.querySelector<HTMLElement>(`[data-for=${to}]`);
-    this.moves.forEach((one) => one.cancel());
-    box
-      ?.querySelectorAll('[data-leaving]')
-      .forEach((panel) => panel.removeAttribute('data-leaving'));
-    if (!box || !old || !next || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    old.setAttribute('data-leaving', '');
-    box.setAttribute('data-moving', '');
-    const timing = { duration: direction ? 450 : 600, easing: 'cubic-bezier(0.65, 0, 0.35, 1)' };
-    const moves = (this.moves = [
-      ...(direction
-        ? [
-            old.animate({ translate: ['0', `${-direction * 100}% 0`] }, timing),
-            next.animate({ translate: [`${direction * 100}% 0`, '0'] }, timing),
-          ]
-        : [old.animate({ opacity: [1, 0] }, timing), next.animate({ opacity: [0, 1] }, timing)]),
-      // The page below follows the height smoothly instead of jumping at the end.
-      box.animate({ height: [`${old.offsetHeight}px`, `${next.offsetHeight}px`] }, timing),
-    ]);
-    Promise.all(moves.map((one) => one.finished)).then(
-      () => {
-        old.removeAttribute('data-leaving');
-        box.removeAttribute('data-moving');
-      },
-      // Cancelled by the next change, which starts from where things are.
-      () => undefined,
-    );
+    const old = box?.querySelector<HTMLElement>(`[data-for=${this.season.current()}]`);
+    const height = box?.offsetHeight;
+    return () => {
+      const next = box?.querySelector<HTMLElement>(`[data-for=${to}]`);
+      this.moves.forEach((one) => one.cancel());
+      box
+        ?.querySelectorAll('[data-leaving]')
+        .forEach((body) => body.removeAttribute('data-leaving'));
+      if (!box || !old || !next || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      old.setAttribute('data-leaving', '');
+      const timing = { duration: direction ? 450 : 600, easing: 'cubic-bezier(0.65, 0, 0.35, 1)' };
+      // A whole width, the rows' grounds that reach the card's edges included.
+      const width = box.offsetWidth;
+      const moves = (this.moves = [
+        ...(direction
+          ? [
+              old.animate({ translate: ['0', `${-direction * width}px 0`] }, timing),
+              next.animate({ translate: [`${direction * width}px 0`, '0'] }, timing),
+            ]
+          : [old.animate({ opacity: [1, 0] }, timing), next.animate({ opacity: [0, 1] }, timing)]),
+        // The page below follows the height smoothly instead of jumping at the end.
+        box.animate({ height: [`${height}px`, `${next.offsetHeight}px`] }, timing),
+      ]);
+      Promise.all(moves.map((one) => one.finished)).then(
+        () => old.removeAttribute('data-leaving'),
+        // Cancelled by the next change, which starts from where things are.
+        () => undefined,
+      );
+    };
   }
 }

@@ -115,6 +115,7 @@ export class Season {
   private readonly server = isPlatformServer(inject(PLATFORM_ID));
   private readonly state = this.server ? seasonState(starts, null, null, new Date()) : this.read();
   private readonly preloaded = new Set<SeasonName>();
+  private readonly watchers = new Set<(name: SeasonName) => () => void>();
 
   readonly names = Object.keys(starts) as SeasonName[];
   readonly current = signal<SeasonName>(this.state.season);
@@ -129,13 +130,22 @@ export class Season {
     }
   }
 
+  // A watcher is called before a change, to measure the page as it is, and returns what to do
+  // once the page shows the new season, so each control animates whichever control changed it.
+  watch(watcher: (name: SeasonName) => () => void) {
+    this.watchers.add(watcher);
+    return () => void this.watchers.delete(watcher);
+  }
+
   switch(name: SeasonName) {
     if (name === this.current()) return;
+    const after = [...this.watchers].map((watcher) => watcher(name));
     this.current.set(name);
     // Only now may the page animate a change of season, not on its first paint.
     this.html.setAttribute('data-switched', '');
     this.html.setAttribute('data-season', name);
     this.remember(name);
+    after.forEach((then) => then());
     // The link's ?season= would win over the switch on the next reload.
     const [path, query = ''] = this.location.path().split('?');
     const params = new URLSearchParams(query.split('#')[0]);
