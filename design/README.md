@@ -44,3 +44,9 @@ The hero photographs are the demo's, in
 [`content/demo/site.json`](../content/demo/site.json) and on the site's picture credits page.
 
 The sheets in `screenshots/` show the page on a phone and on a desktop, in both seasons.
+
+## Apartment pictures
+
+[`apartment-pictures.md`](apartment-pictures.md) is the shot list and the prompts for the demo
+apartments' pictures; [`generated/`](generated/) holds the 14 generated pictures with a note per
+apartment. They are AI-generated, see [`licenses/README.md`](../licenses/README.md).
