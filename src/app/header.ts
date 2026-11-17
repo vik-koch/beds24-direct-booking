@@ -83,7 +83,13 @@ import { address, LANGUAGE, TEXTS } from './texts';
 
       <app-season-switch />
 
-      <hlm-sheet #menu="hlmSheet" side="right" class="header-narrow" (closed)="settle()">
+      <hlm-sheet
+        #menu="hlmSheet"
+        side="right"
+        class="header-narrow"
+        (stateChanged)="menuOpen.set($event === 'open')"
+        (closed)="settle()"
+      >
         <button class="icon-button" hlmSheetTrigger [attr.aria-label]="texts.nav.menu">
           <ng-icon name="lucideMenu" aria-hidden="true" />
         </button>
@@ -137,15 +143,19 @@ import { address, LANGUAGE, TEXTS } from './texts';
       </hlm-sheet>
     </header>
   `,
-  host: { class: 'site-header', '[attr.data-over]': 'overHero() && !scrolled() ? "" : null' },
+  host: {
+    class: 'site-header',
+    '[attr.data-over]': 'overHero() && !scrolled() && !menuOpen() ? "" : null',
+  },
 })
 export class Header {
   // The same page in every language, by address prefix.
   readonly alternates = input.required<Record<string, string>>();
   // On the home page the header lies over the hero photo, without its own ground, until the
-  // page is scrolled.
+  // page is scrolled or the menu is open.
   readonly overHero = input(false);
   protected readonly scrolled = signal(false);
+  protected readonly menuOpen = signal(false);
 
   protected readonly texts = inject(TEXTS);
   protected readonly language = inject(LANGUAGE);

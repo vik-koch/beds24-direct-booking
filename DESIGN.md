@@ -198,10 +198,10 @@ so that amounts can be compared down a column.
   2.75rem above it, and a jump to it places the section's top at the header's lower edge, so
   the header covers the photo's last strip.
 - **Header:** sticky, a light frosted bar (the ground colour at 72% with a blur). Over the hero
-  at the top of the home page it has no ground of its own until the page scrolls. Below 64rem,
-  and on a screen without hover such as a tablet, it holds the wordmark, the season switch and a
-  menu button that opens a sheet from the right with the links and the languages. From 64rem up
-  with a pointer that hovers, everything is in one line.
+  at the top of the home page it has no ground of its own until the page scrolls or the menu
+  opens. Below 64rem, and on a screen without hover such as a tablet, it holds the wordmark, the
+  season switch and a menu button that opens a sheet from the right with the links and the
+  languages. From 64rem up with a pointer that hovers, everything is in one line.
 - **List:** from 48rem up one price column per apartment. Below that one apartment at a
   time, chosen with tabs above the list.
 - **Low windows:** under 30rem of height, bars that stay in view go back into the page.
