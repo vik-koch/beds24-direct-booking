@@ -88,7 +88,8 @@
       "night": "Più una tassa di soggiorno di {amount} per adulto e notte.",
       "stay": "Più una tassa di soggiorno di {amount} per adulto e soggiorno."
     },
-    "continue": "Continua con la prenotazione"
+    "continue": "Continua con la prenotazione",
+    "clear": "Annulla la settimana scelta"
   },
   "placeholder": "Questa pagina è in costruzione.",
   "notFound": {

@@ -278,7 +278,8 @@ readers. The list does not repeat this switch: it has the text button.
   On a phone the one apartment shown takes the whole header row: its name on the left, its
   facts on the right.
 - **Months:** the weeks are grouped by the month they arrive in (a week from 26 December
-  belongs to December). Each group starts with the month's name in soft ink at 0.875rem, and
+  belongs to December). Each group starts with the month's name in soft ink at 0.875rem, with the year where
+  the list starts and in January, and
   every other group lies on a light ground (the page's ground mixed 50% into white) that
   reaches the card's edges; the last month's reaches its lower edge too.
 - **Row:** the stay's dates on the left in body text (weekday, day and month in figures, so a
@@ -288,7 +289,8 @@ readers. The list does not repeat this switch: it has the text button.
 - **Chosen week:** an accent-filled pill with white figures.
 - **Booked week:** the word in soft ink, no decoration.
 - **Not open yet, or no week free:** a short sentence below the header row, in the card.
-- **Below the sheet:** a note in soft ink on what the price includes, and the tourist tax.
+- **Below the sheet:** a note in soft ink on what the price includes, and the tourist tax;
+  from 48rem up it starts a tenth in from the card's side and takes at most 80% of its width.
 - **Apartment tabs (narrow):** a pill with an edge per apartment, all of one width and one
   height, in as many lines as their names need; the chosen one is filled with ink, its colours
   changing over 0.2 s like a price's hover tint. A change of
@@ -300,15 +302,21 @@ readers. The list does not repeat this switch: it has the text button.
   button stay still and the button keeps the focus. The header's switch glides with it. A
   change from the header's switch cross-fades the rows over 0.6 s, like the hero photos. When
   the new season has more rows, the card grows first (0.25 s) and the rows move after; when it
-  has fewer, the rows move first and the card shrinks after, so rows are never cut off. A
-  chosen week stays chosen in its season, and the booking bar shows the shown season's. With
+  has fewer, the rows move first and the card shrinks after, so rows are never cut off.
+  The heading's season name and the button's label cross-fade over 0.2 s. With
   reduced motion the list changes at once.
 
 ### Booking bar
 
-Appears once a week is chosen and stays at the lower edge of the screen: an accent-filled
-card that names the apartment, the stay and the price, with a white button that leads on. It
-takes the accent so that it stands apart from the white sheet behind it.
+Appears once a week is chosen and stays at the lower edge of the screen, but never above the
+list's card: an accent-filled card that names the apartment, the stay and the price, with a
+white button that leads on and a white cross before it that clears the choice. It takes the
+accent so that it stands apart from the white sheet behind it. From 48rem up it is 80% of the
+card's width, centred; on a phone the full width.
+
+One week is chosen at a time, in either season: choosing another replaces it, a change of
+season keeps it and its bar, and a second click on the chosen price clears it, as the cross
+does, which then returns the focus to that price.
 
 ### Navigation
 

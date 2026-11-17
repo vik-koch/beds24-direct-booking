@@ -64,6 +64,33 @@ test('a chosen week leads to its apartment with the stay', async ({ page }) => {
   expect(days).toBe(7);
 });
 
+test('a chosen week is cleared by a second click or by the bar, and stays over a season change', async ({
+  page,
+}) => {
+  await page.goto('/en');
+  await toOtherSeason(page);
+  const stay = panel(page).locator('.stay:visible').first();
+  const radio = stay.getByRole('radio');
+  await stay.click();
+  await expect(page.locator('.pick')).toBeVisible();
+  await stay.click();
+  await expect(radio).not.toBeChecked();
+  await expect(page.locator('.pick')).toHaveCount(0);
+
+  await stay.click();
+  const chosen = await page.locator('.pick output').textContent();
+  // One week at a time: it stays chosen while the other season is shown.
+  await button(page).click();
+  await settled(page);
+  await expect(page.locator('.pick output')).toHaveText(chosen!);
+  await button(page).click();
+  await settled(page);
+  await page.getByRole('button', { name: 'Clear the chosen week' }).click();
+  await expect(page.locator('.pick')).toHaveCount(0);
+  await expect(radio).not.toBeChecked();
+  await expect(radio).toBeFocused();
+});
+
 test('the season button goes both ways, shares the season with the header and keeps the focus', async ({
   page,
 }) => {

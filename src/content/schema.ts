@@ -188,6 +188,7 @@ export const textsSchema = z.strictObject({
     note: text,
     tax: z.strictObject({ night: text, stay: text }),
     continue: text,
+    clear: text,
   }),
   placeholder: text,
   notFound: z.strictObject({ title: text, text, home: text }),

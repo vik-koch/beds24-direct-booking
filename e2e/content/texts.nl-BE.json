@@ -88,7 +88,8 @@
       "night": "Plus een toeristenbelasting van {amount} per volwassene en nacht.",
       "stay": "Plus een toeristenbelasting van {amount} per volwassene en verblijf."
     },
-    "continue": "Verder naar de boeking"
+    "continue": "Verder naar de boeking",
+    "clear": "Gekozen week wissen"
   },
   "placeholder": "Deze pagina wordt nog gemaakt.",
   "notFound": {

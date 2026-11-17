@@ -97,7 +97,8 @@
       "night": "Zuzüglich Ortstaxe von {amount} pro Erwachsenem und Nacht.",
       "stay": "Zuzüglich Ortstaxe von {amount} pro Erwachsenem und Aufenthalt."
     },
-    "continue": "Weiter zur Buchung"
+    "continue": "Weiter zur Buchung",
+    "clear": "Gewählte Woche aufheben"
   },
   "placeholder": "Diese Seite entsteht noch.",
   "notFound": {

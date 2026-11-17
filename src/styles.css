@@ -532,6 +532,18 @@
   html:not([data-season='summer']) .weeks .stack > [data-for='summer'] {
     display: flex;
     visibility: hidden;
+    opacity: 0;
+  }
+
+  /* After a switch the names and labels cross-fade, briefly. */
+  html[data-switched] .weeks .stack > * {
+    transition:
+      opacity 0.2s ease,
+      visibility 0.2s;
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
   }
 
   /* The way to the other season is a sentence with an arrow, not a second switch. */
@@ -539,6 +551,7 @@
      take its parent's. The label stands on its text's baseline, the arrow centred beside it. */
   .other-season {
     min-height: 2.75rem;
+    border-radius: var(--radius-menu);
     align-items: center;
     color: var(--color-accent);
     font-weight: 500;
@@ -739,8 +752,10 @@
     white-space: nowrap;
   }
 
+  /* It spans the columns without widening them: its own width does not count. */
   .weeks-empty {
     grid-column: 1 / -1;
+    contain: inline-size;
     padding: 1.5rem 0;
     text-align: left;
     white-space: normal;
@@ -786,7 +801,8 @@
     align-items: center;
     min-height: 2.75rem;
     margin-right: -0.75rem;
-    padding: 0 0.75rem;
+    /* The figures sit high in their line; a pixel more above centres them in the pill. */
+    padding: 1px 0.75rem 0;
     border-radius: var(--radius-control);
   }
 
@@ -811,11 +827,16 @@
     color: var(--color-ink-soft);
   }
 
+  /* From 48rem up the note and the bar stand a tenth in from the card's sides. */
   .weeks-note {
-    max-width: 44rem;
     margin: 1.25rem 0.25rem 0;
     color: var(--color-ink-soft);
     font-size: 0.9375rem;
+
+    @media (min-width: 48rem) {
+      max-width: 80%;
+      margin-left: 10%;
+    }
   }
 
   /* The chosen week stays in view at the lower edge, unless the window is too low for it. */
@@ -848,8 +869,36 @@
       outline-color: var(--color-on-accent);
     }
 
+    @media (min-width: 48rem) {
+      margin-inline: 10%;
+    }
+
     @media (max-height: 29.9375rem) {
       position: static;
+    }
+  }
+
+  .pick-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .pick-clear {
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: var(--radius-control);
+    cursor: pointer;
+    transition: background-color 0.2s;
+
+    &:hover {
+      background: color-mix(in srgb, var(--color-on-accent) 15%, transparent);
+    }
+
+    ng-icon {
+      --ng-icon__size: 1.375rem;
     }
   }
 }
