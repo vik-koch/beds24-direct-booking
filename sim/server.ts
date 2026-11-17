@@ -53,4 +53,7 @@ export const sim = () => {
   });
 };
 
-if (import.meta.main) sim().listen(4300, () => console.log('Beds24 simulator on port 4300'));
+if (import.meta.main) {
+  const port = Number(process.env['PORT'] ?? 4300);
+  sim().listen(port, () => console.log(`Beds24 simulator on port ${port}`));
+}

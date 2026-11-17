@@ -1,6 +1,6 @@
 # Project brief
 
-Status: the working brief, last revised 2026-11-16. A decision that weighed real alternatives
+Status: the working brief, last revised 2026-11-17. A decision that weighed real alternatives
 and would be costly to change also gets a short ADR in `docs/adr/`.
 
 ## What it is
@@ -65,7 +65,7 @@ public repository publishes. Nothing about the real business goes into the publi
 | Repo shape | One Angular app, no workspace tool, no libraries; the simulator in a second folder | The code is small. |
 | Beds24 simulator | Small own server that answers in the recorded response shapes from fictional data; it is the demo's runtime backend and the e2e tests' backend, and includes a fake booking page | The demo has no real Beds24 account or token; the booking flow needs state. The real recordings stay private as the reference. |
 | Name | Repository `beds24-direct-booking`; the demo at `beds24.vikkoch.com`, not indexed, its booking page plainly marked as simulated | Says what it is and is findable. The seasons go into the tagline: "seasonal rental" means something else. |
-| Beds24 coupling | The site talks to Beds24 directly: one `beds24` module with the client and the mapping into the site's own week and apartment types. No provider interface | One provider is the truth at this size; a second would change the simulator and the hand-over too. The mapping exists because the wire shapes are awkward, not for swapping. |
+| Beds24 coupling | The site talks to Beds24 directly: one `beds24` module with the client, the cache and the mapping into the site's own weeks. Its code says room, as Beds24 does; "apartment" is a word of the content. One unit per room type. No provider interface | One provider is the truth at this size; a second would change the simulator and the hand-over too. The mapping exists because the wire shapes are awkward, not for swapping. |
 | Hosting | One small VM per site (1 GB works with a capped SSR heap and swap, 2 GB is comfortable), images built in CI | The Beds24 production token wants an IP whitelist, so a static address. No database and mostly prerendered pages keep it small. |
 | Proxy | Traefik in front, routing by container labels, on every VM | TLS, redirects and headers need a proxy anyway; one compose file then serves the shared demo VM and a site's own VM. |
 | Stack | A `web` container (SSR and the availability route); a `sim` container on the demo only | Nothing else is needed. No observability stack on a site's VM: an external uptime check. |
@@ -111,8 +111,8 @@ public repository publishes. Nothing about the real business goes into the publi
 4. Done: the design round, the structure in `site-map.md`, then the visual direction in
    `DESIGN.md`.
 5. Slices, each building its part of `site-map.md`: shell with languages and the notice (done);
-   seasons with the switch, the hero and the picture credits (done); stay picker with hand-over;
-   apartment pages; map; guides and FAQ; company and legal pages; SEO, accessibility and
+   seasons with the switch, the hero and the picture credits (done); the free-weeks list
+   (done); apartment pages with the stay picker and the hand-over; map; guides and FAQ; company and legal pages; SEO, accessibility and
    performance pass.
 6. Once the Beds24 account has paid: the confirmation, the payment and the return URL.
 7. The private deployment: real content, legal texts, domain: `1.0.0`.

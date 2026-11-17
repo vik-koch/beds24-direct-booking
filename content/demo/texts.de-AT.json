@@ -79,6 +79,27 @@
       "scaled": "verkleinert"
     }
   },
+  "weeks": {
+    "week": "Woche",
+    "guests": {
+      "one": "{count} Gast",
+      "other": "{count} Gäste"
+    },
+    "taken": "belegt",
+    "apartment": "Wohnung",
+    "next": "Nächste Saison: {season}",
+    "current": "Aktuelle Saison: {season}",
+    "notOpen": "Die Wochen für den {season} sind noch nicht freigegeben. Sie erscheinen hier, sobald die Preise feststehen.",
+    "full": "Im {season} ist keine Woche mehr frei.",
+    "unavailable": "Die freien Wochen können gerade nicht angezeigt werden. Bitte versuchen Sie es in ein paar Minuten noch einmal.",
+    "note": "Preis pro Woche mit Endreinigung.",
+    "tax": {
+      "night": "Zuzüglich Ortstaxe von {amount} pro Erwachsenem und Nacht.",
+      "stay": "Zuzüglich Ortstaxe von {amount} pro Erwachsenem und Aufenthalt."
+    },
+    "continue": "Weiter zur Buchung",
+    "clear": "Gewählte Woche aufheben"
+  },
   "placeholder": "Diese Seite entsteht noch.",
   "notFound": {
     "title": "Seite nicht gefunden",

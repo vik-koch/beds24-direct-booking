@@ -2,8 +2,8 @@ import { Routes } from '@angular/router';
 import site from '../content/generated/site';
 import { loadTexts } from '../content/generated/texts';
 import type { Language } from '../content/schema';
-import { apartments } from './apartments';
 import { Credits } from './credits';
+import { weeks } from './free-weeks';
 import { Home } from './home';
 import { NotFound } from './not-found';
 import { Placeholder } from './placeholder';
@@ -21,7 +21,7 @@ export const simplePages = [
 ] as const;
 
 const pages = ({ paths }: Language): Routes => [
-  { path: '', component: Home, resolve: { apartments }, data: { page: 'home' } },
+  { path: '', component: Home, resolve: { weeks }, data: { page: 'home' } },
   {
     path: `${paths.apartments}/:slug`,
     canMatch: [(_route, segments) => site.apartments.some(({ slug }) => slug === segments[1].path)],

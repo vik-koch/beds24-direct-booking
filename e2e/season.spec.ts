@@ -240,7 +240,9 @@ test('a site with a single season has no switch and no credits', async ({ page }
   await expect(page.getByText('Questo sito non mostra foto di altri.')).toBeVisible();
 });
 
-test('the hero fills the first screen, and the jump to the weeks hides it', async ({ page }) => {
+test('the hero fills the first screen, and the jump to the weeks ends it at the header', async ({
+  page,
+}) => {
   await page.goto('/en');
   const header = page.locator('app-header');
   await expect(header).toHaveAttribute('data-over', '');
@@ -254,9 +256,12 @@ test('the hero fills the first screen, and the jump to the weeks hides it', asyn
     await expect(page).toHaveURL('/en#free-weeks', { timeout: 500 });
   }).toPass();
   await expect(header).not.toHaveAttribute('data-over');
-  await expect
-    .poll(() =>
-      page.evaluate(() => document.querySelector('.hero')!.getBoundingClientRect().bottom),
-    )
-    .toBeLessThanOrEqual(0);
+  // The header covers the hero's last strip: their lower edges meet.
+  const edges = () =>
+    page.evaluate(() =>
+      ['.hero', 'app-header'].map((part) =>
+        Math.round(document.querySelector(part)!.getBoundingClientRect().bottom),
+      ),
+    );
+  await expect.poll(async () => new Set(await edges()).size).toBe(1);
 });

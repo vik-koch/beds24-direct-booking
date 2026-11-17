@@ -1,4 +1,4 @@
-import { Component, ElementRef, inject, viewChild } from '@angular/core';
+import { Component, DestroyRef, ElementRef, inject, viewChild } from '@angular/core';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideSnowflake, lucideSun } from '@ng-icons/lucide';
 import type { SeasonName } from '../content/names';
@@ -27,8 +27,8 @@ import { TEXTS } from './texts';
               name="season"
               [value]="name"
               [checked]="season.current() === name"
-              (click)="choose(name)"
-              (change)="choose(name)"
+              (click)="season.switch(name)"
+              (change)="season.switch(name)"
               (focus)="season.preload(name)"
             />
             <ng-icon [name]="icons[name]" aria-hidden="true" />
@@ -56,8 +56,12 @@ export class SeasonSwitch {
   private readonly pill = viewChild<ElementRef<HTMLElement>>('pill');
   private moves: Animation[] = [];
 
-  protected choose(name: SeasonName) {
-    if (name === this.season.current()) return;
+  constructor() {
+    // It glides whichever control changed the season, the list's button too.
+    inject(DestroyRef).onDestroy(this.season.watch((name) => this.glide(name)));
+  }
+
+  private glide(name: SeasonName) {
     const box = this.box()?.nativeElement;
     const pill = this.pill()?.nativeElement;
     const labels = box ? [...box.querySelectorAll('label')] : [];
@@ -65,48 +69,49 @@ export class SeasonSwitch {
     const gliding = box?.hasAttribute('data-gliding');
     const start = box && pill && edges(box, gliding ? pill : chosen(box));
     const widths = labels.map((label) => label.getBoundingClientRect().width);
-    this.season.switch(name);
-    if (!box || !pill || !start) return;
-    // Only this script's own moves: the colour transitions the change has just started stay.
-    this.moves.forEach((one) => one.cancel());
-    if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      box.removeAttribute('data-gliding');
-      return;
-    }
-    box.setAttribute('data-gliding', '');
-    const end = edges(box, chosen(box));
-    // The edge that leads in the direction of the change moves first, the other one 90 ms
-    // later, so the accent part stretches as it goes. Each label moves its inner edge with
-    // the same timing, so it clips its name as the accent part leaves or reaches it.
-    const lead = name === 'summer' ? 'right' : 'left';
-    const move = (part: HTMLElement, property: string, from: number, to: number, edge: string) =>
-      part.animate([{ [property]: `${from}px` }, { [property]: `${to}px` }], {
-        duration: 320,
-        delay: edge === lead ? 0 : 90,
-        easing: 'cubic-bezier(0.65, 0, 0.35, 1)',
-        fill: 'both',
-      });
-    const moves = (this.moves = [
-      move(pill, 'left', start.left, end.left, 'left'),
-      move(pill, 'right', start.right, end.right, 'right'),
-      ...labels.map((label, index) =>
-        move(
-          label,
-          'width',
-          widths[index],
-          label.getBoundingClientRect().width,
-          label.dataset['for'] === 'winter' ? 'right' : 'left',
-        ),
-      ),
-    ]);
-    Promise.all(moves.map((one) => one.finished)).then(
-      () => {
+    return () => {
+      if (!box || !pill || !start) return;
+      // Only this script's own moves: the colour transitions the change has just started stay.
+      this.moves.forEach((one) => one.cancel());
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
         box.removeAttribute('data-gliding');
-        moves.forEach((one) => one.cancel());
-      },
-      // Cancelled by the next change, which glides on from where this one stopped.
-      () => undefined,
-    );
+        return;
+      }
+      box.setAttribute('data-gliding', '');
+      const end = edges(box, chosen(box));
+      // The edge that leads in the direction of the change moves first, the other one 90 ms
+      // later, so the accent part stretches as it goes. Each label moves its inner edge with
+      // the same timing, so it clips its name as the accent part leaves or reaches it.
+      const lead = name === 'summer' ? 'right' : 'left';
+      const move = (part: HTMLElement, property: string, from: number, to: number, edge: string) =>
+        part.animate([{ [property]: `${from}px` }, { [property]: `${to}px` }], {
+          duration: 320,
+          delay: edge === lead ? 0 : 90,
+          easing: 'cubic-bezier(0.65, 0, 0.35, 1)',
+          fill: 'both',
+        });
+      const moves = (this.moves = [
+        move(pill, 'left', start.left, end.left, 'left'),
+        move(pill, 'right', start.right, end.right, 'right'),
+        ...labels.map((label, index) =>
+          move(
+            label,
+            'width',
+            widths[index],
+            label.getBoundingClientRect().width,
+            label.dataset['for'] === 'winter' ? 'right' : 'left',
+          ),
+        ),
+      ]);
+      Promise.all(moves.map((one) => one.finished)).then(
+        () => {
+          box.removeAttribute('data-gliding');
+          moves.forEach((one) => one.cancel());
+        },
+        // Cancelled by the next change, which glides on from where this one stopped.
+        () => undefined,
+      );
+    };
   }
 }
 

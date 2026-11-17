@@ -76,6 +76,27 @@ Traps:
   an empty Max Stay row.
 - **The price does not depend on the guest count** (`priceFor: maxCapacity`).
 
+Checked on 17 November 2026 against a real account with two properties of one room each,
+with the read-only token, for the free-weeks list:
+
+- **Nights an owner has not priced** come back without a `price1` field (never as `0`), with
+  `numAvail` 0 and, at the start of the calendar, `override` `none` on every day. So an
+  unopened week looks taken by its availability and is told apart only by its missing prices.
+  The site treats a season without any fully priced week as not open yet, unless it has
+  begun; then it says no week is free. It reads a `price1` of `0` like a missing one.
+- **One `calendar` call covers a year** (today plus 372 days, both rooms): one page, every day
+  listed, 1 credit. The `properties` call with rooms, price rules and upsell items cost 1.3.
+- **The lead time's boundary:** a week arriving exactly `minDaysUntilCheckin` days after today
+  is offered, one a week earlier is not (checked with `offers` at a lead time of 25 days, in
+  the evening, Central European Time). The site counts from the server's today and takes the
+  smallest value among the rules that carry one; the two rooms had different lead times.
+- **The site's week prices equal `offers`** to the cent for sixteen weeks of both rooms (the
+  sum of the nights times `*0.9`, rounded to the cent). The account had no bookings, so a
+  taken week was checked against the simulator only.
+- **The tourist tax** was an upsell item of type `obligatory` on one property and
+  `obligatoryTax` on the other, both per adult and night; the site reads both.
+- **A day the calendar does not list** counts as closed and unpriced (not seen on the wire).
+
 ## Prices
 
 - **Daily prices** arrive as `price1` on the calendar ranges.
@@ -83,7 +104,9 @@ Traps:
   `bookingPageMultiplier`. `offers` and the guest form apply the multiplier; `calendar` does
   not. The `multiplier` in `calendar` is a different, per-day value.
 - **The multiplier is a string and must be written `*0.9`.** Written `0.9`, it is returned but
-  applied nowhere. Parse an optional leading `*`; anything else means no price is shown.
+  applied nowhere. The site reads `*` and a number; an empty or missing value as 1 (not
+  checked on the wire); anything else, a bare `0.9` included, as unreadable, and then shows no
+  week of that property and logs why.
 - **No rounding:** a week of 7 × 150.50 (1,053.50) shows as 948.15.
 - **Daily prices within a week need not be equal.** Where a price period ends on the arrival
   day, that day carries the old price and the other six the new one.
@@ -198,7 +221,6 @@ proxy that injected what the settings below would carry):
 - **The frame's session cookie in Safari:** a third-party cookie there. The proxy made it
   first-party, so it showed nothing. Fallbacks: the deep link as a full page, then an own form
   on `POST /bookings`.
-- **The lead time's boundary:** whether the day exactly `minDaysUntilCheckin` away is bookable,
-  and in which time zone the days are counted.
+- **The time zone of the lead time's days,** near midnight.
 - **Whether the override reaches the channels** as closed to arrival and departure.
 - **A property with several rooms:** known from the API's structure only.

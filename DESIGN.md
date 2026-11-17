@@ -56,7 +56,7 @@ components:
     backgroundColor: '{colors.winter}'
     textColor: '{colors.on-accent}'
     rounded: '{rounded.control}'
-    height: '3rem'
+    height: '2.75rem'
     padding: '0 1.5rem'
   card:
     backgroundColor: '{colors.surface}'
@@ -116,7 +116,8 @@ and rejected.
 - One muted accent, and it is the season: navy in winter, emerald in summer.
 - Regular and medium weights only.
 - Round controls and cards, but a photo keeps its straight edges.
-- Few lines: space separates, a hairline only between the rows of a list.
+- Few lines: space separates, a hairline only between the rows of a list, and a light
+  ground behind every other group of rows.
 
 ## Colors
 
@@ -160,8 +161,8 @@ make the hierarchy; weight barely does.
 
 - **Display** (500, clamp(2.125rem, 1.5rem + 3vw, 3.5rem), 1.05): the page's one headline,
   on the hero card.
-- **Headline** (500, clamp(1.875rem, 1.5rem + 1.6vw, 2.75rem), 1.1): a section's heading. Its
-  second line may carry the season's name in the accent at weight 400.
+- **Headline** (500, clamp(1.875rem, 1.5rem + 1.6vw, 2.75rem), 1.1): a section's heading. It
+  may carry the season's name in the accent at weight 400, after it or on a second line.
 - **Lead** (400, clamp(1.1875rem, 1rem + 0.5vw, 1.375rem), 1.5, ink-soft): the line under
   the display headline on the hero card. The feature icons below it are 1.25rem on a phone and
   1.5rem from 48rem up, their centre at 0.5 and 0.6 of the cap height above the baseline.
@@ -190,15 +191,15 @@ so that amounts can be compared down a column.
   bottom. It scrolls with the photo.
 - **Rhythm:** 3.5rem above a section on a phone, 5rem from 48rem up; 1.5rem between a heading
   and what follows. More space above a heading than below it. The section after the hero has
-  5.5rem above it, so a jump to it places the heading below the header with the photo out of
-  view.
+  2.75rem above it, and a jump to it places the section's top at the header's lower edge, so
+  the header covers the photo's last strip.
 - **Header:** sticky, a light frosted bar (the ground colour at 72% with a blur). Over the hero
   at the top of the home page it has no ground of its own until the page scrolls. Below 64rem,
   and on a screen without hover such as a tablet, it holds the wordmark, the season switch and a
   menu button that opens a sheet from the right with the links and the languages. From 64rem up
   with a pointer that hovers, everything is in one line.
 - **List:** from 48rem up one price column per apartment. Below that one apartment at a
-  time, chosen with three tabs above the list.
+  time, chosen with tabs above the list.
 - **Low windows:** under 30rem of height, bars that stay in view go back into the page.
 
 ## Elevation & Depth
@@ -228,11 +229,17 @@ falls downwards, so it reads as lying on the page rather than floating.
 
 ### Buttons
 
-- **Shape:** pill (999px), 3rem high, 1.5rem of padding at the sides.
+- **One height for every control:** `--size-control`, 2.75rem (44 px): buttons, tabs, prices,
+  icon buttons, menu entries and the season switch. A new control takes it, not a number.
+- **Shape:** pill (999px), 1.5rem of padding at the sides.
 - **Primary:** accent fill, white text at weight 500.
-- **Hover / Focus:** a soft shadow in the accent on hover; a 2px accent outline, 3px away, on
-  keyboard focus.
-- **Text button:** a sentence in the accent with an arrow, underlined on hover. Used above
+- **Hover / Focus:** a soft shadow in the accent on hover (underlined instead where the button
+  stands on the accent, as in the booking bar); a 2px accent outline, 3px away, on keyboard
+  focus, following the control's shape. Every tab stop shows it, on the control or on what it
+  draws for a hidden input; an e2e test walks the home page's tab stops and checks each.
+- **Text button:** a sentence in the accent with an arrow, underlined on hover. Its focus ring
+  is a pill round the label with air at its sides (0.875rem); the label stays in line with the
+  column and the ring may reach past it; below 22.5rem the label is at label size, so it keeps one line. Used above
   the list to reach the other season ("Nächste Saison: Sommer 2027 →").
 
 ### Cards / Containers
@@ -266,20 +273,62 @@ readers. The list does not repeat this switch: it has the text button.
 
 ### Free-weeks list
 
-- **Sheet:** a white card holding a table. No vertical lines; a hairline between rows.
-- **Row:** the stay's dates on the left in body text, one cell per apartment on the right.
+- **Sheet:** a white card holding the list. No vertical lines; a hairline between the weeks
+  of a month. The card and its header row stay in place for every season and every state.
+- **Heading:** "Free weeks" and the dated season in the accent at weight 400, on one line
+  where it fits and on two where it does not. The text button stands on the heading's last
+  line. Both seasons' names, and both of the button's labels, take the space of the longer
+  one, so the heading, the button and the card stay where they are on a change of season.
+- **Columns:** they share the card's width evenly, none narrower than its content. A column's
+  head is the apartment's name with its guests and size below, right-aligned over the prices.
+  On a phone the one apartment shown takes the whole header row: its name on the left, its
+  facts on the right.
+- **Months:** the weeks are grouped by the month they arrive in (a week from 26 December
+  belongs to December). Each group starts with the month's name in soft ink at 0.875rem, with the year where
+  the list starts and in January, and
+  every other group lies on a light ground (the page's ground mixed 50% into white) that
+  reaches the card's edges; the last month's reaches its lower edge too.
+- **Row:** the stay's dates on the left in body text (weekday, day and month in figures, so a
+  row fits at 320 px), one cell per apartment on the right. Below 22.5rem the rows leave the
+  weekday out, since every week starts on the same one; each price's label still names it.
+  On a phone the card has 1.25rem at its sides, room for a chosen price's pill.
 - **Free week:** the price in the accent at title size, as a radio button without a visible
   box. Hover puts a soft tint behind it.
 - **Chosen week:** an accent-filled pill with white figures.
 - **Booked week:** the word in soft ink, no decoration.
-- **Not open yet:** a short sentence in place of the table.
-- **Apartment tabs (narrow):** three pills with an edge; the chosen one is filled with ink.
+- **Not open yet, or no week free:** a short sentence below the header row, in the card, on the
+  line where the first week's dates would be.
+- **Below the sheet:** a note in soft ink on what the price includes, and the tourist tax, in
+  line with the card; from 48rem up at most 80% of its width.
+- **Apartment tabs (narrow):** a pill with an edge per apartment, all of one width and one
+  height, in as many lines as their names need; the chosen one is filled with ink, its colours
+  changing over 0.2 s like a price's hover tint. A change of
+  tab clears the chosen week. Without the application the tabs are not shown and the sheet
+  scrolls sideways instead.
+- **The other season:** the text button above the list. The next season's rows slide in from
+  the right while the shown ones leave to the left, and back the other way (0.45 s, ease in
+  and out), each by the card's whole width; the card, its header row, the heading and the
+  button stay still and the button keeps the focus. The header's switch glides with it. A
+  change from the header's switch cross-fades the rows over 0.6 s, like the hero photos. When
+  the new season has more rows, the card grows while they move; when it has fewer, it shrinks
+  after them (0.25 s), so the leaving rows are not cut off.
+  The heading's season name and the button's label cross-fade over 0.2 s. With
+  reduced motion the list changes at once.
 
 ### Booking bar
 
-Appears once a week is chosen and stays at the lower edge of the screen: an accent-filled
-card that names the apartment, the stay and the price, with a white button that leads on. It
-takes the accent so that it stands apart from the white sheet behind it.
+Appears once a week is chosen and stays at the lower edge of the screen, but never above the
+list's card: an accent-filled card that names the apartment, the stay and the price, with a
+white button that leads on and a white cross before it that clears the choice. It takes the
+accent so that it stands apart from the white sheet behind it. From 48rem up it is 80% of the
+card's width, centred. On a phone it is the full width, with the name on a line of its own,
+the stay and price below, and the cross and the button at the two sides, each as far from the
+bar's edge as the other; below 22.5rem its text is 1rem, so the button keeps one line.
+
+One week is chosen at a time, in either season: choosing another replaces it. The bar belongs
+to the chosen week's season, so it is hidden while the other season is shown and returns with
+its own, fading in (0.25 s) once the season's colours have changed. A second click on the chosen price, Enter on it, or the cross clears it; the cross
+then returns the focus to that price.
 
 ### Navigation
 

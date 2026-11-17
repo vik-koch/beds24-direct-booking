@@ -35,6 +35,8 @@
 }
 
 @theme {
+  /* Every control is this tall: buttons, tabs, prices, icon buttons, menu entries. */
+  --size-control: 2.75rem;
   --radius-control: 999px;
   --radius-card: 1.5rem;
   --radius-menu: 1rem;
@@ -126,7 +128,7 @@
   .button {
     display: inline-flex;
     align-items: center;
-    min-height: 3rem;
+    min-height: var(--size-control);
     padding: 0 1.5rem;
     border-radius: var(--radius-control);
     background: var(--color-accent);
@@ -143,8 +145,8 @@
   .icon-button {
     display: grid;
     place-items: center;
-    width: 2.75rem;
-    height: 2.75rem;
+    width: var(--size-control);
+    height: var(--size-control);
     border-radius: var(--radius-control);
     font-size: 1.375rem;
     cursor: pointer;
@@ -482,6 +484,491 @@
         --ng-icon__size: 1.5rem;
         --lift: 0.6cap;
       }
+    }
+  }
+
+  /* The free-weeks list: both seasons are in the page and the page's season shows one. Rows
+     that are leaving stay in view until their move has ended. */
+  html:not([data-season='winter']) .weeks [data-for='winter']:not([data-leaving]),
+  html:not([data-season='summer']) .weeks [data-for='summer']:not([data-leaving]) {
+    display: none;
+  }
+
+  .weeks {
+    display: block;
+  }
+
+  /* A jump lands with the section's top at the header's lower edge, so the header covers the
+     hero's last strip: 1rem less than the page's scroll-padding of header and air. */
+  .weeks-section {
+    scroll-margin-top: -1rem;
+  }
+
+  .weeks-head {
+    display: flex;
+    flex-wrap: wrap;
+    /* The button stands on the heading's last line. */
+    align-items: last baseline;
+    justify-content: space-between;
+    gap: 0.75rem 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  /* On the heading's line where it fits, else on a line of its own. */
+  .weeks-season {
+    color: var(--color-accent);
+    font-weight: 400;
+    white-space: nowrap;
+  }
+
+  /* Both seasons' versions lie in one cell; the other one keeps its place, unseen. */
+  .weeks .stack {
+    display: inline-grid;
+
+    > * {
+      grid-area: 1 / 1;
+    }
+  }
+
+  html:not([data-season='winter']) .weeks .stack > [data-for='winter'],
+  html:not([data-season='summer']) .weeks .stack > [data-for='summer'] {
+    display: flex;
+    visibility: hidden;
+    opacity: 0;
+  }
+
+  /* After a switch the names and labels cross-fade, briefly. */
+  html[data-switched] .weeks .stack > * {
+    transition:
+      opacity 0.2s ease,
+      visibility 0.2s;
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
+  }
+
+  /* The way to the other season: a sentence with an arrow, not a second switch. Underlined on
+     hover like a link; the line is drawn on the label, since a flex box does not take its
+     parent's. The focus ring is drawn round the shown label as a pill with air at its sides;
+     the margins keep the text in line with the column, and the ring may reach past it. The
+     button is as wide as the longer label, so the shown one keeps to the side the button
+     stands on. */
+  .other-season {
+    --air: 0.875rem;
+    margin-inline: calc(-1 * var(--air));
+    justify-items: start;
+    align-items: center;
+    color: var(--color-accent);
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+
+    &:focus-visible {
+      outline: none;
+    }
+
+    /* As tall as a control by its padding, so its baseline stays the text's. */
+    > span {
+      display: flex;
+      align-items: baseline;
+      gap: 0.5rem;
+      padding: calc((var(--size-control) - 1lh) / 2) var(--air);
+      border-radius: var(--radius-control);
+      text-decoration: underline;
+      text-decoration-color: transparent;
+      text-underline-offset: 0.3em;
+      transition: text-decoration-color 0.2s;
+    }
+
+    &:focus-visible > span {
+      outline: 2px solid var(--color-accent);
+      outline-offset: 3px;
+    }
+
+    &:hover > span {
+      text-decoration-color: currentcolor;
+    }
+
+    ng-icon {
+      align-self: center;
+    }
+
+    /* On the narrowest screens a smaller size keeps the longer label on one line. */
+    @media (max-width: 22.4375rem) {
+      font-size: 0.9375rem;
+    }
+
+    @media (min-width: 48rem) {
+      justify-items: end;
+    }
+  }
+
+  /* Tabs of one width and one height, in as many lines as the names need. */
+  .room-tabs {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 5.5rem), 1fr));
+    grid-auto-rows: 1fr;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+
+    label {
+      display: grid;
+    }
+
+    span {
+      display: grid;
+      place-items: center;
+      min-height: var(--size-control);
+      padding: 0.375rem 1rem;
+      border: 1px solid var(--color-edge);
+      border-radius: var(--radius-control);
+      font-weight: 500;
+      line-height: 1.25;
+      text-align: center;
+      cursor: pointer;
+      transition:
+        background-color 0.2s,
+        border-color 0.2s,
+        color 0.2s;
+    }
+
+    :checked + span {
+      border-color: var(--color-ink);
+      background: var(--color-ink);
+      color: var(--color-surface);
+    }
+
+    /* Without the application the tabs cannot choose, so every apartment stays in the list. */
+    html:not([data-script]) & {
+      display: none;
+    }
+
+    @media (min-width: 48rem) {
+      display: none;
+    }
+  }
+
+  :is(.room-tabs, .stay) input {
+    position: absolute;
+    opacity: 0;
+  }
+
+  :is(.room-tabs, .stay) :focus-visible + span {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 3px;
+  }
+
+  /* The card stays; only its rows move. Without the application every apartment is listed,
+     so a narrow screen scrolls the card sideways. */
+  /* The last month's ground reaches the card's lower edge, so the space below it is part of it. */
+  .sheet {
+    /* Room for a chosen price's pill, which reaches into it, and as much at the other side. */
+    --pad: 1.25rem;
+    --end: 1rem;
+    padding: 0.5rem var(--pad) 0;
+    overflow-x: auto;
+    border-radius: var(--radius-card);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-card);
+
+    html[data-script] & {
+      overflow: clip;
+    }
+
+    @media (min-width: 48rem) {
+      --pad: 2.5rem;
+      --end: 1.5rem;
+      padding-top: 1rem;
+    }
+  }
+
+  /* The columns share the width evenly, none narrower than its content. */
+  .weeks-grid {
+    display: grid;
+    grid-template-columns: repeat(var(--columns), minmax(max-content, 1fr));
+  }
+
+  .weeks-row,
+  .weeks-bodies,
+  .weeks-body,
+  .weeks-month {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-columns: subgrid;
+  }
+
+  /* Both seasons' rows lie in one place, from one edge of the card to the other. */
+  .weeks-bodies {
+    margin-inline: calc(-1 * var(--pad));
+    padding-inline: var(--pad);
+  }
+
+  /* Each season's rows keep their own height, also while the leaving ones share the place:
+     the card's move is measured from it. */
+  .weeks-body {
+    grid-row: 1;
+    align-self: start;
+  }
+
+  /* Every other month lies on a light ground, to the card's edges. */
+  .weeks-month {
+    margin-inline: calc(-1 * var(--pad));
+    padding: 0.25rem var(--pad);
+
+    &:nth-child(even) {
+      background: color-mix(in srgb, var(--color-ground) 50%, var(--color-surface));
+    }
+
+    &:last-child {
+      padding-bottom: var(--end);
+    }
+  }
+
+  .weeks-month-name {
+    grid-column: 1 / -1;
+    padding-top: 0.75rem;
+    color: var(--color-ink-soft);
+    font-size: 0.875rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+  }
+
+  .weeks-row > * {
+    align-self: center;
+  }
+
+  .weeks-month .weeks-row + .weeks-row {
+    border-top: 1px solid var(--color-line);
+  }
+
+  .weeks-columns {
+    padding: 1rem 0 0.5rem;
+
+    > :first-child {
+      align-self: end;
+      color: var(--color-ink-soft);
+      font-size: 0.9375rem;
+    }
+
+    > * + * {
+      align-self: end;
+      font-size: 1.1875rem;
+      font-weight: 500;
+      line-height: 1.2;
+      text-align: right;
+    }
+
+    small {
+      display: block;
+      color: var(--color-ink-soft);
+      font-size: 0.875rem;
+      font-weight: 400;
+    }
+  }
+
+  /* Every week starts on the same weekday, so the narrowest screens leave it out of the rows;
+     each price's label still names it. */
+  [role='rowheader'] {
+    padding-block: 1.125rem;
+    white-space: nowrap;
+
+    @media (max-width: 22.4375rem) {
+      .weekday {
+        display: none;
+      }
+    }
+  }
+
+  [role='cell'] {
+    padding-left: 1rem;
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  /* It spans the columns without widening them: its own width does not count. */
+  .weeks-empty {
+    grid-column: 1 / -1;
+    contain: inline-size;
+    /* Its line sits where the first week's dates would. */
+    padding: 3.2rem 0 1.5rem;
+    text-align: left;
+    white-space: normal;
+    text-wrap: pretty;
+  }
+
+  /* On a phone one apartment at a time, the one of the chosen tab, whose name and facts take
+     the header row's whole width. */
+  @media (max-width: 47.9375rem) {
+    html[data-script] .weeks-grid {
+      grid-template-columns: minmax(0, 1fr) auto;
+
+      .elsewhere {
+        display: none;
+      }
+
+      .weeks-columns {
+        > :first-child {
+          position: absolute;
+          clip-path: inset(50%);
+        }
+
+        > :not(:first-child, .elsewhere) {
+          display: flex;
+          grid-column: 1 / -1;
+          flex-wrap: wrap;
+          align-items: baseline;
+          justify-content: space-between;
+          gap: 0 1rem;
+          text-align: left;
+        }
+      }
+
+      [role='cell']:not(.weeks-empty) {
+        padding-left: 0.5rem;
+      }
+    }
+  }
+
+  .price,
+  .taken {
+    display: inline-grid;
+    align-items: center;
+    min-height: var(--size-control);
+    margin-right: -0.75rem;
+    /* The figures sit high in their line; a pixel more above centres them in the pill. */
+    padding: 1px 0.75rem 0;
+    border-radius: var(--radius-control);
+  }
+
+  .price {
+    color: var(--color-accent);
+    font-size: 1.1875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+
+    .stay:hover & {
+      background: var(--color-accent-soft);
+    }
+
+    .stay :checked + & {
+      background: var(--color-accent);
+      color: var(--color-on-accent);
+    }
+  }
+
+  .taken {
+    color: var(--color-ink-soft);
+  }
+
+  .weeks-note {
+    margin: 1.25rem 0.25rem 0;
+    color: var(--color-ink-soft);
+    font-size: 0.9375rem;
+
+    @media (min-width: 48rem) {
+      max-width: 80%;
+    }
+  }
+
+  /* The chosen week stays in view at the lower edge, unless the window is too low for it. */
+  .pick {
+    position: sticky;
+    bottom: 1rem;
+    z-index: 5;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem 1rem;
+    margin-top: 1.25rem;
+    padding: 0.75rem 0.75rem 0.75rem 1.25rem;
+    border-radius: var(--radius-card);
+    background: var(--color-accent);
+    color: var(--color-on-accent);
+    box-shadow: var(--shadow-card);
+
+    output {
+      font-weight: 500;
+    }
+
+    /* On the accent the primary button's shadow would not show: it is underlined instead. */
+    .button {
+      background: var(--color-surface);
+      color: var(--color-accent);
+      text-decoration: underline;
+      text-decoration-color: transparent;
+      text-underline-offset: 0.3em;
+      transition: text-decoration-color 0.2s;
+
+      &:hover {
+        box-shadow: none;
+        text-decoration-color: currentcolor;
+      }
+    }
+
+    /* On a phone the name has a line of its own, and the cross and the button go to the
+       two sides. */
+    @media (max-width: 47.9375rem) {
+      .pick-name {
+        display: block;
+      }
+
+      .pick-dot {
+        display: none;
+      }
+
+      .pick-actions {
+        flex: 1 1 100%;
+        justify-content: space-between;
+      }
+
+      /* Its circle as far from the bar's edge as the button's, its cross under the name. */
+      .pick-clear {
+        margin-left: -0.5rem;
+      }
+    }
+
+    :focus-visible {
+      outline-color: var(--color-on-accent);
+    }
+
+    @media (min-width: 48rem) {
+      margin-inline: 10%;
+    }
+
+    /* On the narrowest screens the button keeps its words on one line. */
+    @media (max-width: 22.4375rem) {
+      font-size: 1rem;
+
+      .button {
+        padding-inline: 1.25rem;
+        white-space: nowrap;
+      }
+    }
+
+    @media (max-height: 29.9375rem) {
+      position: static;
+    }
+  }
+
+  .pick-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  /* An icon button that shows a light ground under the pointer. */
+  .pick-clear {
+    transition: background-color 0.2s;
+
+    &:hover {
+      background: color-mix(in srgb, var(--color-on-accent) 15%, transparent);
+    }
+
+    ng-icon {
+      --ng-icon__size: 1.375rem;
     }
   }
 }

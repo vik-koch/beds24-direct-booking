@@ -70,6 +70,27 @@
     "licence": "Licenza",
     "none": "Questo sito non mostra foto di altri."
   },
+  "weeks": {
+    "week": "Settimana",
+    "guests": {
+      "one": "{count} ospite",
+      "other": "{count} ospiti"
+    },
+    "taken": "occupata",
+    "apartment": "Appartamento",
+    "next": "Prossima stagione: {season}",
+    "current": "Stagione attuale: {season}",
+    "notOpen": "Le settimane di {season} non sono ancora aperte. Appariranno qui non appena i prezzi saranno fissati.",
+    "full": "Nessuna settimana di {season} è ancora libera.",
+    "unavailable": "Le settimane libere non si possono mostrare in questo momento. Riprovate tra qualche minuto.",
+    "note": "Prezzo a settimana, pulizia finale inclusa.",
+    "tax": {
+      "night": "Più una tassa di soggiorno di {amount} per adulto e notte.",
+      "stay": "Più una tassa di soggiorno di {amount} per adulto e soggiorno."
+    },
+    "continue": "Continua con la prenotazione",
+    "clear": "Annulla la settimana scelta"
+  },
   "placeholder": "Questa pagina è in costruzione.",
   "notFound": {
     "title": "Pagina non trovata",
