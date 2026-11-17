@@ -76,6 +76,18 @@ Traps:
   an empty Max Stay row.
 - **The price does not depend on the guest count** (`priceFor: maxCapacity`).
 
+How the site reads it (the free-weeks list, 17 November 2026), checked against the simulator
+only:
+
+- **A week not open yet** is one whose nights have no `price1`. The site treats a season
+  without any fully priced week as not open yet, unless it has begun; then it says no week is
+  free. Not checked on a real account: what `calendar` returns for nights an owner has not
+  priced (no `price1`, or `0`, which the site reads alike), and whether an owner's default
+  price fills them.
+- **The lead time's boundary:** the site lets a week start exactly `minDaysUntilCheckin` days
+  after the server's today, and takes the smallest value among the rules that carry one.
+- **A day the calendar does not list** counts as closed and unpriced.
+
 ## Prices
 
 - **Daily prices** arrive as `price1` on the calendar ranges.
@@ -83,7 +95,9 @@ Traps:
   `bookingPageMultiplier`. `offers` and the guest form apply the multiplier; `calendar` does
   not. The `multiplier` in `calendar` is a different, per-day value.
 - **The multiplier is a string and must be written `*0.9`.** Written `0.9`, it is returned but
-  applied nowhere. Parse an optional leading `*`; anything else means no price is shown.
+  applied nowhere. The site reads `*` and a number; an empty or missing value as 1 (not
+  checked on the wire); anything else, a bare `0.9` included, as unreadable, and then shows no
+  week of that property and logs why.
 - **No rounding:** a week of 7 × 150.50 (1,053.50) shows as 948.15.
 - **Daily prices within a week need not be equal.** Where a price period ends on the arrival
   day, that day carries the old price and the other six the new one.

@@ -8,6 +8,10 @@ and the e2e tests' Beds24; the site itself never knows the difference. The wire 
 npm run sim   # http://localhost:4300/v2, header "token: simulator"
 ```
 
+`PORT` moves it to another port. `SIM_PRICES_UNTIL` (a day such as `2026-11-17`) leaves every
+later night without a price, as on an account whose owner has not opened the coming season
+yet; the e2e tests run a second simulator with it.
+
 Node runs the TypeScript files directly, so there is no build step and no dependency. The
 business is described in [`data.json`](data.json); the decisions behind the simulator are in
 [ADR 5](../docs/adr/0005-the-simulator.md).

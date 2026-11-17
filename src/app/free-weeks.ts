@@ -1,14 +1,14 @@
 import { inject, InjectionToken, makeStateKey, RESPONSE_INIT, TransferState } from '@angular/core';
 import type { ResolveFn } from '@angular/router';
-import type { Apartment } from '../beds24/client';
+import type { FreeWeeks } from '../beds24/weeks';
 
 // Provided on the server only, so the Beds24 client stays out of the browser bundle.
-export const APARTMENTS = new InjectionToken<() => Promise<Apartment[]>>('apartments');
-const key = makeStateKey<Apartment[] | null>('apartments');
+export const FREE_WEEKS = new InjectionToken<() => Promise<FreeWeeks>>('free weeks');
+const key = makeStateKey<FreeWeeks | null>('free weeks');
 
-export const apartments: ResolveFn<Apartment[] | null> = async () => {
+export const weeks: ResolveFn<FreeWeeks | null> = async () => {
   const state = inject(TransferState);
-  const load = inject(APARTMENTS, { optional: true });
+  const load = inject(FREE_WEEKS, { optional: true });
   const response = inject(RESPONSE_INIT, { optional: true });
   if (!load) return state.get(key, null);
   const list = await load().catch((error: unknown) => {

@@ -1,11 +1,12 @@
 import { defineConfig, devices } from '@playwright/test';
 
 const reuse = { reuseExistingServer: !process.env['CI'] };
-const app = (token: string) => ({
+const app = (token: string, sim = 4300) => ({
   NG_ALLOWED_HOSTS: 'localhost',
-  BEDS24_URL: 'http://localhost:4300/v2',
+  BEDS24_URL: `http://localhost:${sim}/v2`,
   BEDS24_TOKEN: token,
 });
+const today = new Date().toISOString().slice(0, 10);
 
 export default defineConfig({
   testDir: 'e2e',
@@ -21,6 +22,19 @@ export default defineConfig({
       command: 'npm run serve',
       url: 'http://localhost:4001/favicon.ico',
       env: { ...app('refused'), PORT: '4001' },
+      ...reuse,
+    },
+    // A Beds24 whose owner has set no prices from today on, and a site that asks it.
+    {
+      command: 'npm run sim',
+      url: 'http://localhost:4301/v2/properties',
+      env: { PORT: '4301', SIM_PRICES_UNTIL: today },
+      ...reuse,
+    },
+    {
+      command: 'npm run serve',
+      url: 'http://localhost:4003/favicon.ico',
+      env: { ...app('simulator', 4301), PORT: '4003' },
       ...reuse,
     },
     // A second site, built from other content: two other languages, no notice, its own theme.

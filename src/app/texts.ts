@@ -21,3 +21,7 @@ export function address(language: Language, page: Page, slug?: string): string {
           : `/${paths[page]}`;
   return `/${language.code}${rest}`;
 }
+
+// Puts values into a text's {placeholders}.
+export const fill = (text: string, values: Record<string, string | number>) =>
+  text.replace(/\{(\w+)\}/g, (_, key: string) => String(values[key] ?? ''));

@@ -44,6 +44,12 @@ repository.
   button. A feature's icon is any [Lucide](https://lucide.dev/icons) icon by its name there,
   such as `calendar-days`; only the icons the texts name go into the build. How the page picks
   its season is [ADR 8](adr/0008-the-season-in-the-page.md).
+- **The free weeks** (`weeks` in a texts file) are the list's wording. Its sentences take
+  `{season}` (a dated season such as "Winter 2026/27"), `{count}` (the guests, with a `one`
+  and an `other` form) and `{amount}` (the tourist tax as money). `note` says what the week's
+  price includes, since that is how a deployment sets up its Beds24 prices; the tax follows it
+  as `tax.night` or `tax.stay`, by Beds24's upsell item. The apartments' order in the list is
+  their order in `site.json`; their guests, size, prices and tax come from Beds24.
 - **A picture** is a file in `pictures/` with an optional `credit`: its title, author, source
   address and licence with its address, and optionally what was changed: `changes` lists
   `cropped`, `scaled` or both, and each language's texts name them under `credits.changes`.

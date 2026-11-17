@@ -174,6 +174,21 @@ export const textsSchema = z.strictObject({
     // The content script checks that each change a credit lists is named here.
     changes: z.strictObject({ cropped: text.optional(), scaled: text.optional() }).optional(),
   }),
+  // The free-weeks list. {season}, {count} and {amount} are filled in by the page.
+  weeks: z.strictObject({
+    week: text,
+    guests: z.strictObject({ one: text, other: text }),
+    taken: text,
+    apartment: text,
+    next: text,
+    current: text,
+    notOpen: text,
+    full: text,
+    unavailable: text,
+    note: text,
+    tax: z.strictObject({ night: text, stay: text }),
+    continue: text,
+  }),
   placeholder: text,
   notFound: z.strictObject({ title: text, text, home: text }),
   footer: z.strictObject({ label: text, contact: text, more: text }),

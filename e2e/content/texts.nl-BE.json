@@ -70,6 +70,26 @@
     "licence": "Licentie",
     "none": "Deze site toont geen foto's van anderen."
   },
+  "weeks": {
+    "week": "Week",
+    "guests": {
+      "one": "{count} gast",
+      "other": "{count} gasten"
+    },
+    "taken": "bezet",
+    "apartment": "Appartement",
+    "next": "Volgend seizoen: {season}",
+    "current": "Huidig seizoen: {season}",
+    "notOpen": "De weken van {season} zijn nog niet open. Ze verschijnen hier zodra de prijzen vaststaan.",
+    "full": "Geen enkele week van {season} is nog vrij.",
+    "unavailable": "De vrije weken kunnen nu niet getoond worden. Probeer het over een paar minuten opnieuw.",
+    "note": "Prijs per week, eindschoonmaak inbegrepen.",
+    "tax": {
+      "night": "Plus een toeristenbelasting van {amount} per volwassene en nacht.",
+      "stay": "Plus een toeristenbelasting van {amount} per volwassene en verblijf."
+    },
+    "continue": "Verder naar de boeking"
+  },
   "placeholder": "Deze pagina wordt nog gemaakt.",
   "notFound": {
     "title": "Pagina niet gevonden",

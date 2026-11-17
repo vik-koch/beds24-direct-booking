@@ -484,4 +484,276 @@
       }
     }
   }
+
+  /* The free-weeks list: both seasons are in the page and the page's season shows one. A list
+     that is leaving stays in view until its move has ended. */
+  html:not([data-season='winter']) .weeks [data-for='winter']:not([data-leaving]),
+  html:not([data-season='summer']) .weeks [data-for='summer']:not([data-leaving]) {
+    display: none;
+  }
+
+  .weeks {
+    display: block;
+  }
+
+  .weeks-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    justify-content: space-between;
+    gap: 0.75rem 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .weeks-season {
+    display: block;
+    color: var(--color-accent);
+    font-weight: 400;
+  }
+
+  /* The way to the other season is a sentence with an arrow, not a second switch. */
+  .other-season {
+    min-height: 2.75rem;
+    color: var(--color-accent);
+    font-weight: 500;
+    text-align: left;
+    text-decoration: underline;
+    text-decoration-color: transparent;
+    text-underline-offset: 0.3em;
+    cursor: pointer;
+    transition: text-decoration-color 0.2s;
+
+    &:hover {
+      text-decoration-color: currentcolor;
+    }
+
+    > span {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+  }
+
+  .room-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+
+    label {
+      flex: 1;
+      min-width: 0;
+    }
+
+    span {
+      display: grid;
+      place-items: center;
+      min-height: 2.75rem;
+      padding: 0 0.5rem;
+      border: 1px solid var(--color-edge);
+      border-radius: var(--radius-control);
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    :checked + span {
+      border-color: var(--color-ink);
+      background: var(--color-ink);
+      color: var(--color-surface);
+    }
+
+    /* Without the application the tabs cannot choose, so every apartment stays in the list;
+       a season without weeks has nothing to choose from. */
+    html:not([data-script]) &,
+    html[data-season='winter'] .weeks:has([data-for='winter'] .weeks-empty) &,
+    html[data-season='summer'] .weeks:has([data-for='summer'] .weeks-empty) & {
+      display: none;
+    }
+
+    @media (min-width: 48rem) {
+      display: none;
+    }
+  }
+
+  :is(.room-tabs, .stay) input {
+    position: absolute;
+    opacity: 0;
+  }
+
+  :is(.room-tabs, .stay) :focus-visible + span {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 3px;
+  }
+
+  .weeks-panels {
+    display: grid;
+
+    /* Only while a list moves: at rest the sheet's shadow must not be cut off. */
+    &[data-moving] {
+      overflow: clip;
+    }
+  }
+
+  .weeks-panel {
+    grid-area: 1 / 1;
+    min-width: 0;
+  }
+
+  .sheet {
+    padding: 0.5rem 0.875rem;
+    overflow-x: auto;
+    border-radius: var(--radius-card);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-card);
+
+    @media (min-width: 48rem) {
+      padding: 1rem 2.5rem 1.25rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      text-align: left;
+    }
+
+    tbody tr + tr > * {
+      border-top: 1px solid var(--color-line);
+    }
+
+    thead th {
+      padding: 1rem 0 0.75rem;
+      font-size: 1.1875rem;
+      font-weight: 500;
+      line-height: 1.2;
+      vertical-align: bottom;
+    }
+
+    thead th:first-child {
+      width: 100%;
+      color: var(--color-ink-soft);
+      font-size: 0.9375rem;
+      font-weight: 400;
+    }
+
+    thead small {
+      display: block;
+      color: var(--color-ink-soft);
+      font-size: 0.875rem;
+      font-weight: 400;
+    }
+
+    td {
+      white-space: nowrap;
+    }
+
+    thead th + th,
+    td {
+      padding-left: 0.5rem;
+      text-align: right;
+
+      @media (min-width: 48rem) {
+        min-width: 9rem;
+        padding-left: 1rem;
+      }
+    }
+
+    tbody th {
+      padding-block: 1.125rem;
+      font-weight: 400;
+      white-space: nowrap;
+
+      @media (max-width: 22.4375rem) {
+        font-size: 1rem;
+      }
+    }
+
+    /* On a phone one apartment at a time, the one of the chosen tab. */
+    @media (max-width: 47.9375rem) {
+      html[data-script] & .elsewhere {
+        display: none;
+      }
+    }
+  }
+
+  .price,
+  .taken {
+    display: inline-grid;
+    align-items: center;
+    min-height: 2.75rem;
+    margin-right: -0.75rem;
+    padding: 0 0.75rem;
+    border-radius: var(--radius-control);
+  }
+
+  .price {
+    color: var(--color-accent);
+    font-size: 1.1875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+
+    .stay:hover & {
+      background: var(--color-accent-soft);
+    }
+
+    .stay :checked + & {
+      background: var(--color-accent);
+      color: var(--color-on-accent);
+    }
+  }
+
+  .taken {
+    color: var(--color-ink-soft);
+  }
+
+  .weeks-empty {
+    max-width: 36rem;
+    padding: 2rem 0.25rem;
+    text-wrap: pretty;
+  }
+
+  .weeks-note {
+    max-width: 44rem;
+    margin: 1.25rem 0.25rem 0;
+    color: var(--color-ink-soft);
+    font-size: 0.9375rem;
+  }
+
+  /* The chosen week stays in view at the lower edge, unless the window is too low for it. */
+  .pick {
+    position: sticky;
+    bottom: 1rem;
+    z-index: 5;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem 1rem;
+    margin-top: 1.25rem;
+    padding: 0.75rem 0.75rem 0.75rem 1.25rem;
+    border-radius: var(--radius-card);
+    background: var(--color-accent);
+    color: var(--color-on-accent);
+    box-shadow: var(--shadow-card);
+
+    output {
+      font-weight: 500;
+    }
+
+    .button {
+      background: var(--color-surface);
+      color: var(--color-accent);
+    }
+
+    :focus-visible {
+      outline-color: var(--color-on-accent);
+    }
+
+    @media (max-height: 29.9375rem) {
+      position: static;
+    }
+  }
 }

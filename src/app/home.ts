@@ -1,16 +1,17 @@
 import { Component, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { NgIcon, provideIcons } from '@ng-icons/core';
-import type { Apartment } from '../beds24/client';
+import type { FreeWeeks } from '../beds24/weeks';
 import { icons } from '../content/generated/icons';
 import site from '../content/generated/site';
 import { lucideName } from '../content/names';
+import { FreeWeeksList } from './free-weeks-list';
 import { Season } from './season';
 import { address, LANGUAGE, TEXTS } from './texts';
 
 @Component({
   selector: 'app-home',
-  imports: [NgIcon],
+  imports: [NgIcon, FreeWeeksList],
   providers: [provideIcons(icons)],
   template: `
     <!-- Every season's photo is in the page; only the shown one is displayed and fetched. -->
@@ -36,17 +37,20 @@ import { address, LANGUAGE, TEXTS } from './texts';
             }
           </ul>
         }
-        <a class="button" [href]="weeks">{{ texts.hero.button }}</a>
+        <a class="button" [href]="weeksLink">{{ texts.hero.button }}</a>
       </div>
     </section>
+    <!-- The anchor is a section's heading: a jump places it below the header, and the space
+         above the first section then hides the hero completely. -->
+    <section class="column pt-[5.5rem]">
+      <app-free-weeks [weeks]="weeks" />
+    </section>
     @for (section of sections; track section) {
-      <!-- The anchor is the heading: a jump places it below the header, and the space above
-           the first section then hides the hero completely. -->
-      <section class="column" [class]="$first ? 'pt-[5.5rem]' : 'pt-14 md:pt-20'">
+      <section class="column pt-14 md:pt-20">
         <h2 class="headline" [id]="anchors[section]">{{ texts.nav[section] }}</h2>
-        @if (section === 'apartments' && apartments?.length) {
+        @if (section === 'apartments' && weeks?.apartments?.length) {
           <ul class="mt-6">
-            @for (apartment of apartments; track apartment.id) {
+            @for (apartment of weeks!.apartments; track apartment.slug) {
               <li>{{ apartment.name }}</li>
             }
           </ul>
@@ -62,12 +66,11 @@ export class Home {
   private readonly language = inject(LANGUAGE);
   protected readonly anchors = this.language.anchors;
   protected readonly lucideName = lucideName;
-  protected readonly sections = ['weeks', 'apartments', 'location', 'about'] as const;
-  protected readonly weeks = `${address(this.language, 'home')}#${this.anchors.weeks}`;
+  protected readonly sections = ['apartments', 'location', 'about'] as const;
+  protected readonly weeksLink = `${address(this.language, 'home')}#${this.anchors.weeks}`;
   protected readonly photos = inject(Season).names.map((name) => ({
     name,
     url: `url('/${site.seasons[name]!.hero.file}')`,
   }));
-  protected readonly apartments: Apartment[] | null =
-    inject(ActivatedRoute).snapshot.data['apartments'];
+  protected readonly weeks: FreeWeeks | null = inject(ActivatedRoute).snapshot.data['weeks'];
 }

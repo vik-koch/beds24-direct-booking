@@ -49,8 +49,11 @@ const taken = (room: Room, time: number) => {
   return draw <= whole || (draw <= whole + 8 && night >= 2 && night <= 4);
 };
 
+// Nights after this day have no price yet, as when an owner has not opened a season.
+const pricesUntil = process.env['SIM_PRICES_UNTIL'];
+
 const dayOf = (room: Room, time: number, has: (name: string) => boolean) => {
-  const price = level(time);
+  const price = pricesUntil && iso(time) > pricesUntil ? 'off' : level(time);
   return {
     ...(has('includeNumAvail') && { numAvail: taken(room, time) ? 0 : 1 }),
     ...(has('includeMinStay') && { minStay: 7 }),

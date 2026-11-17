@@ -267,13 +267,25 @@ readers. The list does not repeat this switch: it has the text button.
 ### Free-weeks list
 
 - **Sheet:** a white card holding a table. No vertical lines; a hairline between rows.
-- **Row:** the stay's dates on the left in body text, one cell per apartment on the right.
+- **Heading:** "Free weeks" with the dated season on a second line in the accent.
+- **Row:** the stay's dates on the left in body text (weekday, day and month in figures, so a
+  row fits at 320 px), one cell per apartment on the right. A column's head is the apartment's
+  name with its guests and size below.
 - **Free week:** the price in the accent at title size, as a radio button without a visible
   box. Hover puts a soft tint behind it.
 - **Chosen week:** an accent-filled pill with white figures.
 - **Booked week:** the word in soft ink, no decoration.
-- **Not open yet:** a short sentence in place of the table.
-- **Apartment tabs (narrow):** three pills with an edge; the chosen one is filled with ink.
+- **Not open yet, or no week free:** a short sentence in place of the table, and no tabs.
+- **Below the sheet:** a note in soft ink on what the price includes, and the tourist tax.
+- **Apartment tabs (narrow):** a pill with an edge per apartment; the chosen one is filled
+  with ink. A change of tab clears the chosen week. Without the application the tabs are not
+  shown and the sheet scrolls sideways instead.
+- **The other season:** the text button above the list. The next season's list slides in from
+  the right while the shown one leaves to the left, and back the other way (0.45 s, ease in and
+  out); the heading and the button stay still and the button keeps the focus. A change from
+  the header's switch cross-fades the lists over 0.6 s, like the hero photos. The space below
+  follows the list's new height during the move instead of jumping at its end. With reduced
+  motion the list changes at once.
 
 ### Booking bar
 

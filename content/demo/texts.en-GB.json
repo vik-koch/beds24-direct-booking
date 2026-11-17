@@ -79,6 +79,26 @@
       "scaled": "scaled down"
     }
   },
+  "weeks": {
+    "week": "Week",
+    "guests": {
+      "one": "{count} guest",
+      "other": "{count} guests"
+    },
+    "taken": "booked",
+    "apartment": "Apartment",
+    "next": "Next season: {season}",
+    "current": "Current season: {season}",
+    "notOpen": "The weeks of {season} are not open yet. They appear here as soon as their prices are set.",
+    "full": "No week of {season} is free any more.",
+    "unavailable": "The free weeks cannot be shown just now. Please try again in a few minutes.",
+    "note": "Price per week including the final cleaning.",
+    "tax": {
+      "night": "Plus a local tax of {amount} per adult and night.",
+      "stay": "Plus a local tax of {amount} per adult and stay."
+    },
+    "continue": "Continue to booking"
+  },
   "placeholder": "This page is still being built.",
   "notFound": {
     "title": "Page not found",

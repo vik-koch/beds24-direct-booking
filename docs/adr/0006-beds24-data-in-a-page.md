@@ -28,6 +28,13 @@ What weighs on it:
    nothing, which the page renders as its unavailable state. The error goes to the server's log.
 5. **The server reads the Beds24 address and token from `BEDS24_URL` and `BEDS24_TOKEN`** when
    a call is made. The demo, the tests and development point them at the simulator.
+6. **An in-memory cache sits between the loading function and Beds24** (added on 17 November
+   2026 with the free-weeks list). One refresh is two calls, `properties` and `calendar` for a
+   year from today, about 3 of the 100 credits Beds24 allows per 5 minutes. An answer is
+   served as it is for 2 minutes; after that it is still served while a refresh runs behind
+   it. When Beds24 cannot be reached, the last good answer is served for up to 24 hours, then
+   the page answers 503. Requests that arrive together share one refresh. The cache is empty
+   after a start, so the first page waits for Beds24.
 
 ## Options
 
@@ -44,12 +51,20 @@ What weighs on it:
   a refused token gives a 503 without them, and the built browser bundle does not contain the
   token's variable name.
 - **Verified by unit tests:** the resolver's three paths and the client's mapping.
-- **Not built yet:** the cache between the resolver and Beds24, and the availability route.
+- **Verified by unit tests:** the cache's four cases (fresh, stale while refreshing, Beds24
+  failing within and beyond the 24 hours, callers sharing one refresh).
+- **Not checked:** how often a real account's prices and bookings change compared with the
+  2 minutes, and whether Beds24 answers a `calendar` call over a whole year in one page. The
+  simulator does both.
+- **Not built yet:** the availability route, and keeping the last good answer on disk across
+  a restart, which `docs/beds24-findings.md` suggests.
 
 ## Consequences
 
-- **Every page view is a call to Beds24 until the cache exists,** so the site runs against the
-  simulator only until the slice that brings it.
+- **A booking made elsewhere shows on the site within about 2 minutes,** later while Beds24
+  cannot be reached. Beds24's own booking step decides whether the stay can still be booked;
+  that Beds24 refuses a taken week was seen through `offers` in the spike, not yet through the
+  booking page.
 - **A new kind of Beds24 data is a function in `src/beds24/`,** a token for it in the server's
   configuration and a resolver.
 - **A page with such a resolver is rendered per request,** and is listed so in the server's
