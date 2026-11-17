@@ -197,15 +197,13 @@
     color: var(--color-accent);
   }
 
-  /* The season switch: a pill whose accent part is placed by its two edges. On a change the
-     leading edge moves first and the trailing one follows, so the part stretches as it glides.
-     Both names sit in one hidden cell (the sizer), so the pill keeps one width. */
+  /* The season switch: a white pill with the chosen season's label in the accent. Both names
+     sit in one hidden cell (the sizer), so the pill keeps one width; the accent part is as
+     wide as the chosen name, so beside a short name the white part grows. */
   .season-switch {
     /* As tall as a menu entry's hover pill beside it, with white around the accent part. */
     --narrow: 2.125rem;
     --pad: 0.3125rem;
-    --glide: 0.32s cubic-bezier(0.65, 0, 0.35, 1);
-    --lag: 0.09s;
     position: relative;
     display: grid;
     grid-template-columns: var(--narrow) auto;
@@ -269,21 +267,52 @@
     }
   }
 
-  .season-pill,
+  /* Winter's label hangs from the left edge, summer's from the right. The chosen one is as
+     wide as its content and carries the accent; the other is the narrow slot. */
   .season-switch label {
     position: absolute;
     inset-block: var(--pad);
-    border-radius: var(--radius-control);
-  }
-
-  .season-pill {
-    background: var(--color-accent);
-  }
-
-  .season-switch label {
+    width: var(--narrow);
     overflow: hidden;
+    border-radius: var(--radius-control);
     color: var(--color-ink-soft);
     cursor: pointer;
+    transition: color 0.3s ease;
+  }
+
+  .season-switch label[data-for='winter'] {
+    left: var(--pad);
+  }
+
+  .season-switch label[data-for='summer'] {
+    right: var(--pad);
+  }
+
+  /* The chosen side follows the page's attribute, not the checked radio: the script sets the
+     attribute before the first paint, the radio is checked only once the application runs. */
+  html[data-season='winter'] .season-switch label[data-for='winter'],
+  html[data-season='summer'] .season-switch label[data-for='summer'] {
+    width: max-content;
+    background: var(--color-accent);
+    color: var(--color-on-accent);
+  }
+
+  /* The glide (see SeasonSwitch): the pill moves from the old label's edges to the new one's,
+     which hand it their accent meanwhile. */
+  .season-pill {
+    position: absolute;
+    inset-block: var(--pad);
+    border-radius: var(--radius-control);
+    background: var(--color-accent);
+    visibility: hidden;
+  }
+
+  .season-switch[data-gliding] .season-pill {
+    visibility: visible;
+  }
+
+  html[data-season] .season-switch[data-gliding] label[data-for] {
+    background: none;
   }
 
   /* In the narrow slot the icon keeps its size; the hidden name is clipped instead. */
@@ -303,13 +332,6 @@
     outline-offset: 3px;
   }
 
-  /* The chosen side follows the page's attribute, not the checked radio: the script sets the
-     attribute before the first paint, the radio is checked only once the application runs. */
-  html[data-season='winter'] .season-switch label[data-for='winter'],
-  html[data-season='summer'] .season-switch label[data-for='summer'] {
-    color: var(--color-on-accent);
-  }
-
   .season-name {
     transition: opacity 0.2s ease;
   }
@@ -319,52 +341,8 @@
     opacity: 0;
   }
 
-  /* Winter is on the left, summer on the right; the chosen side takes the wide part. The
-     edge that leads in the direction of the change has no delay. */
-  .season-pill,
-  .season-switch label[data-for='winter'],
-  .season-switch label[data-for='summer'] {
-    transition:
-      left var(--glide),
-      right var(--glide) var(--lag),
-      color 0.3s ease;
-  }
-
-  html[data-season='summer']
-    :is(
-      .season-pill,
-      .season-switch label[data-for='winter'],
-      .season-switch label[data-for='summer']
-    ) {
-    transition:
-      right var(--glide),
-      left var(--glide) var(--lag),
-      color 0.3s ease;
-  }
-
-  .season-pill,
-  html[data-season='winter'] .season-switch label[data-for='winter'] {
-    left: var(--pad);
-    right: calc(var(--pad) + var(--narrow));
-  }
-
-  html[data-season='summer'] :is(.season-pill, .season-switch label[data-for='summer']) {
-    left: calc(var(--pad) + var(--narrow));
-    right: var(--pad);
-  }
-
-  html:not([data-season='winter']) .season-switch [data-for='winter'] {
-    left: var(--pad);
-    right: calc(100% - var(--pad) - var(--narrow));
-  }
-
-  html:not([data-season='summer']) .season-switch [data-for='summer'] {
-    left: calc(100% - var(--pad) - var(--narrow));
-    right: var(--pad);
-  }
-
   @media (prefers-reduced-motion: reduce) {
-    .season-switch :is(.season-pill, label, .season-name) {
+    .season-switch :is(label, .season-name) {
       transition: none !important;
     }
   }

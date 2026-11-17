@@ -177,15 +177,24 @@ test('only the shown season’s photo is fetched, the other one on approach', as
   }).toPass();
 });
 
-test('both seasons pass axe, and the pill keeps its width', async ({ page }) => {
+test('both seasons pass axe; the switch keeps its width, the accent part fits the name', async ({
+  page,
+}) => {
   await page.clock.setFixedTime(november);
   await page.goto('/de');
   const width = async () => (await page.locator('.season-switch').boundingBox())!.width;
+  // The chosen label carries the accent and is as wide as its icon, name and padding.
+  const fits = (name: 'winter' | 'summer') =>
+    page
+      .locator(`.season-switch label[data-for=${name}]`)
+      .evaluate((label) => label.clientWidth === label.scrollWidth && label.clientWidth > 40);
   const before = await width();
+  expect(await fits('winter')).toBe(true);
   expect(await axe(page)).toEqual([]);
   await switchTo(page, 'summer');
   await settled(page);
   expect(await width()).toBe(before);
+  expect(await fits('summer')).toBe(true);
   expect(await axe(page)).toEqual([]);
 });
 
