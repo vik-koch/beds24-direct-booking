@@ -197,7 +197,9 @@ amounts can be compared down a column.
   covers the photo's last strip.
 - **Jumps:** a jump within the page scrolls smoothly, at once with reduced motion. An address with a
   section's anchor opens at that section, with no scroll to be seen. Without JavaScript, Chromium
-  still scrolls there from the top (#106).
+  scrolls there from the top, and we leave it so: CSS cannot tell the browser's arrival at an anchor
+  from a later jump, so an instant arrival would make every jump instant for these visitors. Firefox
+  opens at the section.
 - **Changes of page:** a new page fades in over the old one (the browser's cross-fade, 0.25 s),
   inside the application and on a full load alike; with reduced motion it changes at once.
 - **Header:** sticky, a light frosted bar (the ground colour at 72% with a blur). Over the hero at
