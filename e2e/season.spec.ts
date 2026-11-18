@@ -257,6 +257,31 @@ test('both seasons pass axe; the switch keeps its width, the accent part fits th
   expect(await axe(page)).toEqual([]);
 });
 
+test('below 24rem the switch shows its icons only, the names stay the radios’ names', async ({
+  page,
+}) => {
+  for (const [path, names] of [
+    ['/de', ['Winter', 'Sommer']],
+    ['/en', ['Winter', 'Summer']],
+  ] as const) {
+    await page.goto(path);
+    for (const name of ['winter', 'summer'] as const) {
+      await switchTo(page, name);
+      await settled(page);
+      for (const width of [320, 360, 375, 383, 384]) {
+        await page.setViewportSize({ width, height: 700 });
+        const place = `${path} in ${name} at ${width}`;
+        const chosen = page.locator(`.season-switch label[data-for=${name}] .season-name`);
+        expect((await chosen.boundingBox())!.width > 1, place).toBe(width >= 384);
+        for (const [index, radio] of ['winter', 'summer'].entries()) {
+          await expect(page.getByRole('radio', { name: names[index] }), place).toHaveValue(radio);
+        }
+        if (width === 320) expect(await axe(page), place).toEqual([]);
+      }
+    }
+  }
+});
+
 test('the picture credits name each photo’s author, source and licence', async ({ page }) => {
   await page.goto('/en/picture-credits');
   await expect(page.getByRole('link', { name: 'Saalbach (8450786397).jpg' })).toHaveAttribute(
