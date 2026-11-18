@@ -242,6 +242,28 @@ test('without an anchor, jumps are smooth before the application has started', a
   await expect(page.locator('html')).toHaveCSS('scroll-behavior', 'smooth');
 });
 
+test('without JavaScript, jumps are smooth', async ({ browser }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  const page = await context.newPage();
+  await page.goto('/en');
+  await expect(page.locator('html')).toHaveCSS('scroll-behavior', 'smooth');
+  await context.close();
+});
+
+test('a fragment cleared while the page loads leaves it shown', async ({ page }) => {
+  // As if the visitor left the anchor before the script at the page's end had run.
+  await page.route('**/en', async (route) => {
+    const response = await route.fetch();
+    const clear = '<script>history.replaceState(null, "", location.pathname)</script>';
+    await route.fulfill({
+      response,
+      body: (await response.text()).replace('<app-root', clear + '<app-root'),
+    });
+  });
+  await page.goto('/en#free-weeks');
+  await expect(page.locator('body')).toBeVisible();
+});
+
 test('an anchor that cannot be decoded opens the page at its top', async ({ page }) => {
   const errors: Error[] = [];
   page.on('pageerror', (error) => errors.push(error));
