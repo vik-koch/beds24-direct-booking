@@ -157,12 +157,9 @@ async function toLanguage(page: Page, current: string, other: string) {
 const settled = (page: Page) =>
   expect.poll(() => page.evaluate(() => document.getAnimations().length)).toBe(0);
 
-test('a language change keeps the place and the chosen week, and focuses the language control', async ({
-  page,
-}, { project }) => {
-  await page.goto('/en');
-  // The next season always has free weeks (weeks.spec.ts). A click during hydration can be
-  // lost, so it is repeated until the season changes.
+// The next season always has free weeks (weeks.spec.ts); the current one may be full. A click
+// during hydration can be lost, so it is repeated until the season changes.
+async function toNextSeason(page: Page) {
   const season = await page.locator('html').getAttribute('data-season');
   await expect(async () => {
     await page.locator('.other-season').click();
@@ -171,6 +168,13 @@ test('a language change keeps the place and the chosen week, and focuses the lan
     });
   }).toPass();
   await settled(page);
+}
+
+test('a language change keeps the place and the chosen week, and focuses the language control', async ({
+  page,
+}, { project }) => {
+  await page.goto('/en');
+  await toNextSeason(page);
   const widths = project.use.isMobile ? [project.use.viewport!.width] : [1280, 320];
   for (const [round, width] of widths.entries()) {
     await page.setViewportSize({ width, height: 800 });
@@ -245,6 +249,7 @@ test('a language change keeps the place on a page besides the home page', async 
 test('on a phone a language change keeps the apartment of the chosen tab', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 800 });
   await page.goto('/en');
+  await toNextSeason(page);
   const tabs = page.locator('.room-tabs input');
   await expect(async () => {
     await page.locator('.room-tabs label').nth(2).click();
