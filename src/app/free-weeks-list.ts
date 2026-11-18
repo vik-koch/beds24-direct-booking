@@ -6,6 +6,7 @@ import {
   DestroyRef,
   ElementRef,
   inject,
+  InjectionToken,
   input,
   signal,
   viewChild,
@@ -23,6 +24,14 @@ interface Week {
   apartment: number;
   row: number;
 }
+
+// In the root injector, so the chosen week and the phone's tab outlive a change of language,
+// which replaces the page's components.
+const chosenWeek = new InjectionToken('chosen week', {
+  providedIn: 'root',
+  factory: () => signal<Week | null>(null),
+});
+const shownTab = new InjectionToken('shown tab', { providedIn: 'root', factory: () => signal(0) });
 
 // Both seasons' rows are in the page and the page's season attribute shows one, as with the
 // hero photos, so the first paint needs no script. A change of season slides the rows when it
@@ -221,8 +230,8 @@ export class FreeWeeksList {
   protected readonly longestWord = (apartments: { name: string }[]) =>
     Math.max(...apartments.flatMap(({ name }) => name.split(/\s+/)).map((word) => word.length));
   // On a phone the list shows one apartment, the one of the chosen tab.
-  protected readonly tab = signal(0);
-  protected readonly chosen = signal<Week | null>(null);
+  protected readonly tab = inject(shownTab);
+  protected readonly chosen = inject(chosenWeek);
   protected readonly picked = computed(() => {
     const pick = this.chosen();
     const season = pick && this.weeks()?.seasons.find(({ name }) => name === pick.season);

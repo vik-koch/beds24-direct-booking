@@ -1,6 +1,6 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import AxeBuilder from '@axe-core/playwright';
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Locator, type Page } from '@playwright/test';
 
 // The site map's table: every page in both languages.
 const pages = [
@@ -123,11 +123,191 @@ test('the language menu leads to the same page in the other language', async ({ 
   } else {
     await open(page, 'Sprache: Deutsch');
     expect(await axe(page)).toEqual([]);
+    // Firefox 159 crashes on the fade that follows axe's run over the open menu, a state no
+    // visitor's page is in: the change starts from a fresh page.
+    await page.reload();
+    await open(page, 'Sprache: Deutsch');
   }
   await page.getByRole('link', { name: 'English' }).click();
   await expect(page).toHaveURL('/en/apartments/laerche');
   await expect(page.locator('html')).toHaveAttribute('lang', 'en-GB');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Lärche');
+});
+
+// Where an element stands against the header's lower edge, in pixels.
+const fromEdge = (target: Locator) =>
+  target.evaluate(
+    (element) =>
+      element.getBoundingClientRect().top -
+      document.querySelector('app-header')!.getBoundingClientRect().bottom,
+  );
+
+// Through the header's language menu, or the sheet where the header is folded. The menu
+// button is pressed by its coordinates: a locator's click scrolls the sticky header's button
+// "into view" and moves the page.
+async function toLanguage(page: Page, current: string, other: string) {
+  const menu = page.locator('.header-narrow .icon-button');
+  if (await menu.isVisible()) {
+    const box = (await menu.boundingBox())!;
+    await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+  } else await open(page, current);
+  await page.getByRole('link', { name: other }).click();
+}
+
+const settled = (page: Page) =>
+  expect.poll(() => page.evaluate(() => document.getAnimations().length)).toBe(0);
+
+// The next season always has free weeks (weeks.spec.ts); the current one may be full. A click
+// during hydration can be lost, so it is repeated until the season changes.
+async function toNextSeason(page: Page) {
+  const season = await page.locator('html').getAttribute('data-season');
+  await expect(async () => {
+    await page.locator('.other-season').click();
+    await expect(page.locator('html')).not.toHaveAttribute('data-season', season!, {
+      timeout: 500,
+    });
+  }).toPass();
+  await settled(page);
+}
+
+test('a language change keeps the place and the chosen week, and focuses the language control', async ({
+  page,
+}, { project }) => {
+  await page.goto('/en');
+  await toNextSeason(page);
+  const widths = project.use.isMobile ? [project.use.viewport!.width] : [1280, 320];
+  for (const [round, width] of widths.entries()) {
+    await page.setViewportSize({ width, height: 800 });
+    const stays = page.locator('.weeks-body:visible .stay:visible');
+    // Another week each round, so the click chooses rather than clears.
+    const stay = stays.nth(Math.floor((await stays.count()) / 2) + round);
+    const pick = (await stay.getAttribute('data-pick'))!;
+    await stay.click();
+    // The week a little below the header's edge.
+    await stay.evaluate((cell) => {
+      const edge = document.querySelector('app-header')!.getBoundingClientRect().bottom;
+      scrollBy({ top: cell.getBoundingClientRect().top - edge + 10, behavior: 'instant' });
+    });
+    const before = await fromEdge(stay);
+
+    // The focus moves once the place is put back, so it is waited for first.
+    const control = page.locator(width < 1024 ? '.header-narrow .icon-button' : '[data-language]');
+    await toLanguage(page, 'Language: English', 'Deutsch');
+    await expect(page.locator('html')).toHaveAttribute('lang', 'de-AT');
+    await expect(control).toBeFocused();
+    // The page takes no pointer while it fades.
+    await settled(page);
+    const same = page.locator(`.weeks-body:visible [data-pick="${pick}"]`);
+    expect(Math.abs((await fromEdge(same)) - before), `${width}`).toBeLessThan(2);
+    await expect(same).toHaveAttribute('aria-selected', 'true');
+    await expect(page.locator('.pick')).toBeVisible();
+
+    // And back, from a section's heading, as far down as the page goes.
+    const heading = page.locator('main').getByRole('heading', { name: 'Wohnungen', exact: true });
+    await heading.evaluate((element) => {
+      const edge = document.querySelector('app-header')!.getBoundingClientRect().bottom;
+      const box = element.getBoundingClientRect();
+      scrollBy({ top: box.top + box.height / 2 - edge, behavior: 'instant' });
+    });
+    const middle = await fromEdge(heading);
+    await toLanguage(page, 'Sprache: Deutsch', 'English');
+    await expect(page.locator('html')).toHaveAttribute('lang', 'en-GB');
+    await expect(control).toBeFocused();
+    const back = page.locator('main').getByRole('heading', { name: 'Apartments', exact: true });
+    expect(Math.abs((await fromEdge(back)) - middle), `${width}`).toBeLessThan(2);
+  }
+});
+
+// The place is found by the element's place in <main>, on every page. Half as far down as the
+// page goes, so that the page's end cannot hide a place that was not put back.
+test('a language change keeps the place on a page besides the home page', async ({ page }, {
+  project,
+}) => {
+  await page.goto('/en/picture-credits');
+  for (const width of project.use.isMobile ? [project.use.viewport!.width] : [1280, 320]) {
+    await page.setViewportSize({ width, height: 800 });
+    for (const [from, to, lang] of [
+      ['Language: English', 'Deutsch', 'de-AT'],
+      ['Sprache: Deutsch', 'English', 'en-GB'],
+    ]) {
+      await page.evaluate(() =>
+        scrollTo({
+          top: (document.documentElement.scrollHeight - innerHeight) / 2,
+          behavior: 'instant',
+        }),
+      );
+      const credit = page.locator('main li').nth(1);
+      const before = await fromEdge(credit);
+      await toLanguage(page, from, to);
+      await expect(page.locator('html')).toHaveAttribute('lang', lang);
+      await settled(page);
+      expect(Math.abs((await fromEdge(credit)) - before), `${width} to ${to}`).toBeLessThan(2);
+    }
+  }
+});
+
+test('on a phone a language change keeps the apartment of the chosen tab', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 800 });
+  await page.goto('/en');
+  await toNextSeason(page);
+  const tabs = page.locator('.room-tabs input');
+  await expect(async () => {
+    await page.locator('.room-tabs label').nth(2).click();
+    await expect(tabs.nth(2)).toBeChecked({ timeout: 500 });
+  }).toPass();
+  const stay = page.locator('.weeks-body:visible [data-pick]:visible').first();
+  const pick = (await stay.getAttribute('data-pick'))!;
+  await stay.evaluate((cell) => {
+    const edge = document.querySelector('app-header')!.getBoundingClientRect().bottom;
+    scrollBy({ top: cell.getBoundingClientRect().top - edge + 10, behavior: 'instant' });
+  });
+  const before = await fromEdge(stay);
+  await toLanguage(page, 'Language: English', 'Deutsch');
+  await expect(page.locator('html')).toHaveAttribute('lang', 'de-AT');
+  await settled(page);
+  await expect(tabs.nth(2)).toBeChecked();
+  const same = page.locator(`.weeks-body:visible [data-pick="${pick}"]`);
+  expect(Math.abs((await fromEdge(same)) - before)).toBeLessThan(2);
+});
+
+// The home page's free weeks come with a full load only (ADR 6), so a 404's links, which lead
+// there, load it.
+test('from a missing page the language link loads the home page with its free weeks', async ({
+  page,
+}) => {
+  await page.goto('/de/nichts');
+  await toLanguage(page, 'Sprache: Deutsch', 'English');
+  await expect(page).toHaveURL('/en');
+  await expect(page.getByRole('grid', { name: 'Free weeks' })).toBeVisible();
+});
+
+test('a language change fades, and changes at once with reduced motion', async ({ page }) => {
+  for (const motion of ['no-preference', 'reduce'] as const) {
+    await page.emulateMedia({ reducedMotion: motion });
+    await page.goto('/en');
+    const supported = await page.evaluate(() => 'startViewTransition' in document);
+    test.skip(!supported, 'no view transitions in this browser');
+    // The number of the fade's animations, counted once it has started.
+    await page.evaluate(() => {
+      const start = document.startViewTransition.bind(document);
+      document.startViewTransition = (update) => {
+        const transition = start(update);
+        void transition.ready.then(() => {
+          (window as unknown as { fades: number }).fades = document
+            .getAnimations()
+            .filter(({ effect }) =>
+              (effect as KeyframeEffect).pseudoElement?.startsWith('::view-transition'),
+            ).length;
+        });
+        return transition;
+      };
+    });
+    await toLanguage(page, 'Language: English', 'Deutsch');
+    const fades = () => page.evaluate(() => (window as unknown as { fades?: number }).fades);
+    await expect.poll(fades).toBeDefined();
+    if (motion === 'reduce') expect(await fades()).toBe(0);
+    else expect(await fades()).toBeGreaterThan(0);
+  }
 });
 
 test('a link to the home page from another page shows the apartments', async ({ page }) => {

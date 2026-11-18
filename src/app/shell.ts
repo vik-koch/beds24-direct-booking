@@ -45,7 +45,7 @@ export function heading(texts: Texts, route: ActivatedRouteSnapshot): string {
         }
       </aside>
     }
-    <app-header [alternates]="alternates" [overHero]="home" />
+    <app-header [alternates]="alternates" [overHero]="home" [keepPlace]="!notFound" />
     <main id="content" class="grow outline-none"><router-outlet /></main>
     <app-footer />
   `,
@@ -60,6 +60,7 @@ export class Shell {
   private readonly router = inject(Router);
   protected alternates: Record<string, string> = {};
   protected home = false;
+  protected notFound = false;
 
   constructor() {
     this.document.documentElement.lang = this.language.tag;
@@ -113,6 +114,7 @@ export class Shell {
     const route = leaf(this.route.snapshot);
     const page: Page = route.data['page'];
     this.home = page === 'home';
+    this.notFound = page === 'notFound';
     const text = heading(this.texts, route);
     this.title.setTitle(page === 'home' ? `${site.name}: ${text}` : `${text} · ${site.name}`);
 

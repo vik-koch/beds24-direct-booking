@@ -38,7 +38,8 @@ content. The application has no wording, no colour and no typeface of its own. T
   February cannot be a start. A single season has no start and the site shows no switch. A texts
   file names exactly the listed seasons in `seasons` (the switch's label and each name) and in
   `hero` (each photo's alternative text), beside the hero's lead, up to five features and its
-  button. A feature's icon is any [Lucide](https://lucide.dev/icons) icon by its name there, such as
+  button. Every language lists as many features, so a change of language finds the reader's place. A
+  feature's icon is any [Lucide](https://lucide.dev/icons) icon by its name there, such as
   `calendar-days`; only the icons the texts name go into the build. How the page picks its season is
   [ADR 8](adr/0008-the-season-in-the-page.md).
 - **The free weeks** (`weeks` in a texts file) are the list's wording. Its sentences take `{season}`
