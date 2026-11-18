@@ -97,14 +97,16 @@ export const starts: Starts = Object.fromEntries(
     .map((name) => [name, site.seasons[name]?.start ?? null]),
 );
 
-// The inline script: sets the season before the body is painted, and marks that it ran.
+// The inline script: sets the season and the tab's icon before the body is painted, and marks
+// that it ran.
 export function seasonScript(value: Starts): string {
   return (
     `(function(s){var r=null;` +
     `try{r=localStorage.getItem(${JSON.stringify(STORAGE_KEY)})}catch(e){}` +
     `var h=document.documentElement;` +
-    `h.dataset.season=(${seasonState.toString()})` +
+    `var n=h.dataset.season=(${seasonState.toString()})` +
     `(s,new URLSearchParams(location.search).get("season"),r,new Date()).season;` +
+    `var l=document.querySelector("link[rel=icon]");if(l)l.href=l.getAttribute("data-"+n);` +
     `h.dataset.script=""})(${JSON.stringify(value)})`
   );
 }
@@ -126,11 +128,18 @@ export class Season {
     if (this.server) {
       // What a visitor without JavaScript sees; the script below chooses again.
       this.html.setAttribute('data-season', this.state.season);
+      // The link holds every season's icon, so the script and a switch can choose one.
+      const link = this.document.createElement('link');
+      link.rel = 'icon';
+      link.type = 'image/svg+xml';
+      for (const name of this.names)
+        link.setAttribute(`data-${name}`, `/${site.seasons[name]!.icon}`);
+      link.href = `/${site.seasons[this.state.season]!.icon}`;
+      this.document.head.appendChild(link);
       const script = this.document.createElement('script');
       script.textContent = seasonScript(starts);
       this.document.head.appendChild(script);
     }
-    this.showIcon(this.state.season);
   }
 
   // A watcher is called before a change, to measure the page as it is, and returns what to do
@@ -147,7 +156,8 @@ export class Season {
     // Only now may the page animate a change of season, not on its first paint.
     this.html.setAttribute('data-switched', '');
     this.html.setAttribute('data-season', name);
-    this.showIcon(name);
+    const icon = this.document.head.querySelector('link[rel=icon]');
+    icon?.setAttribute('href', icon.getAttribute(`data-${name}`)!);
     this.remember(name);
     after.forEach((then) => then());
     // The link's ?season= would win over the switch on the next reload.
@@ -165,18 +175,6 @@ export class Season {
     if (this.server || !file || this.preloaded.has(name)) return;
     this.preloaded.add(name);
     new Image().src = `/${file}`;
-  }
-
-  // The tab shows the season's icon; the browser repoints the link the server rendered.
-  private showIcon(name: SeasonName) {
-    let link = this.document.head.querySelector<HTMLLinkElement>('link[rel=icon]');
-    if (!link) {
-      link = this.document.createElement('link');
-      link.rel = 'icon';
-      link.type = 'image/svg+xml';
-      this.document.head.appendChild(link);
-    }
-    link.href = `/${site.seasons[name]!.icon}`;
   }
 
   // In the browser the inline script has chosen already. This repeats the choice to know the

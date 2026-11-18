@@ -48,6 +48,7 @@ test('the season is chosen before the application starts', async ({ page }) => {
   await expect(page.locator('label[data-for=winter] .season-name')).toHaveCSS('opacity', '0');
   await expect(page.getByRole('img', { name: /Almwiese/ })).toBeVisible();
   await expect(page.getByRole('img', { name: /Glemmtal/ })).toBeHidden();
+  await expect(page.locator('link[rel=icon]')).toHaveAttribute('href', '/pictures/icon-summer.svg');
 });
 
 test('one click before the application starts is not lost', async ({ page }) => {
@@ -193,9 +194,7 @@ test('the tab shows the season’s icon, from the server on and after a switch',
 }) => {
   const served = await (await request.get('/en')).text();
   const name = served.match(/data-season="(\w+)"/)![1];
-  expect(served).toMatch(
-    new RegExp(`<link rel="icon" type="image/svg\\+xml" href="/pictures/icon-${name}.svg">`),
-  );
+  expect(served).toMatch(new RegExp(`<link rel="icon"[^>]* href="/pictures/icon-${name}.svg"`));
   const file = await request.get(`/pictures/icon-${name}.svg`);
   expect(file.headers()['content-type']).toContain('image/svg+xml');
 
