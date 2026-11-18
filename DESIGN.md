@@ -301,10 +301,10 @@ readers. The list does not repeat this switch: it has the text button.
 - **Chosen week:** an accent-filled pill with white figures.
 - **Booked week:** the word in soft ink, no decoration.
 - **Keyboard:** the list is one grid, after the WAI-ARIA Authoring Practices' grid pattern.
-  Tab enters it once: before the list has been used at the chosen week, else at the season's
-  first week; after that where the focus last was, and after a change of season or of tab at
-  the first week shown. The arrow keys move by week and apartment without
-  choosing, Home and End to the row's first and last apartment, Page Up and Page Down to the
+  Tab enters it once, at the chosen week while it is shown. With nothing chosen it enters at
+  the season's first week, booked or free; once the list has been used, where the focus last
+  was, and after a change of season or of tab at the first week shown. The arrow keys move by
+  week and apartment without choosing, Home and End to the row's first and last apartment, Page Up and Page Down to the
   same place in the month before or after, Ctrl+Home and Ctrl+End to the first and last week.
   Enter or Space chooses a free week or clears the chosen one. A booked week can be reached and
   is announced as booked, but not chosen. On a phone the arrows stay in the one apartment shown.

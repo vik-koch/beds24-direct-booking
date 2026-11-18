@@ -158,11 +158,18 @@ test('the list is one tab stop that the keys move through as a grid', async ({ p
   await page.keyboard.press(' ');
   await expect(free).toHaveAttribute('aria-selected', 'true');
 
-  // Tab leaves the list for the bar, Shift+Tab returns to where the focus was.
+  // Tab leaves the list for the bar; Shift+Tab, and Tab after a change of season and back,
+  // enter at the chosen week.
   await page.keyboard.press('Tab');
   await expect(page.getByRole('button', { name: 'Clear the chosen week' })).toBeFocused();
   await page.keyboard.press('Shift+Tab');
-  await expect(booked).toBeFocused();
+  await expect(free).toBeFocused();
+  await toOtherSeason(page);
+  await toOtherSeason(page);
+  await button(page).focus();
+  await page.keyboard.press('Tab');
+  await expect(free).toBeFocused();
+  await expect(page.locator('.weeks-grid [tabindex="0"]')).toHaveCount(1);
 });
 
 test('on a phone the arrows stay in the shown apartment', async ({ page }) => {

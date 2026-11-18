@@ -18,6 +18,11 @@ import { Season } from './season';
 import { address, fill, LANGUAGE, TEXTS } from './texts';
 
 type SeasonWeeks = FreeWeeks['seasons'][number];
+interface Week {
+  season: SeasonName;
+  apartment: number;
+  row: number;
+}
 
 // Both seasons' rows are in the page and the page's season attribute shows one, as with the
 // hero photos, so the first paint needs no script. A change of season slides the rows when it
@@ -216,9 +221,7 @@ export class FreeWeeksList {
   protected readonly fill = fill;
   // On a phone the list shows one apartment, the one of the chosen tab.
   protected readonly tab = signal(0);
-  protected readonly chosen = signal<{ season: SeasonName; apartment: number; row: number } | null>(
-    null,
-  );
+  protected readonly chosen = signal<Week | null>(null);
   protected readonly picked = computed(() => {
     const pick = this.chosen();
     const season = pick && this.weeks()?.seasons.find(({ name }) => name === pick.season);
@@ -272,7 +275,13 @@ export class FreeWeeksList {
       const update = () => this.wide.set(query.matches);
       update();
       query.addEventListener('change', update);
-      destroyRef.onDestroy(() => query.removeEventListener('change', update));
+      const host = this.host.nativeElement;
+      // Before the grid's own handler, which would make the cell Tab reached the active one.
+      host.addEventListener('focusin', this.enter, { capture: true });
+      destroyRef.onDestroy(() => {
+        query.removeEventListener('change', update);
+        host.removeEventListener('focusin', this.enter, { capture: true });
+      });
     });
   }
 
@@ -405,22 +414,36 @@ export class FreeWeeksList {
     if (!to) return;
     const place = months[from].weeks.findIndex((week) => week.row === row);
     const target = to.weeks[Math.min(place, to.weeks.length - 1)].row;
-    this.panels()
-      ?.nativeElement.querySelector<HTMLElement>(
-        `[data-for=${season.name}] [data-pick="${apartment}-${target}"]`,
-      )
-      ?.focus();
+    this.cell({ season: season.name, apartment, row: target })?.focus();
   }
 
   // The bar goes with its button, so the focus returns to the week that was chosen.
   protected clear() {
-    const pick = this.chosen();
+    const cell = this.cell(this.chosen());
     this.chosen.set(null);
-    this.panels()
-      ?.nativeElement.querySelector<HTMLElement>(
-        `[data-for=${pick?.season}] [data-pick="${pick?.apartment}-${pick?.row}"]`,
-      )
-      ?.focus();
+    cell?.focus();
+  }
+
+  // The grid enters where the focus last left it, which after a change of season is not the
+  // chosen week. By keyboard from outside, the list enters at the chosen week if it is shown.
+  private readonly enter = (event: FocusEvent) => {
+    const pick = this.chosen();
+    const panels = this.panels()?.nativeElement;
+    const from = event.target as HTMLElement;
+    const to = pick && this.shown(pick.season, pick.apartment) && this.cell(pick);
+    if (!to || to === from || !panels?.contains(from)) return;
+    if (panels.contains(event.relatedTarget as Node) || !from.matches(':focus-visible')) return;
+    event.stopPropagation();
+    to.focus();
+  };
+
+  private cell(pick: Week | null) {
+    const panels = this.panels()?.nativeElement;
+    return pick
+      ? panels?.querySelector<HTMLElement>(
+          `[data-for=${pick.season}] [data-pick="${pick.apartment}-${pick.row}"]`,
+        )
+      : undefined;
   }
 
   protected pickTab(index: number) {

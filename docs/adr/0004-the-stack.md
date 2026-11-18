@@ -138,9 +138,10 @@ result is added to this ADR when it is known.
   stay reachable but cannot be chosen. The grid owns `aria-selected` here, so the known limit
   above does not arise. Page Up and Page Down, which the grid does not offer, move by a month
   in the list's own code. Enter or Space on a booked cell is stopped before the grid, which
-  would otherwise clear the chosen week. Two points follow the grid rather than the issue:
-  after a change of season Tab enters at the first week shown, not at a week chosen there, and
-  with nothing chosen it can enter on a booked week.
+  would otherwise clear the chosen week. The grid enters where the focus last left it, which
+  after a change of season is not the chosen week, so the list's own code makes Tab enter at
+  the chosen week while it is shown. With nothing chosen, Tab enters where the grid puts it,
+  which can be a booked week; the maintainer accepted this in pull request 96.
 
   - Walked by keyboard in Chromium at 375 px and 1280 px. The e2e suite runs the keys and
     axe in Chromium, Firefox and WebKit.
