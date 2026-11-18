@@ -721,13 +721,6 @@
       --end: 1.5rem;
       padding-top: 1rem;
     }
-
-    /* Four apartments' columns need the room below 56rem. */
-    @media (48rem <= width < 56rem) {
-      &:has(.weeks-columns > :nth-child(5)) {
-        --pad: 1.5rem;
-      }
-    }
   }
 
   /* The columns share the width evenly, none narrower than its content; a name may wrap. */
@@ -789,8 +782,8 @@
     border-top: 1px solid var(--color-line);
   }
 
-  /* Two rows: the names stand at the top, however many lines each takes, and the facts below
-     them in one line. */
+  /* Two rows: the names stand at the top, however many lines each takes, and the facts in a
+     row of their own below them, level across the columns. */
   .weeks-columns {
     grid-template-rows: auto auto;
     padding: 1rem 0 0.5rem;
@@ -822,21 +815,14 @@
     }
   }
 
-  /* Every week starts on the same weekday, so where room is short the rows leave it out; each
-     price's label still names it. */
+  /* Every week starts on the same weekday, so the narrowest screens leave it out of the rows;
+     the row header's label still names it. */
   [role='rowheader'] {
     padding-block: 1.125rem;
     white-space: nowrap;
 
     @media (max-width: 22.4375rem) {
       .weekday {
-        display: none;
-      }
-    }
-
-    /* Nor in four apartments' columns below 56rem. */
-    @media (48rem <= width < 56rem) {
-      .weeks-grid:has(.weeks-columns > :nth-child(5)) & .weekday {
         display: none;
       }
     }
@@ -857,6 +843,18 @@
     text-align: left;
     white-space: normal;
     text-wrap: pretty;
+  }
+
+  /* Four apartments' columns are short of room below 56rem: their text is a step smaller. */
+  @media (48rem <= width < 56rem) {
+    .weeks-grid:has(.weeks-columns > :nth-child(5)) {
+      font-size: 0.9375rem;
+
+      .weeks-columns > * + *,
+      .price {
+        font-size: 1rem;
+      }
+    }
   }
 
   /* On a phone one apartment at a time, the one of the chosen tab, whose name and facts take
