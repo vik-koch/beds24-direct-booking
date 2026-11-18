@@ -31,6 +31,11 @@
         } catch {} // A fragment such as "#50%" cannot be decoded and names no section.
         target?.scrollIntoView();
         if (scrollY > 0) document.querySelector('app-header')?.removeAttribute('data-over');
+        // A jump the visitor asks for before the application starts is smooth all the same.
+        addEventListener('click', () => document.documentElement.setAttribute('data-smooth', ''), {
+          capture: true,
+          once: true,
+        });
       }
       // Also when the fragment was cleared while the page loaded.
       document.documentElement.removeAttribute('data-jump');
