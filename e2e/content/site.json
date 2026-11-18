@@ -3,19 +3,24 @@
   "languages": ["it", "nl-BE"],
   "apartments": [
     {
-      "slug": "zirbe",
+      "slug": "vista",
       "roomId": 9001011,
-      "name": "Zirbe"
+      "name": "Vista sul Ghiacciaio"
     },
     {
-      "slug": "laerche",
+      "slug": "castagno",
       "roomId": 9001012,
-      "name": "Lärche"
+      "name": "Sotto il Castagno"
     },
     {
-      "slug": "ahorn",
+      "slug": "zonneterras",
       "roomId": 9001021,
-      "name": "Ahorn"
+      "name": "Zonneterraswoningen"
+    },
+    {
+      "slug": "fienile",
+      "roomId": 9001022,
+      "name": "Il Fienile"
     }
   ],
   "seasons": {

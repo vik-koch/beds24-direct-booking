@@ -45,16 +45,16 @@ describe('properties', () => {
     });
   });
 
-  it('holds one property with two rooms and one with a single room', async () => {
+  it('holds two properties with two rooms each', async () => {
     const { data } = await (await get(everything)).json();
     expect(data.map((property: { roomTypes: unknown[] }) => property.roomTypes.length)).toEqual([
-      2, 1,
+      2, 2,
     ]);
     expect(
       data.flatMap((property: { roomTypes: { maxPeople: number }[] }) =>
         property.roomTypes.map((room) => room.maxPeople),
       ),
-    ).toEqual([2, 4, 6]);
+    ).toEqual([2, 4, 6, 2]);
   });
 
   it('keeps the oddities of the wire', async () => {
@@ -174,11 +174,8 @@ describe('calendar', () => {
 
   it('returns no days unless an include parameter is passed, and needs both dates', async () => {
     const bare = await get('inventory/rooms/calendar?startDate=2026-12-05&endDate=2026-12-18');
-    expect((await bare.json()).data.map((room: { calendar: Range[] }) => room.calendar)).toEqual([
-      [],
-      [],
-      [],
-    ]);
+    const calendars = (await bare.json()).data.map((room: { calendar: Range[] }) => room.calendar);
+    expect(calendars).toEqual([[], [], [], []]);
     expect((await get('inventory/rooms/calendar?startDate=2026-12-05')).status).toBe(400);
   });
 

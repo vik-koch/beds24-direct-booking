@@ -161,12 +161,12 @@
       ],
       "texts": {
         "headline": {
-          "de": "Ein Haus für sechs bei der Kohlmaisbahn",
-          "en": "A house for six near the Kohlmaisbahn"
+          "de": "Zwei Wohnungen bei der Kohlmaisbahn",
+          "en": "Two apartments near the Kohlmaisbahn"
         },
         "propertyDescription": {
-          "de": "Haus Farn hat eine einzige Wohnung über zwei Etagen, mit Terrasse und eigener Sauna.\nFirn & Farn ist ein erfundener Betrieb: Diese Seite ist eine Demo, hier kann nichts gebucht werden.",
-          "en": "Haus Farn holds a single apartment on two floors, with a terrace and a sauna of its own.\nFirn & Farn is an invented business: this site is a demo and nothing can be booked here."
+          "de": "Haus Farn hat eine Wohnung über zwei Etagen, mit Terrasse und eigener Sauna, und eine kleine unterm Dach.\nFirn & Farn ist ein erfundener Betrieb: Diese Seite ist eine Demo, hier kann nichts gebucht werden.",
+          "en": "Haus Farn holds an apartment on two floors, with a terrace and a sauna of its own, and a small one under the roof.\nFirn & Farn is an invented business: this site is a demo and nothing can be booked here."
         },
         "locationDescription": {
           "de": "Wenige Gehminuten zur Kohlmaisbahn und in die Fußgängerzone.",
@@ -223,6 +223,43 @@
             "roomDescription": {
               "de": "96 m² auf zwei Etagen",
               "en": "96 m² on two floors"
+            }
+          }
+        },
+        {
+          "id": 9001022,
+          "name": "Fichte",
+          "maxPeople": 2,
+          "roomSize": 28,
+          "featureCodes": [
+            ["BEDROOM", "BED_DOUBLE"],
+            ["BATHROOM", "BATH_SHOWER", "BATH_TOILET"]
+          ],
+          "prices": {
+            "summer": 112.5,
+            "winter": 150,
+            "peak": 205
+          },
+          "texts": {
+            "displayName": {
+              "de": "Apartment Fichte",
+              "en": "Apartment Fichte"
+            },
+            "accommodationType": {
+              "de": "Ferienwohnung",
+              "en": "Holiday apartment"
+            },
+            "contentHeadline": {
+              "de": "Für zwei, unterm Dach",
+              "en": "For two, under the roof"
+            },
+            "contentDescription": {
+              "de": "Ein Zimmer mit Kochnische und Dachfenster zum Hang.",
+              "en": "One room with a kitchenette and a roof window facing the slope."
+            },
+            "roomDescription": {
+              "de": "28 m² im Dachgeschoss",
+              "en": "28 m² in the attic"
             }
           }
         }

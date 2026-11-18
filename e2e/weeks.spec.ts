@@ -192,6 +192,77 @@ test('a week chosen in a wide window stays shown when it narrows', async ({ page
   await expect(week).toHaveAttribute('aria-selected', 'false');
 });
 
+// The tabs per row, top to bottom, and whether any two lie over each other. Every tab must be
+// seen: hidden ones would all stand in one row.
+const tabRows = (page: Page) =>
+  page.locator('.room-tabs').evaluate((tabs) => {
+    const boxes = [...tabs.querySelectorAll('label span')].map((tab) =>
+      tab.getBoundingClientRect(),
+    );
+    const tops = [...new Set(boxes.map((box) => Math.round(box.top)))];
+    return {
+      rows: tops.map((top) => boxes.filter((box) => Math.round(box.top) === top).length),
+      seen: boxes.every((box) => box.width > 0 && box.height > 0),
+      overlap: boxes.some((a, i) =>
+        boxes.some(
+          (b, j) =>
+            i < j && a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom,
+        ),
+      ),
+    };
+  });
+const fine = (rows: number[]) => ({ rows, seen: true, overlap: false });
+
+test('four apartments with long names stand two by two, and no tab lies over another', async ({
+  page,
+}) => {
+  for (const path of ['/it', '/nl']) {
+    await page.goto(`http://localhost:4002${path}`);
+    // At 700 px three of these tabs would fit in a row.
+    for (const width of [320, 375, 414, 600, 700]) {
+      await page.setViewportSize({ width, height: 800 });
+      const place = `${path} at ${width}`;
+      expect(await tabRows(page), place).toEqual(fine([2, 2]));
+      expect(await page.evaluate(() => document.documentElement.scrollWidth), place).toBe(width);
+    }
+    // Three of these names stand two and one, the third as wide as the others.
+    await page.setViewportSize({ width: 375, height: 800 });
+    await page
+      .locator('.room-tabs label')
+      .last()
+      .evaluate((tab) => tab.remove());
+    expect(await tabRows(page), path).toEqual(fine([2, 1]));
+    const widths = await page
+      .locator('.room-tabs span')
+      .evaluateAll((tabs) => tabs.map((tab) => Math.round(tab.getBoundingClientRect().width)));
+    expect(new Set(widths).size, path).toBe(1);
+    // From 48rem every apartment has its column.
+    for (const width of [768, 1280]) {
+      await page.setViewportSize({ width, height: 800 });
+      expect(await page.evaluate(() => document.documentElement.scrollWidth), path).toBe(width);
+    }
+  }
+});
+
+test('three short names share one row on the narrowest phone, four stand in one where they fit', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 800 });
+  for (const path of ['/de', '/en']) {
+    await page.goto(path);
+    expect(await tabRows(page), path).toEqual(fine([3]));
+  }
+  // A fourth short name, as a fourth apartment would add it.
+  await page.locator('.room-tabs').evaluate((tabs) => {
+    const tab = tabs.querySelector('label')!.cloneNode(true) as HTMLElement;
+    tab.querySelector('span')!.textContent = 'Fichte';
+    tabs.append(tab);
+  });
+  expect(await tabRows(page)).toEqual(fine([2, 2]));
+  await page.setViewportSize({ width: 500, height: 800 });
+  expect(await tabRows(page)).toEqual(fine([4]));
+});
+
 test('on a phone the arrows stay in the shown apartment', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 800 });
   await page.goto('/en');
