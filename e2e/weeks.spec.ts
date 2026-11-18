@@ -129,7 +129,7 @@ test('the bar’s cross keeps the page in place for a pointer and shows the pric
     );
   await page.goto('/en');
   await toOtherSeason(page);
-  for (const width of project.use.isMobile ? [375] : [1280, 375]) {
+  for (const width of [1280, 375]) {
     await page.setViewportSize({ width, height: 800 });
     const press = project.use.hasTouch
       ? (x: number, y: number) => page.touchscreen.tap(x, y)
