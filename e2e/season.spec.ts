@@ -48,7 +48,6 @@ test('the season is chosen before the application starts', async ({ page }) => {
   await expect(page.locator('label[data-for=winter] .season-name')).toHaveCSS('opacity', '0');
   await expect(page.getByRole('img', { name: /Almwiese/ })).toBeVisible();
   await expect(page.getByRole('img', { name: /Glemmtal/ })).toBeHidden();
-  await expect(page.locator('link[rel=icon]')).toHaveAttribute('href', '/pictures/icon-summer.svg');
 });
 
 test('one click before the application starts is not lost', async ({ page }) => {
@@ -193,16 +192,22 @@ test('the tab shows the season’s icon, from the server on and after a switch',
   request,
 }) => {
   const served = await (await request.get('/en')).text();
-  const name = served.match(/data-season="(\w+)"/)![1];
+  const name = served.match(/data-season="(\w+)"/)![1] as 'winter' | 'summer';
+  const other = name === 'winter' ? 'summer' : 'winter';
   expect(served).toMatch(new RegExp(`<link rel="icon"[^>]* href="/pictures/icon-${name}.svg"`));
   const file = await request.get(`/pictures/icon-${name}.svg`);
   expect(file.headers()['content-type']).toContain('image/svg+xml');
 
+  // The head script takes the other season's icon before the application starts.
   const icon = page.locator('link[rel=icon]');
-  await page.goto('/en?season=summer');
-  await expect(icon).toHaveAttribute('href', '/pictures/icon-summer.svg');
-  await switchTo(page, 'winter');
-  await expect(icon).toHaveAttribute('href', '/pictures/icon-winter.svg');
+  await page.route(/\/(main|chunk)-[\w-]+\.js$/, () => undefined);
+  await page.goto(`/en?season=${other}`, { waitUntil: 'commit' });
+  await expect(icon).toHaveAttribute('href', `/pictures/icon-${other}.svg`);
+  await page.unrouteAll({ behavior: 'ignoreErrors' });
+
+  await page.goto(`/en?season=${other}`);
+  await switchTo(page, name);
+  await expect(icon).toHaveAttribute('href', `/pictures/icon-${name}.svg`);
   await expect(icon).toHaveCount(1);
 });
 
