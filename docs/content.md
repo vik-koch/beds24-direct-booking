@@ -9,7 +9,7 @@ content. The application has no wording, no colour and no typeface of its own. T
 <!-- prettier-ignore -->
 | File | What it holds |
 |---|---|
-| `site.json` | The site's name, its languages in order as language tags, the apartments (slug, Beds24 room ID, name), the seasons and the contact. |
+| `site.json` | The site's name, its languages in order as language tags, the apartments (slug, Beds24 room ID, name), the seasons, the hero's features and the contact. |
 | `texts.<tag>.json` | Everything one language says: the wording, the address parts and the anchors. One file per language listed in `site.json`, such as `texts.en-GB.json`. |
 | `theme.css` | The palette and the typeface as custom properties on `:root`, and the typeface's `@font-face`. |
 | `fonts/` | Optional: the font files `theme.css` refers to, as `fonts/<file>`. |
@@ -37,11 +37,13 @@ content. The application has no wording, no colour and no typeface of its own. T
   photo. With both, each names the day it starts as `MM-DD` and lasts until the other starts; 29
   February cannot be a start. A single season has no start and the site shows no switch. A texts
   file names exactly the listed seasons in `seasons` (the switch's label and each name) and in
-  `hero` (each photo's alternative text), beside the hero's lead, up to five features and its
-  button. Every language lists as many features, so a change of language finds the reader's place. A
-  feature's icon is any [Lucide](https://lucide.dev/icons) icon by its name there, such as
-  `calendar-days`; only the icons the texts name go into the build. How the page picks its season is
-  [ADR 8](adr/0008-the-season-in-the-page.md).
+  `hero` (each photo's alternative text), beside the hero's lead, its features and its button. How
+  the page picks its season is [ADR 8](adr/0008-the-season-in-the-page.md).
+- **The hero's features** (`features` in `site.json`) are up to five, or none, in their order, each
+  a key and an icon: `{ "key": "no-commission", "icon": "tag" }`. The icon is any
+  [Lucide](https://lucide.dev/icons) icon by its name there, such as `calendar-days`; only the icons
+  `site.json` names go into the build. A texts file gives each key's text under `hero.features`,
+  such as `"no-commission": "No booking site commission"`, and no other key.
 - **The free weeks** (`weeks` in a texts file) are the list's wording. Its sentences take `{season}`
   (a dated season such as "Winter 2026/27"), `{count}` (the guests, with a `one` and an `other`
   form) and `{amount}` (the tourist tax as money). `note` says what the week's price includes, since
@@ -70,11 +72,13 @@ content. The application has no wording, no colour and no typeface of its own. T
 `scripts/content.mjs` validates the folder against the schema in
 [`src/content/schema.ts`](../src/content/schema.ts) and writes it into `src/content/generated/`,
 which is not committed. It runs before every `start`, `build`, `test` and `lint`. A key that is
-missing in one language, a key the schema does not know, a missing texts file, a tag that is not
-canonical, two tags with one language each, a season named in the texts but not in `site.json` or
-the other way round, and a missing picture stop the build with the file and the key named. The
+missing in one language, optional ones such as `notice` included, a key the schema does not know, a
+missing texts file, a tag that is not canonical, two tags with one language each, a season named in
+the texts but not in `site.json` or the other way round, a feature without its text or a text
+without its feature, and a missing picture stop the build with the file and the key named. The
 schema, not the demo's files, defines the keys, so the compiler checks every template against the
-same keys for every site.
+same keys for every site. Every language has the same keys, so every language renders the same
+elements and a change of language finds the reader's place.
 
 ## Another folder
 

@@ -5,15 +5,19 @@ import { join } from 'node:path';
 import { test } from 'node:test';
 import { readContent } from './content.mjs';
 
-// A copy of the demo's content with one file changed.
-function changed(file, change) {
+// A copy of the demo's content with files changed, each given by its name and then its change.
+function changed(...edits) {
   const dir = mkdtempSync(join(tmpdir(), 'content-'));
   cpSync('content/demo', dir, { recursive: true });
-  const value = JSON.parse(readFileSync(join(dir, file), 'utf8'));
-  change(value);
-  writeFileSync(join(dir, file), JSON.stringify(value));
+  for (let i = 0; i < edits.length; i += 2) {
+    const value = JSON.parse(readFileSync(join(dir, edits[i]), 'utf8'));
+    edits[i + 1](value);
+    writeFileSync(join(dir, edits[i]), JSON.stringify(value));
+  }
   return dir;
 }
+
+const bothTexts = (change) => changed('texts.de-AT.json', change, 'texts.en-GB.json', change);
 
 test('the demo and the test site are valid', () => {
   assert.deepEqual(Object.keys(readContent('content/demo').texts), ['de', 'en']);
@@ -36,9 +40,30 @@ test('a language without its texts file fails', () => {
   assert.throws(() => readContent(dir), /texts\.en-GB\.json/);
 });
 
-test('the notice may be left out', () => {
-  const dir = changed('texts.de-AT.json', (texts) => delete texts.notice);
+test('the notice may be left out, in every language', () => {
+  const dir = bothTexts((texts) => delete texts.notice);
   assert.equal(readContent(dir).texts.de.notice, undefined);
+});
+
+test('every language has the keys the first one has, and no others', () => {
+  const fewer = changed('texts.en-GB.json', (texts) => delete texts.notice);
+  assert.throws(
+    () => readContent(fewer),
+    /texts\.en-GB\.json\n {2}notice: missing, as texts\.de-AT\.json has it$/,
+  );
+  const nested = changed('texts.en-GB.json', (texts) => delete texts.credits.changes.cropped);
+  assert.throws(
+    () => readContent(nested),
+    /texts\.en-GB\.json\n {2}credits\.changes\.cropped: missing, as texts\.de-AT\.json has it$/,
+  );
+  const more = changed(
+    'texts.en-GB.json',
+    (texts) => (texts.notice.link = { text: 'More', href: '/en' }),
+  );
+  assert.throws(
+    () => readContent(more),
+    /texts\.en-GB\.json\n {2}notice\.link: not in texts\.de-AT\.json$/,
+  );
 });
 
 test('two languages with one address prefix are refused', () => {
@@ -94,31 +119,44 @@ test('a hero photo must exist', () => {
 });
 
 test('a feature names any Lucide icon, and only those', () => {
-  const dir = changed(
-    'texts.de-AT.json',
-    (texts) => (texts.hero.features[0].icon = 'mountain-snow'),
+  const dir = changed('site.json', (site) => (site.features[0].icon = 'mountain-snow'));
+  assert.equal(readContent(dir).site.features[0].icon, 'mountain-snow');
+  const wrong = changed('site.json', (site) => (site.features[0].icon = 'chalet'));
+  assert.throws(
+    () => readContent(wrong),
+    /site\.json\n {2}features\.0\.icon: chalet is not a Lucide icon/,
   );
-  assert.equal(readContent(dir).texts.de.hero.features[0].icon, 'mountain-snow');
-  const wrong = changed('texts.de-AT.json', (texts) => (texts.hero.features[0].icon = 'chalet'));
-  assert.throws(() => readContent(wrong), /hero\.features\.0\.icon: chalet is not a Lucide icon/);
 });
 
-test('the hero has up to five features, or none, as many in every language', () => {
-  const fewer = changed('texts.en-GB.json', (texts) => texts.hero.features.pop());
+test('the site lists up to five features, or none, each key once', () => {
+  const none = changed(
+    'site.json',
+    (site) => (site.features = []),
+    'texts.de-AT.json',
+    (texts) => (texts.hero.features = {}),
+    'texts.en-GB.json',
+    (texts) => (texts.hero.features = {}),
+  );
+  assert.deepEqual(readContent(none).site.features, []);
+  const six = changed('site.json', (site) =>
+    site.features.push(...['a', 'b', 'c'].map((key) => ({ key, icon: 'tag' }))),
+  );
+  assert.throws(() => readContent(six), /site\.json\n {2}features: /);
+  const twice = changed('site.json', (site) => (site.features[1].key = site.features[0].key));
+  assert.throws(() => readContent(twice), /features: a feature key is listed twice/);
+});
+
+test('every language names exactly the features the site lists', () => {
+  const missing = bothTexts((texts) => delete texts.hero.features.saturdays);
   assert.throws(
-    () => readContent(fewer),
-    /texts\.en-GB\.json\n {2}hero\.features: as many as in texts\.de-AT\.json/,
+    () => readContent(missing),
+    /texts\.de-AT\.json\n {2}hero\.features\.saturdays: missing$/,
   );
-  const none = changed('texts.de-AT.json', (texts) => (texts.hero.features = []));
-  const en = join(none, 'texts.en-GB.json');
-  const texts = JSON.parse(readFileSync(en, 'utf8'));
-  texts.hero.features = [];
-  writeFileSync(en, JSON.stringify(texts));
-  assert.deepEqual(readContent(none).texts.de.hero.features, []);
-  const six = changed('texts.de-AT.json', (texts) =>
-    texts.hero.features.push(...texts.hero.features),
+  const other = bothTexts((texts) => (texts.hero.features.parking = 'Parking'));
+  assert.throws(
+    () => readContent(other),
+    /hero\.features\.parking: a feature site\.json does not list$/,
   );
-  assert.throws(() => readContent(six), /texts\.de-AT\.json\n {2}hero\.features/);
 });
 
 test('the contact may list any of its lines, or be left out', () => {

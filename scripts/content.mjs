@@ -12,6 +12,16 @@ import { join, resolve } from 'node:path';
 import * as lucide from '@ng-icons/lucide';
 import { lucideName, prefix, seasonNames, siteSchema, textsSchema } from '../src/content/schema.ts';
 
+// The shallowest key one of two texts has and the other lacks, and whether the second lacks it.
+function difference(a, b, path = []) {
+  for (const key of new Set([...Object.keys(a), ...Object.keys(b)])) {
+    const at = [...path, key];
+    if (!(key in a) || !(key in b)) return [at.join('.'), key in a];
+    const deeper = typeof a[key] === 'object' && difference(a[key], b[key], at);
+    if (deeper) return deeper;
+  }
+}
+
 export function readContent(dir) {
   const read = (file, schema) => {
     const result = schema.safeParse(JSON.parse(readFileSync(join(dir, file), 'utf8')));
@@ -36,19 +46,27 @@ export function readContent(dir) {
             `${join(dir, `texts.${tag}.json`)}\n  ${part}.${name}: ${has ? 'a season site.json does not list' : 'missing'}`,
           );
       }
-  // Every language renders the same elements, so a change of language finds the reader's place.
-  const [first] = site.languages;
-  for (const tag of site.languages) {
-    if (texts[prefix(tag)].hero.features.length !== texts[prefix(first)].hero.features.length)
+  site.features.forEach(({ icon }, index) => {
+    if (!(lucideName(icon) in lucide))
       throw new Error(
-        `${join(dir, `texts.${tag}.json`)}\n  hero.features: as many as in texts.${first}.json`,
+        `${join(dir, 'site.json')}\n  features.${index}.icon: ${icon} is not a Lucide icon`,
       );
-    texts[prefix(tag)].hero.features.forEach(({ icon }, index) => {
-      if (!(lucideName(icon) in lucide))
+  });
+  const keys = site.features.map((f) => f.key);
+  for (const tag of site.languages)
+    for (const key of new Set([...keys, ...Object.keys(texts[prefix(tag)].hero.features)]))
+      if (!keys.includes(key) || !(key in texts[prefix(tag)].hero.features))
         throw new Error(
-          `${join(dir, `texts.${tag}.json`)}\n  hero.features.${index}.icon: ${icon} is not a Lucide icon`,
+          `${join(dir, `texts.${tag}.json`)}\n  hero.features.${key}: ${keys.includes(key) ? 'missing' : 'a feature site.json does not list'}`,
         );
-    });
+  // Every language renders the same elements, so a change of language finds the reader's place.
+  const [first, ...others] = site.languages;
+  for (const tag of others) {
+    const [path, missing] = difference(texts[prefix(first)], texts[prefix(tag)]) ?? [];
+    if (path)
+      throw new Error(
+        `${join(dir, `texts.${tag}.json`)}\n  ${path}: ${missing ? `missing, as texts.${first}.json has it` : `not in texts.${first}.json`}`,
+      );
   }
   // Every change a credit lists is named in every language.
   for (const name of listed)
@@ -100,10 +118,8 @@ export function writeContent(dir, out) {
   mkdirSync(join(out, 'fonts'));
   if (existsSync(join(dir, 'fonts')))
     cpSync(join(dir, 'fonts'), join(out, 'fonts'), { recursive: true });
-  // Only the icons the texts name are imported, so the bundle holds no others.
-  const icons = [
-    ...new Set(Object.values(texts).flatMap((value) => value.hero.features.map((f) => f.icon))),
-  ].map(lucideName);
+  // Only the icons site.json names are imported, so the bundle holds no others.
+  const icons = [...new Set(site.features.map((f) => f.icon))].map(lucideName);
   writeFileSync(
     join(out, 'icons.ts'),
     (icons.length ? `import { ${icons.join(', ')} } from '@ng-icons/lucide';\n\n` : '') +

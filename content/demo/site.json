@@ -52,6 +52,20 @@
       }
     }
   },
+  "features": [
+    {
+      "key": "guests",
+      "icon": "house"
+    },
+    {
+      "key": "saturdays",
+      "icon": "calendar-days"
+    },
+    {
+      "key": "no-commission",
+      "icon": "tag"
+    }
+  ],
   "contact": {
     "name": "Firn & Farn Appartements",
     "address": ["Musterweg 0", "5753 Saalbach", "Österreich"],

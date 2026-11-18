@@ -38,20 +38,11 @@
   "hero": {
     "summer": "Una sfumatura dal sabbia al rosso.",
     "lead": "Tre appartamenti di prova.",
-    "features": [
-      {
-        "icon": "users",
-        "text": "Fino a 6 ospiti"
-      },
-      {
-        "icon": "key-round",
-        "text": "Chiavi in mano"
-      },
-      {
-        "icon": "mountain",
-        "text": "Vicino ai monti"
-      }
-    ],
+    "features": {
+      "guests": "Fino a 6 ospiti",
+      "keys": "Chiavi in mano",
+      "mountains": "Vicino ai monti"
+    },
     "button": "Vedi le settimane libere"
   },
   "pages": {

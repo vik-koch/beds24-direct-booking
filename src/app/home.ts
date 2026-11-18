@@ -28,11 +28,13 @@ import { address, LANGUAGE, TEXTS } from './texts';
       <div class="hero-copy">
         <h1 class="display">{{ texts.home.title }}</h1>
         <p class="lead">{{ texts.hero.lead }}</p>
-        @if (texts.hero.features.length) {
+        @if (features.length) {
           <ul class="features">
-            @for (feature of texts.hero.features; track $index) {
+            @for (feature of features; track feature.key) {
               <li>
-                <ng-icon [name]="lucideName(feature.icon)" aria-hidden="true" />{{ feature.text }}
+                <ng-icon [name]="lucideName(feature.icon)" aria-hidden="true" />{{
+                  texts.hero.features[feature.key]
+                }}
               </li>
             }
           </ul>
@@ -67,6 +69,7 @@ export class Home {
   private readonly language = inject(LANGUAGE);
   protected readonly anchors = this.language.anchors;
   protected readonly lucideName = lucideName;
+  protected readonly features = site.features;
   protected readonly sections = ['apartments', 'location', 'about'] as const;
   protected readonly weeksLink = `${address(this.language, 'home')}#${this.anchors.weeks}`;
   protected readonly photos = inject(Season).names.map((name) => ({
