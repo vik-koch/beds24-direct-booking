@@ -176,6 +176,27 @@ test('the list is one tab stop that the keys move through as a grid', async ({ p
   await expect(page.locator('.weeks-grid [tabindex="0"]')).toHaveCount(1);
 });
 
+// A busy phone can take the next key before the grid has rendered the last one. Angular renders
+// from a timeout or an animation frame, so without them it does not render at all.
+test('Tab right after Page Up leaves the list, also before the grid renders', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/en');
+  // The next season has two months of weeks also when the current one is in its last.
+  await toOtherSeason(page);
+  const months = panel(page).locator('.weeks-month');
+  const later = months.nth(1).locator('[data-pick]').first();
+  await later.focus();
+  await expect(later).toHaveAttribute('tabindex', '0');
+  await page.evaluate(() => {
+    window.setTimeout = (() => 0) as never;
+    window.requestAnimationFrame = () => 0;
+  });
+  await page.keyboard.press('PageUp');
+  await expect(months.first().locator('[data-pick]').first()).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(page.locator('.weeks-grid :focus')).toHaveCount(0);
+});
+
 test('a week chosen in a wide window stays shown when it narrows', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto('/en');

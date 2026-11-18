@@ -12,7 +12,7 @@ export default defineConfig({
   testDir: 'e2e',
   forbidOnly: !!process.env['CI'],
   reporter: process.env['CI'] ? [['github'], ['html', { open: 'never' }]] : 'list',
-  use: { baseURL: 'http://localhost:4000' },
+  use: { baseURL: 'http://localhost:4000', trace: 'retain-on-failure' },
   // Angular's server answers only for hosts it was told about; a deployment sets its own.
   webServer: [
     { command: 'npm run sim', url: 'http://localhost:4300/v2/properties', ...reuse },
