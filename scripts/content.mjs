@@ -21,6 +21,11 @@ function differences(a, b, path = []) {
   });
 }
 
+// An SVG document: an <svg> root in the SVG namespace, closed, after an optional XML declaration
+// and comments.
+const svg =
+  /^\s*(<\?xml[^>]*\?>\s*)?(<!--[\s\S]*?-->\s*)*<svg\s[^>]*xmlns="http:\/\/www\.w3\.org\/2000\/svg"[\s\S]*<\/svg>\s*$/;
+
 export function readContent(dir) {
   const read = (file, schema) => {
     const result = schema.safeParse(JSON.parse(readFileSync(join(dir, file), 'utf8')));
@@ -88,11 +93,8 @@ export function readContent(dir) {
         throw new Error(
           `${join(dir, 'site.json')}\n  seasons.${name}.${key}: ${file} does not exist`,
         );
-      // Served as an SVG by its name, so it must be one.
-      else if (
-        key === 'icon' &&
-        !/^\s*(<\?xml[^>]*>\s*)?<svg[\s>]/.test(readFileSync(join(dir, file), 'utf8'))
-      )
+      // Served as an SVG by its name, so it must be one, and whole.
+      else if (key === 'icon' && !svg.test(readFileSync(join(dir, file), 'utf8')))
         throw new Error(
           `${join(dir, 'site.json')}\n  seasons.${name}.icon: ${file} is not an SVG document`,
         );

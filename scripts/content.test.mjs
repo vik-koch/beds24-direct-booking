@@ -176,6 +176,14 @@ test('every season needs its icon, an SVG file that exists', () => {
   const dir = changed();
   cpSync(join(dir, 'pictures/hero-summer.webp'), join(dir, 'pictures/icon-summer.svg'));
   assert.throws(() => readContent(dir), /icon-summer\.svg is not an SVG document/);
+  const svg = readFileSync(join(dir, 'pictures/icon-winter.svg'), 'utf8');
+  writeFileSync(join(dir, 'pictures/icon-summer.svg'), svg.slice(0, svg.indexOf('>') + 1));
+  assert.throws(() => readContent(dir), /icon-summer\.svg is not an SVG document/);
+  writeFileSync(
+    join(dir, 'pictures/icon-summer.svg'),
+    `<?xml version="1.0"?>\n<!-- A note -->\n${svg}`,
+  );
+  readContent(dir);
 });
 
 test('a feature names any Lucide icon, and only those', () => {
