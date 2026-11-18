@@ -37,6 +37,13 @@ export default defineConfig({
       env: { ...app('simulator', 4301), PORT: '4003' },
       ...reuse,
     },
+    // A site under test, closed with a password; Playwright counts its 401 as ready.
+    {
+      command: 'npm run serve',
+      url: 'http://localhost:4004/en',
+      env: { ...app('simulator'), PORT: '4004', SITE_PASSWORD: 'under test' },
+      ...reuse,
+    },
     // A second site, built from other content: two other languages, no notice, its own theme.
     {
       command:

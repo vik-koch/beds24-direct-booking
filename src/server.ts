@@ -1,3 +1,4 @@
+import { createHash, timingSafeEqual } from 'node:crypto';
 import { join } from 'node:path';
 import {
   AngularNodeAppEngine,
@@ -11,6 +12,20 @@ import site from './content/generated/site';
 const app = express();
 const angularApp = new AngularNodeAppEngine();
 
+// A site under test answers only with its password, under any user name, and no shared cache
+// may keep what it answers.
+const password = process.env['SITE_PASSWORD'];
+if (password) {
+  const digest = (text: string) => createHash('sha256').update(text).digest();
+  app.use((req, res, next) => {
+    const [scheme, encoded = ''] = req.headers.authorization?.split(' ') ?? [];
+    const given = /:(.*)/s.exec(Buffer.from(encoded, 'base64').toString())?.[1] ?? '';
+    res.set('Cache-Control', 'private, no-store');
+    if (scheme === 'Basic' && timingSafeEqual(digest(given), digest(password))) return next();
+    res.set('WWW-Authenticate', 'Basic realm="site", charset="UTF-8"').status(401).end();
+  });
+}
+
 const languages = site.languages.map(({ code }) => code);
 app.get('/', (req, res) => {
   res.vary('Accept-Language').redirect(`/${req.acceptsLanguages(languages) || languages[0]}`);
@@ -19,6 +34,7 @@ app.get('/', (req, res) => {
 app.use(
   express.static(join(import.meta.dirname, '../browser'), {
     maxAge: '1y',
+    cacheControl: !password,
     index: false,
     redirect: false,
   }),

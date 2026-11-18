@@ -60,6 +60,7 @@ jobs:
           DEPLOY_SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
           APP_DOMAIN: ${{ vars.APP_DOMAIN }}
           BEDS24_TOKEN: ${{ secrets.BEDS24_TOKEN }}
+          SITE_PASSWORD: ${{ secrets.SITE_PASSWORD }}
           INDEXED: ${{ vars.INDEXED }}
           SIM_IMAGE: ${{ vars.SIM_IMAGE }}
           REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -68,6 +69,15 @@ jobs:
           : "${DEPLOY_KNOWN_HOSTS:?variable DEPLOY_KNOWN_HOSTS is not set}"
           : "${DEPLOY_SSH_PRIVATE_KEY:?secret DEPLOY_SSH_PRIVATE_KEY is not set}"
           : "${APP_DOMAIN:?variable APP_DOMAIN is not set}"
+          # Before the settings file is written: a line break would start a setting of its own.
+          if [[ ! "$SITE_PASSWORD" =~ ^[A-Za-z0-9_-]*$ ]]; then
+            echo "::error::secret SITE_PASSWORD may hold only letters, digits, - and _"
+            exit 1
+          fi
+          if [ -n "$SITE_PASSWORD" ] && ! grep -q SITE_PASSWORD app/compose.yml; then
+            echo "::error::release $VERSION cannot close a site with a password; 0.2.0 can"
+            exit 1
+          fi
           # An older commit must not replace a newer one: a slow or repeated run stops here.
           head=$(git ls-remote origin refs/heads/main | cut -f1)
           if [ "$head" != "$GITHUB_SHA" ]; then
@@ -96,6 +106,7 @@ jobs:
             fi
             # Search engines are kept out until the variable INDEXED is "true".
             if [ "$INDEXED" = true ]; then echo "ROBOTS_TAG="; fi
+            if [ -n "$SITE_PASSWORD" ]; then echo "SITE_PASSWORD=$SITE_PASSWORD"; fi
           } > "$RUNNER_TEMP/site.env"
 
           # The image is private, so the machine pulls with this run's token. The token ends

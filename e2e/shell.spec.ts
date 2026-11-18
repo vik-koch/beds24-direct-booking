@@ -633,6 +633,31 @@ test('a refused token answers 503 without apartments', async ({ request }) => {
   expect(await response.text()).not.toContain('<li>Zirbe</li>');
 });
 
+test('a site with a password answers only with it, under any user name', async ({ request }) => {
+  const as = (credentials?: string) =>
+    credentials ? { authorization: `Basic ${btoa(credentials)}` } : {};
+  for (const path of ['/en', '/favicon.ico']) {
+    for (const credentials of [undefined, 'guest:wrong', 'under test']) {
+      const response = await request.get(`http://localhost:4004${path}`, {
+        headers: as(credentials),
+      });
+      expect(response.status()).toBe(401);
+      expect(response.headers()['www-authenticate']).toMatch(/^Basic /);
+    }
+    for (const credentials of ['guest:under test', ':under test']) {
+      const response = await request.get(`http://localhost:4004${path}`, {
+        headers: as(credentials),
+      });
+      expect(response.status()).toBe(200);
+      expect(response.headers()['cache-control']).toBe('private, no-store');
+    }
+  }
+  const page = await request.get('http://localhost:4004/en', {
+    headers: as('guest:under test'),
+  });
+  expect(await page.text()).toContain('Zirbe');
+});
+
 test('the browser bundle does not know the token', () => {
   const browser = 'dist/beds24-direct-booking/browser';
   const scripts = readdirSync(browser).filter((file) => file.endsWith('.js'));

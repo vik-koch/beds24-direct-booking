@@ -14,8 +14,14 @@ stack=$(setting STACK_NAME)
 domain=$(setting APP_DOMAIN)
 web=$(setting WEB_IMAGE)
 sim=$(setting SIM_IMAGE)
+password=$(setting SITE_PASSWORD)
 : "${stack:?STACK_NAME missing in $env}" "${domain:?APP_DOMAIN missing in $env}" "${web:?WEB_IMAGE missing in $env}"
 dir=/srv/$stack
+# Compose would read quotes, spaces or a # in the settings file otherwise. The value is not shown.
+if [[ ! "$password" =~ ^[A-Za-z0-9_-]*$ ]]; then
+  echo "SITE_PASSWORD in $env may hold only letters, digits, - and _" >&2
+  exit 1
+fi
 
 # shellcheck disable=SC2086,SC2029
 run() { ssh ${SSH_OPTS:-} "deploy@$host" "$@"; }
@@ -41,15 +47,24 @@ run "cd $dir && docker compose pull -q && docker compose up -d --remove-orphans"
 run "docker images --format '{{.Repository}}:{{.Tag}}' | grep -F '${web%-web:*}-' | grep -vxF -e '$web' -e '$sim' | xargs -r docker rmi" ||
   echo "WARNING: old images were not removed" >&2
 
-# The first request also makes the proxy fetch the certificate, which can take a minute.
+# The first request also makes the proxy fetch the certificate, which can take a minute. A site
+# with a password must refuse a visitor without it and let one with it in; the password goes to
+# curl on stdin, so the process list does not show it.
 echo "==> Checking https://$domain"
+status() { curl -K - -sL -o /dev/null -w '%{http_code}' --max-time 10 "https://$domain/"; }
+checked() {
+  if [ -z "$password" ]; then [ "$(status </dev/null)" = 200 ]; return; fi
+  [ "$(echo "user = \":$password\"" | status)" = 200 ] &&
+    [[ "$(curl -sL -o /dev/null -w '%{http_code} %header{www-authenticate}' --max-time 10 \
+      "https://$domain/")" == "401 Basic "* ]]
+}
 for _ in $(seq 30); do
-  if [ "$(curl -sL -o /dev/null -w '%{http_code}' --max-time 10 "https://$domain/")" = 200 ]; then
+  if checked; then
     echo "OK: https://$domain serves $web"
     exit 0
   fi
   sleep 5
 done
 
-echo "https://$domain did not answer 200." >&2
+echo "https://$domain did not answer 200${password:+ with its password and 401 without}." >&2
 exit 1
