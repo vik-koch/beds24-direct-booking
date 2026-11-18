@@ -77,7 +77,7 @@
 
   /* With an address's anchor only once the application has started (shell.ts): the browser's
      own jump to it would otherwise be animated from the top of the page. Without JavaScript
-     there is no such jump to wait for. */
+     Chromium animates that jump too, which DESIGN.md's "Jumps" accepts. */
   @media (prefers-reduced-motion: no-preference) {
     html[data-smooth],
     html:not([data-script]) {
