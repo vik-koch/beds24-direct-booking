@@ -65,7 +65,7 @@ interface Week {
     </div>
     @if (weeks(); as weeks) {
       @if (weeks.apartments.length > 1) {
-        <fieldset class="room-tabs">
+        <fieldset class="room-tabs" [style.--word]="longestWord(weeks.apartments)">
           <legend class="sr-only">{{ texts.weeks.apartment }}</legend>
           @for (apartment of weeks.apartments; track apartment.slug) {
             <label>
@@ -218,6 +218,8 @@ export class FreeWeeksList {
   private readonly language = inject(LANGUAGE);
   private readonly season = inject(Season);
   protected readonly fill = fill;
+  protected readonly longestWord = (apartments: { name: string }[]) =>
+    Math.max(...apartments.flatMap(({ name }) => name.split(/\s+/)).map((word) => word.length));
   // On a phone the list shows one apartment, the one of the chosen tab.
   protected readonly tab = signal(0);
   protected readonly chosen = signal<Week | null>(null);
