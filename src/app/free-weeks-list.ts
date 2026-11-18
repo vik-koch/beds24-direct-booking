@@ -238,6 +238,12 @@ export class FreeWeeksList {
     month: 'numeric',
     timeZone: 'UTC',
   });
+  private readonly spoken = new Intl.DateTimeFormat(this.language.tag, {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    timeZone: 'UTC',
+  });
   private readonly monthName = new Intl.DateTimeFormat(this.language.tag, {
     month: 'long',
     timeZone: 'UTC',
@@ -321,9 +327,12 @@ export class FreeWeeksList {
     });
   }
 
-  protected stay({ arrival, departure }: { arrival: string; departure: string }) {
-    // Not formatRange: across the turn of the year it adds both years.
-    return `${this.dates.format(new Date(arrival))} – ${this.dates.format(new Date(departure))}`;
+  // Not formatRange: across the turn of the year it adds both years.
+  protected stay(
+    { arrival, departure }: { arrival: string; departure: string },
+    dates = this.dates,
+  ) {
+    return `${dates.format(new Date(arrival))} – ${dates.format(new Date(departure))}`;
   }
 
   protected money(amount: number) {
@@ -340,7 +349,7 @@ export class FreeWeeksList {
     const week = season.weeks[row];
     const { name } = this.weeks()!.apartments[apartment];
     const price = week.prices[apartment];
-    return `${name} · ${this.stay(week)} · ${price === null ? this.texts.weeks.taken : this.money(price)}`;
+    return `${name} · ${this.stay(week, this.spoken)} · ${price === null ? this.texts.weeks.taken : this.money(price)}`;
   }
 
   protected link(season: SeasonWeeks, apartment: number, row: number) {

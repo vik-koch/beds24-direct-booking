@@ -35,10 +35,10 @@ test('the next season lists its weeks with a price or "booked" per apartment', a
   const dates = await panel(page).getByRole('rowheader').first().innerText();
   expect(dates.replace(/\s+/g, ' ').trim()).toMatch(/^Sat \d\d\/\d\d – Sat \d\d\/\d\d$/);
   await expect(panel(page).locator('.stay').first()).toHaveAccessibleName(
-    /^(Zirbe|Lärche|Ahorn) · Sat .+ · €[\d,.]+$/,
+    /^(Zirbe|Lärche|Ahorn) · Saturday \d+ \w+ – Saturday \d+ \w+ · €[\d,.]+$/,
   );
   await expect(panel(page).locator('.booked').first()).toHaveAccessibleName(
-    /^(Zirbe|Lärche|Ahorn) · Sat .+ · booked$/,
+    /^(Zirbe|Lärche|Ahorn) · Saturday .+ · booked$/,
   );
   await expect(panel(page).getByText('booked').first()).toBeVisible();
   await expect(page.locator('.weeks-note')).toHaveText(
@@ -50,10 +50,13 @@ test('a chosen week leads to its apartment with the stay', async ({ page }) => {
   await page.goto('/de');
   await toOtherSeason(page);
   const first = panel(page).locator('.stay:visible').first();
-  const name = await first.getAttribute('aria-label');
+  const [apartment, , price] = (await first.getAttribute('aria-label'))!.split(' · ');
+  const dates = await first.locator('..').getByRole('rowheader').innerText();
   await first.click();
   await expect(first).toHaveAttribute('aria-selected', 'true');
-  await expect(page.locator('.pick output')).toHaveText(name!);
+  await expect(page.locator('.pick output')).toHaveText(
+    `${apartment} · ${dates.replace(/\s+/g, ' ').trim()} · ${price}`,
+  );
   await page.getByRole('link', { name: 'Weiter zur Buchung' }).click();
   await expect(page).toHaveURL(
     /\/de\/wohnungen\/(zirbe|laerche|ahorn)\?arrival=\d{4}-\d\d-\d\d&departure=\d{4}-\d\d-\d\d$/,
@@ -296,7 +299,7 @@ test('a site with one season lists a year of weeks without a season button', asy
   await page.goto('http://localhost:4002/it');
   await expect(page.getByRole('heading', { name: 'Settimane libere', exact: true })).toBeVisible();
   await expect(button(page)).toHaveCount(0);
-  await expect(panel(page).getByRole('gridcell').first()).toBeAttached();
+  await expect(panel(page).locator('.stay[aria-selected]').first()).toBeAttached();
 });
 
 test('the list passes axe in both seasons', async ({ page }) => {

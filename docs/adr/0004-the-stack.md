@@ -142,9 +142,12 @@ result is added to this ADR when it is known.
   after a change of season Tab enters at the first week shown, not at a week chosen there, and
   with nothing chosen it can enter on a booked week.
 
-  - Verified in Chromium and Firefox by keyboard at 375 px and 1280 px, with axe, and in the
-    e2e suite on all three browsers.
-  - Not tried: NVDA, VoiceOver on a Mac or an iPhone.
+  - Walked by keyboard in Chromium at 375 px and 1280 px. The e2e suite runs the keys and
+    axe in Chromium, Firefox and WebKit.
+  - Tried by the maintainer with NVDA on Windows: the position, the price or "booked" and
+    the chosen state were announced. The cell now speaks its dates in full ("Saturday 3
+    April"), since the short form shown on screen was read as such.
+  - Not tried: Firefox and Safari by hand, VoiceOver on a Mac or an iPhone.
 
 - **The typed texts are confirmed in the first slice with a counted text.** If the three
   helpers grow beyond a few lines each, ngx-translate takes over.
