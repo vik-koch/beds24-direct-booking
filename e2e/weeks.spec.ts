@@ -181,6 +181,8 @@ test('the list is one tab stop that the keys move through as a grid', async ({ p
 test('Tab right after Page Up leaves the list, also before the grid renders', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto('/en');
+  // The next season has two months of weeks also when the current one is in its last.
+  await toOtherSeason(page);
   const months = panel(page).locator('.weeks-month');
   const later = months.nth(1).locator('[data-pick]').first();
   await later.focus();
