@@ -74,6 +74,34 @@ test('every language has the keys the first one has, and no others', () => {
   );
 });
 
+test('a content folder beyond a limit fails, and the message names the limit', () => {
+  const cases = [
+    [(site) => (site.name = 'x'.repeat(16)), /site\.json\n {2}name: at most 15 characters/],
+    [(site) => (site.languages = ['de-AT', 'en-GB', 'it']), /languages: exactly two languages/],
+    [(site) => (site.apartments = []), /apartments: at least one apartment/],
+    [
+      (site) =>
+        site.apartments.push(
+          { slug: 'd', roomId: 1, name: 'D' },
+          { slug: 'e', roomId: 2, name: 'E' },
+        ),
+      /apartments: at most four apartments/,
+    ],
+    [
+      (site) => (site.apartments[0].name = 'x'.repeat(21)),
+      /apartments\.0\.name: at most 20 characters/,
+    ],
+  ];
+  for (const [change, message] of cases)
+    assert.throws(() => readContent(changed('site.json', change)), message);
+  const at = changed('site.json', (site) => {
+    site.name = 'x'.repeat(15);
+    site.apartments[0].name = 'x'.repeat(20);
+    site.apartments.push({ slug: 'd', roomId: 1, name: 'D' });
+  });
+  assert.equal(readContent(at).site.apartments.length, 4);
+});
+
 test('two languages with one address prefix are refused', () => {
   const dir = changed('site.json', (site) => (site.languages[1] = 'de-DE'));
   assert.throws(() => readContent(dir), /one address prefix/);

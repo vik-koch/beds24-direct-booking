@@ -1,5 +1,5 @@
 {
-  "name": "Casa Prova",
+  "name": "Casa Prova Alta",
   "languages": ["it", "nl-BE"],
   "apartments": [
     {
@@ -10,7 +10,7 @@
     {
       "slug": "castagno",
       "roomId": 9001012,
-      "name": "Sotto il Castagno"
+      "name": "Sotto i Castagni Due"
     },
     {
       "slug": "zonneterras",
@@ -20,7 +20,7 @@
     {
       "slug": "fienile",
       "roomId": 9001022,
-      "name": "Il Fienile"
+      "name": "Il Fienile del Prato"
     }
   ],
   "seasons": {
