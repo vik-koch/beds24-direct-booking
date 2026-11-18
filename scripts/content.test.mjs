@@ -3,7 +3,7 @@ import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:f
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
-import { readContent } from './content.mjs';
+import { readContent, writeContent } from './content.mjs';
 
 // A copy of the demo's content with files changed, each given by its name and then its change.
 function changed(...edits) {
@@ -56,6 +56,14 @@ test('every language has the keys the first one has, and no others', () => {
     () => readContent(nested),
     /texts\.en-GB\.json\n {2}credits\.changes\.cropped: missing, as texts\.de-AT\.json has it$/,
   );
+  // The notice is visited last, as only the second language has it, and still reported first.
+  const both = changed(
+    'texts.de-AT.json',
+    (texts) => delete texts.notice,
+    'texts.en-GB.json',
+    (texts) => delete texts.credits.changes.cropped,
+  );
+  assert.throws(() => readContent(both), /texts\.en-GB\.json\n {2}notice: not in texts\.de-AT/);
   const more = changed(
     'texts.en-GB.json',
     (texts) => (texts.notice.link = { text: 'More', href: '/en' }),
@@ -128,6 +136,17 @@ test('a feature names any Lucide icon, and only those', () => {
   );
 });
 
+test('two names of one icon import it once', () => {
+  const dir = changed('site.json', (site) => {
+    site.features[0].icon = 'heading-1';
+    site.features[1].icon = 'heading1';
+  });
+  const out = mkdtempSync(join(tmpdir(), 'generated-'));
+  writeContent(dir, out);
+  const icons = readFileSync(join(out, 'icons.ts'), 'utf8');
+  assert.equal(icons.match(/lucideHeading1/g).length, 2);
+});
+
 test('the site lists up to five features, or none, each key once', () => {
   const none = changed(
     'site.json',
@@ -147,6 +166,11 @@ test('the site lists up to five features, or none, each key once', () => {
 });
 
 test('every language names exactly the features the site lists', () => {
+  const inherited = changed('site.json', (site) => (site.features[0].key = 'constructor'));
+  assert.throws(
+    () => readContent(inherited),
+    /texts\.de-AT\.json\n {2}hero\.features\.constructor: missing$/,
+  );
   const missing = bothTexts((texts) => delete texts.hero.features.saturdays);
   assert.throws(
     () => readContent(missing),
