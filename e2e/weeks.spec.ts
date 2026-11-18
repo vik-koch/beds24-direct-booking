@@ -158,6 +158,8 @@ test('the list is one tab stop that the keys move through as a grid', async ({ p
   await page.keyboard.press('Enter');
   await expect(free).toHaveAttribute('aria-selected', 'true');
   await booked.focus();
+  // The grid moves its tab stop at the next render; a Tab before it would go to the old one.
+  await expect(booked).toHaveAttribute('tabindex', '0');
   await page.keyboard.press('Enter');
   await page.keyboard.press(' ');
   await expect(free).toHaveAttribute('aria-selected', 'true');
