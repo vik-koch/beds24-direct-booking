@@ -319,9 +319,12 @@ text button.
 - **Below the sheet:** a note in soft ink on what the price includes, and the tourist tax, in line
   with the card; from 48rem up at most 80% of its width.
 - **Apartment tabs (narrow):** a pill with an edge per apartment, all of one width and one height,
-  in as many lines as their names need; the chosen one is filled with ink, its colours changing over
-  0.2 s like a price's hover tint. A change of tab clears the chosen week. Without the application
-  the tabs are not shown and the sheet scrolls sideways instead.
+  in as many lines as their names need. A tab is at least as wide as the longest word in the names,
+  up to half the row: three short names share a row at 320 px, three long ones stand two and one,
+  and four stand two by two until all four fit in one row, never three and one. A word longer than
+  half the row is hyphenated in its tab. The chosen tab is filled with ink, its colours changing
+  over 0.2 s like a price's hover tint. A change of tab clears the chosen week. Without the
+  application the tabs are not shown and the sheet scrolls sideways instead.
 - **The other season:** the text button above the list. The next season's rows slide in from the
   right while the shown ones leave to the left, and back the other way (0.45 s, ease in and out),
   each by the card's whole width; the card, its header row, the heading and the button stay still

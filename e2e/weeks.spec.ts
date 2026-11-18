@@ -192,6 +192,63 @@ test('a week chosen in a wide window stays shown when it narrows', async ({ page
   await expect(week).toHaveAttribute('aria-selected', 'false');
 });
 
+// The tabs per row, top to bottom, and whether any two lie over each other.
+const tabRows = (page: Page) =>
+  page.locator('.room-tabs').evaluate((tabs) => {
+    const boxes = [...tabs.querySelectorAll('label span')].map((tab) =>
+      tab.getBoundingClientRect(),
+    );
+    const tops = [...new Set(boxes.map((box) => Math.round(box.top)))];
+    const overlap = boxes.some((a, i) =>
+      boxes.some(
+        (b, j) =>
+          i < j && a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom,
+      ),
+    );
+    return {
+      rows: tops.map((top) => boxes.filter((box) => Math.round(box.top) === top).length),
+      overlap,
+    };
+  });
+
+test('four apartments with long names stand two by two, and no tab lies over another', async ({
+  page,
+}) => {
+  for (const path of ['/it', '/nl']) {
+    await page.goto(`http://localhost:4002${path}`);
+    for (const width of [320, 375, 414, 600]) {
+      await page.setViewportSize({ width, height: 800 });
+      const place = `${path} at ${width}`;
+      expect(await tabRows(page), place).toEqual({ rows: [2, 2], overlap: false });
+      expect(await page.evaluate(() => document.documentElement.scrollWidth), place).toBe(width);
+    }
+    // Three of these names stand two and one, the third as wide as the others.
+    await page.setViewportSize({ width: 375, height: 800 });
+    await page
+      .locator('.room-tabs label')
+      .last()
+      .evaluate((tab) => tab.remove());
+    expect(await tabRows(page), path).toEqual({ rows: [2, 1], overlap: false });
+    const widths = await page
+      .locator('.room-tabs span')
+      .evaluateAll((tabs) => tabs.map((tab) => Math.round(tab.getBoundingClientRect().width)));
+    expect(new Set(widths).size, path).toBe(1);
+    // From 48rem every apartment has its column.
+    for (const width of [768, 1280]) {
+      await page.setViewportSize({ width, height: 800 });
+      expect(await page.evaluate(() => document.documentElement.scrollWidth), path).toBe(width);
+    }
+  }
+});
+
+test('three short names share one row on the narrowest phone', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 800 });
+  for (const path of ['/de', '/en']) {
+    await page.goto(path);
+    expect(await tabRows(page), path).toEqual({ rows: [3], overlap: false });
+  }
+});
+
 test('on a phone the arrows stay in the shown apartment', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 800 });
   await page.goto('/en');
