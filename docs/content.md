@@ -86,7 +86,8 @@ beyond a limit fails its build, with the limit named.
 mixed-case average measured in the demo's font (Jost at weight 500: 0.547em in "Wohnen am Wald").
 Capitals and other typefaces can be wider: 13 capitals already overflow at 320 px. Not every
 typeface, name and width is tested, which is beyond this project: a deployment with another font
-checks its name at 320 px.
+checks its name at 320 px and, with two seasons, at 384 px, where the switch shows its label, in
+each language.
 
 ## How it is checked
 

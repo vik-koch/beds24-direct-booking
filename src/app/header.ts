@@ -6,6 +6,7 @@ import { lucideGlobe, lucideMenu } from '@ng-icons/lucide';
 import { HlmNavigationMenuImports } from '@spartan-ng/helm/navigation-menu';
 import { HlmSheetImports } from '@spartan-ng/helm/sheet';
 import site from '../content/generated/site';
+import { letters } from '../content/names';
 import { SeasonSwitch } from './season-switch';
 import { address, LANGUAGE, TEXTS } from './texts';
 
@@ -17,7 +18,7 @@ import { address, LANGUAGE, TEXTS } from './texts';
   providers: [provideIcons({ lucideGlobe, lucideMenu })],
   template: `
     <header class="column flex min-h-[4.5rem] items-center gap-3">
-      <div class="wordmark" [style.--letters]="site.name.length">
+      <div class="wordmark" [style.--letters]="letters">
         <a
           class="-ml-3.5 inline-flex h-(--size-control) items-center rounded-full px-3.5 font-medium tracking-[-0.01em] whitespace-nowrap no-underline"
           [href]="home"
@@ -167,6 +168,7 @@ export class Header {
   protected readonly texts = inject(TEXTS);
   protected readonly language = inject(LANGUAGE);
   protected readonly site = site;
+  protected readonly letters = letters(site.name);
   protected readonly home = address(this.language, 'home');
   protected readonly allApartments = `${this.home}#${this.language.anchors.apartments}`;
   protected readonly sections = (['weeks', 'location', 'about'] as const).map((key) => ({

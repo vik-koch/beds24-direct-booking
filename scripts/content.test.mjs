@@ -100,6 +100,17 @@ test('a content folder beyond a limit fails, and the message names the limit', (
     site.apartments.push({ slug: 'd', roomId: 1, name: 'D' });
   });
   assert.equal(readContent(at).site.apartments.length, 4);
+  // A letter with its accent as a code point of its own counts once.
+  const accent = (count) => 'x'.repeat(count - 1) + 'e\u0301';
+  const accents = changed('site.json', (site) => {
+    site.name = accent(15);
+    site.apartments[0].name = accent(20);
+  });
+  assert.equal(readContent(accents).site.name, accent(15));
+  assert.throws(
+    () => readContent(changed('site.json', (site) => (site.name = accent(16)))),
+    /name: at most 15 characters/,
+  );
 });
 
 test('two languages with one address prefix are refused', () => {
@@ -124,7 +135,10 @@ test('a language is named in its own language, from its tag', () => {
 
 test('a third season is refused', () => {
   const dir = changed('site.json', (site) => (site.seasons.autumn = site.seasons.winter));
-  assert.throws(() => readContent(dir), /site\.json\n {2}seasons: Unrecognized key/);
+  assert.throws(
+    () => readContent(dir),
+    /site\.json\n {2}seasons: only winter and summer, one or both/,
+  );
 });
 
 test('a season cannot start on 29 February', () => {

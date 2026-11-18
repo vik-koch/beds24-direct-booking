@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { seasonNames } from './names.ts';
+import { letters, seasonNames } from './names.ts';
 
 export { lucideName, seasonNames, type SeasonName } from './names.ts';
 
@@ -54,10 +54,16 @@ const picture = z.strictObject({
 // With two seasons each starts on its day and lasts until the other starts; a single season
 // covers the year and has no start.
 const seasons = z
-  .strictObject({
-    winter: z.strictObject({ start: day.optional(), hero: picture }).optional(),
-    summer: z.strictObject({ start: day.optional(), hero: picture }).optional(),
-  })
+  .strictObject(
+    {
+      winter: z.strictObject({ start: day.optional(), hero: picture }).optional(),
+      summer: z.strictObject({ start: day.optional(), hero: picture }).optional(),
+    },
+    {
+      error: (issue) =>
+        issue.code === 'unrecognized_keys' ? 'only winter and summer, one or both' : undefined,
+    },
+  )
   .superRefine((value, context) => {
     const listed = seasonNames.filter((name) => value[name]);
     if (listed.length === 0) context.addIssue({ code: 'custom', message: 'no season is listed' });
@@ -86,7 +92,7 @@ const seasons = z
 
 // The limits docs/content.md lists, each with its reason there.
 export const siteSchema = z.strictObject({
-  name: text.max(15, 'at most 15 characters'),
+  name: text.refine((value) => letters(value) <= 15, 'at most 15 characters'),
   languages: z
     .array(tag)
     .length(2, 'exactly two languages')
@@ -100,7 +106,7 @@ export const siteSchema = z.strictObject({
       z.strictObject({
         slug: segment,
         roomId: z.number().int(),
-        name: text.max(20, 'at most 20 characters'),
+        name: text.refine((value) => letters(value) <= 20, 'at most 20 characters'),
       }),
     )
     .min(1, 'at least one apartment')

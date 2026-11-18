@@ -572,19 +572,15 @@ async function nameFits(page: Page) {
 test('a site name of 15 wide letters fits the header beside the season switch', async ({
   page,
 }) => {
-  // Put into the server's page, with the application held back so that it keeps the name.
+  // Set on the server's page, with the application held back so that it keeps the name.
   const name = 'Wohnen am Walde';
   await page.route(/\/main-[\w-]+\.js$/, (route) => route.abort());
-  await page.route('**/de', async (route) => {
-    const response = await route.fetch();
-    const body = (await response.text()).replace(
-      /(<div class="wordmark" style="--letters: )11(;">\s*<a[^>]*>)Firn &amp; Farn/,
-      `$1${name.length}$2${name}`,
-    );
-    await route.fulfill({ response, body });
-  });
   await page.goto('/de');
-  await expect(page.locator('.wordmark a')).toHaveText(name);
+  await page.evaluate((name) => {
+    const wordmark = document.querySelector<HTMLElement>('.wordmark')!;
+    wordmark.style.setProperty('--letters', String(name.length));
+    wordmark.querySelector('a')!.textContent = name;
+  }, name);
   // 320 px shows the switch's icons, 384 px its label; the wide header starts at 1,024 px.
   for (const width of [320, 384, 1024])
     for (const season of ['winter', 'summer']) {
