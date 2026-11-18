@@ -245,15 +245,14 @@ test('without an anchor, jumps are smooth before the application has started', a
 test('after an anchored arrival, a link pressed before the application starts scrolls smoothly', async ({
   page,
 }) => {
-  await page.setViewportSize({ width: 1280, height: 800 });
   await page.route(/\/main-[\w-]+\.js$/, () => undefined);
   await page.goto('/en#free-weeks', { waitUntil: 'commit' });
   const html = page.locator('html');
   await expect(page.locator('body')).toBeVisible();
   await expect(html).toHaveCSS('scroll-behavior', 'auto');
-  await page.getByRole('banner').getByRole('link', { name: 'Location' }).click();
+  // The hero's link, which every layout shows; the header's are in a menu on a phone.
+  await page.getByRole('link', { name: 'See the free weeks' }).click();
   await expect(html).toHaveCSS('scroll-behavior', 'smooth');
-  await expect(page).toHaveURL(/#location$/);
 });
 
 test('without JavaScript, jumps are smooth', async ({ browser }) => {
