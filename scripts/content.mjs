@@ -100,7 +100,7 @@ export function readContent(dir) {
       // Served as an SVG by its name, so it must be one.
       else if (key === 'icon' && !isSvg(readFileSync(join(dir, file), 'utf8')))
         throw new Error(
-          `${join(dir, 'site.json')}\n  seasons.${name}.icon: ${file} is not an SVG document`,
+          `${join(dir, 'site.json')}\n  seasons.${name}.icon: ${file} is not an SVG document in UTF-8`,
         );
   const languages = site.languages.map((tag) => {
     const code = prefix(tag);

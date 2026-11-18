@@ -175,11 +175,11 @@ test('every season needs its icon, an SVG file that exists', () => {
   assert.throws(() => readContent(icon('pictures/gone.svg')), /pictures\/gone\.svg does not exist/);
   const dir = changed();
   cpSync(join(dir, 'pictures/hero-summer.webp'), join(dir, 'pictures/icon-summer.svg'));
-  assert.throws(() => readContent(dir), /icon-summer\.svg is not an SVG document/);
+  assert.throws(() => readContent(dir), /icon-summer\.svg is not an SVG document in UTF-8/);
   const svg = readFileSync(join(dir, 'pictures/icon-winter.svg'), 'utf8');
   for (const broken of [svg.slice(0, svg.indexOf('>') + 1), svg.replace('</g>', '')]) {
     writeFileSync(join(dir, 'pictures/icon-summer.svg'), broken);
-    assert.throws(() => readContent(dir), /icon-summer\.svg is not an SVG document/);
+    assert.throws(() => readContent(dir), /icon-summer\.svg is not an SVG document in UTF-8/);
   }
   writeFileSync(join(dir, 'pictures/icon-summer.svg'), svg.replaceAll('"', "'"));
   readContent(dir);
