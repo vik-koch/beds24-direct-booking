@@ -11,6 +11,10 @@
          one, there is no first jump to keep from being animated, so jumps are smooth at once. -->
     <script>
       document.documentElement.setAttribute(location.hash ? 'data-jump' : 'data-smooth', '');
+      // Shown when parsing ends at the latest, also if the page's end never arrives.
+      document.addEventListener('DOMContentLoaded', () =>
+        document.documentElement.removeAttribute('data-jump'),
+      );
     </script>
     <style>
       html[data-jump] body {

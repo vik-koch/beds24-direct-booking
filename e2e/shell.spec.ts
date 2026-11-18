@@ -232,8 +232,32 @@ test('an address with an anchor opens at its section; smooth scrolling starts af
   await expect.poll(behavior).toBe('smooth');
   await page.waitForTimeout(500);
   expect(await page.evaluate(() => scrollY)).toBe(first.y);
+
+  // A reload after scrolling away opens at the section again, and stays there.
+  await page.evaluate(() => scrollTo({ top: 2000, behavior: 'instant' }));
+  await page.reload({ waitUntil: 'commit' });
+  const reloaded = await page.waitForFunction(
+    () => (window as unknown as { first?: unknown }).first,
+  );
+  const again = (await reloaded.jsonValue()) as typeof first;
+  expect(again.y).toBe(first.y);
+  expect(Math.abs(again.gap)).toBeLessThanOrEqual(1);
+  await expect.poll(behavior).toBe('smooth');
+  await page.waitForTimeout(500);
+  expect(await page.evaluate(() => scrollY)).toBe(first.y);
+
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await expect.poll(behavior).toBe('auto');
+});
+
+test('a page whose end never arrives is still shown', async ({ page }) => {
+  await page.route('**/en', async (route) => {
+    const response = await route.fetch();
+    const html = await response.text();
+    await route.fulfill({ response, body: html.slice(0, html.indexOf('</app-root>')) });
+  });
+  await page.goto('/en#free-weeks');
+  await expect(page.locator('body')).toBeVisible();
 });
 
 test('without an anchor, jumps are smooth before the application has started', async ({ page }) => {
