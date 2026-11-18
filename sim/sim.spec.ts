@@ -91,7 +91,8 @@ describe('calendar', () => {
     '&includeNumAvail=true&includeMinStay=true&includeMaxStay=true&includeMultiplier=true&includeOverride=true&includePrices=true';
   const day = 86_400_000;
   const weeksOf = async (roomId: number) => {
-    const path = `inventory/rooms/calendar?roomId=${roomId}&startDate=2026-11-14&endDate=2027-11-13${all}`;
+    const dates = 'startDate=2026-11-14&endDate=2027-11-13';
+    const path = `inventory/rooms/calendar?roomId=${roomId}&${dates}${all}`;
     const [{ calendar }] = (await (await get(path)).json()).data as [{ calendar: Range[] }];
     const days = calendar.flatMap((range) =>
       Array.from(

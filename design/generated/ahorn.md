@@ -1,16 +1,18 @@
 # Ahorn picture credits
 
-Generated on 17 November 2026 by the repository's maintainer for the fictional beds24-direct-booking demo.
+Generated on 17 November 2026 by the repository's maintainer for the fictional beds24-direct-booking
+demo.
 
-AI-generated with OpenAI’s built-in image generation tool, directed through Codex using the
-shot list in [design/apartment-pictures.md](../apartment-pictures.md).
-The tool does not expose the underlying image model identifier; no specific model is claimed.
-These are invented interiors and scenery, not photographs of a real property.
-No external reference photographs were used. Pictures 2–6 use `ahorn-1.webp` as their visual reference.
+AI-generated with OpenAI’s built-in image generation tool, directed through Codex using the shot
+list in [design/apartment-pictures.md](../apartment-pictures.md). The tool does not expose the
+underlying image model identifier; no specific model is claimed. These are invented interiors and
+scenery, not photographs of a real property. No external reference photographs were used. Pictures
+2–6 use `ahorn-1.webp` as their visual reference.
 
 ## Files and suggested alternative text
 
-All six files are landscape 1536 × 1024 (3:2). The generator gave PNG; the repository holds them as WebP at quality 85.
+All six files are landscape 1536 × 1024 (3:2). The generator gave PNG; the repository holds them as
+WebP at quality 85.
 
 | File                         | Suggested English alternative text                                                               |
 | ---------------------------- | ------------------------------------------------------------------------------------------------ |
@@ -23,38 +25,40 @@ All six files are landscape 1536 × 1024 (3:2). The generator gave PNG; the repo
 
 ## Reuse and disclosure
 
-These six generated assets are supplied with this project under its [MIT licence](../../LICENSE),
-to the extent that copyright or other licensable rights exist. This statement applies only to
-`ahorn-1.webp` through `ahorn-6.webp`; it does not change the licences of the existing hero photographs.
+These six generated assets are supplied with this project under its [MIT licence](../../LICENSE), to
+the extent that copyright or other licensable rights exist. This statement applies only to
+`ahorn-1.webp` through `ahorn-6.webp`; it does not change the licences of the existing hero
+photographs.
 
-OpenAI’s [Europe Terms of Use](https://openai.com/policies/eu-terms-of-use/) (updated
-16 January 2026, checked on 17 November 2026) assign OpenAI’s rights, if any, in output to the user to the extent permitted
-by law. This permits the intended demo use; it does not establish copyright protection or
-exclusive rights, and similar output may be generated for others.
+OpenAI’s [Europe Terms of Use](https://openai.com/policies/eu-terms-of-use/) (updated 16 January
+2026, checked on 17 November 2026) assign OpenAI’s rights, if any, in output to the user to the
+extent permitted by law. This permits the intended demo use; it does not establish copyright
+protection or exclusive rights, and similar output may be generated for others.
 
 Suggested visible credit when these pictures are published:
 
 > Fictional apartment imagery for this demo, AI-generated with OpenAI through Codex.
 
-Show a clear AI disclosure alongside the gallery when these assets are integrated. This credits
-file alone is not a visible disclosure to site visitors. OpenAI’s
-[sharing and publication policy](https://openai.com/policies/sharing-publication-policy/)
-(updated 14 November 2022) requires clear AI disclosure and review before sharing. No endorsement by OpenAI is implied.
+Show a clear AI disclosure alongside the gallery when these assets are integrated. This credits file
+alone is not a visible disclosure to site visitors. OpenAI’s
+[sharing and publication policy](https://openai.com/policies/sharing-publication-policy/) (updated
+14 November 2022) requires clear AI disclosure and review before sharing. No endorsement by OpenAI
+is implied.
 
 ## Review
 
-Visually inspected all selected outputs for the requested rooms, furnishings, consistency,
-people, visible writing and logos. No people or visible text/logos were seen. The bunk room
-contains a toy rabbit. The terrace uses split cushioned benches rather than two continuous
-benches. These are synthetic illustrations and do not document a physically verified floor plan.
-The first terrace attempt was discarded because it framed too much of the living room.
-No application integration or application tests were performed.
+Visually inspected all selected outputs for the requested rooms, furnishings, consistency, people,
+visible writing and logos. No people or visible text/logos were seen. The bunk room contains a toy
+rabbit. The terrace uses split cushioned benches rather than two continuous benches. These are
+synthetic illustrations and do not document a physically verified floor plan. The first terrace
+attempt was discarded because it framed too much of the living room. No application integration or
+application tests were performed.
 
 ## Final prompts
 
-The prompts below were sent to the built-in image generation tool. For pictures 2–6,
-`ahorn-1.webp` was also supplied as the reference image. Generation is stochastic: these prompts
-do not guarantee identical results on another run.
+The prompts below were sent to the built-in image generation tool. For pictures 2–6, `ahorn-1.webp`
+was also supplied as the reference image. Generation is stochastic: these prompts do not guarantee
+identical results on another run.
 
 ### ahorn-1.webp
 

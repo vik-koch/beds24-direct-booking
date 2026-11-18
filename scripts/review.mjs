@@ -50,10 +50,11 @@ const env = Object.fromEntries(
   Object.entries(process.env).filter(([name]) => !name.includes('_APP_')),
 );
 
-// The only place that knows the reviewer's tool: a prompt goes in, JSON of the schema's shape comes out.
-// The pull request's text is untrusted and the answer is published, so the tool may read the checkout and
-// the repository's git directory, nothing else of this machine, and does not learn where the Apps' keys are.
-// Its sandbox starts the CLI again from inside, so the Node installation that holds the CLI must stay readable.
+// The only place that knows the reviewer's tool: a prompt goes in, JSON of the schema's shape comes
+// out. The pull request's text is untrusted and the answer is published, so the tool may read the
+// checkout and the repository's git directory, nothing else of this machine, and does not learn
+// where the Apps' keys are. Its sandbox starts the CLI again from inside, so the Node installation
+// that holds the CLI must stay readable.
 const tool = 'Codex CLI';
 function runReviewer(prompt, tree, tmp) {
   writeFileSync(join(tmp, 'schema.json'), JSON.stringify(schema));
@@ -176,7 +177,8 @@ try {
   rmSync(tmp, { recursive: true });
 }
 
-// GitHub refuses a whole review when one comment's line is outside the diff, so those move into the text.
+// GitHub refuses a whole review when one comment's line is outside the diff, so those move into
+// the text.
 const [inline, loose] = [true, false].map((wanted) =>
   answer.findings.filter((finding) => inDiff.has(`${finding.path}:${finding.line}`) === wanted),
 );

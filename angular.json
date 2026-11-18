@@ -100,6 +100,7 @@
               "src/**/*.html",
               "e2e/**/*.ts",
               "sim/**/*.ts",
+              "scripts/*.mjs",
               "*.ts"
             ]
           }

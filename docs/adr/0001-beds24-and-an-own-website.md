@@ -4,21 +4,20 @@ Status: accepted, 2026-11-12. Group: product.
 
 ## Context
 
-A small business rents holiday apartments by the week: two now, four soon. They are bookable on
-one booking portal only. The business wants direct bookings at a lower price, a second portal
-next, and a website that is its official page.
+A small business rents holiday apartments by the week: two now, four soon. They are bookable on one
+booking portal only. The business wants direct bookings at a lower price, a second portal next, and
+a website that is its official page.
 
 That needs two things, and each could be bought or built:
 
-- **A system that holds the bookings.** It must do what the portal does for the business today,
-  for several portals and for the own website:
-  1. Connect Booking.com and Airbnb through their APIs, with one calendar, so that no week is
-     sold twice.
+- **A system that holds the bookings.** It must do what the portal does for the business today, for
+  several portals and for the own website:
+  1. Connect Booking.com and Airbnb through their APIs, with one calendar, so that no week is sold
+     twice.
   2. Sell whole weeks only, with a fixed weekday for arrival and departure.
   3. Serve an own website: an API to read from, and a booking step with a payment gateway.
   4. Hold a price per day that follows the season, and a different price for direct bookings.
-  5. Send messages to the guest from templates, on confirmation and later with the check-in
-     details.
+  5. Send messages to the guest from templates, on confirmation and later with the check-in details.
   6. Later, and with low priority: collect reviews of direct stays.
 - **A website for the guest:** the free weeks with their prices, the apartments, the practical
   guides, in two languages, found by search engines and easy to use on a phone.
@@ -28,16 +27,16 @@ developers. One developer builds and maintains the site.
 
 ## Decision
 
-1. **Beds24 is the booking system.** It holds availability, prices, stay rules, bookings and
-   the payment, and connects the portals.
-2. **The website is our own small application.** It reads from the Beds24 API, shows the weeks
-   and the apartments, and hands over to the Beds24 guest form for the booking. It has no
-   checkout, no database and no content editor.
+1. **Beds24 is the booking system.** It holds availability, prices, stay rules, bookings and the
+   payment, and connects the portals.
+2. **The website is our own small application.** It reads from the Beds24 API, shows the weeks and
+   the apartments, and hands over to the Beds24 guest form for the booking. It has no checkout, no
+   database and no content editor.
 
 ## The booking system: options
 
-This is not a full market comparison. Beds24 was tried first, in a spike; the others were
-compared by their published prices and plans only.
+This is not a full market comparison. Beds24 was tried first, in a spike; the others were compared
+by their published prices and plans only.
 
 <!-- prettier-ignore -->
 | Option | For | Against | Result |
@@ -61,10 +60,10 @@ billing and without VAT:
 These are base prices, not final totals:
 
 - **Payment processing** is charged by the payment provider with every system and is left out.
-- **The others include a hosted website.** With Beds24 the site runs on a server of our own,
-  which adds a few euros a month.
-- **Beds24 charges for extras by use:** €0.10 per SMS and €19 a month for a booking page under
-  an own subdomain. Neither is needed now.
+- **The others include a hosted website.** With Beds24 the site runs on a server of our own, which
+  adds a few euros a month.
+- **Beds24 charges for extras by use:** €0.10 per SMS and €19 a month for a booking page under an
+  own subdomain. Neither is needed now.
 - **Growth is cheap with Beds24:** a further portal adds €0.55 per apartment a month.
 
 With the server and even the subdomain added, Beds24 stays below the others in both columns.
@@ -77,8 +76,8 @@ Beds24 charges no commission on bookings. Against the list above:
   templates.
 - **Not offered:** reviews of direct stays, which would be our own later work.
 
-The effort of setting Beds24 up is spent once, by the developer. What the business uses day to
-day is the calendar and the price table.
+The effort of setting Beds24 up is spent once, by the developer. What the business uses day to day
+is the calendar and the price table.
 
 What Beds24 really does, and what is still untested, is in `../beds24-findings.md`.
 
@@ -92,37 +91,36 @@ What Beds24 really does, and what is still untested, is in `../beds24-findings.m
 | An own site with an own checkout through the Beds24 API | Full control of every step. | Brings payments, personal data and stored bookings into our code, for a few dozen bookings a year. | Rejected. |
 | An own site that hands over to the Beds24 guest form | The parts that make the site worth visiting are ours: the grid of weeks, the apartments, the seasons, speed. Beds24 collects the guest's data, stores the booking and takes the payment. | Developer time. The last step looks and behaves as Beds24 allows. | Chosen. |
 
-The own site is affordable here because the developer's time is not billed and the project is
-also a portfolio piece. Without that, the builder would be the better trade.
+The own site is affordable here because the developer's time is not billed and the project is also a
+portfolio piece. Without that, the builder would be the better trade.
 
 ## Conditions before the real site is released
 
 The decision rests on a spike with a trial account. These are still open and must hold first:
 
 - **A complete booking:** payment, confirmation and the return to the site, on a paid account.
-- **The framed guest form in Safari on a real iPhone,** where its session cookie is a
-  third-party cookie. If it fails there, the same link opens as a full page.
-- **The weekly rule on each portal, before that portal is switched on:** that closed arrival
-  and departure days arrive there. Booking.com before the release, Airbnb before it is added.
+- **The framed guest form in Safari on a real iPhone,** where its session cookie is a third-party
+  cookie. If it fails there, the same link opens as a full page.
+- **The weekly rule on each portal, before that portal is switched on:** that closed arrival and
+  departure days arrive there. Booking.com before the release, Airbnb before it is added.
 
 If the hand-over cannot be made to work even as a full page, an own checkout is the remaining
 option. It reverses a boundary of this decision and needs a new ADR.
 
 ## Consequences
 
-- **The site is coupled to Beds24 directly.** There is no provider interface: a second system
-  would change the hand-over and the simulator as well, so an abstraction would be untested
-  guesswork.
-- **The last step is not ours.** The guest form's look, accessibility and behaviour in a frame
-  are limited to what Beds24's settings allow.
-- **Guest data passes through the site once.** After a booking, Beds24 returns the guest to the
-  site with the booking and the guest's name and contact in the address. The site shows them,
-  keeps them out of logs and storage, and does not treat them as proof of a booking.
-- **The site fills the API's gaps itself:** pictures come from content files, and the rule that
-  the calendar does not show is applied by the site.
-- **A simulator is needed.** The public demo has no Beds24 account, and the tests must not call
-  the real one.
-- **The business edits listings in Beds24 and nothing else.** Prices, availability and listing
-  texts change there and show on the site without a deployment. Everything else on the site is
-  a change in the repository, made by the developer.
+- **The site is coupled to Beds24 directly.** There is no provider interface: a second system would
+  change the hand-over and the simulator as well, so an abstraction would be untested guesswork.
+- **The last step is not ours.** The guest form's look, accessibility and behaviour in a frame are
+  limited to what Beds24's settings allow.
+- **Guest data passes through the site once.** After a booking, Beds24 returns the guest to the site
+  with the booking and the guest's name and contact in the address. The site shows them, keeps them
+  out of logs and storage, and does not treat them as proof of a booking.
+- **The site fills the API's gaps itself:** pictures come from content files, and the rule that the
+  calendar does not show is applied by the site.
+- **A simulator is needed.** The public demo has no Beds24 account, and the tests must not call the
+  real one.
+- **The business edits listings in Beds24 and nothing else.** Prices, availability and listing texts
+  change there and show on the site without a deployment. Everything else on the site is a change in
+  the repository, made by the developer.
 - **Running cost** is the Beds24 fee and one small server.

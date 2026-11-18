@@ -100,9 +100,11 @@ export const starts: Starts = Object.fromEntries(
 // The inline script: sets the season before the body is painted, and marks that it ran.
 export function seasonScript(value: Starts): string {
   return (
-    `(function(s){var r=null;try{r=localStorage.getItem(${JSON.stringify(STORAGE_KEY)})}catch(e){}` +
+    `(function(s){var r=null;` +
+    `try{r=localStorage.getItem(${JSON.stringify(STORAGE_KEY)})}catch(e){}` +
     `var h=document.documentElement;` +
-    `h.dataset.season=(${seasonState.toString()})(s,new URLSearchParams(location.search).get("season"),r,new Date()).season;` +
+    `h.dataset.season=(${seasonState.toString()})` +
+    `(s,new URLSearchParams(location.search).get("season"),r,new Date()).season;` +
     `h.dataset.script=""})(${JSON.stringify(value)})`
   );
 }

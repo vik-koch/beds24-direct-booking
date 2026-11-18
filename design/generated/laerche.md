@@ -1,15 +1,17 @@
 # Lärche picture credits
 
-Generated on 17 November 2026 by the repository's maintainer for the fictional beds24-direct-booking demo.
+Generated on 17 November 2026 by the repository's maintainer for the fictional beds24-direct-booking
+demo.
 
 AI-generated with OpenAI’s built-in image generation tool, directed through Codex using
 [the apartment picture brief](../apartment-pictures.md). The tool does not expose its underlying
-image model identifier; no specific model is claimed. No external photographs were supplied.
-These are invented interiors and scenery, not photographs of a real property.
+image model identifier; no specific model is claimed. No external photographs were supplied. These
+are invented interiors and scenery, not photographs of a real property.
 
 ## Files, references and suggested alternative text
 
-All final files are landscape 1536 × 1024 (3:2). The generator gave PNG; the repository holds them as WebP at quality 85.
+All final files are landscape 1536 × 1024 (3:2). The generator gave PNG; the repository holds them
+as WebP at quality 85.
 
 | File                             | Reference      | Suggested English alternative text                                                                                               |
 | -------------------------------- | -------------- | -------------------------------------------------------------------------------------------------------------------------------- |
@@ -21,35 +23,35 @@ All final files are landscape 1536 × 1024 (3:2). The generator gave PNG; the re
 
 ## Reuse and disclosure
 
-These 5 generated assets are supplied under the project’s [MIT licence](../../LICENSE),
-to the extent that copyright or other licensable rights exist. This applies only to
-`laerche-1.webp` through `laerche-5.webp` and does not change any existing photograph’s licence.
-The rights and disclosure notes checked on 17 November 2026 are recorded in
-[Ahorn’s credits](ahorn.md#reuse-and-disclosure). Copyright protection and exclusive rights
-are not guaranteed.
+These 5 generated assets are supplied under the project’s [MIT licence](../../LICENSE), to the
+extent that copyright or other licensable rights exist. This applies only to `laerche-1.webp`
+through `laerche-5.webp` and does not change any existing photograph’s licence. The rights and
+disclosure notes checked on 17 November 2026 are recorded in
+[Ahorn’s credits](ahorn.md#reuse-and-disclosure). Copyright protection and exclusive rights are not
+guaranteed.
 
 Suggested visible credit when published:
 
 > Fictional apartment imagery for this demo, AI-generated with OpenAI through Codex.
 
-Display clear AI disclosure alongside the gallery when integrating the selected images.
-Showing them on the site, with a visible AI label on each, belongs to the apartment pages.
+Display clear AI disclosure alongside the gallery when integrating the selected images. Showing them
+on the site, with a visible AI label on each, belongs to the apartment pages.
 
 ## Review
 
-Visually inspected all five selected outputs. The selected living room has four dining chairs,
-an oven and dishwasher, charcoal sofa and balcony doors. The bedrooms show a double bed and
-a bunk bed with ladder respectively; the bunk room includes its desk and wall hooks. The
-bathroom has a bath tub and hand shower. The balcony fills the foreground, with two chairs,
-a folding table and village roofs beyond. Larch tones and rust/charcoal textiles remain consistent.
-No people, animals or visible writing/logos were seen, and no obvious impossible doors or
-furniture were identified. Appliance controls remain visible but no brand names were identified.
-The living room’s balcony doors are closed rather than open. The balcony view introduces a
-fictional church spire among the roofs; it is not a verified depiction of a particular village.
+Visually inspected all five selected outputs. The selected living room has four dining chairs, an
+oven and dishwasher, charcoal sofa and balcony doors. The bedrooms show a double bed and a bunk bed
+with ladder respectively; the bunk room includes its desk and wall hooks. The bathroom has a bath
+tub and hand shower. The balcony fills the foreground, with two chairs, a folding table and village
+roofs beyond. Larch tones and rust/charcoal textiles remain consistent. No people, animals or
+visible writing/logos were seen, and no obvious impossible doors or furniture were identified.
+Appliance controls remain visible but no brand names were identified. The living room’s balcony
+doors are closed rather than open. The balcony view introduces a fictional church spire among the
+roofs; it is not a verified depiction of a particular village.
 
-The first living-room attempt appeared to contain five dining chairs and was discarded.
-The selected version was generated afresh with the four-chair constraint recorded below.
-All later pictures reference that selected version.
+The first living-room attempt appeared to contain five dining chairs and was discarded. The selected
+version was generated afresh with the four-chair constraint recorded below. All later pictures
+reference that selected version.
 
 These synthetic illustrations do not establish a physically consistent floor plan, actual wood
 species or a geographically verified mountain view. No application tests were run for these
