@@ -100,7 +100,8 @@ The decision rests on a spike with a trial account. These are still open and mus
 
 - **A complete booking:** payment, confirmation and the return to the site, on a paid account.
 - **The framed guest form in Safari on a real iPhone,** where its session cookie is a third-party
-  cookie. If it fails there, the same link opens as a full page.
+  cookie. If it fails there, the same link opens as a full page. Part of the check on real Apple
+  devices, [issue 100](https://github.com/vik-koch/beds24-direct-booking/issues/100).
 - **The weekly rule on each portal, before that portal is switched on:** that closed arrival and
   departure days arrive there. Booking.com before the release, Airbnb before it is added.
 

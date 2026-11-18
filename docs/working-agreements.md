@@ -79,8 +79,13 @@ The process is part of what the project shows: issues, pull requests and agent r
 - **The screenshot matrix** (2 languages × 2 seasons × phone and desktop) stays on Chromium and the
   WebKit phone, or it is too large to review.
 - **Playwright's WebKit is not Safari.** It is a first signal for layout and forms. Cookie blocking
-  and wallet payments differ, so anything that depends on them (the booking frame) is confirmed once
-  on a real iPhone.
+  and wallet payments differ, so anything that depends on them (the booking frame) is confirmed in
+  the check on real Apple devices below.
+- **A feature's done-when names neither Safari nor VoiceOver.** No feature could meet them: the
+  maintainer has no Apple hardware, and no emulator stands in for it. WebKit in CI is the signal for
+  Safari's engine, NVDA on Windows the manual screen-reader check. What only Apple devices show is
+  checked once, on a real iPhone and a real Mac, before a release guests rely on
+  ([issue 100](https://github.com/vik-koch/beds24-direct-booking/issues/100)).
 
 ## Accessibility
 
