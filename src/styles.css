@@ -240,29 +240,11 @@
     white-space: nowrap;
   }
 
-  /* The narrowest phones keep the wordmark on one line beside it. */
-  @media (width < 22.5rem) {
-    .season-switch {
-      --narrow: 2rem;
-      --pad: 0.25rem;
-    }
-
-    .season-sizer,
-    .season-switch label {
-      padding: 0 0.625rem 0 0.4375rem;
-      font-size: 0.875rem;
-    }
-  }
-
   /* Each icon keeps its place: summer's sits right of its name, at the edge that does not
      move, as winter's sits at the left one. */
   .season-switch label[data-for='summer'] {
     flex-direction: row-reverse;
     padding: 0 0.5rem 0 0.875rem;
-
-    @media (width < 22.5rem) {
-      padding: 0 0.4375rem 0 0.625rem;
-    }
   }
 
   .season-sizer {
@@ -306,6 +288,28 @@
     width: max-content;
     background: var(--color-accent);
     color: var(--color-on-accent);
+  }
+
+  /* Phones below 24rem leave the wordmark no room for a name: both seasons show their icon in a
+     narrow slot, and the names are only the radios' names. */
+  @media (width < 24rem) {
+    .season-switch {
+      grid-template-columns: var(--narrow) var(--narrow);
+    }
+
+    .season-sizer {
+      display: none;
+    }
+
+    html[data-season] .season-switch label[data-for] {
+      justify-content: center;
+      width: var(--narrow);
+      padding: 0;
+    }
+
+    .season-name {
+      @apply sr-only;
+    }
   }
 
   /* The glide (see SeasonSwitch): the pill moves from the old label's edges to the new one's,
