@@ -69,6 +69,11 @@ jobs:
           : "${DEPLOY_KNOWN_HOSTS:?variable DEPLOY_KNOWN_HOSTS is not set}"
           : "${DEPLOY_SSH_PRIVATE_KEY:?secret DEPLOY_SSH_PRIVATE_KEY is not set}"
           : "${APP_DOMAIN:?variable APP_DOMAIN is not set}"
+          # Before the settings file is written: a line break would start a setting of its own.
+          if [[ ! "$SITE_PASSWORD" =~ ^[A-Za-z0-9_-]*$ ]]; then
+            echo "::error::secret SITE_PASSWORD may hold only letters, digits, - and _"
+            exit 1
+          fi
           if [ -n "$SITE_PASSWORD" ] && ! grep -q SITE_PASSWORD app/compose.yml; then
             echo "::error::release $VERSION cannot close a site with a password; 0.2.0 can"
             exit 1
