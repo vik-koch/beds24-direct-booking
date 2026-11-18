@@ -154,7 +154,8 @@ export class Header {
   // On the home page the header lies over the hero photo, without its own ground, until the
   // page is scrolled or the menu is open.
   readonly overHero = input(false);
-  protected readonly scrolled = signal(false);
+  // From the start where the page opened lower, at an address's anchor (index.html).
+  protected readonly scrolled = signal((inject(DOCUMENT).defaultView?.scrollY ?? 0) > 0);
   protected readonly menuOpen = signal(false);
 
   protected readonly texts = inject(TEXTS);

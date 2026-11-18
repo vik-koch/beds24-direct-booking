@@ -180,6 +180,136 @@ test('narrower than 320 px the page keeps its 320 px layout and scrolls sideways
   expect(await page.locator('app-header').evaluate((header) => header.offsetWidth)).toBe(320);
 });
 
+test('an address with an anchor opens at its section; smooth scrolling starts after it', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  // The page in the first frame that shows it, while the application's scripts are held back.
+  // Frames before it may be hidden and lack the section, if the transfer pauses.
+  const { promise: held, resolve: release } = Promise.withResolvers<void>();
+  await page.route(/\/main-[\w-]+\.js$/, async (route) => {
+    await held;
+    await route.continue();
+  });
+  await page.addInitScript(() => {
+    const sample = () => {
+      if (!document.body || getComputedStyle(document.body).visibility !== 'visible')
+        return requestAnimationFrame(sample);
+      const header = document.querySelector('app-header');
+      const section = document.getElementById('free-weeks');
+      (window as unknown as { first: unknown }).first = {
+        y: scrollY,
+        behavior: getComputedStyle(document.documentElement).scrollBehavior,
+        over: header?.hasAttribute('data-over') ?? true,
+        // Not a number when a visible frame lacks the section or the header.
+        gap:
+          (section?.getBoundingClientRect().top ?? NaN) -
+          (header?.getBoundingClientRect().bottom ?? NaN),
+      };
+    };
+    requestAnimationFrame(sample);
+  });
+  await page.goto('/en#free-weeks', { waitUntil: 'commit' });
+  const sampled = await page.waitForFunction(
+    () => (window as unknown as { first?: unknown }).first,
+  );
+  const first = (await sampled.jsonValue()) as {
+    y: number;
+    behavior: string;
+    over: boolean;
+    gap: number;
+  };
+  release();
+  expect(first.y).toBeGreaterThan(0);
+  expect(first.over).toBe(false);
+  expect(Math.abs(first.gap)).toBeLessThanOrEqual(1);
+
+  // Smooth scrolling comes with the application, after that first jump, and not with reduced
+  // motion. Whether a browser then animates is its own affair. The page stays where it is.
+  expect(first.behavior).toBe('auto');
+  const behavior = () =>
+    page.evaluate(() => getComputedStyle(document.documentElement).scrollBehavior);
+  await expect.poll(behavior).toBe('smooth');
+  await page.waitForTimeout(500);
+  expect(await page.evaluate(() => scrollY)).toBe(first.y);
+
+  // A reload after scrolling away opens at the section again, and stays there.
+  await page.evaluate(() => scrollTo({ top: 2000, behavior: 'instant' }));
+  await page.reload({ waitUntil: 'commit' });
+  const reloaded = await page.waitForFunction(
+    () => (window as unknown as { first?: unknown }).first,
+  );
+  const again = (await reloaded.jsonValue()) as typeof first;
+  expect(again.y).toBe(first.y);
+  expect(Math.abs(again.gap)).toBeLessThanOrEqual(1);
+  await expect.poll(behavior).toBe('smooth');
+  await page.waitForTimeout(500);
+  expect(await page.evaluate(() => scrollY)).toBe(first.y);
+
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await expect.poll(behavior).toBe('auto');
+});
+
+test('a page whose end never arrives is still shown', async ({ page }) => {
+  await page.route('**/en', async (route) => {
+    const response = await route.fetch();
+    const html = await response.text();
+    await route.fulfill({ response, body: html.slice(0, html.indexOf('</app-root>')) });
+  });
+  await page.goto('/en#free-weeks');
+  await expect(page.locator('body')).toBeVisible();
+});
+
+test('without an anchor, jumps are smooth before the application has started', async ({ page }) => {
+  await page.route(/\/main-[\w-]+\.js$/, () => undefined);
+  await page.goto('/en', { waitUntil: 'commit' });
+  await expect(page.locator('html')).toHaveCSS('scroll-behavior', 'smooth');
+});
+
+test('after an anchored arrival, a link pressed before the application starts scrolls smoothly', async ({
+  page,
+}) => {
+  await page.route(/\/main-[\w-]+\.js$/, () => undefined);
+  await page.goto('/en#free-weeks', { waitUntil: 'commit' });
+  const html = page.locator('html');
+  await expect(page.locator('body')).toBeVisible();
+  await expect(html).toHaveCSS('scroll-behavior', 'auto');
+  // The hero's link, which every layout shows; the header's are in a menu on a phone.
+  await page.getByRole('link', { name: 'See the free weeks' }).click();
+  await expect(html).toHaveCSS('scroll-behavior', 'smooth');
+});
+
+test('without JavaScript, jumps are smooth', async ({ browser }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  const page = await context.newPage();
+  await page.goto('/en');
+  await expect(page.locator('html')).toHaveCSS('scroll-behavior', 'smooth');
+  await context.close();
+});
+
+test('a fragment cleared while the page loads leaves it shown', async ({ page }) => {
+  // As if the visitor left the anchor before the script at the page's end had run.
+  await page.route('**/en', async (route) => {
+    const response = await route.fetch();
+    const clear = '<script>history.replaceState(null, "", location.pathname)</script>';
+    await route.fulfill({
+      response,
+      body: (await response.text()).replace('<app-root', clear + '<app-root'),
+    });
+  });
+  await page.goto('/en#free-weeks');
+  await expect(page.locator('body')).toBeVisible();
+});
+
+test('an anchor that cannot be decoded opens the page at its top', async ({ page }) => {
+  const errors: Error[] = [];
+  page.on('pageerror', (error) => errors.push(error));
+  await page.goto('/en#50%');
+  await expect(page.locator('body')).toBeVisible();
+  expect(await page.evaluate(() => scrollY)).toBe(0);
+  expect(errors).toEqual([]);
+});
+
 test('at 320 px nothing scrolls sideways and a jump lands below the header', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 480 });
   await page.goto('/de/impressum');
