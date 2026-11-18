@@ -80,6 +80,8 @@ test('only the price chooses its week, and only the price reacts to the mouse', 
 test('a click without a pointer chooses a free cell from anywhere, and never a booked one', async ({
   page,
 }) => {
+  // Every apartment's column: on a phone the one shown may be booked out all season.
+  await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto('/en');
   await toOtherSeason(page);
   const stay = panel(page).locator('.stay:visible').first();
