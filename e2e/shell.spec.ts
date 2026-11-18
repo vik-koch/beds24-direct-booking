@@ -171,6 +171,35 @@ test('the apartments menu opens by keyboard and leads to an apartment', async ({
   await expect(page).toHaveURL('/de/wohnungen/zirbe');
 });
 
+test('the wordmark keeps one line on a phone', async ({ page }) => {
+  const paths = ['/de', '/de/bildnachweis', '/en', '/en/picture-credits'];
+  for (const width of [320, 340, 360, 375]) {
+    await page.setViewportSize({ width, height: 600 });
+    for (const path of paths) {
+      for (const season of ['winter', 'summer']) {
+        await page.goto(`${path}?season=${season}`);
+        const place = `${path} in ${season} at ${width}`;
+        const { lines, end, next } = await page
+          .locator('app-header a')
+          .first()
+          .evaluate((link) => {
+            const range = document.createRange();
+            range.selectNodeContents(link);
+            const switcher = document.querySelector('app-header .season-switch')!;
+            return {
+              lines: range.getClientRects().length,
+              end: range.getBoundingClientRect().right,
+              next: switcher.getBoundingClientRect().left,
+            };
+          });
+        expect(lines, place).toBe(1);
+        expect(end, place).toBeLessThanOrEqual(next);
+        expect(await page.evaluate(() => document.documentElement.scrollWidth), place).toBe(width);
+      }
+    }
+  }
+});
+
 test('narrower than 320 px the page keeps its 320 px layout and scrolls sideways', async ({
   page,
 }) => {
