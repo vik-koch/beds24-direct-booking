@@ -530,6 +530,7 @@ test('a season without prices is not open yet, and a season that has begun is fu
     );
   const sentence = await line(panel(page).locator('.weeks-empty'));
   await page.goto('/en');
+  await toOtherSeason(page);
   expect(await line(panel(page).getByRole('rowheader').first())).toBeCloseTo(sentence, 0);
 });
 
