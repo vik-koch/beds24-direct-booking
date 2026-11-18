@@ -194,7 +194,7 @@ interface Week {
                 type="button"
                 class="icon-button pick-clear"
                 [attr.aria-label]="texts.weeks.clear"
-                (click)="clear()"
+                (click)="clear($event)"
               >
                 <ng-icon name="lucideX" aria-hidden="true" />
               </button>
@@ -416,11 +416,12 @@ export class FreeWeeksList {
     this.cell({ season: season.name, apartment, row: target })?.focus();
   }
 
-  // The bar goes with its button, so the focus returns to the week that was chosen.
-  protected clear() {
+  // The bar goes with its button, so the focus returns to the week that was chosen. A pointer
+  // leaves the page where it is: the browser would scroll a price out of view to it.
+  protected clear(event: MouseEvent) {
     const cell = this.cell(this.chosen());
     this.chosen.set(null);
-    cell?.focus();
+    cell?.focus({ preventScroll: event.detail > 0 });
   }
 
   // The grid enters where the focus last left it, which after a change of season is not the
