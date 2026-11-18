@@ -20,7 +20,7 @@ export default defineConfig({
     // A second instance whose token the simulator refuses; its pages answer 503.
     {
       command: 'npm run serve',
-      url: 'http://localhost:4001/favicon.ico',
+      url: 'http://localhost:4001/pictures/icon-winter.svg',
       env: { ...app('refused'), PORT: '4001' },
       ...reuse,
     },
@@ -33,7 +33,7 @@ export default defineConfig({
     },
     {
       command: 'npm run serve',
-      url: 'http://localhost:4003/favicon.ico',
+      url: 'http://localhost:4003/pictures/icon-winter.svg',
       env: { ...app('simulator', 4301), PORT: '4003' },
       ...reuse,
     },
@@ -48,7 +48,7 @@ export default defineConfig({
     {
       command:
         'CONTENT_DIR=e2e/content npm run content && ng build --output-path dist/other && npm run content && node dist/other/server/server.mjs',
-      url: 'http://localhost:4002/favicon.ico',
+      url: 'http://localhost:4002/pictures/icon.svg',
       env: { ...app('simulator'), PORT: '4002' },
       timeout: 180_000,
       ...reuse,

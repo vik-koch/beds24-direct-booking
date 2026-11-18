@@ -187,6 +187,26 @@ test('a link that names a season wins and lasts for the visit', async ({ page })
   expect(await season(page)).toBe('winter');
 });
 
+test('the tab shows the season’s icon, from the server on and after a switch', async ({
+  page,
+  request,
+}) => {
+  const served = await (await request.get('/en')).text();
+  const name = served.match(/data-season="(\w+)"/)![1];
+  expect(served).toMatch(
+    new RegExp(`<link rel="icon" type="image/svg\\+xml" href="/pictures/icon-${name}.svg">`),
+  );
+  const file = await request.get(`/pictures/icon-${name}.svg`);
+  expect(file.headers()['content-type']).toContain('image/svg+xml');
+
+  const icon = page.locator('link[rel=icon]');
+  await page.goto('/en?season=summer');
+  await expect(icon).toHaveAttribute('href', '/pictures/icon-summer.svg');
+  await switchTo(page, 'winter');
+  await expect(icon).toHaveAttribute('href', '/pictures/icon-winter.svg');
+  await expect(icon).toHaveCount(1);
+});
+
 test('a stored choice ends after 30 days, or when its season is no longer shown', async ({
   page,
 }) => {
@@ -212,7 +232,7 @@ test('only the shown season’s photo is fetched, the other one on approach', as
   const photos: string[] = [];
   page.on('request', (request) => {
     const path = new URL(request.url()).pathname;
-    if (path.startsWith('/pictures/')) photos.push(path);
+    if (path.startsWith('/pictures/hero-')) photos.push(path);
   });
   await page.clock.setFixedTime(november);
   await page.goto('/de');
@@ -306,6 +326,7 @@ test('a site with a single season has no switch and no credits', async ({ page }
   expect(await season(page)).toBe('summer');
   await expect(page.getByRole('radiogroup')).toHaveCount(0);
   await expect(page.getByRole('img', { name: /sfumatura/ })).toBeVisible();
+  await expect(page.locator('link[rel=icon]')).toHaveAttribute('href', '/pictures/icon.svg');
   await expect.poll(() => stored(page)).toBeNull();
 
   await page.goto(`${other}/it/crediti`);

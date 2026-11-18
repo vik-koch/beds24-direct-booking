@@ -33,6 +33,9 @@ const day = z
 // What was done to a credited picture; each language's texts name them.
 export const changeNames = ['cropped', 'scaled'] as const;
 
+// The browser tab's icon while the season is shown.
+const icon = z.string().regex(/^pictures\/[\w.-]+\.svg$/, 'not an SVG file in pictures/');
+
 // A file in the content folder's pictures/, and who to credit for it.
 const picture = z.strictObject({
   file: z.string().regex(/^pictures\/[\w.-]+$/, 'not a file in pictures/'),
@@ -56,8 +59,8 @@ const picture = z.strictObject({
 const seasons = z
   .strictObject(
     {
-      winter: z.strictObject({ start: day.optional(), hero: picture }).optional(),
-      summer: z.strictObject({ start: day.optional(), hero: picture }).optional(),
+      winter: z.strictObject({ start: day.optional(), hero: picture, icon }).optional(),
+      summer: z.strictObject({ start: day.optional(), hero: picture, icon }).optional(),
     },
     {
       error: (issue) =>

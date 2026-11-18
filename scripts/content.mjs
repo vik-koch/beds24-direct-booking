@@ -79,13 +79,15 @@ export function readContent(dir) {
           throw new Error(
             `${join(dir, `texts.${tag}.json`)}\n  credits.changes.${change}: missing`,
           );
-  for (const name of listed) {
-    const file = site.seasons[name].hero.file;
-    if (!existsSync(join(dir, file)))
-      throw new Error(
-        `${join(dir, 'site.json')}\n  seasons.${name}.hero.file: ${file} does not exist`,
-      );
-  }
+  for (const name of listed)
+    for (const [key, file] of [
+      ['hero.file', site.seasons[name].hero.file],
+      ['icon', site.seasons[name].icon],
+    ])
+      if (!existsSync(join(dir, file)))
+        throw new Error(
+          `${join(dir, 'site.json')}\n  seasons.${name}.${key}: ${file} does not exist`,
+        );
   const languages = site.languages.map((tag) => {
     const code = prefix(tag);
     const name = new Intl.DisplayNames([tag], { type: 'language' }).of(code);

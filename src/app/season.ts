@@ -130,6 +130,7 @@ export class Season {
       script.textContent = seasonScript(starts);
       this.document.head.appendChild(script);
     }
+    this.showIcon(this.state.season);
   }
 
   // A watcher is called before a change, to measure the page as it is, and returns what to do
@@ -146,6 +147,7 @@ export class Season {
     // Only now may the page animate a change of season, not on its first paint.
     this.html.setAttribute('data-switched', '');
     this.html.setAttribute('data-season', name);
+    this.showIcon(name);
     this.remember(name);
     after.forEach((then) => then());
     // The link's ?season= would win over the switch on the next reload.
@@ -163,6 +165,18 @@ export class Season {
     if (this.server || !file || this.preloaded.has(name)) return;
     this.preloaded.add(name);
     new Image().src = `/${file}`;
+  }
+
+  // The tab shows the season's icon; the browser repoints the link the server rendered.
+  private showIcon(name: SeasonName) {
+    let link = this.document.head.querySelector<HTMLLinkElement>('link[rel=icon]');
+    if (!link) {
+      link = this.document.createElement('link');
+      link.rel = 'icon';
+      link.type = 'image/svg+xml';
+      this.document.head.appendChild(link);
+    }
+    link.href = `/${site.seasons[name]!.icon}`;
   }
 
   // In the browser the inline script has chosen already. This repeats the choice to know the

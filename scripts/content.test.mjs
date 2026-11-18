@@ -168,6 +168,13 @@ test('a hero photo must exist', () => {
   assert.throws(() => readContent(dir), /seasons\.winter\.hero\.file: pictures\/gone\.jpg/);
 });
 
+test('every season needs its icon, an SVG file that exists', () => {
+  const icon = (value) => changed('site.json', (site) => (site.seasons.summer.icon = value));
+  assert.throws(() => readContent(icon(undefined)), /seasons\.summer\.icon/);
+  assert.throws(() => readContent(icon('pictures/hero-summer.webp')), /not an SVG file/);
+  assert.throws(() => readContent(icon('pictures/gone.svg')), /pictures\/gone\.svg does not exist/);
+});
+
 test('a feature names any Lucide icon, and only those', () => {
   const dir = changed('site.json', (site) => (site.features[0].icon = 'mountain-snow'));
   assert.equal(readContent(dir).site.features[0].icon, 'mountain-snow');
