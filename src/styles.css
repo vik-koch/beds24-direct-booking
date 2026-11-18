@@ -97,6 +97,21 @@
       transition: none;
     }
   }
+
+  /* A change of page fades: inside the application by the router, a full load by the browser. */
+  @media (prefers-reduced-motion: no-preference) {
+    @view-transition {
+      navigation: auto;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    ::view-transition-group(*),
+    ::view-transition-old(*),
+    ::view-transition-new(*) {
+      animation: none;
+    }
+  }
 }
 
 @layer components {

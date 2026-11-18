@@ -198,6 +198,8 @@ amounts can be compared down a column.
 - **Jumps:** a jump within the page scrolls smoothly, at once with reduced motion. An address with a
   section's anchor opens at that section, with no scroll to be seen. Without JavaScript, Chromium
   still scrolls there from the top (#106).
+- **Changes of page:** a new page fades in over the old one (the browser's cross-fade, 0.25 s),
+  inside the application and on a full load alike; with reduced motion it changes at once.
 - **Header:** sticky, a light frosted bar (the ground colour at 72% with a blur). Over the hero at
   the top of the home page it has no ground of its own until the page scrolls or the menu opens.
   Below 64rem, and on a screen without hover such as a tablet, it holds the wordmark, the season
@@ -365,6 +367,10 @@ a link to the same page in that language, so it takes any number of them. In the
 are indented below a label like the apartments, at weight 400, the current one in the accent. The
 label, a globe and "Sprache", is in soft ink at label size, so it does not look like an entry that
 can be followed. It is a menu, not a pill, so that the two switches are easy to tell apart.
+
+A change of language keeps the visitor's place: the element at the header's lower edge stays there,
+as far scrolled past as before, however long the other language's texts are. A chosen week stays
+chosen, and the focus is on the language entry, or the menu button where the header is folded.
 
 ## Do's and Don'ts
 
