@@ -241,10 +241,10 @@ falls downwards, so it reads as lying on the page rather than floating.
   stands on the accent, as in the booking bar); a 2px accent outline, 3px away, on keyboard
   focus, following the control's shape. Every tab stop shows it, on the control or on what it
   draws for a hidden input; an e2e test walks the home page's tab stops and checks each.
-- **Text button:** a sentence in the accent with an arrow, underlined on hover. Its focus ring
-  is a pill round the label with air at its sides (0.875rem); the label stays in line with the
-  column and the ring may reach past it; below 22.5rem the label is at label size, so it keeps one line. Used above
-  the list to reach the other season ("Nächste Saison: Sommer 2027 →").
+- **Text button:** a sentence in the accent with an arrow, underlined on hover. Its focus ring is a
+  pill round the label with air at its sides (0.875rem); the label stays in line with the column and
+  the ring may reach past it; below 22.5rem the label is at label size, so it keeps one line. Used
+  above the list to reach the other season ("Nächste Saison: Sommer 2027 →").
 
 ### Cards / Containers
 
@@ -287,11 +287,10 @@ readers. The list does not repeat this switch: it has the text button.
   head is the apartment's name with its guests and size below, right-aligned over the prices.
   On a phone the one apartment shown takes the whole header row: its name on the left, its
   facts on the right.
-- **Months:** the weeks are grouped by the month they arrive in (a week from 26 December
-  belongs to December). Each group starts with the month's name in soft ink at 0.875rem, with the year where
-  the list starts and in January, and
-  every other group lies on a light ground (the page's ground mixed 50% into white) that
-  reaches the card's edges; the last month's reaches its lower edge too.
+- **Months:** the weeks are grouped by the month they arrive in (a week from 26 December belongs to
+  December). Each group starts with the month's name in soft ink at 0.875rem, with the year where
+  the list starts and in January, and every other group lies on a light ground (the page's ground
+  mixed 50% into white) that reaches the card's edges; the last month's reaches its lower edge too.
 - **Row:** the stay's dates on the left in body text (weekday, day and month in figures, so a
   row fits at 320 px), one cell per apartment on the right. Below 22.5rem the rows leave the
   weekday out, since every week starts on the same one; each price's label still names it.
@@ -300,14 +299,14 @@ readers. The list does not repeat this switch: it has the text button.
   box. Hover puts a soft tint behind it.
 - **Chosen week:** an accent-filled pill with white figures.
 - **Booked week:** the word in soft ink, no decoration.
-- **Keyboard:** the list is one grid, after the WAI-ARIA Authoring Practices' grid pattern.
-  Tab enters it once, at the chosen week while it is shown. With nothing chosen it enters at
-  the season's first week, booked or free; once the list has been used, where the focus last
-  was, and after a change of season or of tab at the first week shown. The arrow keys move by
-  week and apartment without choosing, Home and End to the row's first and last apartment, Page Up and Page Down to the
-  same place in the month before or after, Ctrl+Home and Ctrl+End to the first and last week.
-  Enter or Space chooses a free week or clears the chosen one. A booked week can be reached and
-  is announced as booked, but not chosen. On a phone the arrows stay in the one apartment shown.
+- **Keyboard:** the list is one grid, after the WAI-ARIA Authoring Practices' grid pattern. Tab
+  enters it once, at the chosen week while it is shown. With nothing chosen it enters at the
+  season's first week, booked or free; once the list has been used, where the focus last was, and
+  after a change of season or of tab at the first week shown. The arrow keys move by week and
+  apartment without choosing, Home and End to the row's first and last apartment, Page Up and Page
+  Down to the same place in the month before or after, Ctrl+Home and Ctrl+End to the first and last
+  week. Enter or Space chooses a free week or clears the chosen one. A booked week can be reached
+  and is announced as booked, but not chosen. On a phone the arrows stay in the one apartment shown.
   The focus ring goes round the price's or the word's pill.
 - **Not open yet, or no week free:** a short sentence below the header row, in the card, on the
   line where the first week's dates would be.
@@ -338,10 +337,10 @@ card's width, centred. On a phone it is the full width, with the name on a line 
 the stay and price below, and the cross and the button at the two sides, each as far from the
 bar's edge as the other; below 22.5rem its text is 1rem, so the button keeps one line.
 
-One week is chosen at a time, in either season: choosing another replaces it. The bar belongs
-to the chosen week's season, so it is hidden while the other season is shown and returns with
-its own, fading in (0.25 s) once the season's colours have changed. A second click on the chosen price, Enter or Space on it, or the cross clears it; the cross
-then returns the focus to that price.
+One week is chosen at a time, in either season: choosing another replaces it. The bar belongs to the
+chosen week's season, so it is hidden while the other season is shown and returns with its own,
+fading in (0.25 s) once the season's colours have changed. A second click on the chosen price, Enter
+or Space on it, or the cross clears it; the cross then returns the focus to that price.
 
 ### Navigation
 
