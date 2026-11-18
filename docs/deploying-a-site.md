@@ -51,7 +51,7 @@ All in the environment `site` (Settings, Environments).
 |---|---|---|
 | Secret | `DEPLOY_SSH_PRIVATE_KEY` | The content of the private key file from step 1. |
 | Secret | `BEDS24_TOKEN` | The Beds24 token. Not needed while `SIM_IMAGE` is set. It must not contain a `$`: Compose reads the settings file and would take it for a variable. |
-| Secret | `SITE_PASSWORD` | Optional. The site then answers only with this password, under any user name, as a site under test should. The deployment's check uses it. It must not contain a `$`, for the same reason as the token. |
+| Secret | `SITE_PASSWORD` | Optional. The site then answers only with this password, under any user name, as a site under test should. It holds only letters, digits, `-` and `_`, or the run stops before it deploys, and it needs release `0.2.0` or later. The deployment's check then expects 401 without it and 200 with it. |
 | Variable | `DEPLOY_HOST` | The machine's address or name, as SSH reaches it. |
 | Variable | `DEPLOY_KNOWN_HOSTS` | The output of `ssh-keyscan` from step 5, for the same address or name as `DEPLOY_HOST`. |
 | Variable | `APP_DOMAIN` | The site's host name. |
@@ -111,8 +111,10 @@ stack of its own behind the one proxy, with its own host name, directory and rep
 4. **Set up and push** as in steps 6 and 7, with `DEPLOY_HOST` and `DEPLOY_KNOWN_HOSTS` as for the
    first site, and `SITE_PASSWORD` while it is under test.
 
-Each site's app takes about 31 MiB at rest (below), so a second one fits the smallest machine. A
-deployment removes only its own repository's older images.
+Two sites on one machine were not tried under load. At rest one app took 31 MiB on the rehearsal's
+larger machine (below), so a second one should fit the smallest machine; that is an estimate. Deploy
+the two sites one after the other, not at the same moment: the machine's registry login and its
+cleanup of old images are shared.
 
 ## The machine's size
 
