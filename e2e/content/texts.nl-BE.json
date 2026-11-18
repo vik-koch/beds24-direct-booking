@@ -76,6 +76,10 @@
       "one": "{count} gast",
       "other": "{count} gasten"
     },
+    "size": {
+      "shown": "{size}\u00a0m²",
+      "spoken": "{size} vierkante meter"
+    },
     "taken": "bezet",
     "apartment": "Appartement",
     "next": "Volgend seizoen: {season}",

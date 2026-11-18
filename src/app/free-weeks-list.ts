@@ -102,7 +102,13 @@ type SeasonWeeks = FreeWeeks['seasons'][number];
                   [class.elsewhere]="$index !== tab()"
                 >
                   <span class="weeks-name">{{ apartment.name }}</span>
-                  <small>{{ facts(apartment) }}</small>
+                  <small
+                    >{{ guests(apartment) }} ·
+                    <span aria-hidden="true">{{ size(apartment, 'shown') }}</span><span
+                      class="sr-only"
+                      >{{ size(apartment, 'spoken') }}</span
+                    ></small
+                  >
                 </span>
               }
             </div>
@@ -307,10 +313,16 @@ export class FreeWeeksList {
     return this.weeks()!.seasons.find((season) => season.name !== name)!;
   }
 
-  protected facts({ guests, size }: FreeWeeks['apartments'][number]) {
+  protected guests({ guests }: FreeWeeks['apartments'][number]) {
     const { one, other } = this.texts.weeks.guests;
-    const count = fill(this.plural.select(guests) === 'one' ? one : other, { count: guests });
-    return `${count} · ${new Intl.NumberFormat(this.language.tag).format(size)}\u00a0m²`;
+    return fill(this.plural.select(guests) === 'one' ? one : other, { count: guests });
+  }
+
+  // A screen reader reads the unit's sign as it is written, "m superscript 2".
+  protected size({ size }: FreeWeeks['apartments'][number], form: 'shown' | 'spoken') {
+    return fill(this.texts.weeks.size[form], {
+      size: new Intl.NumberFormat(this.language.tag).format(size),
+    });
   }
 
   // A row's two days, each with its weekday apart, which the narrowest screens leave out.

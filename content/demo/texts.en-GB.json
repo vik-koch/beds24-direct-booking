@@ -85,6 +85,10 @@
       "one": "{count} guest",
       "other": "{count} guests"
     },
+    "size": {
+      "shown": "{size}\u00a0m²",
+      "spoken": "{size} square metres"
+    },
     "taken": "booked",
     "apartment": "Apartment",
     "next": "Next season: {season}",

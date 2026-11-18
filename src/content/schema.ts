@@ -178,6 +178,7 @@ export const textsSchema = z.strictObject({
   weeks: z.strictObject({
     week: text,
     guests: z.strictObject({ one: text, other: text }),
+    size: z.strictObject({ shown: text, spoken: text }),
     taken: text,
     apartment: text,
     next: text,
