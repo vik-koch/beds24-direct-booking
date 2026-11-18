@@ -44,6 +44,9 @@ adding a dependency, a route, a content key or an environment variable.
 - A slice is cut by capability and is done when lint, unit tests and the e2e suite pass, its edge
   states (empty, partial, unavailable, Beds24 unreachable) are handled, and it works at 320 px, by
   keyboard, in both languages and both seasons.
+- Care goes to the normal visit and to accessibility (WCAG 2.2 AA). A condition outside
+  `docs/working-agreements.md`'s "What the site supports", such as no JavaScript or a stalled
+  connection, gets no code and no test.
 - A decision gets a short ADR in the same pull request, with its group and a line in the index, when
   real alternatives were weighed and changing it later would be costly: a dependency, a data flow,
   hosting, a process. A smaller decision is recorded with its reason where it lives: the brief's
