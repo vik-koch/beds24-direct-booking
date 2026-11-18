@@ -55,7 +55,8 @@ status() { curl -K - -sL -o /dev/null -w '%{http_code}' --max-time 10 "https://$
 checked() {
   if [ -z "$password" ]; then [ "$(status </dev/null)" = 200 ]; return; fi
   [ "$(echo "user = \":$password\"" | status)" = 200 ] &&
-    curl -sL -o /dev/null -D - --max-time 10 "https://$domain/" | grep -qi '^www-authenticate: basic'
+    [[ "$(curl -sL -o /dev/null -w '%{http_code} %header{www-authenticate}' --max-time 10 \
+      "https://$domain/")" == "401 Basic "* ]]
 }
 for _ in $(seq 30); do
   if checked; then
