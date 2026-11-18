@@ -234,7 +234,7 @@ const tabRows = (page: Page) =>
   });
 const fine = (rows: number[]) => ({ rows, seen: true, overlap: false });
 
-test('four apartments with long names stand two by two, and no tab lies over another', async ({
+test('four apartments with long names stand two by two on a phone and fit the card on a desktop', async ({
   page,
 }) => {
   for (const path of ['/it', '/nl']) {
@@ -257,10 +257,23 @@ test('four apartments with long names stand two by two, and no tab lies over ano
       .locator('.room-tabs span')
       .evaluateAll((tabs) => tabs.map((tab) => Math.round(tab.getBoundingClientRect().width)));
     expect(new Set(widths).size, path).toBe(1);
-    // From 48rem every apartment has its column.
-    for (const width of [768, 1280]) {
+    // From 48rem every apartment has its column, all of it in the card, and the names wrap
+    // with room between them.
+    for (const width of [768, 895, 896, 1280]) {
       await page.setViewportSize({ width, height: 800 });
-      expect(await page.evaluate(() => document.documentElement.scrollWidth), path).toBe(width);
+      const place = `${path} at ${width}`;
+      expect(await page.evaluate(() => document.documentElement.scrollWidth), place).toBe(width);
+      const sheet = page.locator('.sheet').first();
+      expect(await sheet.evaluate((card) => card.scrollWidth - card.clientWidth), place).toBe(0);
+      const names = await page.locator('.weeks-name').evaluateAll((spans) =>
+        spans.map((span) => {
+          const text = document.createRange();
+          text.selectNodeContents(span);
+          return text.getBoundingClientRect();
+        }),
+      );
+      for (let i = 1; i < names.length; i++)
+        expect(names[i].left - names[i - 1].right, place).toBeGreaterThanOrEqual(16);
     }
   }
 });

@@ -723,10 +723,10 @@
     }
   }
 
-  /* The columns share the width evenly, none narrower than its content. */
+  /* The columns share the width evenly, none narrower than its content; a name may wrap. */
   .weeks-grid {
     display: grid;
-    grid-template-columns: repeat(var(--columns), minmax(max-content, 1fr));
+    grid-template-columns: repeat(var(--columns), minmax(min-content, 1fr));
   }
 
   .weeks-row,
@@ -782,25 +782,33 @@
     border-top: 1px solid var(--color-line);
   }
 
+  /* Two rows: the names stand at the top, however many lines each takes, and the facts in a
+     row of their own below them, level across the columns. */
   .weeks-columns {
+    grid-template-rows: auto auto;
     padding: 1rem 0 0.5rem;
 
     > :first-child {
+      grid-row: 2;
       align-self: end;
       color: var(--color-ink-soft);
       font-size: 0.9375rem;
     }
 
     > * + * {
-      align-self: end;
+      display: grid;
+      grid-row: 1 / span 2;
+      grid-template-rows: subgrid;
+      padding-left: 1rem;
       font-size: 1.1875rem;
       font-weight: 500;
       line-height: 1.2;
       text-align: right;
+      overflow-wrap: anywhere;
+      hyphens: auto;
     }
 
     small {
-      display: block;
       color: var(--color-ink-soft);
       font-size: 0.875rem;
       font-weight: 400;
@@ -808,7 +816,7 @@
   }
 
   /* Every week starts on the same weekday, so the narrowest screens leave it out of the rows;
-     each price's label still names it. */
+     the row header's label still names it. */
   [role='rowheader'] {
     padding-block: 1.125rem;
     white-space: nowrap;
@@ -837,6 +845,18 @@
     text-wrap: pretty;
   }
 
+  /* Four apartments' columns are short of room below 56rem: their text is a step smaller. */
+  @media (48rem <= width < 56rem) {
+    .weeks-grid:has(.weeks-columns > :nth-child(5)) {
+      font-size: 0.9375rem;
+
+      .weeks-columns > * + *,
+      .price {
+        font-size: 1rem;
+      }
+    }
+  }
+
   /* On a phone one apartment at a time, the one of the chosen tab, whose name and facts take
      the header row's whole width. */
   @media (width < 48rem) {
@@ -856,6 +876,7 @@
         > :not(:first-child, .elsewhere) {
           display: flex;
           grid-column: 1 / -1;
+          padding-left: 0;
           flex-wrap: wrap;
           align-items: baseline;
           justify-content: space-between;
