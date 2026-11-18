@@ -1,8 +1,26 @@
 // @ts-check
 const eslint = require('@eslint/js');
+const stylistic = require('@stylistic/eslint-plugin');
 const { defineConfig } = require('eslint/config');
 const tseslint = require('typescript-eslint');
 const angular = require('angular-eslint');
+
+// Prettier wraps code but not comments, so in practice this reports comments.
+const width = {
+  plugins: { '@stylistic': stylistic },
+  rules: {
+    '@stylistic/max-len': [
+      'error',
+      {
+        code: 100,
+        ignoreUrls: true,
+        ignoreStrings: true,
+        ignoreTemplateLiterals: true,
+        ignoreRegExpLiterals: true,
+      },
+    ],
+  },
+};
 
 module.exports = defineConfig([
   // Generated from the content folder, and spartan/ui's components as they are copied in.
@@ -14,6 +32,7 @@ module.exports = defineConfig([
       tseslint.configs.recommended,
       tseslint.configs.stylistic,
       angular.configs.tsRecommended,
+      width,
     ],
     processor: angular.processInlineTemplates,
     rules: {
@@ -35,6 +54,7 @@ module.exports = defineConfig([
       ],
     },
   },
+  { files: ['scripts/*.mjs'], ...width },
   {
     files: ['**/*.html'],
     extends: [angular.configs.templateRecommended, angular.configs.templateAccessibility],
