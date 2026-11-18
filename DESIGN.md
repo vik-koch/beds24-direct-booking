@@ -347,7 +347,9 @@ the cross and the button at the two sides, each as far from the bar's edge as th
 One week is chosen at a time, in either season: choosing another replaces it. The bar belongs to the
 chosen week's season, so it is hidden while the other season is shown and returns with its own,
 fading in (0.25 s) once the season's colours have changed. A second click on the chosen price, Enter
-or Space on it, or the cross clears it; the cross then returns the focus to that price.
+or Space on it, or the cross clears it; the cross then returns the focus to that price. Pressed with
+a pointer, the page stays where it is; by keyboard, it scrolls to the price, so the focus is in
+view.
 
 ### Navigation
 

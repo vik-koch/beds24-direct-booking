@@ -112,6 +112,58 @@ test('a chosen week is cleared by a second click, Enter, Space or the bar, and w
   await expect(stay).toBeFocused();
 });
 
+// The cross returns the focus to the price. A pointer has no use for the price's place, so the
+// page stays; a keyboard follows the focus. Pressed by coordinates: a locator's click would
+// scroll the cross into view itself.
+test('the bar’s cross keeps the page in place for a pointer and shows the price for a keyboard', async ({
+  page,
+}, { project }) => {
+  // Where the page rests once a smooth scroll, if any, has ended.
+  const rest = () =>
+    page.evaluate(
+      () =>
+        new Promise<number>((done) => {
+          addEventListener('scrollend', () => done(scrollY), { once: true });
+          setTimeout(() => done(scrollY), 1000);
+        }),
+    );
+  await page.goto('/en');
+  await toOtherSeason(page);
+  for (const width of project.use.isMobile ? [375] : [1280, 375]) {
+    await page.setViewportSize({ width, height: 800 });
+    const press = project.use.hasTouch
+      ? (x: number, y: number) => page.touchscreen.tap(x, y)
+      : (x: number, y: number) => page.mouse.click(x, y);
+    for (const by of [press, null]) {
+      const stays = panel(page).locator('.stay:visible');
+      const stay = stays.nth(Math.floor((await stays.count()) / 2));
+      await stay.click();
+      await expect(page.locator('.pick')).toBeVisible();
+      // The price 100 px below the window.
+      await stay.evaluate((cell) =>
+        scrollBy({
+          top: cell.getBoundingClientRect().top - innerHeight - 100,
+          behavior: 'instant',
+        }),
+      );
+      await expect(stay).not.toBeInViewport();
+      const before = await page.evaluate(() => scrollY);
+      const cross = page.getByRole('button', { name: 'Clear the chosen week' });
+      if (by) {
+        const box = (await cross.boundingBox())!;
+        await by(box.x + box.width / 2, box.y + box.height / 2);
+      } else {
+        await cross.focus();
+        await page.keyboard.press('Enter');
+      }
+      await expect(page.locator('.pick')).toHaveCount(0);
+      await expect(stay).toBeFocused();
+      if (by) expect(await rest(), `${width}`).toBe(before);
+      else await expect(stay).toBeInViewport();
+    }
+  }
+});
+
 // The grid pattern of the WAI-ARIA Authoring Practices: one tab stop, arrows that move without
 // choosing, Home and End in a row, Page Up and Page Down by a month.
 test('the list is one tab stop that the keys move through as a grid', async ({ page }) => {
