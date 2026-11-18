@@ -4,38 +4,38 @@ Status: accepted, 2026-11-13. Group: stack.
 
 ## Context
 
-The brief renders every page that shows listings or stays on the server, per request, and keeps
-the Beds24 token on the server. The home page is the first such page: it lists the apartments.
-Every later page that shows Beds24 data will get it the same way, so the way is decided once.
-What weighs on it:
+The brief renders every page that shows listings or stays on the server, per request, and keeps the
+Beds24 token on the server. The home page is the first such page: it lists the apartments. Every
+later page that shows Beds24 data will get it the same way, so the way is decided once. What weighs
+on it:
 
-- **The token and the client that sends it stay on the server.** Nothing of `src/beds24/`
-  beyond its types belongs in the browser bundle.
-- **The HTML carries the data,** for search engines and without a late pop-in, and the browser
-  must not ask again for what the server just rendered.
-- **A failure has to show in the status code,** not only on the page: a proxy, an uptime check
-  and a search engine read the status.
+- **The token and the client that sends it stay on the server.** Nothing of `src/beds24/` beyond its
+  types belongs in the browser bundle.
+- **The HTML carries the data,** for search engines and without a late pop-in, and the browser must
+  not ask again for what the server just rendered.
+- **A failure has to show in the status code,** not only on the page: a proxy, an uptime check and a
+  search engine read the status.
 
 ## Decision
 
-1. **A route resolver supplies the data.** On the server it calls a loading function; in the
-   browser it reads what the server resolved.
-2. **The loading function is an injection token that only the server's configuration
-   provides.** The browser's configuration never imports the Beds24 client.
-3. **The result travels in Angular's transfer state,** written by the resolver on the server
-   and read by it in the browser.
-4. **When loading fails, the resolver sets the response status to 503** and resolves to
-   nothing, which the page renders as its unavailable state. The error goes to the server's log.
-5. **The server reads the Beds24 address and token from `BEDS24_URL` and `BEDS24_TOKEN`** when
-   a call is made. The demo, the tests and development point them at the simulator.
-6. **An in-memory cache sits between the loading function and Beds24** (added on 17 November
-   2026 with the free-weeks list). One refresh is two calls, `properties` and `calendar` for a
-   year from today, about 2.3 of the 100 credits Beds24 allows per 5 minutes. An answer is
-   served as it is for 2 minutes; after that it is still served while a refresh runs behind
-   it. When Beds24 cannot be reached, the last good answer is served for up to 24 hours, then
-   the page answers 503. Requests that arrive together share one refresh, and after a failed
-   one Beds24 is not asked again for a minute, so an outage does not spend its credits on
-   every page view. The cache is empty after a start, so the first page waits for Beds24.
+1. **A route resolver supplies the data.** On the server it calls a loading function; in the browser
+   it reads what the server resolved.
+2. **The loading function is an injection token that only the server's configuration provides.** The
+   browser's configuration never imports the Beds24 client.
+3. **The result travels in Angular's transfer state,** written by the resolver on the server and
+   read by it in the browser.
+4. **When loading fails, the resolver sets the response status to 503** and resolves to nothing,
+   which the page renders as its unavailable state. The error goes to the server's log.
+5. **The server reads the Beds24 address and token from `BEDS24_URL` and `BEDS24_TOKEN`** when a
+   call is made. The demo, the tests and development point them at the simulator.
+6. **An in-memory cache sits between the loading function and Beds24** (added on 17 November 2026
+   with the free-weeks list). One refresh is two calls, `properties` and `calendar` for a year from
+   today, about 2.3 of the 100 credits Beds24 allows per 5 minutes. An answer is served as it is for
+   2 minutes; after that it is still served while a refresh runs behind it. When Beds24 cannot be
+   reached, the last good answer is served for up to 24 hours, then the page answers 503. Requests
+   that arrive together share one refresh, and after a failed one Beds24 is not asked again for a
+   minute, so an outage does not spend its credits on every page view. The cache is empty after a
+   start, so the first page waits for Beds24.
 
 ## Options
 
@@ -48,29 +48,28 @@ What weighs on it:
 
 ## What this rests on
 
-- **Verified by the e2e suite against the simulator:** the served HTML contains the apartments,
-  a refused token gives a 503 without them, and the built browser bundle does not contain the
-  token's variable name.
+- **Verified by the e2e suite against the simulator:** the served HTML contains the apartments, a
+  refused token gives a 503 without them, and the built browser bundle does not contain the token's
+  variable name.
 - **Verified by unit tests:** the resolver's three paths and the client's mapping.
 - **Verified by unit tests:** the cache's cases (fresh, stale while refreshing, Beds24 failing
-  within and beyond the 24 hours, callers sharing one refresh, the minute's pause after a
-  failure, also behind a stale answer).
-- **Verified on a real account** (17 November 2026, read-only token): one `calendar` call
-  answers a whole year in one page for 1 credit, and the `properties` call costs 1.3
+  within and beyond the 24 hours, callers sharing one refresh, the minute's pause after a failure,
+  also behind a stale answer).
+- **Verified on a real account** (17 November 2026, read-only token): one `calendar` call answers a
+  whole year in one page for 1 credit, and the `properties` call costs 1.3
   (`docs/beds24-findings.md`).
-- **Not checked:** how often a real account's prices and bookings change compared with the
-  2 minutes.
-- **Not built yet:** the availability route, and keeping the last good answer on disk across
-  a restart, which `docs/beds24-findings.md` suggests.
+- **Not checked:** how often a real account's prices and bookings change compared with the 2
+  minutes.
+- **Not built yet:** the availability route, and keeping the last good answer on disk across a
+  restart, which `docs/beds24-findings.md` suggests.
 
 ## Consequences
 
-- **A booking made elsewhere shows on the site within about 2 minutes,** later while Beds24
-  cannot be reached. Beds24's own booking step decides whether the stay can still be booked;
-  that Beds24 refuses a taken week was seen through `offers` in the spike, not yet through the
-  booking page.
+- **A booking made elsewhere shows on the site within about 2 minutes,** later while Beds24 cannot
+  be reached. Beds24's own booking step decides whether the stay can still be booked; that Beds24
+  refuses a taken week was seen through `offers` in the spike, not yet through the booking page.
 - **A new kind of Beds24 data is a function in `src/beds24/`,** a token for it in the server's
   configuration and a resolver.
-- **A page with such a resolver is rendered per request,** and is listed so in the server's
-  routes; everything else stays prerendered.
+- **A page with such a resolver is rendered per request,** and is listed so in the server's routes;
+  everything else stays prerendered.
 - **A deployment must set the two variables.** Without them the pages answer 503.

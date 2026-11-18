@@ -4,40 +4,39 @@ Status: accepted, 2026-11-12, with the two conditions below. Group: stack.
 
 ## Context
 
-ADR 1 decided what is built: a small site that reads from Beds24 and hands over to its guest
-form. The brief adds the shape: one Node process, pages rendered on the server, two languages
-per deployment, two seasons, content from files, no database. This ADR fixes what it is built
-with. What weighs on the choices:
+ADR 1 decided what is built: a small site that reads from Beds24 and hands over to its guest form.
+The brief adds the shape: one Node process, pages rendered on the server, two languages per
+deployment, two seasons, content from files, no database. This ADR fixes what it is built with. What
+weighs on the choices:
 
-- **One developer and coding agents** build and maintain it. Angular is the framework the
-  developer knows; the new parts are the workflow and the UI.
-- **Wording is content, never code,** and a private deployment has its own two languages and
-  its own content, built from a public tag.
-- **The look is designed for this site,** with two season palettes. A library's look would be
-  in the way.
-- **The week grid is the hard control:** a grid of weeks by apartment that must work by
-  keyboard and with a screen reader.
-- **Few dependencies,** each one a thing to update, on a site that should run for years. But
-  not at the price of building by hand what a maintained library does well.
+- **One developer and coding agents** build and maintain it. Angular is the framework the developer
+  knows; the new parts are the workflow and the UI.
+- **Wording is content, never code,** and a private deployment has its own two languages and its own
+  content, built from a public tag.
+- **The look is designed for this site,** with two season palettes. A library's look would be in the
+  way.
+- **The week grid is the hard control:** a grid of weeks by apartment that must work by keyboard and
+  with a screen reader.
+- **Few dependencies,** each one a thing to update, on a site that should run for years. But not at
+  the price of building by hand what a maintained library does well.
 
 ## Decision
 
-1. **Angular 22 as one application,** standalone components, signals, without zone.js.
-   TypeScript in the version the Angular CLI pins, Node 24, npm.
-2. **Server-side rendering with `@angular/ssr`** on the Express server the CLI generates. Pages
-   with listings or weeks are rendered per request, the others prerendered, as the brief says.
-   The availability route and the preview lock live in the same server.
+1. **Angular 22 as one application,** standalone components, signals, without zone.js. TypeScript in
+   the version the Angular CLI pins, Node 24, npm.
+2. **Server-side rendering with `@angular/ssr`** on the Express server the CLI generates. Pages with
+   listings or weeks are rendered per request, the others prerendered, as the brief says. The
+   availability route and the preview lock live in the same server.
 3. **Languages are keyed text files in the deployment's content,** one per language, with the
-   language as the first URL segment. The templates read them as a typed object; numbers,
-   dates and plurals are formatted with the platform's `Intl`. Every key exists in both
-   languages; there is no fallback language. No translation library and not Angular's
-   built-in i18n.
+   language as the first URL segment. The templates read them as a typed object; numbers, dates and
+   plurals are formatted with the platform's `Intl`. Every key exists in both languages; there is no
+   fallback language. No translation library and not Angular's built-in i18n.
 4. **Tailwind 4 for styling,** with the design tokens as CSS variables, so that a season is one
    attribute on the page.
-5. **spartan/ui for the components:** dialog, sheet, accordion, carousel and the like, each
-   copied into the project when it is first needed and themed through those variables.
-6. **The week grid's behaviour is decided by a spike** before its slice, see the conditions
-   for its result.
+5. **spartan/ui for the components:** dialog, sheet, accordion, carousel and the like, each copied
+   into the project when it is first needed and themed through those variables.
+6. **The week grid's behaviour is decided by a spike** before its slice, see the conditions for its
+   result.
 7. **Vitest for unit tests** through `ng test`, **Playwright for e2e** with axe, as the working
    agreements describe.
 8. **Prettier formats and ESLint lints.** Their plugins are set up in the scaffold.
@@ -50,8 +49,8 @@ hosting and delivery get an ADR with the first deployment.
 ## Languages: options
 
 The site needs little here: an estimated hundred interface texts in two languages, a few of them
-with a number in them. The language is part of the address, so it never changes inside a
-running page. Guides, season texts and legal pages are content files in any case.
+with a number in them. The language is part of the address, so it never changes inside a running
+page. Guides, season texts and legal pages are content files in any case.
 
 <!-- prettier-ignore -->
 | Option | For | Against | Result |
@@ -62,10 +61,9 @@ running page. Guides, season texts and legal pages are content files in any case
 | Transloco | Much the same, with plugins for plural forms and for dates and currency. | The same string keys and wiring. Used less, and its page on server rendering still describes Angular Universal. | Not pursued. |
 | Keyed text files, read as a typed object | One mechanism for all wording. The schema checks that both languages have every key, and the compiler checks every key a template uses. Nothing to wire for hydration: the texts are part of the language's code. No dependency. | Three things are our own code, each a few lines: providing the language's texts, putting a value into a text, and choosing the plural form with `Intl.PluralRules`. No select or nested forms. | Chosen. |
 
-Plain texts have the same shape in the chosen option and in ngx-translate's files, so a later
-move would leave them as they are. Texts with a plural form would not carry over: here they
-are separate forms per key, there one string in message syntax. How much that is shows in the
-first slice.
+Plain texts have the same shape in the chosen option and in ngx-translate's files, so a later move
+would leave them as they are. Texts with a plural form would not carry over: here they are separate
+forms per key, there one string in message syntax. How much that is shows in the first slice.
 
 ## Components: options
 
@@ -81,90 +79,90 @@ first slice.
 Nothing has been built yet. On 2026-11-12:
 
 - **Read from package metadata on npm:** Angular 22.2 is current. `@angular/build` accepts
-  TypeScript 6.0 and Vitest 4 or 5. spartan/ui's package asks for Angular 21 or 22, the CDK,
-  clsx and tw-animate-css, and for luxon only optionally. Angular Aria is published in
-  Angular's version and depends on the CDK. ngx-translate is at 18.1.0, published in October
-  2026, and Transloco at 8.4.0. In the week before, npm counted about 1.8 million downloads of
-  ngx-translate and 0.5 million of Transloco.
-- **Read from the CLI's own help, version 22.0.6:** Vitest is the default test runner, and
-  `ng new` has options for server-side rendering, Tailwind and an application without zone.js.
-- **Taken from documentation:** runtime translations are applied once per message and do not
-  allow changing the language without a reload
-  ([loadTranslations](https://angular.dev/api/localize/loadTranslations)). Built-in i18n
-  writes each language to its own directory
-  ([deployment](https://angular.dev/guide/i18n/deploy)). ngx-translate's set-up and its recipe
-  for server rendering ([ngx-translate.org](https://ngx-translate.org/recipes/ssr-and-prerender/)).
-  spartan/ui's components, set-up and variables
+  TypeScript 6.0 and Vitest 4 or 5. spartan/ui's package asks for Angular 21 or 22, the CDK, clsx
+  and tw-animate-css, and for luxon only optionally. Angular Aria is published in Angular's version
+  and depends on the CDK. ngx-translate is at 18.1.0, published in October 2026, and Transloco at
+  8.4.0. In the week before, npm counted about 1.8 million downloads of ngx-translate and 0.5
+  million of Transloco.
+- **Read from the CLI's own help, version 22.0.6:** Vitest is the default test runner, and `ng new`
+  has options for server-side rendering, Tailwind and an application without zone.js.
+- **Taken from documentation:** runtime translations are applied once per message and do not allow
+  changing the language without a reload
+  ([loadTranslations](https://angular.dev/api/localize/loadTranslations)). Built-in i18n writes each
+  language to its own directory ([deployment](https://angular.dev/guide/i18n/deploy)).
+  ngx-translate's set-up and its recipe for server rendering
+  ([ngx-translate.org](https://ngx-translate.org/recipes/ssr-and-prerender/)). spartan/ui's
+  components, set-up and variables
   ([installation](https://www.spartan.ng/documentation/installation),
   [theming](https://www.spartan.ng/documentation/theming)). Angular Aria's grid
   ([grid](https://angular.dev/guide/aria/grid)). Unit tests run in Node with jsdom
-  ([testing](https://angular.dev/guide/testing)), and the server in the rendering guide is
-  built on Express ([SSR](https://angular.dev/guide/ssr)).
-- **Not checked:** how ngx-translate and Transloco behave in this application, since neither
-  was tried; Angular Material beyond what is commonly known of it; how much of spartan/ui's
-  design the design round will want to change.
+  ([testing](https://angular.dev/guide/testing)), and the server in the rendering guide is built on
+  Express ([SSR](https://angular.dev/guide/ssr)).
+- **Not checked:** how ngx-translate and Transloco behave in this application, since neither was
+  tried; Angular Material beyond what is commonly known of it; how much of spartan/ui's design the
+  design round will want to change.
 
 ## Conditions
 
-The ADR is accepted with two points still to be confirmed by building, as ADR 1 was. Each
-result is added to this ADR when it is known.
+The ADR is accepted with two points still to be confirmed by building, as ADR 1 was. Each result is
+added to this ADR when it is known.
 
-- **The week grid is decided by a spike,** once the scaffold exists and before its slice. It
-  is a grid of weeks by apartment, which no library offers ready. The spike compares building
-  it from spartan/ui's calendar or table with Angular Aria's grid pattern, which is released
-  with Angular and needs only the CDK that spartan/ui brings anyway. It is judged by keyboard,
-  with VoiceOver on a real iPhone, and at 320 px. The result is recorded here.
+- **The week grid is decided by a spike,** once the scaffold exists and before its slice. It is a
+  grid of weeks by apartment, which no library offers ready. The spike compares building it from
+  spartan/ui's calendar or table with Angular Aria's grid pattern, which is released with Angular
+  and needs only the CDK that spartan/ui brings anyway. It is judged by keyboard, with VoiceOver on
+  a real iPhone, and at 320 px. The result is recorded here.
 
-  **Result, 13 November 2026** (issue 37, the candidates are kept in pull request 38). The
-  control became a stay picker for one apartment. It is given stays, each with a start, an
-  end, a price and a state, and offers no free choice of dates. Two views share the selected
-  stay: a list of native radio buttons, which is the default, and a calendar of months built
-  as tables on Angular Aria's grid. spartan/ui's calendar was tried and not chosen: one
-  instance shows one month, it owns its selection, and it does not focus a disabled date, so
-  the arrow keys stop in front of a booked period.
+  **Result, 13 November 2026** (issue 37, the candidates are kept in pull request 38). The control
+  became a stay picker for one apartment. It is given stays, each with a start, an end, a price and
+  a state, and offers no free choice of dates. Two views share the selected stay: a list of native
+  radio buttons, which is the default, and a calendar of months built as tables on Angular Aria's
+  grid. spartan/ui's calendar was tried and not chosen: one instance shows one month, it owns its
+  selection, and it does not focus a disabled date, so the arrow keys stop in front of a booked
+  period.
 
   - Verified in Chromium at 320 px and 1280 px, by keyboard and with axe.
-  - Tried by the maintainer with NVDA on Windows, by mouse and by keyboard: the focused and
-    the selected stay were announced in the list and in both calendars.
-  - Not tried: VoiceOver or any screen reader on a phone, because no iPhone was at hand;
-    Firefox and WebKit by hand.
-  - A known limit: the Aria grid removes an `aria-selected` that it did not set, so the
-    calendar carries the selection in the day's accessible name.
+  - Tried by the maintainer with NVDA on Windows, by mouse and by keyboard: the focused and the
+    selected stay were announced in the list and in both calendars.
+  - Not tried: VoiceOver or any screen reader on a phone, because no iPhone was at hand; Firefox and
+    WebKit by hand.
+  - A known limit: the Aria grid removes an `aria-selected` that it did not set, so the calendar
+    carries the selection in the day's accessible name.
 
-  **The free-weeks list, 17 November 2026** (issue 88). The list on the home page moved from
-  native radio buttons to Angular Aria's grid, so that it and the calendar share one keyboard
-  model. Its cells that are not shown, the other season's and on a phone the other
-  apartments', are disabled with `softDisabled` off, so the arrows pass them by; booked weeks
-  stay reachable but cannot be chosen. The grid owns `aria-selected` here, so the known limit
-  above does not arise. Page Up and Page Down, which the grid does not offer, move by a month
-  in the list's own code. Enter or Space on a booked cell is stopped before the grid, which
-  would otherwise clear the chosen week. The grid enters where the focus last left it, which
-  after a change of season is not the chosen week, so the list's own code makes Tab enter at
-  the chosen week while it is shown. With nothing chosen, Tab enters where the grid puts it,
-  which can be a booked week; the maintainer accepted this in pull request 96.
+  **The free-weeks list, 17 November 2026** (issue 88). The list on the home page moved from native
+  radio buttons to Angular Aria's grid, so that it and the calendar share one keyboard model. Its
+  cells that are not shown, the other season's and on a phone the other apartments', are disabled
+  with `softDisabled` off, so the arrows pass them by; booked weeks stay reachable but cannot be
+  chosen. The grid owns `aria-selected` here, so the known limit above does not arise. Page Up and
+  Page Down, which the grid does not offer, move by a month in the list's own code. Enter or Space
+  on a booked cell is stopped before the grid, which would otherwise clear the chosen week. The grid
+  enters where the focus last left it, which after a change of season is not the chosen week, so the
+  list's own code makes Tab enter at the chosen week while it is shown. With nothing chosen, Tab
+  enters where the grid puts it, which can be a booked week; the maintainer accepted this in pull
+  request 96.
 
-  - Walked by keyboard in Chromium at 375 px and 1280 px. The e2e suite runs the keys and
-    axe in Chromium, Firefox and WebKit.
-  - Tried by the maintainer with NVDA on Windows: the position, the price or "booked" and
-    the chosen state were announced. A cell's name repeated its row's and column's headers,
-    which NVDA reads as well, so a cell now says only its price or "booked", the row header
-    the dates in full ("Saturday 3 April") and the column header the size in words.
+  - Walked by keyboard in Chromium at 375 px and 1280 px. The e2e suite runs the keys and axe in
+    Chromium, Firefox and WebKit.
+  - Tried by the maintainer with NVDA on Windows: the position, the price or "booked" and the chosen
+    state were announced. A cell's name repeated its row's and column's headers, which NVDA reads as
+    well, so a cell now says only its price or "booked", the row header the dates in full ("Saturday
+    3 April") and the column header the size in words.
   - Not tried: Firefox and Safari by hand, VoiceOver on a Mac or an iPhone.
 
-- **The typed texts are confirmed in the first slice with a counted text.** If the three
-  helpers grow beyond a few lines each, ngx-translate takes over.
+- **The typed texts are confirmed in the first slice with a counted text.** If the three helpers
+  grow beyond a few lines each, ngx-translate takes over.
 
 ## Consequences
 
-- **A text is added in two places at once:** a key in each language's file. The build fails
-  until both have it.
-- **Templates hold no wording,** only keys, which also keeps the demo's languages out of the
-  code a private deployment builds from.
+- **A text is added in two places at once:** a key in each language's file. The build fails until
+  both have it.
+- **Templates hold no wording,** only keys, which also keeps the demo's languages out of the code a
+  private deployment builds from.
 - **Each language's texts are loaded only for that language,** so a page does not carry both.
-- **A component enters the project when a slice needs it,** as copied code that is then ours
-  to read, restyle and review.
+- **A component enters the project when a slice needs it,** as copied code that is then ours to
+  read, restyle and review.
 - **An Angular update waits for spartan/ui** to allow the new major version.
 - **The TypeScript version follows the CLI,** not the newest release.
-- **Content, pictures and theme values are build inputs,** read from one directory per
-  deployment. At runtime the server reads only the Beds24 address and token, the preview
-  password and the indexing flag.
+- **Content, pictures and theme values are build inputs,** read from one directory per deployment.
+  At runtime the server reads only the Beds24 address and token, the preview password and the
+  indexing flag.

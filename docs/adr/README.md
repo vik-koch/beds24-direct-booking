@@ -1,8 +1,8 @@
 # Decisions
 
-Every decision that shapes the project, with the options that were weighed. The ADRs are
-numbered in the order they were written and grouped here by what they are about. A new ADR
-gets its line in this index in the same pull request.
+Every decision that shapes the project, with the options that were weighed. The ADRs are numbered in
+the order they were written and grouped here by what they are about. A new ADR gets its line in this
+index in the same pull request.
 
 ## Product
 

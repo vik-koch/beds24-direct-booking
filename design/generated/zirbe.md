@@ -1,15 +1,17 @@
 # Zirbe picture credits
 
-Generated on 17 November 2026 by the repository's maintainer for the fictional beds24-direct-booking demo.
+Generated on 17 November 2026 by the repository's maintainer for the fictional beds24-direct-booking
+demo.
 
 AI-generated with OpenAI’s built-in image generation tool, directed through Codex using
 [the apartment picture brief](../apartment-pictures.md). The tool does not expose its underlying
-image model identifier; no specific model is claimed. No external photographs were supplied.
-These are invented interiors and scenery, not photographs of a real property.
+image model identifier; no specific model is claimed. No external photographs were supplied. These
+are invented interiors and scenery, not photographs of a real property.
 
 ## Files, references and suggested alternative text
 
-All final files are landscape 1536 × 1024 (3:2). The generator gave PNG; the repository holds them as WebP at quality 85.
+All final files are landscape 1536 × 1024 (3:2). The generator gave PNG; the repository holds them
+as WebP at quality 85.
 
 | File                         | Reference                                                          | Suggested English alternative text                                                                                                          |
 | ---------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -19,34 +21,33 @@ All final files are landscape 1536 × 1024 (3:2). The generator gave PNG; the re
 
 ## Reuse and disclosure
 
-These 3 generated assets are supplied under the project’s [MIT licence](../../LICENSE),
-to the extent that copyright or other licensable rights exist. This applies only to
-`zirbe-1.webp` through `zirbe-3.webp` and does not change any existing photograph’s licence.
-The rights and disclosure notes checked on 17 November 2026 are recorded in
-[Ahorn’s credits](ahorn.md#reuse-and-disclosure). Copyright protection and exclusive rights
-are not guaranteed.
+These 3 generated assets are supplied under the project’s [MIT licence](../../LICENSE), to the
+extent that copyright or other licensable rights exist. This applies only to `zirbe-1.webp` through
+`zirbe-3.webp` and does not change any existing photograph’s licence. The rights and disclosure
+notes checked on 17 November 2026 are recorded in [Ahorn’s credits](ahorn.md#reuse-and-disclosure).
+Copyright protection and exclusive rights are not guaranteed.
 
 Suggested visible credit when published:
 
 > Fictional apartment imagery for this demo, AI-generated with OpenAI through Codex.
 
-Display clear AI disclosure alongside the gallery when integrating the selected images.
-Showing them on the site, with a visible AI label on each, belongs to the apartment pages.
+Display clear AI disclosure alongside the gallery when integrating the selected images. Showing them
+on the site, with a visible AI label on each, belongs to the apartment pages.
 
 ## Review
 
-Visually inspected all three selected outputs. The studio has a double bed, two dining chairs
-and a deep grey window seat; no balcony is shown. The kitchenette includes the two-ring hob,
-sink and window seat. The bathroom has a ceiling-mounted rain shower and frosted window.
-Pine, green and grey remain consistent. No people, animals or visible writing/logos were seen
-in the final selections, and no obvious impossible doors or furniture were identified.
-The studio blanket is spread across the foot of the bed rather than neatly folded.
+Visually inspected all three selected outputs. The studio has a double bed, two dining chairs and a
+deep grey window seat; no balcony is shown. The kitchenette includes the two-ring hob, sink and
+window seat. The bathroom has a ceiling-mounted rain shower and frosted window. Pine, green and grey
+remain consistent. No people, animals or visible writing/logos were seen in the final selections,
+and no obvious impossible doors or furniture were identified. The studio blanket is spread across
+the foot of the bed rather than neatly folded.
 
-The kitchenette draft contained a small text-like mark on its kettle and marks in the sink.
-A first edit left a faint kettle mark; the final edit replaced the kettle with a plain ivory
-ceramic version and removed the sink marks. The two edits independently targeted the original
-kitchenette draft. That intermediate draft is not retained in this folder; its generation
-prompt is recorded below, with zirbe-1.webp as its reference.
+The kitchenette draft contained a small text-like mark on its kettle and marks in the sink. A first
+edit left a faint kettle mark; the final edit replaced the kettle with a plain ivory ceramic version
+and removed the sink marks. The two edits independently targeted the original kitchenette draft.
+That intermediate draft is not retained in this folder; its generation prompt is recorded below,
+with zirbe-1.webp as its reference.
 
 These synthetic illustrations do not establish a physically consistent floor plan, actual wood
 species or a geographically verified mountain view. No application tests were run for these

@@ -1,7 +1,7 @@
 # Project brief
 
-Status: the working brief, last revised 2026-11-17. A decision that weighed real alternatives
-and would be costly to change also gets a short ADR in `docs/adr/`.
+Status: the working brief, last revised 2026-11-17. A decision that weighed real alternatives and
+would be costly to change also gets a short ADR in `docs/adr/`.
 
 ## What it is
 
@@ -9,22 +9,22 @@ A direct-booking website for a small business that rents holiday apartments by t
 mountain resort: two apartments now, four soon. Today the apartments are bookable on Booking.com
 only. The website offers the same weeks at a lower price, because no commission is paid.
 
-Beds24 is the property management system: it holds availability, prices and bookings, connects
-the channels (Booking.com now, Airbnb next), and takes the booking and the payment. The website
-shows what Beds24 knows and hands over to it for checkout.
+Beds24 is the property management system: it holds availability, prices and bookings, connects the
+channels (Booking.com now, Airbnb next), and takes the booking and the payment. The website shows
+what Beds24 knows and hands over to it for checkout.
 
-The repository is public as a portfolio piece and carries a fictional demo only: _Firn & Farn_,
-an invented business with three apartments in two houses in Saalbach in Austria, in German and
-English. The village is real; the houses, the prices and the tourist tax are made up. The real
-business (another country, its own two languages) is a private deployment that uses only what the
-public repository publishes. Nothing about the real business goes into the public repository.
+The repository is public as a portfolio piece and carries a fictional demo only: _Firn & Farn_, an
+invented business with three apartments in two houses in Saalbach in Austria, in German and English.
+The village is real; the houses, the prices and the tourist tax are made up. The real business
+(another country, its own two languages) is a private deployment that uses only what the public
+repository publishes. Nothing about the real business goes into the public repository.
 
 ## Goals
 
-1. A visitor finds a free week, sees its price and books it directly, on a phone as easily as on
-   a desktop.
-2. The site is the business's official page: who they are, where the apartments are, how to get
-   in touch.
+1. A visitor finds a free week, sees its price and books it directly, on a phone as easily as on a
+   desktop.
+2. The site is the business's official page: who they are, where the apartments are, how to get in
+   touch.
 3. Guests find the practical guides there (self check-in, waste, FAQ), linked by QR code from
    printed sheets in the apartments.
 4. The site is found: search engines get complete, fast, well-structured pages in both languages.
@@ -83,12 +83,12 @@ public repository publishes. Nothing about the real business goes into the publi
 
 ## Open decisions
 
-- **The booking step** (decided as far as a trial account allows): own stay picker and guest
-  count, then the Beds24 guest form in an iframe by deep link, restyled through the booking
-  engine's CSS and script settings, with an own confirmation page behind the return URL.
-  Payment may leave the frame for Beds24's page. Untested until the account has paid: the
-  confirmation, the payment, the return, and the frame's cookie in Safari (accepted risk).
-  Fallbacks: the same link as a full page, then an own form through the API.
+- **The booking step** (decided as far as a trial account allows): own stay picker and guest count,
+  then the Beds24 guest form in an iframe by deep link, restyled through the booking engine's CSS
+  and script settings, with an own confirmation page behind the return URL. Payment may leave the
+  frame for Beds24's page. Untested until the account has paid: the confirmation, the payment, the
+  return, and the frame's cookie in Safari (accepted risk). Fallbacks: the same link as a full page,
+  then an own form through the API.
 - **Token handling in production:** scopes `read:inventory` and `read:properties` only, an IP
   whitelist, and a refresh token exchanged for 24-hour access tokens. To confirm later.
 - **The real site's name, domain and logo.** `.com` as the main domain; the national domain
@@ -104,20 +104,19 @@ public repository publishes. Nothing about the real business goes into the publi
 ## Rough order
 
 1. Done: the API and booking page spike, in `beds24-findings.md`.
-2. The repository: these documents; the first ADRs (why Beds24 and an own site, then the
-   stack); the scaffold with lint, tests and CI.
+2. The repository: these documents; the first ADRs (why Beds24 and an own site, then the stack); the
+   scaffold with lint, tests and CI.
 3. The simulator with fictional data in the recorded shapes, and the demo deployed from `main`:
    `0.1.0`.
-4. Done: the design round, the structure in `site-map.md`, then the visual direction in
-   `DESIGN.md`.
+4. Done: the design round, the structure in `site-map.md`, then the visual direction in `DESIGN.md`.
 5. Slices, each building its part of `site-map.md`: shell with languages and the notice (done);
-   seasons with the switch, the hero and the picture credits (done); the free-weeks list
-   (done); apartment pages with the stay picker and the hand-over; map; guides and FAQ; company and legal pages; SEO, accessibility and
-   performance pass.
+   seasons with the switch, the hero and the picture credits (done); the free-weeks list (done);
+   apartment pages with the stay picker and the hand-over; map; guides and FAQ; company and legal
+   pages; SEO, accessibility and performance pass.
 6. Once the Beds24 account has paid: the confirmation, the payment and the return URL.
 7. The private deployment: real content, legal texts, domain: `1.0.0`.
 
 Beside this runs the business work: the listings' migration to Beds24 and the channel connection.
 
-Estimate: about a month to a live demo; six to eight weeks to the real site, where the calendar
-time goes into name, logo, pictures, texts and legal pages.
+Estimate: about a month to a live demo; six to eight weeks to the real site, where the calendar time
+goes into name, logo, pictures, texts and legal pages.
