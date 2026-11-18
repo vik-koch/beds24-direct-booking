@@ -172,18 +172,31 @@ test('the apartments menu opens by keyboard and leads to an apartment', async ({
 });
 
 test('the wordmark keeps one line on a phone', async ({ page }) => {
+  // The season switch's label, and so the room left for the wordmark, differs by season.
+  const paths = ['/de', '/de/bildnachweis', '/en', '/en/picture-credits'];
   for (const width of [320, 340, 360, 375]) {
-    for (const path of ['/de', '/en/picture-credits']) {
-      await page.setViewportSize({ width, height: 600 });
-      await page.goto(path);
-      const wordmark = page.locator('app-header a').first();
-      const lines = await wordmark.evaluate((element) => {
-        const range = document.createRange();
-        range.selectNodeContents(element);
-        return range.getClientRects().length;
-      });
-      expect(lines, `${path} at ${width}`).toBe(1);
-      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
+    await page.setViewportSize({ width, height: 600 });
+    for (const path of paths) {
+      for (const season of ['winter', 'summer']) {
+        await page.goto(`${path}?season=${season}`);
+        const place = `${path} in ${season} at ${width}`;
+        const { lines, end, next } = await page
+          .locator('app-header a')
+          .first()
+          .evaluate((link) => {
+            const range = document.createRange();
+            range.selectNodeContents(link);
+            const switcher = document.querySelector('app-header .season-switch')!;
+            return {
+              lines: range.getClientRects().length,
+              end: range.getBoundingClientRect().right,
+              next: switcher.getBoundingClientRect().left,
+            };
+          });
+        expect(lines, place).toBe(1);
+        expect(end, place).toBeLessThanOrEqual(next);
+        expect(await page.evaluate(() => document.documentElement.scrollWidth), place).toBe(width);
+      }
     }
   }
 });
