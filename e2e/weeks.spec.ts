@@ -1,5 +1,5 @@
 import AxeBuilder from '@axe-core/playwright';
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Locator, type Page } from '@playwright/test';
 
 // The server dates the seasons by today, so these tests take the seasons from the page. The
 // simulator prices every season ahead of today, so the next season always has free weeks.
@@ -519,6 +519,18 @@ test('a season without prices is not open yet, and a season that has begun is fu
   await expect(panel(page)).toHaveText(
     /The weeks of (Winter|Summer) [\d/]+ are not open yet\. They appear here as soon as their prices are set\./,
   );
+
+  // The sentence's line sits where the first week's dates would.
+  const line = (cell: Locator) =>
+    cell.evaluate(
+      (cell) =>
+        cell.getBoundingClientRect().top +
+        parseFloat(getComputedStyle(cell).paddingTop) -
+        cell.closest('.sheet')!.getBoundingClientRect().top,
+    );
+  const sentence = await line(panel(page).locator('.weeks-empty'));
+  await page.goto('/en');
+  expect(await line(panel(page).getByRole('rowheader').first())).toBeCloseTo(sentence, 0);
 });
 
 test('without Beds24 the list says it cannot be shown', async ({ page }) => {

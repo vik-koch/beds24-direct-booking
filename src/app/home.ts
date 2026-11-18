@@ -44,12 +44,12 @@ import { address, LANGUAGE, TEXTS } from './texts';
     </section>
     <!-- A jump to the free weeks places the section's top below the header, which then covers
          the hero's last strip; the other sections' anchors are their headings. -->
-    <section class="column weeks-section pt-11" [id]="anchors.weeks">
+    <section class="column weeks-section pt-(--space-section)" [id]="anchors.weeks">
       <app-free-weeks [weeks]="weeks" />
     </section>
     @for (section of sections; track section) {
       <!-- The anchor is the heading: a jump places it below the header. -->
-      <section class="column pt-14 md:pt-20">
+      <section class="column pt-(--space-section)">
         <h2 class="headline" [id]="anchors[section]">{{ texts.nav[section] }}</h2>
         @if (section === 'apartments' && weeks?.apartments?.length) {
           <ul class="mt-6">

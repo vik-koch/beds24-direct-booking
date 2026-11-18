@@ -8,7 +8,7 @@ import { TEXTS } from './texts';
 @Component({
   selector: 'app-credits',
   template: `
-    <div class="column py-14 md:py-20">
+    <div class="column pt-(--space-section)">
       <h1 class="headline">{{ texts.pages.credits }}</h1>
       @if (credits.length) {
         <p class="text-ink-soft mt-6">{{ texts.credits.lead }}</p>
