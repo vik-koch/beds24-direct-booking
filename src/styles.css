@@ -924,7 +924,7 @@
     cursor: pointer;
     transition: background-color 0.2s;
 
-    .stay:hover & {
+    &:hover {
       background: var(--color-accent-soft);
     }
 
