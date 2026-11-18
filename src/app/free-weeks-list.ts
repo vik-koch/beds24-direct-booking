@@ -429,11 +429,18 @@ export class FreeWeeksList {
     const pick = this.chosen();
     const panels = this.panels()?.nativeElement;
     const from = event.target as HTMLElement;
+    if (!panels?.contains(from)) return;
     const to = pick && this.shown(pick.season, pick.apartment) && this.cell(pick);
-    if (!to || to === from || !panels?.contains(from)) return;
-    if (panels.contains(event.relatedTarget as Node) || !from.matches(':focus-visible')) return;
-    event.stopPropagation();
-    to.focus();
+    const outside = !panels.contains(event.relatedTarget as Node);
+    if (to && to !== from && outside && from.matches(':focus-visible')) {
+      event.stopPropagation();
+      to.focus();
+      return;
+    }
+    // The grid moves its tab stop only at its next render: a Tab before that, as right after
+    // Page Up, would go back to the old one.
+    panels.querySelector('[tabindex="0"]')?.setAttribute('tabindex', '-1');
+    from.setAttribute('tabindex', '0');
   };
 
   private cell(pick: Week | null) {
