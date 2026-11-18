@@ -15,8 +15,6 @@ domain=$(setting APP_DOMAIN)
 web=$(setting WEB_IMAGE)
 sim=$(setting SIM_IMAGE)
 password=$(setting SITE_PASSWORD)
-# For curl's config on stdin, so the process list does not show the password.
-auth() { local p=${password//\\/\\\\}; printf 'user = ":%s"\n' "${p//\"/\\\"}"; }
 : "${stack:?STACK_NAME missing in $env}" "${domain:?APP_DOMAIN missing in $env}" "${web:?WEB_IMAGE missing in $env}"
 dir=/srv/$stack
 
@@ -44,15 +42,22 @@ run "cd $dir && docker compose pull -q && docker compose up -d --remove-orphans"
 run "docker images --format '{{.Repository}}:{{.Tag}}' | grep -F '${web%-web:*}-' | grep -vxF -e '$web' -e '$sim' | xargs -r docker rmi" ||
   echo "WARNING: old images were not removed" >&2
 
-# The first request also makes the proxy fetch the certificate, which can take a minute.
+# The first request also makes the proxy fetch the certificate, which can take a minute. A site
+# with a password must refuse a visitor without it and let one with it in; the password goes to
+# curl on stdin, so the process list does not show it.
 echo "==> Checking https://$domain"
+status() { curl -K - -sL -o /dev/null -w '%{http_code}' --max-time 10 "https://$domain/"; }
+checked() {
+  if [ -z "$password" ]; then [ "$(status </dev/null)" = 200 ]; return; fi
+  [ "$(status </dev/null)" = 401 ] && [ "$(echo "user = \":$password\"" | status)" = 200 ]
+}
 for _ in $(seq 30); do
-  if [ "$(auth | curl -K - -sL -o /dev/null -w '%{http_code}' --max-time 10 "https://$domain/")" = 200 ]; then
+  if checked; then
     echo "OK: https://$domain serves $web"
     exit 0
   fi
   sleep 5
 done
 
-echo "https://$domain did not answer 200." >&2
+echo "https://$domain did not answer 200${password:+ with its password and 401 without}." >&2
 exit 1
