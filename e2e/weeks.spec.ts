@@ -176,6 +176,22 @@ test('the list is one tab stop that the keys move through as a grid', async ({ p
   await expect(page.locator('.weeks-grid [tabindex="0"]')).toHaveCount(1);
 });
 
+test('a week chosen in a wide window stays shown when it narrows', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/en');
+  await toOtherSeason(page);
+  const week = panel(page).locator('.stay[data-pick^="1-"]').first();
+  await week.focus();
+  await page.keyboard.press('Enter');
+  await expect(week).toHaveAttribute('aria-selected', 'true');
+  await page.setViewportSize({ width: 375, height: 800 });
+  await expect(page.locator('.room-tabs input').nth(1)).toBeChecked();
+  await expect(week).toBeVisible();
+  await page.getByRole('button', { name: 'Clear the chosen week' }).click();
+  await expect(week).toBeFocused();
+  await expect(week).toHaveAttribute('aria-selected', 'false');
+});
+
 test('on a phone the arrows stay in the shown apartment', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 800 });
   await page.goto('/en');

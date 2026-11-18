@@ -271,7 +271,12 @@ export class FreeWeeksList {
     destroyRef.onDestroy(this.season.watch((name) => this.move(name)));
     afterNextRender(() => {
       const query = matchMedia('(min-width: 48rem)');
-      const update = () => this.wide.set(query.matches);
+      // A narrow screen shows only the tab's apartment, so it shows the chosen week's.
+      const update = () => {
+        const pick = this.chosen();
+        if (!query.matches && pick) this.tab.set(pick.apartment);
+        this.wide.set(query.matches);
+      };
       update();
       query.addEventListener('change', update);
       const host = this.host.nativeElement;
