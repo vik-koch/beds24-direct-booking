@@ -120,9 +120,9 @@ after edits. Added when one of these has become routine:
 The stack, with format, lint, tests and the content schema, is ADR 4. Agreed beside it:
 
 - **One width of 100 columns** for code, Markdown prose and comments. Prettier wraps code and
-  Markdown prose, ESLint reports a longer comment or template line in the TypeScript and in
-  `scripts/*.mjs`, and CI runs both. Comments elsewhere, in shell scripts, CSS and YAML, keep the
-  width by hand.
+  Markdown prose, ESLint reports a longer comment in the TypeScript and in `scripts/*.mjs` and a
+  longer line of an inline template, except a class list, and CI runs both. Comments elsewhere, in
+  shell scripts, CSS and YAML, keep the width by hand.
 - **Site notice:** an optional line above the header with an optional link, per language, from the
   deployment's content. It is in the first shell slice, so the demo says it is a demo from day one.
 - **Security headers** as Traefik labels in the stack; indexing off unless the flag is set.
