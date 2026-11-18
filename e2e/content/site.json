@@ -30,6 +30,20 @@
       }
     }
   },
+  "features": [
+    {
+      "key": "guests",
+      "icon": "users"
+    },
+    {
+      "key": "keys",
+      "icon": "key-round"
+    },
+    {
+      "key": "mountains",
+      "icon": "mountain"
+    }
+  ],
   "contact": {
     "name": "Casa Prova",
     "email": "ciao@casa-prova.example"

@@ -38,20 +38,11 @@
   "hero": {
     "summer": "Een verloop van zand naar rood.",
     "lead": "Drie testappartementen.",
-    "features": [
-      {
-        "icon": "users",
-        "text": "Tot 6 gasten"
-      },
-      {
-        "icon": "key-round",
-        "text": "Sleutel klaar"
-      },
-      {
-        "icon": "mountain",
-        "text": "Dicht bij de bergen"
-      }
-    ],
+    "features": {
+      "guests": "Tot 6 gasten",
+      "keys": "Sleutel klaar",
+      "mountains": "Dicht bij de bergen"
+    },
     "button": "Bekijk de vrije weken"
   },
   "pages": {

@@ -98,6 +98,12 @@ export const siteSchema = z.strictObject({
     .array(z.strictObject({ slug: segment, roomId: z.number().int(), name: text }))
     .refine((list) => unique(list, (a) => a.slug), 'an apartment slug is listed twice'),
   seasons,
+  // The hero's features, in their order, each with a Lucide icon by its name on lucide.dev; the
+  // content script checks it exists. Each language's texts name them by their keys.
+  features: z
+    .array(z.strictObject({ key: segment, icon: segment }))
+    .max(5)
+    .refine((list) => unique(list, (f) => f.key), 'a feature key is listed twice'),
   // The footer shows what is listed, and no contact without one: a site may give its details
   // on its imprint page instead.
   contact: z
@@ -152,8 +158,8 @@ export const textsSchema = z.strictObject({
     winter: text.optional(),
     summer: text.optional(),
     lead: text,
-    // Each with a Lucide icon by its name on lucide.dev; the content script checks it exists.
-    features: z.array(z.strictObject({ icon: segment, text })).max(5),
+    // The text of each feature site.json lists, by its key; the content script checks the keys.
+    features: z.record(segment, text),
     button: text,
   }),
   pages: z.strictObject({

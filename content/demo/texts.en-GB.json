@@ -43,20 +43,11 @@
     "winter": "A view from the piste into the snowy Glemm valley, with mist lying over it.",
     "summer": "A view over an alpine meadow and spruces to the green slopes above Saalbach.",
     "lead": "Three holiday apartments in the village centre, booked directly with the hosts.",
-    "features": [
-      {
-        "icon": "house",
-        "text": "For 2, 4 or 6 guests"
-      },
-      {
-        "icon": "calendar-days",
-        "text": "Saturday to Saturday"
-      },
-      {
-        "icon": "tag",
-        "text": "No booking site commission"
-      }
-    ],
+    "features": {
+      "guests": "For 2, 4 or 6 guests",
+      "saturdays": "Saturday to Saturday",
+      "no-commission": "No booking site commission"
+    },
     "button": "See the free weeks"
   },
   "pages": {
