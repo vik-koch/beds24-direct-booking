@@ -181,6 +181,13 @@ test('every season needs its icon, an SVG file that exists', () => {
     writeFileSync(join(dir, 'pictures/icon-summer.svg'), broken);
     assert.throws(() => readContent(dir), /icon-summer\.svg is not an SVG document in UTF-8/);
   }
+  // A stray byte in the licence comment, the rest intact.
+  const at = svg.indexOf('Lucide');
+  writeFileSync(
+    join(dir, 'pictures/icon-summer.svg'),
+    Buffer.concat([Buffer.from(svg.slice(0, at)), Buffer.from([0xff]), Buffer.from(svg.slice(at))]),
+  );
+  assert.throws(() => readContent(dir), /icon-summer\.svg is not an SVG document in UTF-8/);
   writeFileSync(join(dir, 'pictures/icon-summer.svg'), svg.replaceAll('"', "'"));
   readContent(dir);
   writeFileSync(

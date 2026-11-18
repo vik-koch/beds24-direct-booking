@@ -22,12 +22,17 @@ function differences(a, b, path = []) {
   });
 }
 
-// An SVG document: well-formed XML with an <svg> root in the SVG namespace. Malformed XML parses
-// to a parsererror root.
+// An SVG document: valid UTF-8, well-formed XML with an <svg> root in the SVG namespace. Malformed
+// XML parses to a parsererror root; a lenient decoder would hide an invalid byte.
 const parser = new new JSDOM('').window.DOMParser();
-const isSvg = (text) => {
-  const root = parser.parseFromString(text, 'image/svg+xml').documentElement;
-  return root.localName === 'svg' && root.namespaceURI === 'http://www.w3.org/2000/svg';
+const utf8 = new TextDecoder('utf-8', { fatal: true });
+const isSvg = (bytes) => {
+  try {
+    const root = parser.parseFromString(utf8.decode(bytes), 'image/svg+xml').documentElement;
+    return root.localName === 'svg' && root.namespaceURI === 'http://www.w3.org/2000/svg';
+  } catch {
+    return false;
+  }
 };
 
 export function readContent(dir) {
@@ -98,7 +103,7 @@ export function readContent(dir) {
           `${join(dir, 'site.json')}\n  seasons.${name}.${key}: ${file} does not exist`,
         );
       // Served as an SVG by its name, so it must be one.
-      else if (key === 'icon' && !isSvg(readFileSync(join(dir, file), 'utf8')))
+      else if (key === 'icon' && !isSvg(readFileSync(join(dir, file))))
         throw new Error(
           `${join(dir, 'site.json')}\n  seasons.${name}.icon: ${file} is not an SVG document in UTF-8`,
         );
