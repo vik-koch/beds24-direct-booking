@@ -76,13 +76,12 @@ The normal visit is what the work and the reviews take care of: a current browse
 phone or computer. Accessibility always counts. A rare condition outside this is not a finding, and
 nothing is built or tested for it.
 
-- **Browsers:** the current versions of Chrome, Edge, Firefox and Safari on iOS and macOS, with
+- **Browsers:** current Chrome, Edge and Firefox, plus current Safari on iOS and macOS, with
   JavaScript on and an ordinary connection.
 - **Accessibility:** WCAG 2.2 AA: keyboard and screen-reader use, 200% zoom, and reflow at 320 CSS
-  px, which is a 1,280 px desktop at 400% zoom. EN 301 549 V4.1.1, the European standard behind the
-  European Accessibility Act, refers to WCAG 2.2 since September 2026; the version the EU's Official
-  Journal cites still refers to WCAG 2.1 (secondary sources such as AccessibleEU, read on 18
-  November 2026). The rules are under [Accessibility](#accessibility).
+  px, which is a 1,280 px desktop at 400% zoom. The current European standard, EN 301 549 V4.1.1 of
+  September 2026, refers to WCAG 2.2 (secondary sources such as AccessibleEU, read on 18 November
+  2026). The rules are under [Accessibility](#accessibility).
 - **JavaScript is required to choose a week and to book.** Without JavaScript, pages can be read and
   their links work.
 - **Outside the boundary:** an outdated system or browser, a stalled or very slow connection,

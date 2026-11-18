@@ -52,7 +52,8 @@ Leave out what the formatter and the linter decide, and leave out praise.
   wrong, who meets it (which visitors under which conditions, or the maintainer for a test or a
   process), what they see, and what you would do instead. The visitors are the ones
   `docs/working-agreements.md` supports ("What the site supports"), in normal use: a condition
-  outside it, such as no JavaScript, an outdated browser or a stalled connection, is not a finding.
+  outside it, such as choosing a week or booking without JavaScript, an outdated browser or a
+  stalled connection, is not a finding.
 - **Say how sure you are.** "Verified" means you read the code path to its end, or a check in CI or
   a command you could run shows it; otherwise say that you suspect it.
 - **On a first round,** report every finding you can verify, not only the most important ones.
