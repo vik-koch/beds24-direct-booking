@@ -184,25 +184,30 @@ test('an address with an anchor opens at its section; smooth scrolling starts af
   page,
 }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
-  // The page as the first frame shows it, while the application's scripts are held back.
+  // The page in the first frame that shows it, while the application's scripts are held back.
+  // Frames before it may be hidden and lack the section, if the transfer pauses.
   const { promise: held, resolve: release } = Promise.withResolvers<void>();
   await page.route(/\/main-[\w-]+\.js$/, async (route) => {
     await held;
     await route.continue();
   });
   await page.addInitScript(() => {
-    requestAnimationFrame(() => {
-      const header = document.querySelector('app-header')!;
+    const sample = () => {
+      if (!document.body || getComputedStyle(document.body).visibility !== 'visible')
+        return requestAnimationFrame(sample);
+      const header = document.querySelector('app-header');
+      const section = document.getElementById('free-weeks');
       (window as unknown as { first: unknown }).first = {
         y: scrollY,
-        shown: getComputedStyle(document.body).visibility === 'visible',
         behavior: getComputedStyle(document.documentElement).scrollBehavior,
-        over: header.hasAttribute('data-over'),
+        over: header?.hasAttribute('data-over') ?? true,
+        // Not a number when a visible frame lacks the section or the header.
         gap:
-          document.getElementById('free-weeks')!.getBoundingClientRect().top -
-          header.getBoundingClientRect().bottom,
+          (section?.getBoundingClientRect().top ?? NaN) -
+          (header?.getBoundingClientRect().bottom ?? NaN),
       };
-    });
+    };
+    requestAnimationFrame(sample);
   });
   await page.goto('/en#free-weeks', { waitUntil: 'commit' });
   const sampled = await page.waitForFunction(
@@ -210,13 +215,11 @@ test('an address with an anchor opens at its section; smooth scrolling starts af
   );
   const first = (await sampled.jsonValue()) as {
     y: number;
-    shown: boolean;
     behavior: string;
     over: boolean;
     gap: number;
   };
   release();
-  expect(first.shown).toBe(true);
   expect(first.y).toBeGreaterThan(0);
   expect(first.over).toBe(false);
   expect(Math.abs(first.gap)).toBeLessThanOrEqual(1);
