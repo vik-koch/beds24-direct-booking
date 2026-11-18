@@ -172,7 +172,6 @@ test('the apartments menu opens by keyboard and leads to an apartment', async ({
 });
 
 test('the wordmark keeps one line on a phone', async ({ page }) => {
-  // The season switch's label, and so the room left for the wordmark, differs by season.
   const paths = ['/de', '/de/bildnachweis', '/en', '/en/picture-credits'];
   for (const width of [320, 340, 360, 375]) {
     await page.setViewportSize({ width, height: 600 });
