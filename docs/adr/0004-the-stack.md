@@ -131,6 +131,26 @@ result is added to this ADR when it is known.
   - A known limit: the Aria grid removes an `aria-selected` that it did not set, so the
     calendar carries the selection in the day's accessible name.
 
+  **The free-weeks list, 17 November 2026** (issue 88). The list on the home page moved from
+  native radio buttons to Angular Aria's grid, so that it and the calendar share one keyboard
+  model. Its cells that are not shown, the other season's and on a phone the other
+  apartments', are disabled with `softDisabled` off, so the arrows pass them by; booked weeks
+  stay reachable but cannot be chosen. The grid owns `aria-selected` here, so the known limit
+  above does not arise. Page Up and Page Down, which the grid does not offer, move by a month
+  in the list's own code. Enter or Space on a booked cell is stopped before the grid, which
+  would otherwise clear the chosen week. The grid enters where the focus last left it, which
+  after a change of season is not the chosen week, so the list's own code makes Tab enter at
+  the chosen week while it is shown. With nothing chosen, Tab enters where the grid puts it,
+  which can be a booked week; the maintainer accepted this in pull request 96.
+
+  - Walked by keyboard in Chromium at 375 px and 1280 px. The e2e suite runs the keys and
+    axe in Chromium, Firefox and WebKit.
+  - Tried by the maintainer with NVDA on Windows: the position, the price or "booked" and
+    the chosen state were announced. A cell's name repeated its row's and column's headers,
+    which NVDA reads as well, so a cell now says only its price or "booked", the row header
+    the dates in full ("Saturday 3 April") and the column header the size in words.
+  - Not tried: Firefox and Safari by hand, VoiceOver on a Mac or an iPhone.
+
 - **The typed texts are confirmed in the first slice with a counted text.** If the three
   helpers grow beyond a few lines each, ngx-translate takes over.
 

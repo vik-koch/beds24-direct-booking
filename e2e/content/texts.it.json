@@ -76,6 +76,10 @@
       "one": "{count} ospite",
       "other": "{count} ospiti"
     },
+    "size": {
+      "shown": "{size}\u00a0m²",
+      "spoken": "{size} metri quadrati"
+    },
     "taken": "occupata",
     "apartment": "Appartamento",
     "next": "Prossima stagione: {season}",

@@ -659,12 +659,12 @@
     }
   }
 
-  :is(.room-tabs, .stay) input {
+  .room-tabs input {
     position: absolute;
     opacity: 0;
   }
 
-  :is(.room-tabs, .stay) :focus-visible + span {
+  .room-tabs :focus-visible + span {
     outline: 2px solid var(--color-accent);
     outline-offset: 3px;
   }
@@ -790,7 +790,7 @@
     }
   }
 
-  [role='cell'] {
+  [role='gridcell'] {
     padding-left: 1rem;
     text-align: right;
     white-space: nowrap;
@@ -809,7 +809,7 @@
 
   /* On a phone one apartment at a time, the one of the chosen tab, whose name and facts take
      the header row's whole width. */
-  @media (max-width: 47.9375rem) {
+  @media (width < 48rem) {
     html[data-script] .weeks-grid {
       grid-template-columns: minmax(0, 1fr) auto;
 
@@ -834,7 +834,7 @@
         }
       }
 
-      [role='cell']:not(.weeks-empty) {
+      [role='gridcell']:not(.weeks-empty) {
         padding-left: 0.5rem;
       }
     }
@@ -862,9 +862,19 @@
       background: var(--color-accent-soft);
     }
 
-    .stay :checked + & {
+    .stay[aria-selected='true'] & {
       background: var(--color-accent);
       color: var(--color-on-accent);
+    }
+  }
+
+  /* The ring goes round the price's or the word's pill, not the whole cell. */
+  :is(.stay, .booked):focus-visible {
+    outline: none;
+
+    > * {
+      outline: 2px solid var(--color-accent);
+      outline-offset: 3px;
     }
   }
 
@@ -920,7 +930,7 @@
 
     /* On a phone the name has a line of its own, and the cross and the button go to the
        two sides. */
-    @media (max-width: 47.9375rem) {
+    @media (width < 48rem) {
       .pick-name {
         display: block;
       }
