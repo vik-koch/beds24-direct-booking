@@ -14,6 +14,9 @@ stack=$(setting STACK_NAME)
 domain=$(setting APP_DOMAIN)
 web=$(setting WEB_IMAGE)
 sim=$(setting SIM_IMAGE)
+password=$(setting SITE_PASSWORD)
+# For curl's config on stdin, so the process list does not show the password.
+auth() { local p=${password//\\/\\\\}; printf 'user = ":%s"\n' "${p//\"/\\\"}"; }
 : "${stack:?STACK_NAME missing in $env}" "${domain:?APP_DOMAIN missing in $env}" "${web:?WEB_IMAGE missing in $env}"
 dir=/srv/$stack
 
@@ -44,7 +47,7 @@ run "docker images --format '{{.Repository}}:{{.Tag}}' | grep -F '${web%-web:*}-
 # The first request also makes the proxy fetch the certificate, which can take a minute.
 echo "==> Checking https://$domain"
 for _ in $(seq 30); do
-  if [ "$(curl -sL -o /dev/null -w '%{http_code}' --max-time 10 "https://$domain/")" = 200 ]; then
+  if [ "$(auth | curl -K - -sL -o /dev/null -w '%{http_code}' --max-time 10 "https://$domain/")" = 200 ]; then
     echo "OK: https://$domain serves $web"
     exit 0
   fi

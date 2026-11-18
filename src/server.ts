@@ -1,3 +1,4 @@
+import { createHash, timingSafeEqual } from 'node:crypto';
 import { join } from 'node:path';
 import {
   AngularNodeAppEngine,
@@ -10,6 +11,18 @@ import site from './content/generated/site';
 
 const app = express();
 const angularApp = new AngularNodeAppEngine();
+
+// A site under test answers only with its password, under any user name.
+const password = process.env['SITE_PASSWORD'];
+if (password) {
+  const digest = (text: string) => createHash('sha256').update(text).digest();
+  app.use((req, res, next) => {
+    const [scheme, encoded = ''] = req.headers.authorization?.split(' ') ?? [];
+    const given = /:(.*)/s.exec(Buffer.from(encoded, 'base64').toString())?.[1] ?? '';
+    if (scheme === 'Basic' && timingSafeEqual(digest(given), digest(password))) return next();
+    res.set('WWW-Authenticate', 'Basic realm="site", charset="UTF-8"').status(401).end();
+  });
+}
 
 const languages = site.languages.map(({ code }) => code);
 app.get('/', (req, res) => {

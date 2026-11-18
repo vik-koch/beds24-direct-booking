@@ -60,6 +60,7 @@ jobs:
           DEPLOY_SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
           APP_DOMAIN: ${{ vars.APP_DOMAIN }}
           BEDS24_TOKEN: ${{ secrets.BEDS24_TOKEN }}
+          SITE_PASSWORD: ${{ secrets.SITE_PASSWORD }}
           INDEXED: ${{ vars.INDEXED }}
           SIM_IMAGE: ${{ vars.SIM_IMAGE }}
           REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -96,6 +97,7 @@ jobs:
             fi
             # Search engines are kept out until the variable INDEXED is "true".
             if [ "$INDEXED" = true ]; then echo "ROBOTS_TAG="; fi
+            if [ -n "$SITE_PASSWORD" ]; then echo "SITE_PASSWORD=$SITE_PASSWORD"; fi
           } > "$RUNNER_TEMP/site.env"
 
           # The image is private, so the machine pulls with this run's token. The token ends

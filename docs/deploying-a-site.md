@@ -51,6 +51,7 @@ All in the environment `site` (Settings, Environments).
 |---|---|---|
 | Secret | `DEPLOY_SSH_PRIVATE_KEY` | The content of the private key file from step 1. |
 | Secret | `BEDS24_TOKEN` | The Beds24 token. Not needed while `SIM_IMAGE` is set. It must not contain a `$`: Compose reads the settings file and would take it for a variable. |
+| Secret | `SITE_PASSWORD` | Optional. The site then answers only with this password, under any user name, as a site under test should. The deployment's check uses it. It must not contain a `$`, for the same reason as the token. |
 | Variable | `DEPLOY_HOST` | The machine's address or name, as SSH reaches it. |
 | Variable | `DEPLOY_KNOWN_HOSTS` | The output of `ssh-keyscan` from step 5, for the same address or name as `DEPLOY_HOST`. |
 | Variable | `APP_DOMAIN` | The site's host name. |
@@ -94,6 +95,24 @@ later, ends without deploying.
   Ubuntu's archive. A new kernel waits for a restart of the machine.
 - **Watching it:** nothing on the machine reports an outage. An external uptime check on the site's
   address is the means meant for a site of this size.
+
+## A second site on the same machine
+
+A machine can carry more than one site, for example a site under test beside another one: each is a
+stack of its own behind the one proxy, with its own host name, directory and repository.
+
+1. **Point the second host name at the machine,** as in step 4.
+2. **Give its repository a deploy key of its own** (step 1) and add the public key on the machine:
+   `sudo tee -a /home/deploy/.ssh/authorized_keys < site-deploy.pub`.
+3. **Give it a stack name no other site on the machine uses.** The template names its stack `site`
+   (`STACK_NAME` in `deploy.yml`); the second one changes that line if the first one also came from
+   the template. Create its directory, `sudo install -d -o deploy -g deploy /srv/<stack name>`; a
+   machine from `cloud-init.yml` has `/srv/site` already.
+4. **Set up and push** as in steps 6 and 7, with `DEPLOY_HOST` and `DEPLOY_KNOWN_HOSTS` as for the
+   first site, and `SITE_PASSWORD` while it is under test.
+
+Each site's app takes about 31 MiB at rest (below), so a second one fits the smallest machine. A
+deployment removes only its own repository's older images.
 
 ## The machine's size
 
