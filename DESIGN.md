@@ -264,8 +264,14 @@ text button.
 
 - **One width:** both names share one hidden cell, so the pill is as wide as the longer name in the
   page's language and does not change when the season does. The accent part is as wide as the chosen
-  season's icon and name, so beside the shorter name the white part grows. Below 22.5rem it is a
-  little smaller, so the wordmark keeps one line beside it.
+  season's icon and name, so beside the shorter name the white part grows.
+- **Icons only below 24rem:** on the narrowest phones both seasons show their icon alone, each in a
+  round slot, so the wordmark keeps its size and one line beside it. The names stay the radios'
+  names for screen readers. From 24rem up there is room for the chosen season's name, and it says
+  what the icon only suggests. With the demo's name the row has 13 px to spare at both 320 px and
+  384 px. Nothing limits a site name yet: #107 sets its limit by both widths. A name too long at 384
+  px needs a higher breakpoint; one too long at 320 px has no room to gain here, since the icons
+  already stand alone.
 - **The glide:** on a change the accent part moves to the other side by its two edges, the leading
   edge first and the trailing one 0.09 s later, so it stretches as it goes (0.32 s, ease in and
   out). The accent colour of the whole page fades to the other season's over 0.45 s, the names fade,

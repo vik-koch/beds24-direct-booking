@@ -16,9 +16,9 @@ import { address, LANGUAGE, TEXTS } from './texts';
   imports: [RouterLink, NgIcon, HlmNavigationMenuImports, HlmSheetImports, SeasonSwitch],
   providers: [provideIcons({ lucideGlobe, lucideMenu })],
   template: `
-    <header class="column flex min-h-[4.5rem] items-center gap-3 max-[22.5rem]:gap-1.5">
+    <header class="column flex min-h-[4.5rem] items-center gap-3">
       <a
-        class="mr-auto -ml-3.5 inline-flex h-(--size-control) items-center rounded-full px-3.5 text-2xl font-medium tracking-[-0.01em] whitespace-nowrap no-underline max-[22.5rem]:text-xl"
+        class="mr-auto -ml-3.5 inline-flex h-(--size-control) items-center rounded-full px-3.5 text-2xl font-medium tracking-[-0.01em] whitespace-nowrap no-underline"
         [href]="home"
         >{{ site.name }}</a
       >
