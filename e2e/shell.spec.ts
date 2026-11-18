@@ -636,7 +636,7 @@ test('a refused token answers 503 without apartments', async ({ request }) => {
 test('a site with a password answers only with it, under any user name', async ({ request }) => {
   const as = (credentials?: string) =>
     credentials ? { authorization: `Basic ${btoa(credentials)}` } : {};
-  for (const path of ['/en', '/favicon.ico']) {
+  for (const path of ['/en', '/pictures/icon-winter.svg']) {
     for (const credentials of [undefined, 'guest:wrong', 'under test']) {
       const response = await request.get(`http://localhost:4004${path}`, {
         headers: as(credentials),

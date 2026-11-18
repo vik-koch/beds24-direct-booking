@@ -168,6 +168,35 @@ test('a hero photo must exist', () => {
   assert.throws(() => readContent(dir), /seasons\.winter\.hero\.file: pictures\/gone\.jpg/);
 });
 
+test('every season needs its icon, an SVG file that exists', () => {
+  const icon = (value) => changed('site.json', (site) => (site.seasons.summer.icon = value));
+  assert.throws(() => readContent(icon(undefined)), /seasons\.summer\.icon/);
+  assert.throws(() => readContent(icon('pictures/hero-summer.webp')), /not an SVG file/);
+  assert.throws(() => readContent(icon('pictures/gone.svg')), /pictures\/gone\.svg does not exist/);
+  const dir = changed();
+  cpSync(join(dir, 'pictures/hero-summer.webp'), join(dir, 'pictures/icon-summer.svg'));
+  assert.throws(() => readContent(dir), /icon-summer\.svg is not an SVG document in UTF-8/);
+  const svg = readFileSync(join(dir, 'pictures/icon-winter.svg'), 'utf8');
+  for (const broken of [svg.slice(0, svg.indexOf('>') + 1), svg.replace('</g>', '')]) {
+    writeFileSync(join(dir, 'pictures/icon-summer.svg'), broken);
+    assert.throws(() => readContent(dir), /icon-summer\.svg is not an SVG document in UTF-8/);
+  }
+  // A stray byte in the licence comment, the rest intact.
+  const at = svg.indexOf('Lucide');
+  writeFileSync(
+    join(dir, 'pictures/icon-summer.svg'),
+    Buffer.concat([Buffer.from(svg.slice(0, at)), Buffer.from([0xff]), Buffer.from(svg.slice(at))]),
+  );
+  assert.throws(() => readContent(dir), /icon-summer\.svg is not an SVG document in UTF-8/);
+  writeFileSync(join(dir, 'pictures/icon-summer.svg'), svg.replaceAll('"', "'"));
+  readContent(dir);
+  writeFileSync(
+    join(dir, 'pictures/icon-summer.svg'),
+    `<?xml version="1.0"?>\n<!-- A note -->\n${svg}`,
+  );
+  readContent(dir);
+});
+
 test('a feature names any Lucide icon, and only those', () => {
   const dir = changed('site.json', (site) => (site.features[0].icon = 'mountain-snow'));
   assert.equal(readContent(dir).site.features[0].icon, 'mountain-snow');

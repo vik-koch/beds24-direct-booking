@@ -27,7 +27,8 @@
     "summer": {
       "hero": {
         "file": "pictures/hero.svg"
-      }
+      },
+      "icon": "pictures/icon.svg"
     }
   },
   "features": [

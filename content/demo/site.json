@@ -33,7 +33,8 @@
           },
           "changes": ["scaled"]
         }
-      }
+      },
+      "icon": "pictures/icon-winter.svg"
     },
     "summer": {
       "start": "04-01",
@@ -49,7 +50,8 @@
           },
           "changes": ["scaled"]
         }
-      }
+      },
+      "icon": "pictures/icon-summer.svg"
     }
   },
   "features": [

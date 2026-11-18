@@ -34,11 +34,14 @@ content. The application has no wording, no colour and no typeface of its own. T
 - **The notice** (`notice` in a texts file) is an optional line above the header, with an optional
   link. Left out, no line is shown.
 - **The seasons** (`seasons` in `site.json`) are `winter`, `summer` or both, each with its hero
-  photo. With both, each names the day it starts as `MM-DD` and lasts until the other starts; 29
-  February cannot be a start. A single season has no start and the site shows no switch. A texts
-  file names exactly the listed seasons in `seasons` (the switch's label and each name) and in
-  `hero` (each photo's alternative text), beside the hero's lead, its features and its button. How
-  the page picks its season is [ADR 8](adr/0008-the-season-in-the-page.md).
+  photo and its `icon`: an SVG file in UTF-8 in `pictures/` that the browser's tab shows while the
+  season is shown. It has no alternative text; the page's title stands beside it. The demo's are a
+  Lucide icon in white on a circle of the season's accent, which reads on light and dark tabs alike.
+  With both, each names the day it starts as `MM-DD` and lasts until the other starts; 29 February
+  cannot be a start. A single season has no start and the site shows no switch. A texts file names
+  exactly the listed seasons in `seasons` (the switch's label and each name) and in `hero` (each
+  photo's alternative text), beside the hero's lead, its features and its button. How the page picks
+  its season is [ADR 8](adr/0008-the-season-in-the-page.md).
 - **The hero's features** (`features` in `site.json`) are up to five, or none, in their order, each
   a key and an icon: `{ "key": "no-commission", "icon": "tag" }`. The icon is any
   [Lucide](https://lucide.dev/icons) icon by its name there, such as `calendar-days`; only the icons

@@ -10,6 +10,7 @@ import {
 } from 'node:fs';
 import { join, resolve } from 'node:path';
 import * as lucide from '@ng-icons/lucide';
+import { JSDOM } from 'jsdom';
 import { lucideName, prefix, seasonNames, siteSchema, textsSchema } from '../src/content/schema.ts';
 
 // Every key one of two texts has and the other lacks, and whether the second lacks it.
@@ -20,6 +21,19 @@ function differences(a, b, path = []) {
     return typeof a[key] === 'object' ? differences(a[key], b[key], at) : [];
   });
 }
+
+// An SVG document: valid UTF-8, well-formed XML with an <svg> root in the SVG namespace. Malformed
+// XML parses to a parsererror root; a lenient decoder would hide an invalid byte.
+const parser = new new JSDOM('').window.DOMParser();
+const utf8 = new TextDecoder('utf-8', { fatal: true });
+const isSvg = (bytes) => {
+  try {
+    const root = parser.parseFromString(utf8.decode(bytes), 'image/svg+xml').documentElement;
+    return root.localName === 'svg' && root.namespaceURI === 'http://www.w3.org/2000/svg';
+  } catch {
+    return false;
+  }
+};
 
 export function readContent(dir) {
   const read = (file, schema) => {
@@ -79,13 +93,20 @@ export function readContent(dir) {
           throw new Error(
             `${join(dir, `texts.${tag}.json`)}\n  credits.changes.${change}: missing`,
           );
-  for (const name of listed) {
-    const file = site.seasons[name].hero.file;
-    if (!existsSync(join(dir, file)))
-      throw new Error(
-        `${join(dir, 'site.json')}\n  seasons.${name}.hero.file: ${file} does not exist`,
-      );
-  }
+  for (const name of listed)
+    for (const [key, file] of [
+      ['hero.file', site.seasons[name].hero.file],
+      ['icon', site.seasons[name].icon],
+    ])
+      if (!existsSync(join(dir, file)))
+        throw new Error(
+          `${join(dir, 'site.json')}\n  seasons.${name}.${key}: ${file} does not exist`,
+        );
+      // Served as an SVG by its name, so it must be one.
+      else if (key === 'icon' && !isSvg(readFileSync(join(dir, file))))
+        throw new Error(
+          `${join(dir, 'site.json')}\n  seasons.${name}.icon: ${file} is not an SVG document in UTF-8`,
+        );
   const languages = site.languages.map((tag) => {
     const code = prefix(tag);
     const name = new Intl.DisplayNames([tag], { type: 'language' }).of(code);
