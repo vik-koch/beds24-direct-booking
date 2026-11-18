@@ -4,7 +4,7 @@ import { address, LANGUAGE, TEXTS } from './texts';
 @Component({
   selector: 'app-not-found',
   template: `
-    <div class="column py-14 md:py-20">
+    <div class="column pt-(--space-section)">
       <h1 class="headline">{{ texts.notFound.title }}</h1>
       <p class="text-ink-soft mt-6">{{ texts.notFound.text }}</p>
       <p class="mt-6">

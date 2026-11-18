@@ -35,8 +35,10 @@
 }
 
 @theme {
-  /* Every control is this tall: buttons, tabs, prices, icon buttons, menu entries. */
+  /* Every control is this tall: buttons, tabs, icon buttons, menu entries. */
   --size-control: 2.75rem;
+  /* A control inside a dense grid of dates, and the season switch's inner pill. */
+  --size-control-small: 2.125rem;
   --radius-control: 999px;
   --radius-card: 1.5rem;
   --radius-menu: 1rem;
@@ -51,6 +53,11 @@
     /* For focus moved by the keyboard; a jump from a link is placed by the router. The header
        takes itself out of it (.site-header). */
     scroll-padding-top: 5.5rem;
+    --space-section: 2rem;
+
+    @media (min-width: 48rem) {
+      --space-section: 2.75rem;
+    }
   }
 
   body {
@@ -228,12 +235,12 @@
      wide as the chosen name, so beside a short name the white part grows. */
   .season-switch {
     /* As tall as a menu entry's hover pill beside it, with white around the accent part. */
-    --narrow: 2.125rem;
-    --pad: 0.3125rem;
+    --narrow: var(--size-control-small);
+    --pad: calc((var(--size-control) - var(--narrow)) / 2);
     position: relative;
     display: grid;
     grid-template-columns: var(--narrow) auto;
-    height: calc(var(--narrow) + 2 * var(--pad));
+    height: var(--size-control);
     padding: var(--pad);
     border-radius: var(--radius-control);
     background: var(--color-surface);
@@ -557,7 +564,11 @@
     align-items: last baseline;
     justify-content: space-between;
     gap: 0.75rem 1.5rem;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
+
+    @media (min-width: 48rem) {
+      margin-bottom: 1.5rem;
+    }
   }
 
   /* On the heading's line where it fits, else on a line of its own. */
@@ -845,7 +856,7 @@
   /* Every week starts on the same weekday, so the narrowest screens leave it out of the rows;
      the row header's label still names it. */
   [role='rowheader'] {
-    padding-block: 1.125rem;
+    padding-block: 0.75rem;
     white-space: nowrap;
 
     @media (max-width: 22.4375rem) {
@@ -866,7 +877,7 @@
     grid-column: 1 / -1;
     contain: inline-size;
     /* Its line sits where the first week's dates would. */
-    padding: 3.2rem 0 1.5rem;
+    padding: 2.825rem 0 1.5rem;
     text-align: left;
     white-space: normal;
     text-wrap: pretty;
@@ -922,7 +933,7 @@
   .taken {
     display: inline-grid;
     align-items: center;
-    min-height: var(--size-control);
+    min-height: var(--size-control-small);
     margin-right: -0.75rem;
     /* The figures sit high in their line; a pixel more above centres them in the pill. */
     padding: 1px 0.75rem 0;

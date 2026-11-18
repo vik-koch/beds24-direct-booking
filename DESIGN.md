@@ -50,8 +50,8 @@ rounded:
 spacing:
   gutter: '1rem'
   gutter-wide: '2rem'
-  section: '3.5rem'
-  section-wide: '5rem'
+  section: '2rem'
+  section-wide: '2.75rem'
 components:
   button-primary:
     backgroundColor: '{colors.winter}'
@@ -67,7 +67,7 @@ components:
   price:
     textColor: '{colors.winter}'
     rounded: '{rounded.control}'
-    height: '2.75rem'
+    height: '2.125rem'
     padding: '0 0.75rem'
   price-hover:
     backgroundColor: '{colors.winter-soft}'
@@ -191,10 +191,10 @@ amounts can be compared down a column.
   to 46rem from 48rem up. The space below it grows with the screen's height, up to 4rem on a phone
   and 10rem from 48rem up, so on a tall screen the card stands clear of the bottom. It scrolls with
   the photo.
-- **Rhythm:** 3.5rem above a section on a phone, 5rem from 48rem up; 1.5rem between a heading and
-  what follows. More space above a heading than below it. The section after the hero has 2.75rem
-  above it, and a jump to it places the section's top at the header's lower edge, so the header
-  covers the photo's last strip.
+- **Rhythm:** `--space-section` above every section and page and above the footer: 2rem on a phone,
+  2.75rem from 48rem up. 1.5rem between a heading and what follows (1rem above the free weeks' card
+  on a phone). More space above a heading than below it. A jump to the section after the hero places
+  its top at the header's lower edge, so the header covers the photo's last strip.
 - **Jumps:** a jump within the page scrolls smoothly, at once with reduced motion. An address with a
   section's anchor opens at that section, with no scroll to be seen. Without JavaScript, Chromium
   scrolls there from the top, and we leave it so: CSS cannot tell the browser's arrival at an anchor
@@ -238,8 +238,10 @@ downwards, so it reads as lying on the page rather than floating.
 
 ### Buttons
 
-- **One height for every control:** `--size-control`, 2.75rem (44 px): buttons, tabs, prices, icon
-  buttons, menu entries and the season switch. A new control takes it, not a number.
+- **Two heights for controls:** `--size-control`, 2.75rem (44 px): buttons, tabs, icon buttons, menu
+  entries and the season switch. `--size-control-small`, 2.125rem (34 px), inside a dense grid of
+  dates, such as the free-weeks list, and for the season switch's inner pill. A new control takes
+  one of them, not a number.
 - **Shape:** pill (999px), 1.5rem of padding at the sides.
 - **Primary:** accent fill, white text at weight 500.
 - **Hover / Focus:** a soft shadow in the accent on hover (underlined instead where the button
@@ -301,10 +303,11 @@ text button.
   December). Each group starts with the month's name in soft ink at 0.875rem, with the year where
   the list starts and in January, and every other group lies on a light ground (the page's ground
   mixed 50% into white) that reaches the card's edges; the last month's reaches its lower edge too.
-- **Row:** the stay's dates on the left in body text (weekday, day and month in figures, so a row
-  fits at 320 px), one cell per apartment on the right. Below 22.5rem the rows leave the weekday
-  out, since every week starts on the same one; each price's label still names it. On a phone the
-  card has 1.25rem at its sides, room for a chosen price's pill.
+- **Row:** 0.75rem above and below the dates, so a grid of dates stays compact; the stay's dates on
+  the left in body text (weekday, day and month in figures, so a row fits at 320 px), one cell per
+  apartment on the right. Below 22.5rem the rows leave the weekday out, since every week starts on
+  the same one; each price's label still names it. On a phone the card has 1.25rem at its sides,
+  room for a chosen price's pill.
 - **Free week:** the price in the accent at title size, as a cell of a grid without a visible box.
   Hover puts a soft tint behind it.
 - **Chosen week:** an accent-filled pill with white figures.

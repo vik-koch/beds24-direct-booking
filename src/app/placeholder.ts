@@ -8,7 +8,7 @@ import { TEXTS } from './texts';
 @Component({
   selector: 'app-placeholder',
   template: `
-    <div class="column py-14 md:py-20">
+    <div class="column pt-(--space-section)">
       <h1 class="headline">{{ heading() }}</h1>
       <p class="text-ink-soft mt-6">{{ texts.placeholder }}</p>
     </div>

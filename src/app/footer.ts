@@ -8,7 +8,7 @@ import { address, LANGUAGE, TEXTS } from './texts';
   imports: [RouterLink],
   template: `
     <footer
-      class="column mt-14 grid gap-8 py-10 text-base md:mt-20 md:grid-cols-2"
+      class="column mt-(--space-section) grid gap-8 py-10 text-base md:grid-cols-2"
       [attr.aria-label]="texts.footer.label"
     >
       @if (contact; as contact) {
