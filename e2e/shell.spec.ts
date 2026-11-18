@@ -649,6 +649,7 @@ test('a site with a password answers only with it, under any user name', async (
         headers: as(credentials),
       });
       expect(response.status()).toBe(200);
+      expect(response.headers()['cache-control']).toBe('private, no-store');
     }
   }
   const page = await request.get('http://localhost:4004/en', {
