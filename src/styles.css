@@ -236,11 +236,11 @@
   .season-switch {
     /* As tall as a menu entry's hover pill beside it, with white around the accent part. */
     --narrow: var(--size-control-small);
-    --pad: 0.3125rem;
+    --pad: calc((var(--size-control) - var(--narrow)) / 2);
     position: relative;
     display: grid;
     grid-template-columns: var(--narrow) auto;
-    height: calc(var(--narrow) + 2 * var(--pad));
+    height: var(--size-control);
     padding: var(--pad);
     border-radius: var(--radius-control);
     background: var(--color-surface);
