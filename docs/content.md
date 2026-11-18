@@ -67,6 +67,28 @@ content. The application has no wording, no colour and no typeface of its own. T
   `--color-*` properties of `content/demo/theme.css`. Every pair of text and ground is measured
   before a theme is used.
 
+## Its boundaries
+
+What varies with a deployment's content, and how far the layout is built and tested for it. A folder
+beyond a limit fails its build, with the limit named.
+
+<!-- prettier-ignore -->
+| Varies | Limit | Why | Enforced by |
+|---|---|---|---|
+| Site name | 15 characters | The narrow header keeps one row at 320 px: the name shrinks from 24 px where its room runs short, to about 15.5 px for 15 letters | The schema; an e2e test puts a 15-letter name into the demo's header |
+| Apartments | 1 to 4 | From 48rem the free-weeks list has a column for each, and four fill the card | The schema; the e2e test site has four |
+| Apartment name | 20 characters | The list's column headers and the phone's tabs | The schema; the e2e test site's names |
+| Languages | Exactly 2 | The language menu and the address prefixes have not been tried with a third | The schema |
+| Seasons | 1 or 2 | Winter and summer, one each | The schema |
+| Hero features | Up to 5 | The hero's card | The schema |
+
+**The site name's size comes from its length,** at an assumed 0.55em per letter: the widest
+mixed-case average measured in the demo's font (Jost at weight 500: 0.547em in "Wohnen am Wald").
+Capitals and other typefaces can be wider: 13 capitals already overflow at 320 px. Not every
+typeface, name and width is tested, which is beyond this project: every deployment, in Jost too,
+checks its own name at 320 px and, with two seasons, at 384 px, where the switch shows its label, in
+each language.
+
 ## How it is checked
 
 `scripts/content.mjs` validates the folder against the schema in
@@ -75,10 +97,10 @@ which is not committed. It runs before every `start`, `build`, `test` and `lint`
 missing in one language, optional ones such as `notice` included, a key the schema does not know, a
 missing texts file, a tag that is not canonical, two tags with one language each, a season named in
 the texts but not in `site.json` or the other way round, a feature without its text or a text
-without its feature, and a missing picture stop the build with the file and the key named. The
-schema, not the demo's files, defines the keys, so the compiler checks every template against the
-same keys for every site. Every language has the same keys, so every language renders the same
-elements and a change of language finds the reader's place.
+without its feature, a missing picture, and a part beyond its boundary stop the build with the file
+and the key named. The schema, not the demo's files, defines the keys, so the compiler checks every
+template against the same keys for every site. Every language has the same keys, so every language
+renders the same elements and a change of language finds the reader's place.
 
 ## Another folder
 

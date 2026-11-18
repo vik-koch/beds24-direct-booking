@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { seasonNames } from './names.ts';
+import { letters, seasonNames } from './names.ts';
 
 export { lucideName, seasonNames, type SeasonName } from './names.ts';
 
@@ -54,10 +54,16 @@ const picture = z.strictObject({
 // With two seasons each starts on its day and lasts until the other starts; a single season
 // covers the year and has no start.
 const seasons = z
-  .strictObject({
-    winter: z.strictObject({ start: day.optional(), hero: picture }).optional(),
-    summer: z.strictObject({ start: day.optional(), hero: picture }).optional(),
-  })
+  .strictObject(
+    {
+      winter: z.strictObject({ start: day.optional(), hero: picture }).optional(),
+      summer: z.strictObject({ start: day.optional(), hero: picture }).optional(),
+    },
+    {
+      error: (issue) =>
+        issue.code === 'unrecognized_keys' ? 'only winter and summer, one or both' : undefined,
+    },
+  )
   .superRefine((value, context) => {
     const listed = seasonNames.filter((name) => value[name]);
     if (listed.length === 0) context.addIssue({ code: 'custom', message: 'no season is listed' });
@@ -84,25 +90,34 @@ const seasons = z
       });
   });
 
+// The limits docs/content.md lists, each with its reason there.
 export const siteSchema = z.strictObject({
-  name: text,
+  name: text.refine((value) => letters(value) <= 15, 'at most 15 characters'),
   languages: z
     .array(tag)
-    .min(2)
+    .length(2, 'exactly two languages')
     // Runs on invalid tags too, which the tag check reports.
     .refine(
       (list) => unique(list, (value) => value.split('-')[0].toLowerCase()),
       'two languages would share one address prefix',
     ),
   apartments: z
-    .array(z.strictObject({ slug: segment, roomId: z.number().int(), name: text }))
+    .array(
+      z.strictObject({
+        slug: segment,
+        roomId: z.number().int(),
+        name: text.refine((value) => letters(value) <= 20, 'at most 20 characters'),
+      }),
+    )
+    .min(1, 'at least one apartment')
+    .max(4, 'at most four apartments')
     .refine((list) => unique(list, (a) => a.slug), 'an apartment slug is listed twice'),
   seasons,
   // The hero's features, in their order, each with a Lucide icon by its name on lucide.dev; the
   // content script checks it exists. Each language's texts name them by their keys.
   features: z
     .array(z.strictObject({ key: segment, icon: segment }))
-    .max(5)
+    .max(5, 'at most five features')
     .refine((list) => unique(list, (f) => f.key), 'a feature key is listed twice'),
   // The footer shows what is listed, and no contact without one: a site may give its details
   // on its imprint page instead.

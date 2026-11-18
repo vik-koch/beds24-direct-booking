@@ -540,6 +540,67 @@ test('at 320 px nothing scrolls sideways and a jump lands below the header', asy
     .toBe(true);
 });
 
+// The name's link ends inside its slot, which the header's other parts leave it at their own
+// width, each on one line, and the page does not scroll sideways.
+async function nameFits(page: Page) {
+  await page.evaluate(() => document.fonts.ready);
+  const { link, slot, wrapped, scroll } = await page.evaluate(() => ({
+    link: document.querySelector('.wordmark a')!.getBoundingClientRect().right,
+    slot: document.querySelector('.wordmark')!.getBoundingClientRect().right,
+    wrapped: [...document.querySelectorAll('app-header :is(a, button, label)')]
+      .filter((e) => e.checkVisibility() && e.textContent!.trim())
+      .filter((e) => {
+        // Visible text only: an icon beside it sits higher.
+        const walker = document.createTreeWalker(e, NodeFilter.SHOW_TEXT);
+        const tops = new Set<number>();
+        for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+          if (node.parentElement!.closest('.sr-only')) continue;
+          const range = document.createRange();
+          range.selectNodeContents(node);
+          for (const rect of range.getClientRects()) if (rect.width) tops.add(Math.round(rect.top));
+        }
+        return tops.size > 1;
+      })
+      .map((e) => e.textContent!.trim()),
+    scroll: document.documentElement.scrollWidth - innerWidth,
+  }));
+  expect(link).toBeLessThanOrEqual(slot);
+  expect(wrapped).toEqual([]);
+  expect(scroll).toBe(0);
+}
+
+test('a site name of 15 wide letters fits the header beside the season switch', async ({
+  page,
+}) => {
+  // Set on the server's page, with the application held back so that it keeps the name.
+  const name = 'Wohnen am Walde';
+  await page.route(/\/main-[\w-]+\.js$/, (route) => route.abort());
+  await page.goto('/de');
+  await page.evaluate((name) => {
+    const wordmark = document.querySelector<HTMLElement>('.wordmark')!;
+    wordmark.style.setProperty('--letters', String(name.length));
+    wordmark.querySelector('a')!.textContent = name;
+  }, name);
+  // 320 px shows the switch's icons, 384 px its label; the wide header starts at 1,024 px.
+  for (const width of [320, 384, 1024])
+    for (const season of ['winter', 'summer']) {
+      await page.setViewportSize({ width, height: 800 });
+      await page.evaluate(
+        (name) => document.documentElement.setAttribute('data-season', name),
+        season,
+      );
+      await nameFits(page);
+    }
+});
+
+test('the test site’s name at its limit fits the header', async ({ page }) => {
+  await page.goto('http://localhost:4002/it');
+  for (const width of [320, 1280]) {
+    await page.setViewportSize({ width, height: 800 });
+    await nameFits(page);
+  }
+});
+
 test('a second content folder changes languages, name, wording and theme', async ({
   page,
   request,
@@ -553,7 +614,7 @@ test('a second content folder changes languages, name, wording and theme', async
   await page.goto(`${other}/it`);
   await expect(page.locator('html')).toHaveAttribute('lang', 'it');
   await expect(page.locator('link[hreflang="nl-BE"]')).toHaveAttribute('href', '/nl');
-  await expect(page.getByRole('link', { name: 'Casa Prova' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Casa Prova Alta' })).toBeVisible();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Appartamenti per le vacanze');
   await expect(page.getByText('Demo:')).toHaveCount(0);
   // This site lists no address and no phone: the footer shows the name and the email.

@@ -377,6 +377,18 @@
     }
   }
 
+  /* The site's name takes the room the header leaves it, and shrinks from 24 px where its
+     letters, at an assumed 0.55em each, would not fit; the link's left padding hangs outside. */
+  .wordmark {
+    flex: 1;
+    min-width: 0;
+    container-type: inline-size;
+
+    > a {
+      font-size: min(1.5rem, (100cqi - 0.875rem) / (var(--letters) * 0.55));
+    }
+  }
+
   /* The header: a light frosted bar over the page. Over the hero at the top of the home page
      it has no ground of its own; the photo's top fades to the ground behind it instead. */
   .site-header {
