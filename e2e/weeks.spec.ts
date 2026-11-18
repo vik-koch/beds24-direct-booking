@@ -49,6 +49,26 @@ test('the next season lists its weeks with a price or "booked" per apartment', a
   );
 });
 
+test('the pointer shows over the whole cell of a free week and not over a booked one', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/en');
+  await toOtherSeason(page);
+  // Inside the cell, left of the price, where the hover already lights the price's pill.
+  const cursorAt = (selector: string) =>
+    panel(page)
+      .locator(selector)
+      .first()
+      .evaluate((cell) => {
+        const { left, top, height } = cell.getBoundingClientRect();
+        return getComputedStyle(document.elementFromPoint(left + 4, top + height / 2)!).cursor;
+      });
+  expect(await cursorAt('.stay')).toBe('pointer');
+  await expect(panel(page).locator('.stay .price').first()).toHaveCSS('cursor', 'pointer');
+  expect(await cursorAt('.booked')).toBe('auto');
+});
+
 test('a chosen week leads to its apartment with the stay', async ({ page }) => {
   await page.goto('/de');
   await toOtherSeason(page);

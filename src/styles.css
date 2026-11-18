@@ -906,6 +906,10 @@
     }
   }
 
+  .stay {
+    cursor: pointer;
+  }
+
   .price,
   .taken {
     display: inline-grid;
@@ -921,7 +925,6 @@
     color: var(--color-accent);
     font-size: 1.1875rem;
     font-weight: 500;
-    cursor: pointer;
     transition: background-color 0.2s;
 
     .stay:hover & {
