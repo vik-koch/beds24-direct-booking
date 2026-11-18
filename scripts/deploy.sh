@@ -17,6 +17,11 @@ sim=$(setting SIM_IMAGE)
 password=$(setting SITE_PASSWORD)
 : "${stack:?STACK_NAME missing in $env}" "${domain:?APP_DOMAIN missing in $env}" "${web:?WEB_IMAGE missing in $env}"
 dir=/srv/$stack
+# Compose would read quotes, spaces or a # in the settings file otherwise. The value is not shown.
+if [[ ! "$password" =~ ^[A-Za-z0-9_-]*$ ]]; then
+  echo "SITE_PASSWORD in $env may hold only letters, digits, - and _" >&2
+  exit 1
+fi
 
 # shellcheck disable=SC2086,SC2029
 run() { ssh ${SSH_OPTS:-} "deploy@$host" "$@"; }
@@ -49,7 +54,8 @@ echo "==> Checking https://$domain"
 status() { curl -K - -sL -o /dev/null -w '%{http_code}' --max-time 10 "https://$domain/"; }
 checked() {
   if [ -z "$password" ]; then [ "$(status </dev/null)" = 200 ]; return; fi
-  [ "$(status </dev/null)" = 401 ] && [ "$(echo "user = \":$password\"" | status)" = 200 ]
+  [ "$(echo "user = \":$password\"" | status)" = 200 ] &&
+    curl -sL -o /dev/null -D - --max-time 10 "https://$domain/" | grep -qi '^www-authenticate: basic'
 }
 for _ in $(seq 30); do
   if checked; then
