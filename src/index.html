@@ -7,9 +7,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" type="image/x-icon" href="favicon.ico" />
     <!-- With an anchor, the page stays hidden until the script at its end has moved it there:
-         a transfer that stalls after the hero would otherwise paint the hero first. -->
+         a transfer that stalls after the hero would otherwise paint the hero first. Without
+         one, there is no first jump to keep from being animated, so jumps are smooth at once. -->
     <script>
-      if (location.hash) document.documentElement.setAttribute('data-jump', '');
+      document.documentElement.setAttribute(location.hash ? 'data-jump' : 'data-smooth', '');
     </script>
     <style>
       html[data-jump] body {

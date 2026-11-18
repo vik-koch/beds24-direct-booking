@@ -75,8 +75,8 @@
     color: var(--color-on-accent);
   }
 
-  /* Only once the application has started: the browser's own jump to an address's anchor
-     would otherwise be animated from the top of the page. */
+  /* With an address's anchor only once the application has started (shell.ts): the browser's
+     own jump to it would otherwise be animated from the top of the page. */
   @media (prefers-reduced-motion: no-preference) {
     html[data-smooth] {
       scroll-behavior: smooth;

@@ -236,6 +236,12 @@ test('an address with an anchor opens at its section; smooth scrolling starts af
   await expect.poll(behavior).toBe('auto');
 });
 
+test('without an anchor, jumps are smooth before the application has started', async ({ page }) => {
+  await page.route(/\/main-[\w-]+\.js$/, () => undefined);
+  await page.goto('/en', { waitUntil: 'commit' });
+  await expect(page.locator('html')).toHaveCSS('scroll-behavior', 'smooth');
+});
+
 test('an anchor that cannot be decoded opens the page at its top', async ({ page }) => {
   const errors: Error[] = [];
   page.on('pageerror', (error) => errors.push(error));
