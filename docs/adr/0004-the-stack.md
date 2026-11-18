@@ -146,8 +146,9 @@ result is added to this ADR when it is known.
   - Walked by keyboard in Chromium at 375 px and 1280 px. The e2e suite runs the keys and
     axe in Chromium, Firefox and WebKit.
   - Tried by the maintainer with NVDA on Windows: the position, the price or "booked" and
-    the chosen state were announced. The cell now speaks its dates in full ("Saturday 3
-    April"), since the short form shown on screen was read as such.
+    the chosen state were announced. A cell's name repeated its row's and column's headers,
+    which NVDA reads as well, so a cell now says only its price or "booked", the row header
+    the dates in full ("Saturday 3 April") and the column header the size in words.
   - Not tried: Firefox and Safari by hand, VoiceOver on a Mac or an iPhone.
 
 - **The typed texts are confirmed in the first slice with a counted text.** If the three

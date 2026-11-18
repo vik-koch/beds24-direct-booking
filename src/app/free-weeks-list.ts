@@ -124,7 +124,10 @@ interface Week {
                         @for (week of month.weeks; track week.arrival) {
                           <div class="weeks-row" ngGridRow [rowIndex]="week.row + 2">
                             @let span = days(week);
-                            <span role="rowheader" aria-colindex="1"
+                            <span
+                              role="rowheader"
+                              aria-colindex="1"
+                              [attr.aria-label]="stay(week, spoken)"
                               ><span class="weekday">{{ span[0].weekday }}</span
                               >{{ span[0].date }} –
                               <span class="weekday">{{ span[1].weekday }}</span>{{
@@ -144,7 +147,6 @@ interface Week {
                                 [selectable]="price !== null"
                                 [selected]="isChosen(season.name, $index, week.row)"
                                 (selectedChange)="select($event, season.name, $index, week.row)"
-                                [attr.aria-label]="describe(season, $index, week.row)"
                                 [attr.data-pick]="$index + '-' + week.row"
                                 (click)="price === null && $event.stopPropagation()"
                                 (keydown.enter)="price === null && $event.stopPropagation()"
@@ -244,7 +246,7 @@ export class FreeWeeksList {
     month: 'numeric',
     timeZone: 'UTC',
   });
-  private readonly spoken = new Intl.DateTimeFormat(this.language.tag, {
+  protected readonly spoken = new Intl.DateTimeFormat(this.language.tag, {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
@@ -361,13 +363,6 @@ export class FreeWeeksList {
       minimumFractionDigits: digits,
       maximumFractionDigits: digits,
     }).format(amount);
-  }
-
-  protected describe(season: SeasonWeeks, apartment: number, row: number) {
-    const week = season.weeks[row];
-    const { name } = this.weeks()!.apartments[apartment];
-    const price = week.prices[apartment];
-    return `${name} · ${this.stay(week, this.spoken)} · ${price === null ? this.texts.weeks.taken : this.money(price)}`;
   }
 
   protected link(season: SeasonWeeks, apartment: number, row: number) {

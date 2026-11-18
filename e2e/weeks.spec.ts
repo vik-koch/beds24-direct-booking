@@ -37,12 +37,12 @@ test('the next season lists its weeks with a price or "booked" per apartment', a
   );
   const dates = await panel(page).getByRole('rowheader').first().innerText();
   expect(dates.replace(/\s+/g, ' ').trim()).toMatch(/^Sat \d\d\/\d\d – Sat \d\d\/\d\d$/);
-  await expect(panel(page).locator('.stay').first()).toHaveAccessibleName(
-    /^(Zirbe|Lärche|Ahorn) · Saturday \d+ \w+ – Saturday \d+ \w+ · €[\d,.]+$/,
+  // The headers say the week and the apartment, so a cell says only its own price or "booked".
+  await expect(panel(page).getByRole('rowheader').first()).toHaveAccessibleName(
+    /^Saturday \d+ \w+ – Saturday \d+ \w+$/,
   );
-  await expect(panel(page).locator('.booked').first()).toHaveAccessibleName(
-    /^(Zirbe|Lärche|Ahorn) · Saturday .+ · booked$/,
-  );
+  await expect(panel(page).locator('.stay').first()).toHaveAccessibleName(/^€[\d,.]+$/);
+  await expect(panel(page).locator('.booked').first()).toHaveAccessibleName('booked');
   await expect(panel(page).getByText('booked').first()).toBeVisible();
   await expect(page.locator('.weeks-note')).toHaveText(
     'Price per week including the final cleaning. Plus a local tax of €3.50 per adult and night.',
@@ -53,8 +53,12 @@ test('a chosen week leads to its apartment with the stay', async ({ page }) => {
   await page.goto('/de');
   await toOtherSeason(page);
   const first = panel(page).locator('.stay:visible').first();
-  const [apartment, , price] = (await first.getAttribute('aria-label'))!.split(' · ');
+  const column = await first.getAttribute('aria-colindex');
+  const apartment = await page
+    .locator(`[role=columnheader][aria-colindex="${column}"] .weeks-name`)
+    .innerText();
   const dates = await first.locator('..').getByRole('rowheader').innerText();
+  const price = await first.innerText();
   await first.click();
   await expect(first).toHaveAttribute('aria-selected', 'true');
   await expect(page.locator('.pick output')).toHaveText(
