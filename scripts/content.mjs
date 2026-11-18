@@ -88,6 +88,14 @@ export function readContent(dir) {
         throw new Error(
           `${join(dir, 'site.json')}\n  seasons.${name}.${key}: ${file} does not exist`,
         );
+      // Served as an SVG by its name, so it must be one.
+      else if (
+        key === 'icon' &&
+        !/^\s*(<\?xml[^>]*>\s*)?<svg[\s>]/.test(readFileSync(join(dir, file), 'utf8'))
+      )
+        throw new Error(
+          `${join(dir, 'site.json')}\n  seasons.${name}.icon: ${file} is not an SVG document`,
+        );
   const languages = site.languages.map((tag) => {
     const code = prefix(tag);
     const name = new Intl.DisplayNames([tag], { type: 'language' }).of(code);

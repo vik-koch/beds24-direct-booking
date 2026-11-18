@@ -173,6 +173,9 @@ test('every season needs its icon, an SVG file that exists', () => {
   assert.throws(() => readContent(icon(undefined)), /seasons\.summer\.icon/);
   assert.throws(() => readContent(icon('pictures/hero-summer.webp')), /not an SVG file/);
   assert.throws(() => readContent(icon('pictures/gone.svg')), /pictures\/gone\.svg does not exist/);
+  const dir = changed();
+  cpSync(join(dir, 'pictures/hero-summer.webp'), join(dir, 'pictures/icon-summer.svg'));
+  assert.throws(() => readContent(dir), /icon-summer\.svg is not an SVG document/);
 });
 
 test('a feature names any Lucide icon, and only those', () => {
