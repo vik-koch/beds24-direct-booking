@@ -184,12 +184,18 @@ test('an address with an anchor opens at its section; smooth scrolling starts af
   page,
 }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
-  // The page as the first frame shows it, before the application has started.
+  // The page as the first frame shows it, while the application's scripts are held back.
+  const { promise: held, resolve: release } = Promise.withResolvers<void>();
+  await page.route(/\/main-[\w-]+\.js$/, async (route) => {
+    await held;
+    await route.continue();
+  });
   await page.addInitScript(() => {
     requestAnimationFrame(() => {
       const header = document.querySelector('app-header')!;
       (window as unknown as { first: unknown }).first = {
         y: scrollY,
+        shown: getComputedStyle(document.body).visibility === 'visible',
         behavior: getComputedStyle(document.documentElement).scrollBehavior,
         over: header.hasAttribute('data-over'),
         gap:
@@ -198,26 +204,42 @@ test('an address with an anchor opens at its section; smooth scrolling starts af
       };
     });
   });
-  await page.goto('/en#free-weeks');
-  const first = await page.evaluate(
-    () =>
-      (window as unknown as { first: { y: number; behavior: string; over: boolean; gap: number } })
-        .first,
+  await page.goto('/en#free-weeks', { waitUntil: 'commit' });
+  const sampled = await page.waitForFunction(
+    () => (window as unknown as { first?: unknown }).first,
   );
+  const first = (await sampled.jsonValue()) as {
+    y: number;
+    shown: boolean;
+    behavior: string;
+    over: boolean;
+    gap: number;
+  };
+  release();
+  expect(first.shown).toBe(true);
   expect(first.y).toBeGreaterThan(0);
   expect(first.over).toBe(false);
   expect(Math.abs(first.gap)).toBeLessThanOrEqual(1);
-  await page.waitForTimeout(500);
-  expect(await page.evaluate(() => scrollY)).toBe(first.y);
 
   // Smooth scrolling comes with the application, after that first jump, and not with reduced
-  // motion. Whether a browser then animates is its own affair.
+  // motion. Whether a browser then animates is its own affair. The page stays where it is.
   expect(first.behavior).toBe('auto');
   const behavior = () =>
     page.evaluate(() => getComputedStyle(document.documentElement).scrollBehavior);
   await expect.poll(behavior).toBe('smooth');
+  await page.waitForTimeout(500);
+  expect(await page.evaluate(() => scrollY)).toBe(first.y);
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await expect.poll(behavior).toBe('auto');
+});
+
+test('an anchor that cannot be decoded opens the page at its top', async ({ page }) => {
+  const errors: Error[] = [];
+  page.on('pageerror', (error) => errors.push(error));
+  await page.goto('/en#50%');
+  await expect(page.locator('body')).toBeVisible();
+  expect(await page.evaluate(() => scrollY)).toBe(0);
+  expect(errors).toEqual([]);
 });
 
 test('at 320 px nothing scrolls sideways and a jump lands below the header', async ({ page }) => {

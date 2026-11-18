@@ -6,6 +6,16 @@
     <base href="/" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <!-- With an anchor, the page stays hidden until the script at its end has moved it there:
+         a transfer that stalls after the hero would otherwise paint the hero first. -->
+    <script>
+      if (location.hash) document.documentElement.setAttribute('data-jump', '');
+    </script>
+    <style>
+      html[data-jump] body {
+        visibility: hidden;
+      }
+    </style>
   </head>
   <body>
     <app-root></app-root>
@@ -14,8 +24,13 @@
          header's ground, which it has below the top. -->
     <script>
       if (location.hash) {
-        document.getElementById(decodeURIComponent(location.hash.slice(1)))?.scrollIntoView();
+        let target = null;
+        try {
+          target = document.getElementById(decodeURIComponent(location.hash.slice(1)));
+        } catch {} // A fragment such as "#50%" cannot be decoded and names no section.
+        target?.scrollIntoView();
         if (scrollY > 0) document.querySelector('app-header')?.removeAttribute('data-over');
+        document.documentElement.removeAttribute('data-jump');
       }
     </script>
   </body>
