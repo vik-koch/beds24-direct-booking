@@ -36,13 +36,20 @@ export function readContent(dir) {
             `${join(dir, `texts.${tag}.json`)}\n  ${part}.${name}: ${has ? 'a season site.json does not list' : 'missing'}`,
           );
       }
-  for (const tag of site.languages)
+  // Every language renders the same elements, so a change of language finds the reader's place.
+  const [first] = site.languages;
+  for (const tag of site.languages) {
+    if (texts[prefix(tag)].hero.features.length !== texts[prefix(first)].hero.features.length)
+      throw new Error(
+        `${join(dir, `texts.${tag}.json`)}\n  hero.features: as many as in texts.${first}.json`,
+      );
     texts[prefix(tag)].hero.features.forEach(({ icon }, index) => {
       if (!(lucideName(icon) in lucide))
         throw new Error(
           `${join(dir, `texts.${tag}.json`)}\n  hero.features.${index}.icon: ${icon} is not a Lucide icon`,
         );
     });
+  }
   // Every change a credit lists is named in every language.
   for (const name of listed)
     for (const change of site.seasons[name].hero.credit?.changes ?? [])

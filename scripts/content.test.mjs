@@ -103,8 +103,17 @@ test('a feature names any Lucide icon, and only those', () => {
   assert.throws(() => readContent(wrong), /hero\.features\.0\.icon: chalet is not a Lucide icon/);
 });
 
-test('the hero has up to five features, or none', () => {
+test('the hero has up to five features, or none, as many in every language', () => {
+  const fewer = changed('texts.en-GB.json', (texts) => texts.hero.features.pop());
+  assert.throws(
+    () => readContent(fewer),
+    /texts\.en-GB\.json\n {2}hero\.features: as many as in texts\.de-AT\.json/,
+  );
   const none = changed('texts.de-AT.json', (texts) => (texts.hero.features = []));
+  const en = join(none, 'texts.en-GB.json');
+  const texts = JSON.parse(readFileSync(en, 'utf8'));
+  texts.hero.features = [];
+  writeFileSync(en, JSON.stringify(texts));
   assert.deepEqual(readContent(none).texts.de.hero.features, []);
   const six = changed('texts.de-AT.json', (texts) =>
     texts.hero.features.push(...texts.hero.features),
