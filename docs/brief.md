@@ -75,7 +75,7 @@ repository publishes. Nothing about the real business goes into the public repos
 | Demo and real site | The demo is a deployment, never a mode: no demo-only features in the app. What differs is content, configuration and the Beds24 address (the simulator) | Keeps one scope and one code path. National differences (imprint, tax wording, registration numbers, mediation) are content and optional fields. |
 | Render modes | No client-only routes. Pages that show listings or the stay picker (home, apartment) are rendered on the server per request from the cache; guides, company and legal pages are prerendered. The availability route stays for navigation inside the app | Prices and listing texts are in the HTML for search and without a late pop-in; one hydration path. |
 | Design first | A design round before the first slice: two or three directions for the home page and the stay picker, phone first, both seasons; the chosen one becomes HTML mock-ups on the real Tailwind tokens and the design language | The UI is the new part. |
-| Testing | Every e2e test on Chromium desktop, WebKit with an iPhone device and Firefox desktop; details in `working-agreements.md` | Small suite, phone visitors, Safari is where sites break. |
+| Testing | Every e2e test on Chromium desktop, WebKit with an iPhone device and Firefox desktop; details in `working-agreements.md`. A feature is not checked in Safari or with VoiceOver: an accepted risk, covered by one check on real Apple devices before a release guests rely on ([issue 100](https://github.com/vik-koch/beds24-direct-booking/issues/100)) | Small suite, phone visitors, Safari is where sites break. The maintainer has no Apple hardware, and nothing else runs Safari or VoiceOver. |
 | Accessibility | Built in from the first slice: contrast checked on both season palettes' tokens, axe in the e2e suite, keyboard and focus rules; details in `working-agreements.md` | Cheaper than a pass at the end, and it shapes the palettes and the stay picker. |
 | Releases | Deployment from `main` only: a merge deploys the demo. No planned increments: issue by issue. A tag marks a state the private site can pin: `0.1.0` when CI/CD runs and the demo is live with the simulator, a `0.x.0` after a slice the private site wants, `1.0.0` when the real site is live | Slices are planned as issues in a milestone, not as versions. |
 | Agentic practices | From the start: the reviewer agent, the screenshot matrix (2 languages × 2 seasons × phone and desktop), and hooks for format and lint. Installed skills for Angular and for design work; a project skill of our own when a procedure has been done twice | Three to practise first; more when one has become routine. The list to choose from is in `working-agreements.md`. |
@@ -87,8 +87,9 @@ repository publishes. Nothing about the real business goes into the public repos
   then the Beds24 guest form in an iframe by deep link, restyled through the booking engine's CSS
   and script settings, with an own confirmation page behind the return URL. Payment may leave the
   frame for Beds24's page. Untested until the account has paid: the confirmation, the payment, the
-  return, and the frame's cookie in Safari (accepted risk). Fallbacks: the same link as a full page,
-  then an own form through the API.
+  return, and the frame's cookie in Safari (accepted risk, checked in
+  [issue 100](https://github.com/vik-koch/beds24-direct-booking/issues/100)). Fallbacks: the same
+  link as a full page, then an own form through the API.
 - **Token handling in production:** scopes `read:inventory` and `read:properties` only, an IP
   whitelist, and a refresh token exchanged for 24-hour access tokens. To confirm later.
 - **The real site's name, domain and logo.** `.com` as the main domain; the national domain
