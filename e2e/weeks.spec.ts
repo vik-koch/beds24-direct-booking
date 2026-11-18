@@ -33,7 +33,7 @@ test('the next season lists its weeks with a price or "booked" per apartment', a
   for (const name of ['Zirbe', 'Lärche', 'Ahorn'])
     await expect(grid.getByRole('columnheader', { name })).toContainText(/\d guests · \d+\sm²/);
   await expect(grid.getByRole('columnheader', { name: 'Zirbe' })).toHaveAccessibleName(
-    /^Zirbe ?\d guests · \d+ square metres$/,
+    /^Zirbe · \d guests · \d+ square metres$/,
   );
   const dates = await panel(page).getByRole('rowheader').first().innerText();
   expect(dates.replace(/\s+/g, ' ').trim()).toMatch(/^Sat \d\d\/\d\d – Sat \d\d\/\d\d$/);

@@ -104,16 +104,13 @@ interface Week {
                 <span
                   role="columnheader"
                   [attr.aria-colindex]="$index + 2"
+                  [attr.aria-label]="
+                    apartment.name + ' · ' + guests(apartment) + ' · ' + size(apartment, 'spoken')
+                  "
                   [class.elsewhere]="$index !== tab()"
                 >
                   <span class="weeks-name">{{ apartment.name }}</span>
-                  <small
-                    >{{ guests(apartment) }} ·
-                    <span aria-hidden="true">{{ size(apartment, 'shown') }}</span><span
-                      class="sr-only"
-                      >{{ size(apartment, 'spoken') }}</span
-                    ></small
-                  >
+                  <small>{{ guests(apartment) }} · {{ size(apartment, 'shown') }}</small>
                 </span>
               }
             </div>
