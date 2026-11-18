@@ -156,6 +156,8 @@ export class Header {
   // On the home page the header lies over the hero photo, without its own ground, until the
   // page is scrolled or the menu is open.
   readonly overHero = input(false);
+  // A 404's language links lead to the home page, whose free weeks only a full load brings.
+  readonly keepPlace = input(true);
   // From the start where the page opened lower, at an address's anchor (index.html).
   protected readonly scrolled = signal((inject(DOCUMENT).defaultView?.scrollY ?? 0) > 0);
   protected readonly menuOpen = signal(false);
@@ -207,6 +209,7 @@ export class Header {
   // The other language inside the application, where the visitor was. A modifier key, or no
   // application, leaves it to the link.
   protected change(event: MouseEvent, href: string, menu?: { close: () => void }) {
+    if (!this.keepPlace()) return;
     if (event.button || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
     event.preventDefault();
     if (!menu) return this.go(href);

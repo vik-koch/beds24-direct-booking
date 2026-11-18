@@ -214,6 +214,68 @@ test('a language change keeps the place and the chosen week, and focuses the lan
   }
 });
 
+// The place is found by the element's place in <main>, on every page. Half as far down as the
+// page goes, so that the page's end cannot hide a place that was not put back.
+test('a language change keeps the place on a page besides the home page', async ({ page }, {
+  project,
+}) => {
+  await page.goto('/en/picture-credits');
+  for (const width of project.use.isMobile ? [project.use.viewport!.width] : [1280, 320]) {
+    await page.setViewportSize({ width, height: 800 });
+    for (const [from, to, lang] of [
+      ['Language: English', 'Deutsch', 'de-AT'],
+      ['Sprache: Deutsch', 'English', 'en-GB'],
+    ]) {
+      await page.evaluate(() =>
+        scrollTo({
+          top: (document.documentElement.scrollHeight - innerHeight) / 2,
+          behavior: 'instant',
+        }),
+      );
+      const credit = page.locator('main li').nth(1);
+      const before = await fromEdge(credit);
+      await toLanguage(page, from, to);
+      await expect(page.locator('html')).toHaveAttribute('lang', lang);
+      await settled(page);
+      expect(Math.abs((await fromEdge(credit)) - before), `${width} to ${to}`).toBeLessThan(2);
+    }
+  }
+});
+
+test('on a phone a language change keeps the apartment of the chosen tab', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 800 });
+  await page.goto('/en');
+  const tabs = page.locator('.room-tabs input');
+  await expect(async () => {
+    await page.locator('.room-tabs label').nth(2).click();
+    await expect(tabs.nth(2)).toBeChecked({ timeout: 500 });
+  }).toPass();
+  const stay = page.locator('.weeks-body:visible [data-pick]:visible').first();
+  const pick = (await stay.getAttribute('data-pick'))!;
+  await stay.evaluate((cell) => {
+    const edge = document.querySelector('app-header')!.getBoundingClientRect().bottom;
+    scrollBy({ top: cell.getBoundingClientRect().top - edge + 10, behavior: 'instant' });
+  });
+  const before = await fromEdge(stay);
+  await toLanguage(page, 'Language: English', 'Deutsch');
+  await expect(page.locator('html')).toHaveAttribute('lang', 'de-AT');
+  await settled(page);
+  await expect(tabs.nth(2)).toBeChecked();
+  const same = page.locator(`.weeks-body:visible [data-pick="${pick}"]`);
+  expect(Math.abs((await fromEdge(same)) - before)).toBeLessThan(2);
+});
+
+// The home page's free weeks come with a full load only (ADR 6), so a 404's links, which lead
+// there, load it.
+test('from a missing page the language link loads the home page with its free weeks', async ({
+  page,
+}) => {
+  await page.goto('/de/nichts');
+  await toLanguage(page, 'Sprache: Deutsch', 'English');
+  await expect(page).toHaveURL('/en');
+  await expect(page.getByRole('grid', { name: 'Free weeks' })).toBeVisible();
+});
+
 test('a language change fades, and changes at once with reduced motion', async ({ page }) => {
   for (const motion of ['no-preference', 'reduce'] as const) {
     await page.emulateMedia({ reducedMotion: motion });
