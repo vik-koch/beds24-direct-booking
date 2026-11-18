@@ -85,8 +85,8 @@ beyond a limit fails its build, with the limit named.
 **The site name's size comes from its length,** at an assumed 0.55em per letter: the widest
 mixed-case average measured in the demo's font (Jost at weight 500: 0.547em in "Wohnen am Wald").
 Capitals and other typefaces can be wider: 13 capitals already overflow at 320 px. Not every
-typeface, name and width is tested, which is beyond this project: a deployment with another font
-checks its name at 320 px and, with two seasons, at 384 px, where the switch shows its label, in
+typeface, name and width is tested, which is beyond this project: every deployment, in Jost too,
+checks its own name at 320 px and, with two seasons, at 384 px, where the switch shows its label, in
 each language.
 
 ## How it is checked
