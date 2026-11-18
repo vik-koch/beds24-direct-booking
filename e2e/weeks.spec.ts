@@ -58,20 +58,36 @@ test('only the price chooses its week, and only the price reacts to the mouse', 
   await toOtherSeason(page);
   const stay = panel(page).locator('.stay').first();
   const price = stay.locator('.price');
+  const unlit = 'rgba(0, 0, 0, 0)';
   await stay.scrollIntoViewIfNeeded();
   const cell = (await stay.boundingBox())!;
   const beside = { x: cell.x + 4, y: cell.y + cell.height / 2 };
   await expect(stay).toHaveCSS('cursor', 'auto');
   await expect(price).toHaveCSS('cursor', 'pointer');
   await expect(panel(page).locator('.booked').first()).toHaveCSS('cursor', 'auto');
+  // Lit first, so that unlit beside it is not the start of the pill's transition.
+  await price.hover();
+  await expect(price).not.toHaveCSS('background-color', unlit);
   await page.mouse.move(beside.x, beside.y);
-  await expect(price).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+  await expect(price).toHaveCSS('background-color', unlit);
   await page.mouse.click(beside.x, beside.y);
   await expect(stay).toHaveAttribute('aria-selected', 'false');
   await expect(page.locator('.pick')).toHaveCount(0);
-  await price.hover();
-  await expect(price).not.toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
   await price.click();
+  await expect(stay).toHaveAttribute('aria-selected', 'true');
+});
+
+test('a click without a pointer chooses a free cell from anywhere, and never a booked one', async ({
+  page,
+}) => {
+  await page.goto('/en');
+  await toOtherSeason(page);
+  const stay = panel(page).locator('.stay:visible').first();
+  await stay.dispatchEvent('click');
+  await expect(stay).toHaveAttribute('aria-selected', 'true');
+  const booked = panel(page).locator('.booked:visible').first();
+  // A booked cell's click would clear the chosen week.
+  await booked.dispatchEvent('click');
   await expect(stay).toHaveAttribute('aria-selected', 'true');
 });
 

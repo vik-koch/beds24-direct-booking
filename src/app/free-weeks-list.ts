@@ -145,8 +145,7 @@ const shownTab = new InjectionToken('shown tab', { providedIn: 'root', factory: 
                             >
                             @for (price of week.prices; track $index) {
                               <!-- A booked cell can be reached but not chosen: Enter, Space or
-                                   a click on it would clear the chosen week. A click chooses
-                                   only on the price, which alone shows the pointer. -->
+                                   a click on it would clear the chosen week. -->
                               <span
                                 ngGridCell
                                 role="gridcell"
@@ -158,7 +157,7 @@ const shownTab = new InjectionToken('shown tab', { providedIn: 'root', factory: 
                                 [selected]="isChosen(season.name, $index, week.row)"
                                 (selectedChange)="select($event, season.name, $index, week.row)"
                                 [attr.data-pick]="$index + '-' + week.row"
-                                (click)="onPrice($event) || $event.stopPropagation()"
+                                (click)="guard($event, price !== null)"
                                 (keydown.enter)="price === null && $event.stopPropagation()"
                                 (keydown.space)="price === null && hold($event)"
                                 (keydown.pageup)="byMonth($event, -1)"
@@ -404,8 +403,11 @@ export class FreeWeeksList {
     return season === this.season.current() && (this.wide() || apartment === this.tab());
   }
 
-  protected onPrice(event: MouseEvent) {
-    return !!(event.target as Element).closest('.price');
+  // A pointer chooses only on the price, which alone shows the pointer. A click without one
+  // (detail 0), as assistive technology sends it to the focused cell, chooses from anywhere.
+  protected guard(event: MouseEvent, free: boolean) {
+    if (!free || (event.detail > 0 && !(event.target as Element).closest('.price')))
+      event.stopPropagation();
   }
 
   protected hold(event: Event) {
