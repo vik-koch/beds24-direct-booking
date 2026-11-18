@@ -182,7 +182,7 @@ test('a language change keeps the place and the chosen week, and focuses the lan
     // Another week each round, so the click chooses rather than clears.
     const stay = stays.nth(Math.floor((await stays.count()) / 2) + round);
     const pick = (await stay.getAttribute('data-pick'))!;
-    await stay.click();
+    await stay.locator('.price').click();
     // The week a little below the header's edge.
     await stay.evaluate((cell) => {
       const edge = document.querySelector('app-header')!.getBoundingClientRect().bottom;

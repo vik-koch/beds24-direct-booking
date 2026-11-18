@@ -145,7 +145,8 @@ const shownTab = new InjectionToken('shown tab', { providedIn: 'root', factory: 
                             >
                             @for (price of week.prices; track $index) {
                               <!-- A booked cell can be reached but not chosen: Enter, Space or
-                                   a click on it would clear the chosen week. -->
+                                   a click on it would clear the chosen week. A click chooses
+                                   only on the price, which alone shows the pointer. -->
                               <span
                                 ngGridCell
                                 role="gridcell"
@@ -157,7 +158,7 @@ const shownTab = new InjectionToken('shown tab', { providedIn: 'root', factory: 
                                 [selected]="isChosen(season.name, $index, week.row)"
                                 (selectedChange)="select($event, season.name, $index, week.row)"
                                 [attr.data-pick]="$index + '-' + week.row"
-                                (click)="price === null && $event.stopPropagation()"
+                                (click)="onPrice($event) || $event.stopPropagation()"
                                 (keydown.enter)="price === null && $event.stopPropagation()"
                                 (keydown.space)="price === null && hold($event)"
                                 (keydown.pageup)="byMonth($event, -1)"
@@ -401,6 +402,10 @@ export class FreeWeeksList {
 
   protected shown(season: SeasonName, apartment: number) {
     return season === this.season.current() && (this.wide() || apartment === this.tab());
+  }
+
+  protected onPrice(event: MouseEvent) {
+    return !!(event.target as Element).closest('.price');
   }
 
   protected hold(event: Event) {

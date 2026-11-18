@@ -49,24 +49,30 @@ test('the next season lists its weeks with a price or "booked" per apartment', a
   );
 });
 
-test('the pointer shows over the whole cell of a free week and not over a booked one', async ({
+test('only the price chooses its week, and only the price reacts to the mouse', async ({
   page,
 }) => {
+  // The columns share the card's width here, so the cell is wider than its price.
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto('/en');
   await toOtherSeason(page);
-  // Inside the cell, left of the price, where the hover already lights the price's pill.
-  const cursorAt = (selector: string) =>
-    panel(page)
-      .locator(selector)
-      .first()
-      .evaluate((cell) => {
-        const { left, top, height } = cell.getBoundingClientRect();
-        return getComputedStyle(document.elementFromPoint(left + 4, top + height / 2)!).cursor;
-      });
-  expect(await cursorAt('.stay')).toBe('pointer');
-  await expect(panel(page).locator('.stay .price').first()).toHaveCSS('cursor', 'pointer');
-  expect(await cursorAt('.booked')).toBe('auto');
+  const stay = panel(page).locator('.stay').first();
+  const price = stay.locator('.price');
+  await stay.scrollIntoViewIfNeeded();
+  const cell = (await stay.boundingBox())!;
+  const beside = { x: cell.x + 4, y: cell.y + cell.height / 2 };
+  await expect(stay).toHaveCSS('cursor', 'auto');
+  await expect(price).toHaveCSS('cursor', 'pointer');
+  await expect(panel(page).locator('.booked').first()).toHaveCSS('cursor', 'auto');
+  await page.mouse.move(beside.x, beside.y);
+  await expect(price).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+  await page.mouse.click(beside.x, beside.y);
+  await expect(stay).toHaveAttribute('aria-selected', 'false');
+  await expect(page.locator('.pick')).toHaveCount(0);
+  await price.hover();
+  await expect(price).not.toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+  await price.click();
+  await expect(stay).toHaveAttribute('aria-selected', 'true');
 });
 
 test('a chosen week leads to its apartment with the stay', async ({ page }) => {
@@ -79,7 +85,7 @@ test('a chosen week leads to its apartment with the stay', async ({ page }) => {
     .innerText();
   const dates = await first.locator('..').getByRole('rowheader').innerText();
   const price = await first.innerText();
-  await first.click();
+  await first.locator('.price').click();
   await expect(first).toHaveAttribute('aria-selected', 'true');
   await expect(page.locator('.pick output')).toHaveText(
     `${apartment} · ${dates.replace(/\s+/g, ' ').trim()} · ${price}`,
@@ -104,9 +110,9 @@ test('a chosen week is cleared by a second click, Enter, Space or the bar, and w
   const stay = panel(page).locator('.stay:visible').first();
   const selected = () => expect(stay).toHaveAttribute('aria-selected', 'true');
   const unselected = () => expect(stay).toHaveAttribute('aria-selected', 'false');
-  await stay.click();
+  await stay.locator('.price').click();
   await expect(page.locator('.pick')).toBeVisible();
-  await stay.click();
+  await stay.locator('.price').click();
   await unselected();
   await expect(page.locator('.pick')).toHaveCount(0);
   await stay.focus();
@@ -117,7 +123,7 @@ test('a chosen week is cleared by a second click, Enter, Space or the bar, and w
     await unselected();
   }
 
-  await stay.click();
+  await stay.locator('.price').click();
   const chosen = await page.locator('.pick output').textContent();
   // The bar belongs to its season: hidden while the other one is shown, back with its own.
   await button(page).click();
@@ -157,7 +163,7 @@ test('the bar’s cross keeps the page in place for a pointer and shows the pric
     for (const by of [press, null]) {
       const stays = panel(page).locator('.stay:visible');
       const stay = stays.nth(Math.floor((await stays.count()) / 2));
-      await stay.click();
+      await stay.locator('.price').click();
       await expect(page.locator('.pick')).toBeVisible();
       // The price 100 px below the window.
       await stay.evaluate((cell) =>
@@ -478,7 +484,7 @@ test('on a phone the tabs choose one apartment and clear the chosen week', async
   const header = page.locator('.weeks-columns > :not(:first-child):visible');
   await expect(header).toHaveCount(1);
   await expect(header).toContainText('Zirbe');
-  await panel(page).locator('.stay:visible').first().click();
+  await panel(page).locator('.stay:visible .price').first().click();
   await expect(page.locator('.pick')).toBeVisible();
   await page.locator('.room-tabs').getByText('Ahorn').click();
   await expect(header).toContainText('Ahorn');
