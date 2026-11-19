@@ -17,9 +17,8 @@ concurrency:
 jobs:
   check:
     runs-on: ubuntu-latest
-    # The browsers and their system packages come with the image (ADR 9), on the Ubuntu of
-    # ubuntu-latest: WebKit formats dates by the system's ICU. Firefox refuses to run as root in
-    # another user's home, so the job runs as the runner's user.
+    # The browsers and their system packages come with the image (ADR 9). Firefox refuses to run
+    # as root in another user's home, so the job runs as the runner's user.
     container:
       image: mcr.microsoft.com/playwright:v1.65.0-resolute
       options: --user 1001

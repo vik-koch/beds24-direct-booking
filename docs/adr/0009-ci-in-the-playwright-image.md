@@ -14,17 +14,14 @@ server the project does not control.
 ## Decision
 
 1. **The `check` job runs in Microsoft's Playwright image** for the version of `@playwright/test` in
-   the lock file, on the Ubuntu release of `ubuntu-latest`
-   (`mcr.microsoft.com/playwright:v<version>-resolute`, Ubuntu 26.04). The browsers and their system
-   packages are in the image; the install step is gone. The job runs as the runner's user, as
-   Firefox refuses to start as root in another user's home.
+   the lock file, for Ubuntu 26.04 (`mcr.microsoft.com/playwright:v<version>-resolute`), the release
+   `ubuntu-latest` ran the browsers on before. The browsers and their system packages are in the
+   image; the install step is gone. The job runs as the runner's user, as Firefox refuses to start
+   as root in another user's home.
 2. **A step compares the image's tag with the installed `@playwright/test`** and fails the run with
    both versions named, so an upgrade of the package must move the image in the same change.
 3. **The job has a time limit of 20 minutes,** about two and a half times a normal run, so a stalled
    step fails instead of holding the branch's run.
-4. **The image's Ubuntu follows the runner's.** WebKit takes its date formats from the system's ICU:
-   on the image for Ubuntu 24.04 it wrote "Sat, 03/04" where 26.04 writes "Sat 03/04", and the e2e
-   suite failed on it.
 
 ## Options
 
@@ -40,7 +37,10 @@ server the project does not control.
 
 - **An upgrade of Playwright is two lines:** the package and the image's tag. The check names both
   if one is forgotten.
-- **The registry can fail too:** a pull from `mcr.microsoft.com` that fails stops the job at once,
-  with a message, rather than in a slow step.
+- **The registry is a dependency that remains:** a slow or failing pull from `mcr.microsoft.com` can
+  hold the job as the mirror did. The 20-minute limit bounds how long.
+- **Dates may be written differently by the system's locale data:** on the image for Ubuntu 24.04
+  WebKit wrote "Sat, 03/04" where 26.04 writes "Sat 03/04". Both are valid `Intl` output, so the e2e
+  suite accepts either, and the image's release need not follow the runner's.
 - **Local runs are unchanged:** a developer still installs the browsers once with
   `npx playwright install --with-deps`.
