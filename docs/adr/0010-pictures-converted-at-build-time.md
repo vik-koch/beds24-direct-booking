@@ -32,8 +32,10 @@ copies, in widths a phone does not have to download in full. What weighs on the 
    outside square to 2:1 with 1% to spare, and an alternative text missing in a language,** naming
    the apartment and the picture.
 4. **Downloads and conversions are kept in `node_modules/.cache/pictures`** for local runs. CI and
-   the image build start without it, so every release fetches every address again and finds a
-   picture that was removed.
+   the image build start without it, and the image is built with a plain `docker build` on a fresh
+   runner, so every image build fetches every address again and finds a picture that was removed: on
+   each merge for the demo, and on each deployment for a site of its own, which builds its image
+   then. A version tag reuses the image of its commit and checks nothing again.
 
 ## Options
 
@@ -49,7 +51,7 @@ copies, in widths a phone does not have to download in full. What weighs on the 
 
 - **The first local run converts every picture,** about 8 s for the demo's 14; later runs copy them
   from the cache in under a second.
-- **A release depends on Beds24's picture host:** if it does not answer, the build fails and is run
-  again.
+- **An image build depends on Beds24's picture host:** if it does not answer, the build fails and is
+  run again.
 - **When Beds24's API sends pictures,** their list, order and texts move there, and this decision is
   reviewed.

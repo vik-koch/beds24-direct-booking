@@ -1,14 +1,16 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { mkdirSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { test } from 'node:test';
+import { after, test } from 'node:test';
 import sharp from 'sharp';
 import { convertPictures } from './pictures.mjs';
 
-const temp = (name) => mkdtempSync(join(tmpdir(), `${name}-`));
+const root = mkdtempSync(join(tmpdir(), 'pictures-test-'));
+after(() => rmSync(root, { recursive: true, force: true }));
+const temp = (name) => mkdtempSync(join(root, `${name}-`));
 const png = (width, height, orientation) => {
   const picture = sharp({ create: { width, height, channels: 3, background: '#789' } });
   return (orientation ? picture.withMetadata({ orientation }) : picture).png().toBuffer();
@@ -171,4 +173,18 @@ test('a file is named by its apartment, place, width and content', async () => {
     assert.equal(name.split('.').at(-2), hash.slice(0, 8));
   }
   assert.deepEqual(readdirSync(out).sort(), urls.map((url) => url.split('/').at(-1)).sort());
+});
+
+test('two builds can convert into one empty cache at once', async () => {
+  const dir = await folder({ 'a.png': png(2000, 1500) });
+  const cache = temp('cache');
+  const both = await Promise.all([
+    convert(dir, listing('pictures/a.png'), cache),
+    convert(dir, listing('pictures/a.png'), cache),
+  ]);
+  assert.deepEqual(both[0].pictures, both[1].pictures);
+  assert.deepEqual(
+    readdirSync(cache).filter((file) => file.endsWith('.part')),
+    [],
+  );
 });

@@ -2,12 +2,16 @@ import assert from 'node:assert/strict';
 import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { test } from 'node:test';
+import { after, test } from 'node:test';
 import { readContent, writeContent } from './content.mjs';
+
+// Every folder a test makes, removed when the file's tests are done.
+const root = mkdtempSync(join(tmpdir(), 'content-test-'));
+after(() => rmSync(root, { recursive: true, force: true }));
 
 // A copy of the demo's content with files changed, each given by its name and then its change.
 function changed(...edits) {
-  const dir = mkdtempSync(join(tmpdir(), 'content-'));
+  const dir = mkdtempSync(join(root, 'content-'));
   cpSync('content/demo', dir, { recursive: true });
   for (let i = 0; i < edits.length; i += 2) {
     const value = JSON.parse(readFileSync(join(dir, edits[i]), 'utf8'));
@@ -195,7 +199,7 @@ test("a picture has its alternative text in exactly the site's languages", () =>
 });
 
 test('the generated site gives each picture its files and its texts by address prefix', async () => {
-  const out = mkdtempSync(join(tmpdir(), 'generated-'));
+  const out = mkdtempSync(join(root, 'generated-'));
   await writeContent('content/demo', out, cache);
   const site = readFileSync(join(out, 'site.ts'), 'utf8');
   const value = JSON.parse(site.slice(site.indexOf('= ') + 2, site.lastIndexOf(';\nexport')));
@@ -320,7 +324,7 @@ test('two names of one icon import it once', async () => {
     site.features[0].icon = 'heading-1';
     site.features[1].icon = 'heading1';
   });
-  const out = mkdtempSync(join(tmpdir(), 'generated-'));
+  const out = mkdtempSync(join(root, 'generated-'));
   await writeContent(dir, out, cache);
   const icons = readFileSync(join(out, 'icons.ts'), 'utf8');
   assert.equal(icons.match(/lucideHeading1/g).length, 2);

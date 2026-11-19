@@ -1,5 +1,5 @@
 // Converts the apartments' pictures into WebP files in several widths, named by their content.
-import { createHash } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import {
   copyFileSync,
   existsSync,
@@ -16,6 +16,13 @@ const quality = 80;
 // A crop a pixel or so off still counts: 1% either way of square and of 2:1.
 const slack = 0.01;
 const digest = (data) => createHash('sha256').update(data).digest('hex');
+// Written to a name of its own and then renamed, so a cache file is whole or absent, also when
+// two builds share the cache.
+const place = async (path, write) => {
+  const part = `${path}.${process.pid}-${randomUUID()}.part`;
+  await write(part);
+  renameSync(part, path);
+};
 
 // A file of the content folder, or an address; a download is kept in the cache only once its
 // picture has been converted, so a damaged answer is fetched again.
@@ -31,12 +38,11 @@ async function read(dir, file, cache) {
   if (!response.ok || !type.startsWith('image/'))
     throw new Error(`${file} answered ${response.status} ${type}, not a picture`);
   const bytes = Buffer.from(await response.arrayBuffer());
-  return { bytes, keep: () => writeFileSync(kept, bytes) };
+  return { bytes, keep: () => place(kept, (part) => writeFileSync(part, bytes)) };
 }
 
 // Each apartment's pictures by slug, written to `out`, and how many files had to be converted. A
-// conversion is kept in the cache under the source's digest, written whole or not at all, and
-// published under a digest of the file itself, so a different encoding gets a new address.
+// conversion is kept in the cache under the source's digest and published under a digest of the file itself, so a different encoding gets a new address.
 export async function convertPictures(dir, apartments, out, cache) {
   mkdirSync(cache, { recursive: true });
   mkdirSync(out, { recursive: true });
@@ -64,22 +70,18 @@ export async function convertPictures(dir, apartments, out, cache) {
         for (const w of sizes) {
           const kept = join(cache, `${hash}-${w}-q${quality}.webp`);
           if (!existsSync(kept)) {
-            await sharp(bytes)
-              .rotate()
-              .resize(w)
-              .webp({ quality })
-              .toFile(`${kept}.part`)
-              .catch((error) => {
-                throw new Error(`${file} cannot be converted: ${error.message}`);
-              });
-            renameSync(`${kept}.part`, kept);
+            await place(kept, (part) =>
+              sharp(bytes).rotate().resize(w).webp({ quality }).toFile(part),
+            ).catch((error) => {
+              throw new Error(`${file} cannot be converted: ${error.message}`);
+            });
             converted++;
           }
           const name = `${slug}-${index + 1}-${w}.${digest(readFileSync(kept)).slice(0, 8)}.webp`;
           copyFileSync(kept, join(out, name));
           sources.push({ width: w, url: `/pictures/apartments/${name}` });
         }
-        keep();
+        await keep();
         const largest = sizes.at(-1);
         pictures[slug].push({
           alt,
