@@ -1,32 +1,42 @@
 // Converts the apartments' pictures into WebP files in several widths, named by their content.
 import { createHash } from 'node:crypto';
-import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import {
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  renameSync,
+  writeFileSync,
+} from 'node:fs';
 import { join } from 'node:path';
 import sharp from 'sharp';
 
 export const widths = [480, 960, 1440, 1920];
 const quality = 80;
+// A crop a pixel or so off still counts: 1% either way of square and of 2:1.
+const slack = 0.01;
 const digest = (data) => createHash('sha256').update(data).digest('hex');
 
-// A file of the content folder, or an address, fetched once into the cache.
+// A file of the content folder, or an address; a download is kept in the cache only once its
+// picture has been converted, so a damaged answer is fetched again.
 async function read(dir, file, cache) {
   if (!/^https?:\/\//.test(file)) {
     if (!existsSync(join(dir, file))) throw new Error(`${file} does not exist`);
-    return readFileSync(join(dir, file));
+    return { bytes: readFileSync(join(dir, file)), keep: () => {} };
   }
   const kept = join(cache, `${digest(file)}.source`);
-  if (existsSync(kept)) return readFileSync(kept);
+  if (existsSync(kept)) return { bytes: readFileSync(kept), keep: () => {} };
   const response = await fetch(file, { signal: AbortSignal.timeout(60_000) });
   const type = response.headers.get('content-type') ?? '';
   if (!response.ok || !type.startsWith('image/'))
     throw new Error(`${file} answered ${response.status} ${type}, not a picture`);
   const bytes = Buffer.from(await response.arrayBuffer());
-  writeFileSync(kept, bytes);
-  return bytes;
+  return { bytes, keep: () => writeFileSync(kept, bytes) };
 }
 
-// Each apartment's pictures by slug, written to `out`, and how many files had to be converted:
-// a conversion is kept in the cache under the source's digest, so an unchanged picture is copied.
+// Each apartment's pictures by slug, written to `out`, and how many files had to be converted. A
+// conversion is kept in the cache under the source's digest, written whole or not at all, and
+// published under a digest of the file itself, so a different encoding gets a new address.
 export async function convertPictures(dir, apartments, out, cache) {
   mkdirSync(cache, { recursive: true });
   mkdirSync(out, { recursive: true });
@@ -35,41 +45,53 @@ export async function convertPictures(dir, apartments, out, cache) {
   for (const { slug, pictures: list } of apartments) {
     pictures[slug] = [];
     for (const [index, { file, alt }] of list.entries()) {
-      const fail = (message) => {
-        throw new Error(
-          `${join(dir, 'apartments', `${slug}.json`)}\n  pictures.${index}: ${message}`,
-        );
-      };
-      const bytes = await read(dir, file, cache).catch((error) => fail(error.message));
-      const size = await sharp(bytes)
-        .metadata()
-        .catch(() => fail(`${file} is not a picture`));
-      // Measured as shown, after the camera's orientation is applied.
-      const { width, height } = size.autoOrient;
-      if (width < height * 0.99 || width > height * 2.01)
-        fail(`${file} is ${width} × ${height}, not between square and 2:1`);
-      const sizes = [
-        ...new Set([...widths.filter((w) => w < width), Math.min(width, widths.at(-1))]),
-      ];
-      const hash = digest(bytes);
-      const sources = [];
-      for (const w of sizes) {
-        const kept = join(cache, `${hash}-${w}-q${quality}.webp`);
-        if (!existsSync(kept)) {
-          await sharp(bytes).rotate().resize(w).webp({ quality }).toFile(kept);
-          converted++;
+      try {
+        const { bytes, keep } = await read(dir, file, cache);
+        const size = await sharp(bytes)
+          .metadata()
+          .catch(() => {
+            throw new Error(`${file} is not a picture`);
+          });
+        // Measured as shown, after the camera's orientation is applied.
+        const { width, height } = size.autoOrient;
+        if (width < height * (1 - slack) || width > height * 2 * (1 + slack))
+          throw new Error(`${file} is ${width} × ${height}, not between square and 2:1`);
+        const sizes = [
+          ...new Set([...widths.filter((w) => w < width), Math.min(width, widths.at(-1))]),
+        ];
+        const hash = digest(bytes);
+        const sources = [];
+        for (const w of sizes) {
+          const kept = join(cache, `${hash}-${w}-q${quality}.webp`);
+          if (!existsSync(kept)) {
+            await sharp(bytes)
+              .rotate()
+              .resize(w)
+              .webp({ quality })
+              .toFile(`${kept}.part`)
+              .catch((error) => {
+                throw new Error(`${file} cannot be converted: ${error.message}`);
+              });
+            renameSync(`${kept}.part`, kept);
+            converted++;
+          }
+          const name = `${slug}-${index + 1}-${w}.${digest(readFileSync(kept)).slice(0, 8)}.webp`;
+          copyFileSync(kept, join(out, name));
+          sources.push({ width: w, url: `/pictures/apartments/${name}` });
         }
-        const name = `${slug}-${index + 1}-${w}.${hash.slice(0, 8)}.webp`;
-        copyFileSync(kept, join(out, name));
-        sources.push({ width: w, url: `/pictures/apartments/${name}` });
+        keep();
+        const largest = sizes.at(-1);
+        pictures[slug].push({
+          alt,
+          width: largest,
+          height: Math.round((largest * height) / width),
+          sources,
+        });
+      } catch (error) {
+        throw new Error(
+          `${join(dir, 'apartments', `${slug}.json`)}\n  pictures.${index}: ${error.message}`,
+        );
       }
-      const largest = sizes.at(-1);
-      pictures[slug].push({
-        alt,
-        width: largest,
-        height: Math.round((largest * height) / width),
-        sources,
-      });
     }
   }
   return { pictures, converted };

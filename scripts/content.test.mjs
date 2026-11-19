@@ -17,8 +17,9 @@ function changed(...edits) {
   return dir;
 }
 
-// One cache for every test that converts the demo's pictures, so that only the first converts.
-const cache = mkdtempSync(join(tmpdir(), 'cache-'));
+// The project's cache, which the content script before the tests has filled with the demo's
+// pictures; scripts/pictures.test.mjs converts into empty caches.
+const cache = 'node_modules/.cache/pictures';
 
 const bothTexts = (change) => changed('texts.de-AT.json', change, 'texts.en-GB.json', change);
 
@@ -187,8 +188,7 @@ test("a picture has its alternative text in exactly the site's languages", () =>
 
 test('the generated site gives each picture its files and its texts by address prefix', async () => {
   const out = mkdtempSync(join(tmpdir(), 'generated-'));
-  const converted = await writeContent('content/demo', out, cache);
-  assert.equal(converted, 4 * 14);
+  await writeContent('content/demo', out, cache);
   const site = readFileSync(join(out, 'site.ts'), 'utf8');
   const value = JSON.parse(site.slice(site.indexOf('= ') + 2, site.lastIndexOf(';\nexport')));
   const [first] = value.apartments[0].pictures;
@@ -204,6 +204,13 @@ test('the generated site gives each picture its files and its texts by address p
   assert.ok(!existsSync(join(out, 'pictures', 'zirbe-1.webp')));
   assert.ok(existsSync(join(out, 'pictures', 'hero-winter.webp')));
   assert.equal(await writeContent('content/demo', out, cache), 0);
+  // A hero that is also an apartment's picture is still served as it is.
+  const shared = changed(
+    'apartments/zirbe.json',
+    (a) => (a.pictures[0].file = 'pictures/hero-winter.webp'),
+  );
+  await writeContent(shared, out, cache);
+  assert.ok(existsSync(join(out, 'pictures', 'hero-winter.webp')));
 });
 
 test('two languages with one address prefix are refused', () => {

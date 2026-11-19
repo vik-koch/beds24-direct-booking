@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
-import { mkdirSync, mkdtempSync, readdirSync, writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -57,6 +58,19 @@ test('a portrait picture or one wider than 2:1 stops the build, naming it', asyn
   await assert.rejects(convert(dir, listing('pictures/wide.png')), /is 1100 × 500, not between/);
 });
 
+test('a crop 1% off square or off 2:1 still counts, and one pixel more does not', async () => {
+  const dir = await folder({
+    'square.png': png(99, 100),
+    'not-square.png': png(98, 100),
+    'two-one.png': png(202, 100),
+    'too-wide.png': png(203, 100),
+  });
+  const { pictures } = await convert(dir, listing('pictures/square.png', 'pictures/two-one.png'));
+  assert.equal(pictures.one.length, 2);
+  await assert.rejects(convert(dir, listing('pictures/not-square.png')), /is 98 × 100/);
+  await assert.rejects(convert(dir, listing('pictures/too-wide.png')), /is 203 × 100/);
+});
+
 test('a picture is measured as the camera meant it to be shown', async () => {
   // Stored landscape, shown portrait: orientation 6 turns it by 90 degrees.
   const dir = await folder({ 'turned.png': png(800, 600, 6) });
@@ -73,6 +87,36 @@ test('a missing file or one that is not a picture stops the build, naming it', a
     convert(dir, listing('pictures/text.png')),
     /pictures\.0: pictures\/text\.png is not a picture/,
   );
+});
+
+test('a picture whose pixels are damaged stops the build, naming it', async () => {
+  const noise = Buffer.from(Array.from({ length: 600 * 450 * 3 }, () => (Math.random() * 256) | 0));
+  const whole = await sharp(noise, { raw: { width: 600, height: 450, channels: 3 } })
+    .png()
+    .toBuffer();
+  // The header and the size are intact; the pixels stop half way.
+  const dir = await folder({ 'cut.png': whole.subarray(0, whole.length / 2) });
+  await assert.rejects(
+    convert(dir, listing('pictures/cut.png')),
+    /apartments\/one\.json\n {2}pictures\.0: pictures\/cut\.png cannot be converted: /,
+  );
+});
+
+test('a damaged download is not kept, so the next run fetches the address again', async () => {
+  let answer = Buffer.from('broken');
+  const server = createServer((req, res) =>
+    res.writeHead(200, { 'content-type': 'image/png' }).end(answer),
+  ).listen(0);
+  const address = `http://localhost:${server.address().port}/01.png`;
+  const cache = temp('cache');
+  try {
+    await assert.rejects(convert(temp('content'), listing(address), cache), /is not a picture/);
+    answer = await png(800, 600);
+    const { pictures } = await convert(temp('content'), listing(address), cache);
+    assert.equal(pictures.one[0].width, 800);
+  } finally {
+    server.close();
+  }
 });
 
 test('an address is fetched once, and one that does not answer with a picture stops the build', async () => {
@@ -117,7 +161,14 @@ test('a file is named by its apartment, place, width and content', async () => {
   );
   const urls = pictures.one.flatMap(({ sources }) => sources.map((s) => s.url));
   assert.equal(urls.length, 4);
-  for (const url of urls)
+  // The name carries the served file's own digest, so a new encoding gets a new address.
+  for (const url of urls) {
     assert.match(url, /^\/pictures\/apartments\/one-[12]-\d+\.[0-9a-f]{8}\.webp$/);
+    const name = url.split('/').at(-1);
+    const hash = createHash('sha256')
+      .update(readFileSync(join(out, name)))
+      .digest('hex');
+    assert.equal(name.split('.').at(-2), hash.slice(0, 8));
+  }
   assert.deepEqual(readdirSync(out).sort(), urls.map((url) => url.split('/').at(-1)).sort());
 });

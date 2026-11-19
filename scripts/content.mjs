@@ -154,9 +154,13 @@ export async function writeContent(dir, out, cache) {
   const { site, texts } = readContent(dir);
   rmSync(out, { recursive: true, force: true });
   mkdirSync(out, { recursive: true });
-  // An apartment's picture is served only as its converted files, by their content's names.
+  // An apartment's picture is served only as its converted files, unless a season's hero or
+  // icon is the same file.
+  const seasonal = Object.values(site.seasons).flatMap(({ hero, icon }) => [hero.file, icon]);
   const sources = new Set(
-    site.apartments.flatMap(({ pictures }) => pictures.map(({ file }) => join(dir, file))),
+    site.apartments.flatMap(({ pictures }) =>
+      pictures.filter(({ file }) => !seasonal.includes(file)).map(({ file }) => join(dir, file)),
+    ),
   );
   const { pictures, converted } = await convertPictures(
     dir,
