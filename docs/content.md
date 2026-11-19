@@ -33,12 +33,22 @@ content. The application has no wording, no colour and no typeface of its own. T
   [`site-map.md`](site-map.md)'s addresses, such as `wohnungen` for `apartments`; `anchors` are the
   home page's section anchors. An apartment's slug is the same in every language.
 - **An apartment** is a file of its own, named by its slug: `site.json` lists
-  `"apartments": ["zirbe", "laerche"]` and `apartments/zirbe.json` holds
-  `{ "roomId": 9001011, "name": "Zirbe" }`. The room ID is the Beds24 room the apartment is, and the
-  name is how the site calls it in every language.
+  `"apartments": ["zirbe", "laerche"]`, and `apartments/zirbe.json` holds
+
+  ```json
+  {
+    "roomId": 9001011,
+    "name": "Zirbe",
+    "pictures": [{ "file": "pictures/zirbe-1.webp", "alt": { "de-AT": "…", "en-GB": "…" } }]
+  }
+  ```
+
+  The room ID is the Beds24 room the apartment is, and the name is how the site calls it in every
+  language.
+
 - **An apartment's pictures** (`pictures` in its file) are listed in the order the site shows them,
-  at least one, each a `file` and its alternative text `alt` in each of the site's languages by tag:
-  `{ "file": "pictures/zirbe-1.webp", "alt": { "de-AT": "…", "en-GB": "…" } }`. The file is in
+  at least one, each a `file` and its alternative text `alt` in each of the site's languages by tag.
+  A picture is landscape or square, from 1:1 to 2:1 with 1% to spare either way. The file is in
   `pictures/` or is an `https` address, such as a Beds24 picture's. The build converts each to WebP
   at quality 80 in widths of 480, 960, 1440 and 1920 px, none wider than the source, and serves only
   those, at `/pictures/apartments/` under names that change with the picture
@@ -98,7 +108,7 @@ beyond a limit fails its build, with the limit named.
 | Languages | Exactly 2 | The language menu and the address prefixes have not been tried with a third | The schema |
 | Seasons | 1 or 2 | Winter and summer, one each | The schema |
 | Hero features | Up to 5 | The hero's card | The schema |
-| An apartment's picture | Square to 2:1, landscape | The gallery's frames; tested with 1:1, 4:3 and 3:2 | The content script; the demo has 3:2, the e2e test site 1:1 and 4:3 |
+| An apartment's picture | Square to 2:1, landscape, with 1% to spare | The gallery's frames; tested with 1:1, 4:3 and 3:2 | The content script; the demo has 3:2, the e2e test site 1:1 and 4:3 |
 
 **The site name's size comes from its length,** at an assumed 0.55em per letter: the widest
 mixed-case average measured in the demo's font (Jost at weight 500: 0.547em in "Wohnen am Wald").

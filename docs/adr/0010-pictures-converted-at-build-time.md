@@ -25,11 +25,12 @@ copies, in widths a phone does not have to download in full. What weighs on the 
 1. **The content script converts the pictures,** with [sharp](https://sharp.pixelplumbing.com/), a
    development dependency. It reads each listed file or fetches each address, checks it, and writes
    WebP files at quality 80 in widths of 480, 960, 1440 and 1920 px, none wider than the source.
-2. **Each file's name carries a hash of its source,** such as `zirbe-1-960.3f2a9c41.webp`, so it is
-   served with a year's cache, and a changed picture gets a new name by itself.
+2. **Each file's name carries a hash of the file itself,** such as `zirbe-1-960.3f2a9c41.webp`, so
+   it is served with a year's cache, and a changed picture or a changed encoding gets a new name by
+   itself.
 3. **The build stops on a missing file, an address that does not answer with a picture, a ratio
-   outside square to 2:1, and an alternative text missing in a language,** naming the apartment and
-   the picture.
+   outside square to 2:1 with 1% to spare, and an alternative text missing in a language,** naming
+   the apartment and the picture.
 4. **Downloads and conversions are kept in `node_modules/.cache/pictures`** for local runs. CI and
    the image build start without it, so every release fetches every address again and finds a
    picture that was removed.
