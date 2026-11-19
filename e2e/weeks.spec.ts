@@ -510,6 +510,48 @@ test('on a phone the tabs choose one apartment and clear the chosen week', async
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(320);
 });
 
+// The grid focuses its active cell again when a tab hides it, which scrolled to the new
+// apartment's week. Pressed by coordinates: a locator's click would scroll by itself. Lärche has
+// free weeks in both seasons; Zirbe is booked out in winter.
+test('a tab keeps the page in place and the focus on itself, also after a chosen week', async ({
+  page,
+}, { project }) => {
+  await page.setViewportSize({ width: 375, height: 800 });
+  await page.goto('/en');
+  await toOtherSeason(page);
+  const press = async (target: Locator) => {
+    const box = (await target.boundingBox())!;
+    const [x, y] = [box.x + box.width / 2, box.y + box.height / 2];
+    await (project.use.hasTouch ? page.touchscreen.tap(x, y) : page.mouse.click(x, y));
+  };
+  const tabs = page.locator('.room-tabs');
+  const header = page.locator('.weeks-columns > :not(:first-child):visible');
+  // The list's last free week chosen and cleared, the tabs in view, then the switch.
+  const switches = async (to: string, by: () => Promise<void>) => {
+    const price = panel(page).locator('.stay:visible .price').last();
+    await price.scrollIntoViewIfNeeded();
+    await press(price);
+    await expect(page.locator('.pick')).toBeVisible();
+    await press(price);
+    await expect(page.locator('.pick')).toHaveCount(0);
+    await tabs.evaluate((element) =>
+      scrollBy({ top: element.getBoundingClientRect().top - 200, behavior: 'instant' }),
+    );
+    const before = await page.evaluate(() => scrollY);
+    await by();
+    await expect(header).toContainText(to);
+    await expect(tabs.getByRole('radio', { name: to })).toBeFocused();
+    expect(await page.evaluate(() => scrollY)).toBe(before);
+  };
+  await press(tabs.getByText('Lärche'));
+  await expect(header).toContainText('Lärche');
+  await switches('Ahorn', () => press(tabs.getByText('Ahorn')));
+  await switches('Lärche', async () => {
+    await tabs.getByRole('radio', { name: 'Ahorn' }).focus();
+    await page.keyboard.press('ArrowLeft');
+  });
+});
+
 test('a season without prices is not open yet, and a season that has begun is full', async ({
   page,
 }) => {

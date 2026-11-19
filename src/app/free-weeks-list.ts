@@ -7,6 +7,7 @@ import {
   ElementRef,
   inject,
   InjectionToken,
+  Injector,
   input,
   signal,
   viewChild,
@@ -82,7 +83,7 @@ const shownTab = new InjectionToken('shown tab', { providedIn: 'root', factory: 
                 type="radio"
                 name="apartment"
                 [checked]="$index === tab()"
-                (change)="pickTab($index)"
+                (change)="pickTab($index, $any($event.target))"
               />
               <span>{{ apartment.name }}</span>
             </label>
@@ -250,6 +251,7 @@ export class FreeWeeksList {
   private readonly wide = signal(true);
   private readonly panels = viewChild<ElementRef<HTMLElement>>('panels');
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly injector = inject(Injector);
 
   private readonly dates = new Intl.DateTimeFormat(this.language.tag, {
     weekday: 'short',
@@ -469,9 +471,22 @@ export class FreeWeeksList {
       : undefined;
   }
 
-  protected pickTab(index: number) {
+  // The tab hides the grid's active cell, and the grid then focuses the new apartment's cell in
+  // that row, which scrolls to it. The focus returns to the tab, and the page to where it was.
+  protected pickTab(index: number, tab: HTMLInputElement) {
+    const top = scrollY;
     this.tab.set(index);
     this.chosen.set(null);
+    afterNextRender(
+      {
+        read: () => {
+          if (!this.panels()?.nativeElement.contains(document.activeElement)) return;
+          tab.focus({ preventScroll: true });
+          scrollTo({ top, behavior: 'instant' });
+        },
+      },
+      { injector: this.injector },
+    );
   }
 
   protected slide() {
