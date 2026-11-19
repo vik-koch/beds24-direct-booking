@@ -11,7 +11,7 @@ const room = (overrides: Partial<Room> = {}): Room => ({
   multiplier: 1,
   tax: { amount: 3.5, per: 'night' },
   address: '',
-  checkIn: null,
+  checkIn: { from: null, until: null },
   checkOut: null,
   features: [],
   texts: {},

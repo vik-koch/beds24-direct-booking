@@ -18,16 +18,13 @@ export interface Listing {
   maxPeople: number;
   size: number;
   address: string;
-  // HH:MM, midnight as 24:00; null where the property has none.
-  checkIn: { from: string; until: string } | null;
+  // HH:MM, midnight as 24:00; null where the property sets none.
+  checkIn: { from: string | null; until: string | null };
   checkOut: string | null;
   // The property's codes, each a group of its own, then the room's groups in their order.
   features: string[][];
   // Per Beds24 language code, such as de, empty where nothing is written; rich text sanitised.
-  texts: Record<
-    string,
-    { headline: string; summary: string; description: string; houseRules: string }
-  >;
+  texts: Record<string, { description: string; houseRules: string }>;
 }
 
 // The tourist tax per adult, per night or once per stay.
@@ -72,7 +69,7 @@ interface Properties {
       maxPeople: number;
       roomSize: number;
       featureCodes: string[][];
-      texts: Texts<'contentHeadline' | 'contentDescription' | 'roomDescription'>;
+      texts: Texts<'roomDescription'>;
       priceRules?: { minDaysUntilCheckin?: number }[];
     }[];
   }[];
@@ -142,18 +139,13 @@ export const loadInventory = async (first: string, last: string): Promise<Invent
         multiplier: multiplier(property.bookingPageMultiplier),
         tax: tax ? { amount: tax.amount, per: tax.period === 'daily' ? 'night' : 'stay' } : null,
         address: [property.address, property.city].filter(Boolean).join(', '),
-        checkIn:
-          property.checkInStart && property.checkInEnd
-            ? { from: property.checkInStart, until: property.checkInEnd }
-            : null,
+        checkIn: { from: property.checkInStart || null, until: property.checkInEnd || null },
         checkOut: property.checkOutEnd || null,
         features: [...property.featureCodes, ...room.featureCodes],
         texts: Object.fromEntries(
           room.texts.map((text) => [
             text.language,
             {
-              headline: text.contentHeadline.trim(),
-              summary: text.contentDescription.trim(),
               description: richText(text.roomDescription),
               houseRules:
                 property.texts

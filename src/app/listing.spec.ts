@@ -20,7 +20,7 @@ describe('listing', () => {
     maxPeople: 2,
     size: 34,
     address: '',
-    checkIn: null,
+    checkIn: { from: null, until: null },
     checkOut: null,
     features: [],
     texts: {},

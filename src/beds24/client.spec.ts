@@ -47,14 +47,14 @@ describe('loadInventory', () => {
           },
         ],
       },
-      // Without any text, Beds24 leaves the key out; its times are not set.
+      // Without any text, Beds24 leaves the key out; of its times only the latest arrival is set.
       {
         id: 2,
         currency: 'EUR',
         address: '',
         city: 'Saalbach',
         checkInStart: '',
-        checkInEnd: '',
+        checkInEnd: '18:00',
         checkOutEnd: '',
         featureCodes: [],
         roomTypes: [
@@ -122,12 +122,10 @@ describe('loadInventory', () => {
         features: [['WIFI'], ['PARKING_PAID'], ['BEDROOM', 'BED_DOUBLE'], ['BOOT_DRYER']],
         texts: {
           de: {
-            headline: 'Für vier',
-            summary: 'Zwei Schlafzimmer.',
             description: '<p><strong>61 m²</strong> mit Balkon.</p>',
             houseRules: 'Nachtruhe ab 22 Uhr.',
           },
-          en: { headline: '', summary: '', description: '', houseRules: '' },
+          en: { description: '', houseRules: '' },
         },
       },
       {
@@ -140,10 +138,10 @@ describe('loadInventory', () => {
         multiplier: 1,
         tax: null,
         address: 'Saalbach',
-        checkIn: null,
+        checkIn: { from: null, until: '18:00' },
         checkOut: null,
         features: [],
-        texts: { de: { headline: '', summary: '', description: '', houseRules: '' } },
+        texts: { de: { description: '', houseRules: '' } },
       },
     ]);
     expect(days[11]).toEqual([
@@ -206,14 +204,11 @@ describe('listingOf', () => {
     multiplier: 1,
     tax: null,
     address: 'Musterweg 1, Saalbach',
-    checkIn: null,
+    checkIn: { from: '16:00', until: null },
     checkOut: '10:00',
     features: [['WIFI']],
     texts: Object.fromEntries(
-      ['de', 'en', 'it'].map((code) => [
-        code,
-        { headline: code, summary: '', description: '', houseRules: '' },
-      ]),
+      ['de', 'en', 'it'].map((code) => [code, { description: code, houseRules: '' }]),
     ),
   };
 
@@ -223,7 +218,7 @@ describe('listingOf', () => {
       maxPeople: 4,
       size: 61,
       address: 'Musterweg 1, Saalbach',
-      checkIn: null,
+      checkIn: { from: '16:00', until: null },
       checkOut: '10:00',
       features: [['WIFI']],
       texts: { de: room.texts['de'], en: room.texts['en'] },
