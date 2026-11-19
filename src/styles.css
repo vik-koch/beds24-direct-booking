@@ -1309,8 +1309,11 @@
     }
   }
 
+  /* On a phone only, for now: on a desktop the columns keep the list short. */
   .amenities-fold {
-    --cut: 13.5rem;
+    @media (width < 48rem) {
+      --cut: 13.5rem;
+    }
   }
 
   /* A room or an area: its icon and name, and below them what it holds in the softer text. */
