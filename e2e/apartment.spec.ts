@@ -4,7 +4,7 @@ import { expect, test, type Page } from '@playwright/test';
 const section = (page: Page, name: string) =>
   page.locator('section').filter({ has: page.getByRole('heading', { level: 2, name }) });
 
-test('each apartment shows its facts, picture, description, rooms, amenities and terms', async ({
+test('each apartment shows its facts, pictures, description, rooms, amenities and terms', async ({
   page,
 }) => {
   for (const [path, name, facts, rooms] of [
@@ -31,10 +31,10 @@ test('each apartment shows its facts, picture, description, rooms, amenities and
     expect(response!.status()).toBe(200);
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(name);
     for (const fact of facts) await expect(page.locator('.facts')).toContainText(fact);
-    const picture = page.locator('.apartment-picture img');
+    const picture = page.locator('.tile img').first();
     await expect(picture).toHaveAttribute('alt', /.{20}/);
     expect(await picture.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
-    await expect(page.locator('.apartment-picture .ai-label')).toHaveText(
+    await expect(page.locator('.tile .ai-label').first()).toHaveText(
       path.startsWith('/de') ? 'KI-Bild' : 'AI image',
     );
     await expect(page.locator('.prose')).not.toBeEmpty();
@@ -247,7 +247,7 @@ test('without Beds24 the page answers 503 with the name, the picture and a sente
   const response = await page.goto('http://localhost:4001/en/apartments/zirbe');
   expect(response!.status()).toBe(503);
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Zirbe');
-  await expect(page.locator('.apartment-picture img')).toBeVisible();
+  await expect(page.locator('.tile img').first()).toBeVisible();
   await expect(page.getByText('cannot be loaded just now')).toBeVisible();
   await expect(page.locator('.facts, .prose, .rooms, .amenities, .spartan-accordion')).toHaveCount(
     0,
@@ -303,8 +303,10 @@ test('every tab stop on an apartment page shows a focus ring', async ({ page, br
     const stop = await page.evaluate(() => {
       const element = document.activeElement as HTMLElement;
       const style = getComputedStyle(element);
+      // A picture's cell by its picture: each says "KI-Bild".
+      const text = element.querySelector('img')?.alt ?? element.textContent?.trim();
       return {
-        name: `${element.tagName.toLowerCase()} ${element.textContent?.trim().slice(0, 30)}`,
+        name: `${element.tagName.toLowerCase()} ${text?.slice(0, 30)}`,
         ring: style.outlineStyle !== 'none' && parseFloat(style.outlineWidth) >= 2,
         inside: !!element.closest('main'),
       };
@@ -314,7 +316,18 @@ test('every tab stop on an apartment page shows a focus ring', async ({ page, br
     expect(stop.ring, stop.name).toBe(true);
     await page.keyboard.press('Tab');
   }
-  expect(seen).toEqual(['a Alle Wohnungen', 'button Anreise und Abreise', 'button Hausordnung']);
+  const cells = await page
+    .locator('.tile:visible img')
+    .evaluateAll((images: HTMLImageElement[]) =>
+      images.map(({ alt }) => `button ${alt.slice(0, 30)}`),
+    );
+  expect(cells).toHaveLength(8);
+  expect(seen).toEqual([
+    'a Alle Wohnungen',
+    ...cells,
+    'button Anreise und Abreise',
+    'button Hausordnung',
+  ]);
 });
 
 // One test per language: sixteen scans in one would outlast the test's time limit.
