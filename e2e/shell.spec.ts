@@ -386,7 +386,9 @@ test('the wordmark, the hero card and the free weeks start on the 72rem columnâ€
   for (const width of [1280, 1440, 1920]) {
     await page.setViewportSize({ width, height: 900 });
     await page.goto('/de');
-    const edge = (width - 72 * 16) / 2 + 32;
+    // A classic scrollbar takes its width from the page, which centres the column in the rest.
+    const inner = await page.evaluate(() => document.documentElement.clientWidth);
+    const edge = (inner - 72 * 16) / 2 + 32;
     for (const selector of ['.wordmark', '.hero-copy', '.weeks-head'])
       expect(
         await page
