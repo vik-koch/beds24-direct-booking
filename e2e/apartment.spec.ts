@@ -69,7 +69,10 @@ test('a room and a bed are named in Beds24’s order, a sofa bed included', asyn
   ]);
 });
 
-test('the amenities show their first rows until the button opens all of them', async ({ page }) => {
+test('on a phone the amenities show their first rows until the button opens them all', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 375, height: 800 });
   await page.goto('/de/wohnungen/ahorn');
   const amenities = section(page, 'Ausstattung');
   const fold = amenities.locator('.amenities-fold');
@@ -92,10 +95,15 @@ test('the amenities show their first rows until the button opens all of them', a
   await expect.poll(height).toBe(full);
   await page.keyboard.press('Space');
   await expect.poll(height).toBe(cut);
-  // A list that fits needs no button.
+  // A list that fits needs no button, and on a desktop no list is cut.
   await page.goto('http://localhost:4002/it/appartamenti/castagno');
   await expect(page.locator('.amenities')).toBeVisible();
   await expect(page.locator('.amenities-fold + .text-button')).toBeHidden();
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto('/de/wohnungen/ahorn');
+  await expect(amenities.locator('.amenities')).toBeVisible();
+  expect(await fold.evaluate((element) => element.scrollHeight - element.clientHeight)).toBe(0);
+  await expect(more).toBeHidden();
 });
 
 test('arrival, departure and the house rules open one at a time, by keyboard too', async ({
@@ -204,10 +212,17 @@ test('on a phone a long description opens with its button, a short one has none'
   await page.goto('/en/apartments/laerche');
   await expect(page.locator('.prose')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Read more' })).toBeHidden();
-  // Wide enough, the whole description shows and no button.
-  await page.setViewportSize({ width: 1280, height: 800 });
+  // Wide enough, the whole description shows and no button, also after it was opened on a
+  // phone; narrowed again, the button is back and still open.
   await page.goto('/en/apartments/zirbe');
-  await expect(page.getByRole('button', { name: 'Read more' })).toBeHidden();
+  await more.click();
+  await expect(more).toHaveAttribute('aria-expanded', 'true');
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await expect(more).toBeHidden();
+  expect(await prose.evaluate((element) => element.scrollHeight - element.clientHeight)).toBe(0);
+  await page.setViewportSize({ width: 320, height: 700 });
+  await expect(more).toBeVisible();
+  await expect(more).toHaveAttribute('aria-expanded', 'true');
 });
 
 test('a language Beds24 has no texts in leaves the description and the house rules out', async ({
@@ -297,29 +312,24 @@ test('every tab stop on an apartment page shows a focus ring', async ({ page, br
     expect(stop.ring, stop.name).toBe(true);
     await page.keyboard.press('Tab');
   }
-  expect(seen).toEqual([
-    'a Alle Wohnungen',
-    'button Alle 16 Merkmale',
-    'button Anreise und Abreise',
-    'button Hausordnung',
-  ]);
+  expect(seen).toEqual(['a Alle Wohnungen', 'button Anreise und Abreise', 'button Hausordnung']);
 });
 
-test('the page passes axe in both seasons, with everything open', async ({ page }) => {
-  for (const [path, width] of [
-    ['/de/wohnungen/ahorn', 1280],
-    ['/en/apartments/zirbe', 320],
-  ] as const)
-    for (const season of ['winter', 'summer']) {
-      await page.setViewportSize({ width, height: 800 });
-      await page.goto(`${path}?season=${season}`);
-      const { violations } = await new AxeBuilder({ page }).include('main').analyze();
-      expect(violations).toEqual([]);
-      const more = page.getByRole('button', { name: 'Read more' });
-      if (await more.isVisible()) await more.click();
-      await page.locator('.amenities-fold + .text-button').click();
-      await page.locator('hlm-accordion-trigger button').last().click();
-      const open = await new AxeBuilder({ page }).include('main').analyze();
-      expect(open.violations).toEqual([]);
-    }
-});
+// One test per language: sixteen scans in one would outlast the test's time limit.
+for (const path of ['/de/wohnungen/zirbe', '/en/apartments/zirbe'])
+  test(`${path} passes axe in both seasons and widths, with everything open`, async ({ page }) => {
+    for (const width of [320, 1280])
+      for (const season of ['winter', 'summer']) {
+        await page.setViewportSize({ width, height: 800 });
+        await page.goto(`${path}?season=${season}`);
+        const place = `at ${width} in ${season}`;
+        const { violations } = await new AxeBuilder({ page }).include('main').analyze();
+        expect(violations, place).toEqual([]);
+        // Every fold's button the width shows, in the page's language.
+        for (const button of await page.locator('.apartment .text-button:visible').all())
+          await button.click();
+        await page.locator('hlm-accordion-trigger button').last().click();
+        const open = await new AxeBuilder({ page }).include('main').analyze();
+        expect(open.violations, place).toEqual([]);
+      }
+  });

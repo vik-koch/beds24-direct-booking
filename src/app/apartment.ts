@@ -313,18 +313,22 @@ export class Apartment {
     this.measure(this.amenities.fold, this.amenityList);
   }
 
-  // The fold's content is its only child: a fold is long while it cuts its content.
+  // The fold's content is its only child. Long is measured against the cut (in rem, unset where
+  // nothing is cut), also while open: a window widened past the cut drops the button. The page's
+  // root is observed too, since crossing a breakpoint may change neither box.
   private measure(fold: Fold, content: Signal<ElementRef<HTMLElement> | undefined>) {
     afterRenderEffect((onCleanup) => {
       const element = content()?.nativeElement;
       if (!element) return;
+      const root = element.ownerDocument.documentElement;
       const observer = new ResizeObserver(() => {
+        const cut = parseFloat(getComputedStyle(element.parentElement!).getPropertyValue('--cut'));
+        const rem = parseFloat(getComputedStyle(root).fontSize);
         fold.full.set(element.offsetHeight);
-        if (!fold.open())
-          fold.long.set(element.offsetHeight > element.parentElement!.clientHeight + 1);
+        fold.long.set(element.offsetHeight > cut * rem + 1);
       });
       observer.observe(element);
-      observer.observe(element.parentElement!);
+      observer.observe(root);
       onCleanup(() => observer.disconnect());
     });
   }
