@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="de" data-season="winter">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Firn &amp; Farn: Entwurf der Wohnungsseite</title>
+    <link rel="stylesheet" href="home.css" />
+    <link rel="stylesheet" href="apartment.css" />
+  </head>
+  <body>
+    <!-- Icons: Lucide. -->
+    <svg class="sprite">
+      <symbol id="i-snowflake" viewBox="0 0 24 24">
+        <path d="m10 20-1.25-2.5L6 18" />
+        <path d="M10 4 8.75 6.5 6 6" />
+        <path d="m14 20 1.25-2.5L18 18" />
+        <path d="m14 4 1.25 2.5L18 6" />
+        <path d="m17 21-3-6h-4" />
+        <path d="m17 3-3 6 1.5 3" />
+        <path d="M2 12h6.5L10 9" />
+        <path d="m20 10-1.5 2 1.5 2" />
+        <path d="M22 12h-6.5L14 15" />
+        <path d="m4 10 1.5 2L4 14" />
+        <path d="m7 21 3-6-1.5-3" />
+        <path d="m7 3 3 6h4" />
+      </symbol>
+      <symbol id="i-sun" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="4" />
+        <path d="M12 2v2" />
+        <path d="M12 20v2" />
+        <path d="m4.93 4.93 1.41 1.41" />
+        <path d="m17.66 17.66 1.41 1.41" />
+        <path d="M2 12h2" />
+        <path d="M20 12h2" />
+        <path d="m6.34 17.66-1.41 1.41" />
+        <path d="m19.07 4.93-1.41 1.41" />
+      </symbol>
+      <symbol id="i-house" viewBox="0 0 24 24">
+        <path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8" />
+        <path
+          d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"
+        />
+      </symbol>
+      <symbol id="i-calendar-days" viewBox="0 0 24 24">
+        <path d="M8 2v3" />
+        <path d="M16 2v3" />
+        <rect x="3" y="3" width="18" height="18" rx="2" />
+        <path d="M3 9h18" />
+        <path d="M8 13h.01" />
+        <path d="M12 13h.01" />
+        <path d="M16 13h.01" />
+        <path d="M8 17h.01" />
+        <path d="M12 17h.01" />
+        <path d="M16 17h.01" />
+      </symbol>
+      <symbol id="i-tag" viewBox="0 0 24 24">
+        <path
+          d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"
+        />
+        <circle cx="7.5" cy="7.5" r=".5" fill="currentColor" />
+      </symbol>
+      <symbol id="i-arrow-right" viewBox="0 0 24 24">
+        <path d="M5 12h14" />
+        <path d="m12 5 7 7-7 7" />
+      </symbol>
+      <symbol id="i-arrow-left" viewBox="0 0 24 24">
+        <path d="m12 19-7-7 7-7" />
+        <path d="M19 12H5" />
+      </symbol>
+      <symbol id="i-menu" viewBox="0 0 24 24">
+        <path d="M4 5h16" />
+        <path d="M4 12h16" />
+        <path d="M4 19h16" />
+      </symbol>
+      <symbol id="i-chevron-down" viewBox="0 0 24 24">
+        <path d="m6 9 6 6 6-6" />
+      </symbol>
+      <symbol id="i-users" viewBox="0 0 24 24">
+        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+        <path d="M16 3.128a4 4 0 0 1 0 7.744"></path>
+        <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+        <circle cx="9" cy="7" r="4"></circle>
+      </symbol>
+      <symbol id="i-bed-double" viewBox="0 0 24 24">
+        <path d="M2 20v-8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v8"></path>
+        <path d="M4 10V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v4"></path>
+        <path d="M12 4v6"></path>
+        <path d="M2 18h20"></path>
+      </symbol>
+      <symbol id="i-bed-single" viewBox="0 0 24 24">
+        <path d="M3 20v-8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v8"></path>
+        <path d="M5 10V6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v4"></path>
+        <path d="M3 18h18"></path>
+      </symbol>
+      <symbol id="i-bunk" viewBox="0 0 24 24">
+        <path d="M2 4v16"></path>
+        <path d="M2 8h18a2 2 0 0 1 2 2v10"></path>
+        <path d="M2 17h20"></path>
+        <path d="M6 8v9"></path>
+      </symbol>
+      <symbol id="i-sofa" viewBox="0 0 24 24">
+        <path d="M20 9V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v3"></path>
+        <path
+          d="M2 16a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-5a2 2 0 0 0-4 0v1.5a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5V11a2 2 0 0 0-4 0z"
+        ></path>
+        <path d="M4 18v2"></path>
+        <path d="M20 18v2"></path>
+        <path d="M12 4v9"></path>
+      </symbol>
+      <symbol id="i-bath" viewBox="0 0 24 24">
+        <path d="M10 4 8 6"></path>
+        <path d="M17 19v2"></path>
+        <path d="M2 12h20"></path>
+        <path d="M7 19v2"></path>
+        <path
+          d="M9 5 7.621 3.621A2.121 2.121 0 0 0 4 5v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5"
+        ></path>
+      </symbol>
+      <symbol id="i-shower-head" viewBox="0 0 24 24">
+        <path d="m4 4 2.5 2.5"></path>
+        <path d="M13.5 6.5a4.95 4.95 0 0 0-7 7"></path>
+        <path d="M15 5 5 15"></path>
+        <path d="M14 17v.01"></path>
+        <path d="M10 16v.01"></path>
+        <path d="M13 13v.01"></path>
+        <path d="M16 10v.01"></path>
+        <path d="M11 20v.01"></path>
+        <path d="M17 14v.01"></path>
+        <path d="M20 11v.01"></path>
+      </symbol>
+      <symbol id="i-ruler" viewBox="0 0 24 24">
+        <path
+          d="M21.3 15.3a2.4 2.4 0 0 1 0 3.4l-2.6 2.6a2.4 2.4 0 0 1-3.4 0L2.7 8.7a2.41 2.41 0 0 1 0-3.4l2.6-2.6a2.41 2.41 0 0 1 3.4 0Z"
+        ></path>
+        <path d="m14.5 12.5 2-2"></path>
+        <path d="m11.5 9.5 2-2"></path>
+        <path d="m8.5 6.5 2-2"></path>
+        <path d="m17.5 15.5 2-2"></path>
+      </symbol>
+      <symbol id="i-x" viewBox="0 0 24 24">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </symbol>
+      <symbol id="i-chevron-left" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"></path></symbol>
+      <symbol id="i-chevron-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"></path></symbol>
+      <symbol id="i-images" viewBox="0 0 24 24">
+        <path d="m22 11-1.296-1.296a2.4 2.4 0 0 0-3.408 0L11 16"></path>
+        <path d="M4 8a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2"></path>
+        <circle cx="13" cy="7" r="1" fill="currentColor"></circle>
+        <rect x="8" y="2" width="14" height="14" rx="2"></rect>
+      </symbol>
+      <symbol id="i-sparkles" viewBox="0 0 24 24">
+        <path
+          d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"
+        ></path>
+        <path d="M20 2v4"></path>
+        <path d="M22 4h-4"></path>
+        <circle cx="4" cy="20" r="2"></circle>
+      </symbol>
+      <symbol id="i-house" viewBox="0 0 24 24">
+        <path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"></path>
+        <path
+          d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"
+        ></path>
+      </symbol>
+      <symbol id="i-cooking-pot" viewBox="0 0 24 24">
+        <path d="M2 12h20"></path>
+        <path d="M20 12v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8"></path>
+        <path d="m4 8 16-4"></path>
+        <path
+          d="m8.86 6.78-.45-1.81a2 2 0 0 1 1.45-2.43l1.94-.48a2 2 0 0 1 2.43 1.46l.45 1.8"
+        ></path>
+      </symbol>
+      <symbol id="i-mountain" viewBox="0 0 24 24">
+        <path d="m8 3 4 8 5-5 5 15H2L8 3z"></path>
+        <path d="M4.14 15.08c2.62-1.57 5.24-1.43 7.86.42 2.74 1.94 5.49 2 8.23.19"></path>
+      </symbol>
+      <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"></path></symbol>
+      <symbol id="i-plus" viewBox="0 0 24 24">
+        <path d="M5 12h14"></path>
+        <path d="M12 5v14"></path>
+      </symbol>
+      <symbol id="i-list" viewBox="0 0 24 24">
+        <path d="M3 5h.01"></path>
+        <path d="M3 12h.01"></path>
+        <path d="M3 19h.01"></path>
+        <path d="M8 5h13"></path>
+        <path d="M8 12h13"></path>
+        <path d="M8 19h13"></path>
+      </symbol>
+      <symbol id="i-calendar" viewBox="0 0 24 24">
+        <path d="M8 2v4"></path>
+        <path d="M16 2v4"></path>
+        <rect width="18" height="18" x="3" y="4" rx="2"></rect>
+        <path d="M3 10h18"></path>
+      </symbol>
+      <symbol id="i-clock" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10"></circle>
+        <path d="M12 6v6l4 2"></path>
+      </symbol>
+      <symbol id="i-scroll-text" viewBox="0 0 24 24">
+        <path d="M15 12h-5"></path>
+        <path d="M15 8h-5"></path>
+        <path d="M19 17V5a2 2 0 0 0-2-2H4"></path>
+        <path
+          d="M8 21h12a2 2 0 0 0 2-2v-1a1 1 0 0 0-1-1H11a1 1 0 0 0-1 1v1a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v2a1 1 0 0 0 1 1h3"
+        ></path>
+      </symbol>
+      <symbol id="i-circle-help" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10"></circle>
+        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+        <path d="M12 17h.01"></path>
+      </symbol>
+      <symbol id="i-toilet" viewBox="0 0 24 24">
+        <path
+          d="M7 12h13a1 1 0 0 1 1 1 5 5 0 0 1-5 5h-.598a.5.5 0 0 0-.424.765l1.544 2.47a.5.5 0 0 1-.424.765H5.402a.5.5 0 0 1-.424-.765L7 18"
+        ></path>
+        <path d="M8 18a5 5 0 0 1-5-5V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8"></path>
+      </symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"></path></symbol>
+      <symbol id="i-pencil" viewBox="0 0 24 24">
+        <path
+          d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"
+        ></path>
+        <path d="m15 5 4 4"></path>
+      </symbol>
+      <symbol id="i-cigarette-off" viewBox="0 0 24 24">
+        <path d="M12 12H3a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h13"></path>
+        <path d="M18 8c0-2.5-2-2.5-2-5"></path>
+        <path d="m2 2 20 20"></path>
+        <path d="M21 12a1 1 0 0 1 1 1v2a1 1 0 0 1-.5.866"></path>
+        <path d="M22 8c0-2.5-2-2.5-2-5"></path>
+        <path d="M7 12v4"></path>
+      </symbol>
+      <symbol id="i-paw-print" viewBox="0 0 24 24">
+        <circle cx="11" cy="4" r="2"></circle>
+        <circle cx="18" cy="8" r="2"></circle>
+        <circle cx="20" cy="16" r="2"></circle>
+        <path
+          d="M9 10a5 5 0 0 1 5 5v3.5a3.5 3.5 0 0 1-6.84 1.045Q6.52 17.48 4.46 16.84A3.5 3.5 0 0 1 5.5 10Z"
+        ></path>
+      </symbol>
+      <symbol id="i-globe" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10"></circle>
+        <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path>
+        <path d="M2 12h20"></path>
+      </symbol>
+      <symbol id="i-map-pin" viewBox="0 0 24 24">
+        <path
+          d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"
+        ></path>
+        <circle cx="12" cy="10" r="3"></circle>
+      </symbol>
+    </svg>
+    <a class="skip" href="#wochen">Zur Wochenwahl</a>
+    <p class="notice">Demo: Firn &amp; Farn ist erfunden. Die Häuser und Preise gibt es nicht.</p>
+
+    <header class="top">
+      <a class="wordmark" href="home.html">Firn <span>&amp;</span> Farn</a>
+      <div class="season-switch" role="group" aria-label="Saison">
+        <button type="button" data-go="winter">
+          <svg class="icon" aria-hidden="true"><use href="#i-snowflake" /></svg><span>Winter</span>
+        </button>
+        <button type="button" data-go="summer">
+          <svg class="icon" aria-hidden="true"><use href="#i-sun" /></svg><span>Sommer</span>
+        </button>
+      </div>
+      <button class="menu-button" type="button" aria-controls="menu" aria-label="Menü">
+        <svg class="icon" aria-hidden="true"><use href="#i-menu" /></svg>
+      </button>
+      <nav id="menu" aria-label="Hauptmenü">
+        <a href="home.html#freie-wochen">Freie Wochen</a>
+        <details>
+          <summary>
+            Wohnungen <svg class="icon" aria-hidden="true"><use href="#i-chevron-down" /></svg>
+          </summary>
+          <div class="submenu">
+            <a href="home.html#wohnungen">Alle im Überblick</a>
+            <a href="apartment.html?apartment=zirbe">Zirbe</a>
+            <a href="apartment.html?apartment=laerche">Lärche</a>
+            <a href="apartment.html?apartment=ahorn">Ahorn</a>
+          </div>
+        </details>
+        <a href="home.html#lage">Lage</a>
+        <a href="home.html#ueber-uns">Über uns</a>
+        <div class="lang-switch" role="group" aria-label="Sprache">
+          <a href="#" aria-current="true" lang="de">Deutsch</a>
+          <a href="#" lang="en" aria-label="English">EN</a>
+        </div>
+      </nav>
+    </header>
+
+    <main id="page"></main>
+
+    <dialog class="viewer" aria-label="Bilder">
+      <div class="viewer-top">
+        <p class="viewer-count" aria-live="polite"></p>
+        <button class="icon-button" type="button" data-close aria-label="Schließen">
+          <svg class="icon" aria-hidden="true"><use href="#i-x" /></svg>
+        </button>
+      </div>
+      <figure>
+        <img alt="" />
+        <figcaption></figcaption>
+      </figure>
+      <button
+        class="icon-button viewer-prev"
+        type="button"
+        data-step="-1"
+        aria-label="Voriges Bild"
+      >
+        <svg class="icon" aria-hidden="true"><use href="#i-chevron-left" /></svg>
+      </button>
+      <button
+        class="icon-button viewer-next"
+        type="button"
+        data-step="1"
+        aria-label="Nächstes Bild"
+      >
+        <svg class="icon" aria-hidden="true"><use href="#i-chevron-right" /></svg>
+      </button>
+      <div class="viewer-thumbs"></div>
+    </dialog>
+
+    <div class="pick bottom-bar" hidden>
+      <output aria-live="polite"></output>
+      <a class="button" href="#wochen"></a>
+    </div>
+
+    <script src="apartment.js"></script>
+  </body>
+</html>
