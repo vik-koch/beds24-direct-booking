@@ -11,6 +11,8 @@ const today = new Date().toISOString().slice(0, 10);
 export default defineConfig({
   testDir: 'e2e',
   forbidOnly: !!process.env['CI'],
+  // One per vCPU of the runner; Playwright's default takes half of them (#142).
+  workers: process.env['CI'] ? 4 : undefined,
   reporter: process.env['CI'] ? [['github'], ['html', { open: 'never' }]] : 'list',
   use: { baseURL: 'http://localhost:4000', trace: 'retain-on-failure' },
   // Angular's server answers only for hosts it was told about; a deployment sets its own.
