@@ -1,4 +1,13 @@
 {
   "roomId": 9001021,
-  "name": "Zonneterraswoningen"
+  "name": "Zonneterraswoningen",
+  "pictures": [
+    {
+      "file": "pictures/square.png",
+      "alt": {
+        "it": "Immagine di prova quadrata",
+        "nl-BE": "Vierkante testafbeelding"
+      }
+    }
+  ]
 }

@@ -1,4 +1,13 @@
 {
   "roomId": 9001012,
-  "name": "Sotto i Castagni Due"
+  "name": "Sotto i Castagni Due",
+  "pictures": [
+    {
+      "file": "pictures/four-three.png",
+      "alt": {
+        "it": "Immagine di prova in formato 4:3",
+        "nl-BE": "Testafbeelding in 4:3"
+      }
+    }
+  ]
 }

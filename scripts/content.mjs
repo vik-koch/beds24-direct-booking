@@ -19,6 +19,7 @@ import {
   siteSchema,
   textsSchema,
 } from '../src/content/schema.ts';
+import { convertPictures } from './pictures.mjs';
 
 // Every key one of two texts has and the other lacks, and whether the second lacks it.
 function differences(a, b, path = []) {
@@ -69,6 +70,15 @@ export function readContent(dir) {
       throw new Error(
         `${join(dir, 'apartments', file)}\n  (file): not an apartment site.json lists`,
       );
+  // Each picture's alternative text is given in exactly the site's languages.
+  for (const { slug, pictures } of apartments)
+    pictures.forEach(({ alt }, index) => {
+      for (const tag of new Set([...site.languages, ...Object.keys(alt)]))
+        if (!site.languages.includes(tag) || !Object.hasOwn(alt, tag))
+          throw new Error(
+            `${join(dir, 'apartments', `${slug}.json`)}\n  pictures.${index}.alt.${tag}: ${site.languages.includes(tag) ? 'missing' : 'a language site.json does not list'}`,
+          );
+    });
   const texts = Object.fromEntries(
     site.languages.map((tag) => [prefix(tag), read(`texts.${tag}.json`, textsSchema)]),
   );
@@ -140,13 +150,33 @@ export function readContent(dir) {
   return { site: { ...site, languages, apartments }, texts };
 }
 
-export function writeContent(dir, out) {
+export async function writeContent(dir, out, cache) {
   const { site, texts } = readContent(dir);
-  const module = (type, value) =>
-    `import type { ${type} } from '../schema';\n\nconst value: ${type} = ${JSON.stringify(value, null, 2)};\nexport default value;\n`;
   rmSync(out, { recursive: true, force: true });
   mkdirSync(out, { recursive: true });
-  writeFileSync(join(out, 'site.ts'), module('Site', site));
+  // An apartment's picture is served only as its converted files, by their content's names.
+  const sources = new Set(
+    site.apartments.flatMap(({ pictures }) => pictures.map(({ file }) => join(dir, file))),
+  );
+  const { pictures, converted } = await convertPictures(
+    dir,
+    site.apartments,
+    join(out, 'pictures', 'apartments'),
+    cache,
+  );
+  // Alternative texts by address prefix, as the texts are.
+  const apartments = site.apartments.map((apartment) => ({
+    ...apartment,
+    pictures: pictures[apartment.slug].map((picture) => ({
+      ...picture,
+      alt: Object.fromEntries(
+        Object.entries(picture.alt).map(([tag, text]) => [prefix(tag), text]),
+      ),
+    })),
+  }));
+  const module = (type, value) =>
+    `import type { ${type} } from '../schema';\n\nconst value: ${type} = ${JSON.stringify(value, null, 2)};\nexport default value;\n`;
+  writeFileSync(join(out, 'site.ts'), module('Site', { ...site, apartments }));
   for (const [code, value] of Object.entries(texts))
     writeFileSync(join(out, `texts.${code}.ts`), module('Texts', value));
   const loaders = Object.keys(texts).map(
@@ -175,9 +205,11 @@ export function writeContent(dir, out) {
       `export const icons: Record<string, string> = { ${icons.join(', ')} };\n`,
   );
   // The pictures are served unhashed at /pictures/ too: give a changed picture a new name.
-  mkdirSync(join(out, 'pictures'));
   if (existsSync(join(dir, 'pictures')))
-    cpSync(join(dir, 'pictures'), join(out, 'pictures'), { recursive: true });
+    cpSync(join(dir, 'pictures'), join(out, 'pictures'), {
+      recursive: true,
+      filter: (path) => !sources.has(path),
+    });
   const fonts = readdirSync(join(out, 'fonts'))
     .filter((file) => file.endsWith('.woff2'))
     .map((file) => `/fonts/${file}`);
@@ -185,13 +217,18 @@ export function writeContent(dir, out) {
     join(out, 'fonts.ts'),
     `export const fonts: string[] = ${JSON.stringify(fonts)};\n`,
   );
+  return converted;
 }
 
 if (import.meta.main) {
   const dir = resolve(process.env.CONTENT_DIR || 'content/demo');
   try {
-    writeContent(dir, 'src/content/generated');
-    console.log(`Content from ${dir}`);
+    const converted = await writeContent(
+      dir,
+      'src/content/generated',
+      'node_modules/.cache/pictures',
+    );
+    console.log(`Content from ${dir}, ${converted} picture files converted`);
   } catch (error) {
     console.error(`The content is not valid: ${error.message}`);
     process.exit(1);
