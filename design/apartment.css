@@ -1,7 +1,7 @@
 /* The apartment page and its booking step, on home.css's tokens and controls. */
 
 .apartment {
-  max-width: 66rem;
+  max-width: 72rem;
   margin: 0 auto;
   padding: 1rem 1rem 4rem;
 }
@@ -30,8 +30,24 @@
   margin-bottom: 1.5rem;
 }
 
-.title .lead {
-  margin-bottom: 1rem;
+.title h1 {
+  margin-bottom: 0.75rem;
+}
+
+.facts a {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--color-accent);
+  text-decoration: none;
+}
+
+.facts a:hover {
+  text-decoration: underline;
+}
+
+.facts a .icon {
+  color: inherit;
 }
 
 .facts {
@@ -54,8 +70,8 @@
   color: var(--color-ink-soft);
 }
 
-/* Gallery: a strip that snaps on a phone, a mosaic of five from 48rem up. Photos keep their
-   straight edges. */
+/* Gallery: a strip that snaps on a phone, a mosaic from 48rem up. Photos keep their straight
+   edges; each cell has a fixed shape and crops its picture. */
 .gallery {
   position: relative;
   margin-inline: -1rem;
@@ -64,6 +80,7 @@
 .tile {
   position: relative;
   display: block;
+  overflow: hidden;
   padding: 0;
   border: 0;
   background: var(--color-line);
@@ -83,6 +100,21 @@
   box-shadow: inset 0 0 0 7px var(--color-accent);
 }
 
+.more {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+  padding: 0.25rem 0.875rem;
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  white-space: nowrap;
+  box-shadow: var(--shadow-card);
+}
+
 .strip {
   display: flex;
   overflow-x: auto;
@@ -92,8 +124,12 @@
 
 .strip .tile {
   flex: 0 0 100%;
-  aspect-ratio: 3 / 2;
+  aspect-ratio: 4 / 3;
   scroll-snap-align: start;
+}
+
+.strip .more {
+  display: none;
 }
 
 .strip-count {
@@ -113,30 +149,6 @@
   display: none;
 }
 
-.all-pictures {
-  position: absolute;
-  right: 0.875rem;
-  bottom: 0.875rem;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  min-height: 2.75rem;
-  padding: 0 1.25rem;
-  border: 0;
-  border-radius: var(--radius-control);
-  background: var(--color-surface);
-  color: var(--color-ink);
-  font: inherit;
-  font-size: 0.9375rem;
-  font-weight: 500;
-  box-shadow: var(--shadow-card);
-  cursor: pointer;
-}
-
-.all-pictures:hover {
-  color: var(--color-accent);
-}
-
 @media (width >= 48rem) {
   .gallery {
     margin-inline: 0;
@@ -147,47 +159,59 @@
     display: none;
   }
 
+  /* The first picture spans two columns and two rows of a 4:3 frame. */
   .mosaic {
     display: grid;
-    grid-template-columns: 2fr 1fr 1fr;
-    grid-template-rows: repeat(2, 1fr);
-    gap: 0.5rem;
-    height: clamp(22rem, 38vw, 30rem);
+    grid-template-columns: 2fr 1fr;
+    gap: 0.375rem;
   }
 
   .mosaic .tile:first-child {
     grid-row: span 2;
+    aspect-ratio: 4 / 3;
   }
 
-  /* Fewer than five: the large picture and the others in one column, or alone. */
-  .gallery[data-count='4'] .mosaic,
-  .gallery[data-count='3'] .mosaic {
-    grid-template-columns: 2fr 1fr;
-  }
-
-  .gallery[data-count='4'] .tile:nth-child(4) {
-    display: none;
-  }
-
-  .gallery[data-count='2'] .mosaic {
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: 1fr;
-  }
-
-  .gallery[data-count='2'] .tile:first-child {
-    grid-row: auto;
-  }
-
-  .gallery[data-count='1'] .mosaic {
+  .gallery[data-layout='one'] .mosaic {
     grid-template-columns: 1fr;
+  }
+
+  .gallery[data-layout='five'] .mosaic {
+    grid-template-columns: 2fr 1fr 1fr;
+  }
+
+  .gallery[data-layout='eight'] .mosaic {
+    grid-template-columns: repeat(15, 1fr);
+  }
+
+  .gallery[data-layout='eight'] .tile:first-child {
+    grid-column: span 10;
+  }
+
+  .gallery[data-layout='eight'] .tile:nth-child(2),
+  .gallery[data-layout='eight'] .tile:nth-child(3) {
+    grid-column: span 5;
+  }
+
+  .gallery[data-layout='eight'] .tile:nth-child(n + 4) {
+    grid-column: span 3;
+    aspect-ratio: 4 / 3;
+  }
+
+  /* In the row of small pictures the label keeps its icon, its word for screen readers. */
+  .gallery[data-layout='eight'] .tile:nth-child(n + 4) .ai-label {
+    padding: 0.25rem;
+  }
+
+  .gallery[data-layout='eight'] .tile:nth-child(n + 4) .ai-label span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
   }
 
   .tile img {
     transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-
-  .mosaic .tile {
-    overflow: hidden;
   }
 
   .mosaic .tile:hover img {
@@ -195,21 +219,17 @@
   }
 }
 
-/* Two columns from 64rem: what the apartment is on the left, the weeks beside it. */
+/* One grid: on a phone everything in one column, the panel after the features; from 64rem the
+   gallery and the content on the left and the panel beside them, sticky. */
 .columns {
   display: grid;
-  gap: 2.5rem;
-  margin-top: 2rem;
+  gap: 2rem;
 }
 
-.content > section + section {
-  margin-top: 2.75rem;
-}
-
-.content h2,
+.columns > section > h2,
 .panel h2 {
-  margin-bottom: 1.25rem;
-  font-size: clamp(1.5rem, 1.3rem + 0.8vw, 1.875rem);
+  margin-bottom: 1rem;
+  font-size: clamp(1.375rem, 1.2rem + 0.8vw, 1.75rem);
 }
 
 .prose {
@@ -217,7 +237,7 @@
 }
 
 .prose h3 {
-  margin: 1.5rem 0 0.5rem;
+  margin: 1.25rem 0 0.375rem;
   font-size: 1.1875rem;
   font-weight: 500;
 }
@@ -228,7 +248,7 @@
 
 .prose p,
 .prose ul {
-  margin: 0 0 0.75rem;
+  margin: 0 0 0.625rem;
 }
 
 .prose strong {
@@ -240,10 +260,62 @@
   font-weight: 500;
 }
 
+.text-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-height: 2.75rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-accent);
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.text-button:hover {
+  text-decoration: underline;
+}
+
+.text-button .icon {
+  width: 1.125rem;
+  height: 1.125rem;
+  transition: rotate 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.text-button[aria-expanded='true'] .icon {
+  rotate: 180deg;
+}
+
+/* A long description shows about six lines on a phone and opens with its button. */
+.more-text {
+  display: none;
+}
+
+@media (width < 48rem) {
+  .prose:not([data-open]) {
+    max-height: 10.5rem;
+    overflow: hidden;
+  }
+
+  .prose[data-long]:not([data-open]) {
+    mask-image: linear-gradient(to bottom, #000 60%, transparent);
+  }
+
+  .more-text {
+    display: inline-flex;
+  }
+
+  .more-text[hidden] {
+    display: none;
+  }
+}
+
 .rooms {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
-  gap: 1.25rem 2rem;
+  grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
+  gap: 1rem;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -251,12 +323,13 @@
 
 .rooms li {
   display: flex;
-  gap: 0.75rem;
+  gap: 0.625rem;
+  font-size: 1rem;
 }
 
 .rooms .icon {
-  width: 1.75rem;
-  height: 1.75rem;
+  width: 1.5rem;
+  height: 1.5rem;
   color: var(--color-ink-soft);
   stroke-width: 1.75;
 }
@@ -268,7 +341,26 @@
 
 .rooms li > span > span {
   color: var(--color-ink-soft);
-  font-size: 1rem;
+  font-size: 0.9375rem;
+}
+
+.feature-areas:not([data-open]) [data-more] {
+  display: none;
+}
+
+/* On a phone an area's entries are one line, so the list stays short. */
+@media (width < 48rem) {
+  .area ul li {
+    display: inline;
+  }
+
+  .area ul li + li::before {
+    content: ', ';
+  }
+
+  .area {
+    margin-bottom: 1rem;
+  }
 }
 
 /* Areas run in as many columns as there is room for, each kept whole. */
@@ -915,11 +1007,16 @@
 @media (width >= 64rem) {
   .columns {
     grid-template-columns: minmax(0, 1fr) 24rem;
-    gap: 4rem;
-    margin-top: 2.75rem;
+    gap: 2.5rem 3.5rem;
   }
 
-  aside {
+  .columns > * {
+    grid-column: 1;
+  }
+
+  .columns > aside {
+    grid-column: 2;
+    grid-row: 1 / span 6;
     align-self: start;
     position: sticky;
     top: 5.5rem;
@@ -1100,5 +1197,42 @@
 
   aside {
     position: static;
+  }
+}
+
+/* The map runs below the page at full width, up to 120rem. */
+.map {
+  max-width: 120rem;
+  margin: 0 auto;
+}
+
+.map h2 {
+  max-width: 72rem;
+  margin: 0 auto 1rem;
+  padding-inline: 1rem;
+  font-size: clamp(1.375rem, 1.2rem + 0.8vw, 1.75rem);
+}
+
+.map-stand-in {
+  display: grid;
+  place-items: center;
+  height: clamp(16rem, 40vw, 28rem);
+  background: color-mix(in srgb, var(--color-edge) 18%, var(--color-ground));
+  color: var(--color-ink-soft);
+  text-align: center;
+}
+
+.map-stand-in p {
+  margin: 0;
+}
+
+.map-stand-in .icon {
+  vertical-align: -0.2em;
+  color: var(--color-accent);
+}
+
+@media (width >= 48rem) {
+  .map h2 {
+    padding-inline: 2rem;
   }
 }

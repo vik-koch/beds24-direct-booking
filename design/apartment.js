@@ -24,7 +24,6 @@ const tax = 3.5;
 const apartments = {
   zirbe: {
     name: 'Zirbe',
-    headline: 'Für zwei, mit Regendusche',
     short: 'Ein Raum mit Doppelbett, Küchenzeile und Sitzecke am Fenster. Kein Balkon.',
     guests: 2,
     size: 34,
@@ -47,7 +46,6 @@ const apartments = {
   },
   laerche: {
     name: 'Lärche',
-    headline: 'Für vier, mit Südbalkon und Badewanne',
     short: 'Zwei Schlafzimmer, eine Wohnküche und ein Balkon zur Sonnenseite.',
     guests: 4,
     size: 61,
@@ -69,7 +67,6 @@ const apartments = {
   },
   ahorn: {
     name: 'Ahorn',
-    headline: 'Für sechs, mit Terrasse und Sauna',
     short: 'Drei Schlafzimmer, zwei Bäder und ein großer Tisch für alle.',
     guests: 6,
     size: 96,
@@ -164,6 +161,7 @@ const labels = {
   BOOT_DRYER: 'Skischuhtrockner',
   PARKING_PAID: 'Tiefgarage, gegen Gebühr',
 };
+const addresses = { firn: 'Musterweg 1, Saalbach', farn: 'Musterweg 3, Saalbach' };
 const roomNames = {
   BEDROOM: 'Schlafzimmer',
   BATHROOM: 'Bad',
@@ -201,7 +199,6 @@ if (state === 'sofa' && slug === 'ahorn') {
   apartment.rooms.splice(3, 0, ['BEDROOM_OTHER_SLEEPING_AREA', 'BED_SOFA']);
 }
 if (state === 'no-text') {
-  apartment.headline = '';
   apartment.prose = '';
 }
 const count = Number(params.get('pictures')) || apartment.pictures.length;
@@ -238,31 +235,28 @@ function facts() {
     <li>${icon('users')} Bis ${apartment.guests} Gäste</li>
     <li>${icon('bed-double')} ${bedrooms()} Schlafzimmer</li>
     <li>${icon('ruler')} ${apartment.size} m²</li>
+    <li><a href="#karte">${icon('map-pin')} ${addresses[apartment.house]}</a></li>
   </ul>`;
 }
 
+// Like Booking.com's: the first picture always 4:3, the others in cells of fixed shape that crop
+// them. From 8 pictures one large, two beside it and five below; from 5 one large and four; from
+// 3 one large and two; fewer, the first alone.
 function gallery() {
-  const shown = pictures.slice(0, 5);
-  const label = `<span class="ai-label">${icon('sparkles')} KI-Bild</span>`;
-  return `<section class="gallery" aria-label="Bilder" data-count="${Math.min(count, 5)}">
-    <div class="mosaic">
-      ${shown
-        .map(
-          (p, i) => `<button type="button" class="tile" data-open="${i}">
-            <img src="${p.src}" alt="${p.alt}" ${i ? 'loading="lazy"' : ''} />${label}
-          </button>`,
-        )
-        .join('')}
-      ${count > 1 ? `<button type="button" class="all-pictures" data-open="0">${icon('images')} Alle ${count} Bilder</button>` : ''}
-    </div>
+  const layout = count >= 8 ? 'eight' : count >= 5 ? 'five' : count >= 3 ? 'three' : 'one';
+  const shown = { eight: 8, five: 5, three: 3, one: 1 }[layout];
+  const tile = (p, i) => {
+    const more = i === shown - 1 && count > shown;
+    return `<button type="button" class="tile" data-open="${i}">
+      <img src="${p.src}" alt="${p.alt}" ${i ? 'loading="lazy"' : ''} />
+      <span class="ai-label">${icon('sparkles')}<span>KI-Bild</span></span>
+      ${more ? `<span class="more">+${count - shown} ${count - shown === 1 ? 'Bild' : 'Bilder'}</span>` : ''}
+    </button>`;
+  };
+  return `<section class="gallery" aria-label="Bilder" data-layout="${layout}">
+    <div class="mosaic">${pictures.slice(0, shown).map(tile).join('')}</div>
     <div class="strip" tabindex="0" aria-label="Bilder, seitlich wischen">
-      ${pictures
-        .map(
-          (p, i) => `<button type="button" class="tile" data-open="${i}">
-            <img src="${p.src}" alt="${p.alt}" ${i ? 'loading="lazy"' : ''} />${label}
-          </button>`,
-        )
-        .join('')}
+      ${pictures.map(tile).join('')}
     </div>
     <p class="strip-count" aria-hidden="true"><span>1</span> / ${count}</p>
   </section>`;
@@ -282,20 +276,27 @@ function rooms() {
     .join('')}</ul>`;
 }
 
+// The first entries of each area show; the rest open with one button.
 function features() {
   const codes = [...houses[apartment.house], ...(apartment.codes ?? [])];
-  return `<div class="feature-areas">${areas
+  let total = 0;
+  const html = areas
     .map((area) => {
-      if (area.code)
-        return codes.includes(area.code)
-          ? `<div class="area single">${icon(area.icon)}<span>${labels[area.code]}</span></div>`
-          : '';
+      if (area.code) {
+        if (!codes.includes(area.code)) return '';
+        total++;
+        return `<div class="area single">${icon(area.icon)}<span>${labels[area.code]}</span></div>`;
+      }
       const present = area.codes.filter((c) => codes.includes(c));
+      total += present.length;
       if (!present.length) return '';
       return `<div class="area"><h3>${icon(area.icon)} ${area.name}</h3>
-        <ul>${present.map((c) => `<li>${labels[c]}</li>`).join('')}</ul></div>`;
+        <ul>${present.map((c, i) => `<li ${i >= 3 ? 'data-more' : ''}>${labels[c]}</li>`).join('')}</ul></div>`;
     })
-    .join('')}</div>`;
+    .join('');
+  const hidden = (html.match(/data-more/g) ?? []).length;
+  return `<div class="feature-areas" id="ausstattung">${html}</div>
+    ${hidden ? `<button class="text-button" type="button" aria-expanded="false" aria-controls="ausstattung" data-features>Alle ${total} Merkmale${icon('chevron-down')}</button>` : ''}`;
 }
 
 function goodToKnow() {
@@ -445,25 +446,28 @@ function panel() {
   </section>`;
 }
 
+// One grid: the gallery and the content on the left, the panel beside them from 64rem. On a
+// phone the panel follows the features. The map runs below at full width.
 function apartmentPage() {
   return `<div class="apartment">
     <a class="back" href="home.html#wohnungen">${icon('arrow-left')} Alle Wohnungen</a>
     <div class="title">
       <h1>${apartment.name}</h1>
-      ${apartment.headline ? `<p class="lead">${apartment.headline}</p>` : ''}
       ${facts()}
     </div>
-    ${gallery()}
     <div class="columns">
-      <div class="content">
-        ${apartment.prose ? `<section><h2>Die Wohnung</h2><div class="prose">${apartment.prose}</div></section>` : ''}
-        <section><h2>Räume und Betten</h2>${rooms()}</section>
-        <section><h2>Ausstattung</h2>${features()}</section>
-        <section><h2>Gut zu wissen</h2>${goodToKnow()}</section>
-      </div>
+      ${gallery()}
+      ${apartment.prose ? `<section class="prose-section"><h2>Die Wohnung</h2><div class="prose" id="beschreibung">${apartment.prose}</div><button class="text-button more-text" type="button" aria-expanded="false" aria-controls="beschreibung" data-prose>Mehr lesen${icon('chevron-down')}</button></section>` : ''}
+      <section><h2>Räume und Betten</h2>${rooms()}</section>
+      <section><h2>Ausstattung</h2>${features()}</section>
       <aside>${panel()}</aside>
+      <section><h2>Gut zu wissen</h2>${goodToKnow()}</section>
     </div>
-  </div>`;
+  </div>
+  <section class="map" id="karte" aria-labelledby="karte-titel">
+    <h2 id="karte-titel">Lage</h2>
+    <div class="map-stand-in"><p>${icon('map-pin')} ${addresses[apartment.house]}<br />Hier steht die Karte (Version 0.4).</p></div>
+  </section>`;
 }
 
 // The booking step: the panel's place keeps the stay, beside Beds24's form.
@@ -510,6 +514,15 @@ function render() {
   }
   const scroll = page.querySelector('.stays')?.scrollTop;
   page.innerHTML = apartmentPage();
+  const features = page.querySelector('[data-features]');
+  if (features) features.dataset.label = features.firstChild.textContent;
+  // A description short enough to show whole needs no button.
+  const prose = page.querySelector('.prose');
+  if (prose) {
+    const long = prose.scrollHeight > prose.clientHeight + 2;
+    prose.toggleAttribute('data-long', long);
+    page.querySelector('[data-prose]').hidden = !long;
+  }
   if (scroll) page.querySelector('.stays').scrollTop = scroll;
   updateBar();
 }
@@ -533,7 +546,7 @@ function updateBar() {
       ? `ab <strong>${euro(from)}</strong> <small>pro Woche</small>`
       : 'Keine Woche frei';
   const link = bar.querySelector('a');
-  link.textContent = here ? 'Weiter' : 'Woche wählen';
+  link.textContent = here ? 'Weiter' : from ? 'Woche wählen' : 'Wochen ansehen';
   link.href = here ? `?step=book&apartment=${slug}` : '#wochen';
 }
 const observer = new IntersectionObserver(([entry]) => (bar.hidden = entry?.isIntersecting));
@@ -609,6 +622,17 @@ document.addEventListener('click', (event) => {
     }
   }
   if (t.closest('[aria-disabled="true"][data-book]')) event.preventDefault();
+  const toggle = t.closest('[data-features], [data-prose]');
+  if (toggle) {
+    const open = toggle.getAttribute('aria-expanded') !== 'true';
+    toggle.setAttribute('aria-expanded', String(open));
+    document
+      .getElementById(toggle.getAttribute('aria-controls'))
+      .toggleAttribute('data-open', open);
+    if (toggle.dataset.features !== undefined)
+      toggle.firstChild.textContent = open ? 'Weniger zeigen' : toggle.dataset.label;
+    else toggle.firstChild.textContent = open ? 'Weniger lesen' : 'Mehr lesen';
+  }
   const opener = t.closest('[data-open]');
   if (opener) openViewer(Number(opener.dataset.open));
   const step = t.closest('[data-step]');
