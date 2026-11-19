@@ -130,10 +130,15 @@ test('arrival, departure and the house rules open one at a time, by keyboard too
   await closed(rulesText);
 });
 
-test('with reduced motion the folds and the rows open at once', async ({ page }) => {
+test('with reduced motion the folds, the rows and their arrows move at once', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/de/wohnungen/ahorn');
-  for (const selector of ['.amenities-fold', 'hlm-accordion-content'])
+  for (const selector of [
+    '.amenities-fold',
+    '.amenities-fold + .text-button ng-icon',
+    'hlm-accordion-content',
+    '.spartan-accordion-trigger-icon',
+  ])
     expect(
       await page
         .locator(selector)
@@ -141,6 +146,33 @@ test('with reduced motion the folds and the rows open at once', async ({ page })
         .evaluate((element) => getComputedStyle(element).transitionDuration),
       selector,
     ).toBe('0s');
+});
+
+test('an open row keeps one arrow, turned', async ({ page }) => {
+  await page.goto('/de/wohnungen/laerche');
+  const trigger = page.getByRole('button', { name: 'Hausordnung' });
+  const arrows = trigger.locator('.spartan-accordion-trigger-icon:visible');
+  await expect(arrows).toHaveCount(1);
+  await trigger.click();
+  await expect(trigger).toHaveAttribute('aria-expanded', 'true');
+  await expect(arrows).toHaveCount(1);
+  await expect(arrows).toHaveCSS('rotate', '180deg');
+});
+
+test('without JavaScript every text can be read in full', async ({ browser }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  const page = await context.newPage();
+  await page.setViewportSize({ width: 320, height: 700 });
+  await page.goto('/de/wohnungen/ahorn');
+  for (const fold of ['.prose-fold', '.amenities-fold'])
+    expect(
+      await page.locator(fold).evaluate((element) => element.scrollHeight - element.clientHeight),
+      fold,
+    ).toBe(0);
+  for (const content of await page.locator('hlm-accordion-content').all())
+    expect(await content.evaluate((element) => element.clientHeight)).toBeGreaterThan(0);
+  await expect(page.getByText('Nachtruhe von 22 bis 7 Uhr.')).toBeVisible();
+  await context.close();
 });
 
 test('on a phone a long description opens with its button, a short one has none', async ({
@@ -159,6 +191,16 @@ test('on a phone a long description opens with its button, a short one has none'
     .toBeGreaterThan(closed);
   await more.click();
   await expect(more).toHaveAttribute('aria-expanded', 'false');
+  // A link below the cut opens the description when it takes the focus. From the top at once:
+  // a smooth scroll still running would carry the page away from the link.
+  await page.evaluate(() => scrollTo({ top: 0, behavior: 'instant' }));
+  await page.locator('.back').focus();
+  const link = page.locator('.prose').getByRole('link');
+  for (let i = 0; i < 10 && !(await link.evaluate((a) => a === document.activeElement)); i++)
+    await page.keyboard.press('Tab');
+  await expect(link).toBeFocused();
+  await expect(more).toHaveAttribute('aria-expanded', 'true');
+  await expect(link).toBeInViewport();
   await page.goto('/en/apartments/laerche');
   await expect(page.locator('.prose')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Read more' })).toBeHidden();
@@ -196,6 +238,21 @@ test('without Beds24 the page answers 503 with the name, the picture and a sente
 });
 
 test('at 320 px nothing scrolls sideways, in both seasons and languages', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 700 });
+  // The rooms stand one below the other, where two would break a name, and two by two from 360.
+  for (const [width, columns] of [
+    [320, 1],
+    [360, 2],
+  ]) {
+    await page.setViewportSize({ width, height: 700 });
+    await page.goto('/de/wohnungen/ahorn');
+    expect(
+      await page
+        .locator('.rooms')
+        .evaluate((grid) => getComputedStyle(grid).gridTemplateColumns.split(' ').length),
+      `at ${width}`,
+    ).toBe(columns);
+  }
   await page.setViewportSize({ width: 320, height: 700 });
   for (const path of ['/de/wohnungen/ahorn', '/en/apartments/laerche'])
     for (const season of ['winter', 'summer']) {
@@ -248,14 +305,21 @@ test('every tab stop on an apartment page shows a focus ring', async ({ page, br
   ]);
 });
 
-test('the page passes axe with everything open', async ({ page }) => {
-  for (const path of ['/de/wohnungen/ahorn', '/en/apartments/zirbe']) {
-    await page.goto(path);
-    const { violations } = await new AxeBuilder({ page }).include('main').analyze();
-    expect(violations).toEqual([]);
-    await page.locator('.amenities-fold + .text-button').click();
-    await page.locator('hlm-accordion-trigger button').last().click();
-    const open = await new AxeBuilder({ page }).include('main').analyze();
-    expect(open.violations).toEqual([]);
-  }
+test('the page passes axe in both seasons, with everything open', async ({ page }) => {
+  for (const [path, width] of [
+    ['/de/wohnungen/ahorn', 1280],
+    ['/en/apartments/zirbe', 320],
+  ] as const)
+    for (const season of ['winter', 'summer']) {
+      await page.setViewportSize({ width, height: 800 });
+      await page.goto(`${path}?season=${season}`);
+      const { violations } = await new AxeBuilder({ page }).include('main').analyze();
+      expect(violations).toEqual([]);
+      const more = page.getByRole('button', { name: 'Read more' });
+      if (await more.isVisible()) await more.click();
+      await page.locator('.amenities-fold + .text-button').click();
+      await page.locator('hlm-accordion-trigger button').last().click();
+      const open = await new AxeBuilder({ page }).include('main').analyze();
+      expect(open.violations).toEqual([]);
+    }
 });

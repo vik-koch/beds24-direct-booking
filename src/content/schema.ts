@@ -257,10 +257,10 @@ export const textsSchema = z.strictObject({
     continue: text,
     clear: text,
   }),
-  // The apartment page. {count} and {from}, {until} are filled in by the page.
+  // The apartment page. {count}, {from} and {until} are filled in by the page.
   apartment: z.strictObject({
     back: text,
-    guests: text,
+    guests: z.strictObject({ one: text, other: text }),
     bedrooms: z.strictObject({ one: text, other: text }),
     description: text,
     more: text,
@@ -269,7 +269,8 @@ export const textsSchema = z.strictObject({
     allFeatures: text,
     goodToKnow: text,
     times: text,
-    checkIn: text,
+    // By the bounds Beds24 sets: both, only the start or only the end.
+    checkIn: z.strictObject({ both: text, from: text, until: text }),
     checkOut: text,
     houseRules: text,
     unavailable: text,

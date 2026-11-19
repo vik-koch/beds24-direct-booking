@@ -97,7 +97,7 @@
   },
   "apartment": {
     "back": "Alle Wohnungen",
-    "guests": "Bis {count} Gäste",
+    "guests": { "one": "Bis {count} Gast", "other": "Bis {count} Gäste" },
     "bedrooms": { "one": "1 Schlafzimmer", "other": "{count} Schlafzimmer" },
     "description": "Die Wohnung",
     "more": "Mehr lesen",
@@ -106,7 +106,11 @@
     "allFeatures": "Alle {count} Merkmale",
     "goodToKnow": "Gut zu wissen",
     "times": "Anreise und Abreise",
-    "checkIn": "Anreise von {from} bis {until} Uhr.",
+    "checkIn": {
+      "both": "Anreise von {from} bis {until} Uhr.",
+      "from": "Anreise ab {from} Uhr.",
+      "until": "Anreise bis {until} Uhr."
+    },
     "checkOut": "Abreise bis {until} Uhr.",
     "houseRules": "Hausordnung",
     "unavailable": "Die Einzelheiten zu dieser Wohnung können gerade nicht geladen werden. Bitte versuchen Sie es in ein paar Minuten noch einmal.",
@@ -136,7 +140,7 @@
       "DOWNTOWN": "Im Ortszentrum",
       "SKI_STORAGE": "Skiraum",
       "BOOT_DRYER": "Skischuhtrockner",
-      "PARKING_PAID": "Tiefgarage, gegen Gebühr",
+      "PARKING_PAID": "Parkplatz, gegen Gebühr",
       "BED_DOUBLE": "Doppelbett",
       "BED_BUNK": "Stockbett",
       "BED_SOFA": "Schlafsofa",

@@ -123,9 +123,14 @@
 }
 
 /* One chevron that turns, as the page's other buttons do, in place of the copied pair. */
+/* Unlayered, these win over the copied pair's utilities in both states. */
 .spartan-accordion-trigger-icon {
   --ng-icon__size: 1.125rem;
-  transition: rotate 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  display: inline-block;
+
+  @media (prefers-reduced-motion: no-preference) {
+    transition: rotate 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
 }
 
 .spartan-accordion-trigger-icon + .spartan-accordion-trigger-icon {
@@ -141,6 +146,11 @@
 
   @media (prefers-reduced-motion: reduce) {
     transition: none;
+  }
+
+  /* Without scripts no row opens, so each shows its content. */
+  @media (scripting: none) {
+    height: auto;
   }
 }
 

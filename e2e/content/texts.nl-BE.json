@@ -88,7 +88,7 @@
   },
   "apartment": {
     "back": "Alle appartementen",
-    "guests": "Tot {count} gasten",
+    "guests": { "one": "Tot {count} gast", "other": "Tot {count} gasten" },
     "bedrooms": { "one": "1 slaapkamer", "other": "{count} slaapkamers" },
     "description": "Het appartement",
     "more": "Lees meer",
@@ -97,7 +97,11 @@
     "allFeatures": "Alle {count} voorzieningen",
     "goodToKnow": "Goed om te weten",
     "times": "Aankomst en vertrek",
-    "checkIn": "Aankomst van {from} tot {until}.",
+    "checkIn": {
+      "both": "Aankomst van {from} tot {until}.",
+      "from": "Aankomst vanaf {from}.",
+      "until": "Aankomst tegen {until}."
+    },
     "checkOut": "Vertrek tegen {until}.",
     "houseRules": "Huisregels",
     "unavailable": "De gegevens van dit appartement kunnen nu niet worden geladen.",

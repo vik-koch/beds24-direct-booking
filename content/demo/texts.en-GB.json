@@ -97,7 +97,7 @@
   },
   "apartment": {
     "back": "All apartments",
-    "guests": "Up to {count} guests",
+    "guests": { "one": "Up to {count} guest", "other": "Up to {count} guests" },
     "bedrooms": { "one": "1 bedroom", "other": "{count} bedrooms" },
     "description": "The apartment",
     "more": "Read more",
@@ -106,7 +106,11 @@
     "allFeatures": "All {count} amenities",
     "goodToKnow": "Good to know",
     "times": "Arrival and departure",
-    "checkIn": "Arrival from {from} to {until}.",
+    "checkIn": {
+      "both": "Arrival from {from} to {until}.",
+      "from": "Arrival from {from}.",
+      "until": "Arrival by {until}."
+    },
     "checkOut": "Departure by {until}.",
     "houseRules": "House rules",
     "unavailable": "The details of this apartment cannot be loaded just now. Please try again in a few minutes.",
@@ -136,7 +140,7 @@
       "DOWNTOWN": "In the village centre",
       "SKI_STORAGE": "Ski room",
       "BOOT_DRYER": "Ski boot dryer",
-      "PARKING_PAID": "Underground parking, charged",
+      "PARKING_PAID": "Paid parking",
       "BED_DOUBLE": "Double bed",
       "BED_BUNK": "Bunk bed",
       "BED_SOFA": "Sofa bed",

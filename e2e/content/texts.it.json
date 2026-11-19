@@ -88,7 +88,7 @@
   },
   "apartment": {
     "back": "Tutti gli appartamenti",
-    "guests": "Fino a {count} ospiti",
+    "guests": { "one": "Fino a {count} ospite", "other": "Fino a {count} ospiti" },
     "bedrooms": { "one": "1 camera", "other": "{count} camere" },
     "description": "L'appartamento",
     "more": "Leggi di più",
@@ -97,7 +97,11 @@
     "allFeatures": "Tutti i {count} servizi",
     "goodToKnow": "Da sapere",
     "times": "Arrivo e partenza",
-    "checkIn": "Arrivo dalle {from} alle {until}.",
+    "checkIn": {
+      "both": "Arrivo dalle {from} alle {until}.",
+      "from": "Arrivo dalle {from}.",
+      "until": "Arrivo entro le {until}."
+    },
     "checkOut": "Partenza entro le {until}.",
     "houseRules": "Regole della casa",
     "unavailable": "I dettagli di questo appartamento non si possono caricare ora.",

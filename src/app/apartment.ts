@@ -66,15 +66,25 @@ type Fold = ReturnType<typeof fold>;
         <ul class="facts">
           <li>
             <ng-icon name="lucideUsers" aria-hidden="true" />{{
-              fill(texts.apartment.guests, { count: listing.maxPeople })
+              fill(
+                texts.apartment.guests[
+                  plural.select(listing.maxPeople) === 'one' ? 'one' : 'other'
+                ],
+                {
+                  count: listing.maxPeople,
+                }
+              )
             }}
           </li>
           @if (bedrooms) {
             <li>
               <ng-icon name="lucideBedDouble" aria-hidden="true" />{{
-                fill(texts.apartment.bedrooms[bedrooms === 1 ? 'one' : 'other'], {
-                  count: bedrooms,
-                })
+                fill(
+                  texts.apartment.bedrooms[plural.select(bedrooms) === 'one' ? 'one' : 'other'],
+                  {
+                    count: bedrooms,
+                  }
+                )
               }}
             </li>
           }
@@ -114,6 +124,7 @@ type Fold = ReturnType<typeof fold>;
             <h2>{{ texts.apartment.description }}</h2>
             <div
               class="fold prose-fold"
+              (focusin)="description.open.set(true)"
               [attr.data-open]="description.open() ? '' : null"
               [attr.data-long]="description.long() ? '' : null"
               [style.--full.px]="description.full()"
@@ -184,11 +195,11 @@ type Fold = ReturnType<typeof fold>;
             </button>
           </section>
         }
-        @if (listing?.checkIn || listing?.checkOut || text.houseRules) {
+        @if (checkIn || listing?.checkOut || text.houseRules) {
           <section>
             <h2>{{ texts.apartment.goodToKnow }}</h2>
             <div hlmAccordion>
-              @if (listing!.checkIn || listing!.checkOut) {
+              @if (checkIn || listing!.checkOut) {
                 <div hlmAccordionItem>
                   <hlm-accordion-trigger>
                     <ng-icon name="lucideClock" aria-hidden="true" /><span>{{
@@ -197,8 +208,8 @@ type Fold = ReturnType<typeof fold>;
                   </hlm-accordion-trigger>
                   <hlm-accordion-content>
                     <p>
-                      @if (listing!.checkIn; as checkIn) {
-                        {{ fill(texts.apartment.checkIn, checkIn) }}
+                      @if (checkIn) {
+                        {{ checkIn }}
                       }
                       @if (listing!.checkOut; as until) {
                         {{ fill(texts.apartment.checkOut, { until }) }}
@@ -239,6 +250,14 @@ export class Apartment {
     description: '',
     houseRules: '',
   };
+  protected readonly plural = new Intl.PluralRules(this.language.tag);
+  // The arrival's wording by the bounds Beds24 sets.
+  protected readonly checkIn = (() => {
+    const { from, until } = this.listing?.checkIn ?? { from: null, until: null };
+    const wording = this.texts.apartment.checkIn;
+    const text = from && until ? wording.both : from ? wording.from : until ? wording.until : null;
+    return text && fill(text, { from: from ?? '', until: until ?? '' });
+  })();
   protected readonly back = `${address(this.language, 'home')}#${this.language.anchors.apartments}`;
   protected readonly picture = this.apartment.pictures[0];
   protected readonly srcset = this.picture.sources
@@ -263,9 +282,8 @@ export class Apartment {
     ];
   });
   protected readonly amenities = (() => {
-    const codes = new Set(
-      this.groups.filter(([code]) => !site.rooms.some((room) => room.code === code)).flat(),
-    );
+    // Every code counts, a room's fittings too: a site may list a bath tub as an amenity.
+    const codes = new Set(this.groups.flat());
     const entries = site.amenities.flatMap((entry): Entry[] => {
       const icon = lucideName(entry.icon);
       if ('code' in entry)

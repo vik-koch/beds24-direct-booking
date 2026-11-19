@@ -59,17 +59,19 @@ content. The application has no wording, no colour and no typeface of its own. T
   the words of `apartment.generated`, such as "AI image": an image model's terms may ask for a
   disclosure no viewer could miss.
 - **The apartment page** (`apartment` in a texts file) is the page's wording: its headings, the
-  facts line (`guests` and `bedrooms` take `{count}`), and the arrival and departure times
-  (`checkIn` takes `{from}` and `{until}`, `checkOut` `{until}`, each as Beds24's `HH:MM`). The name
-  and the pictures come from the apartment's file. The guests, size, address, times, description and
-  house rules come from Beds24, in the page's language by its address prefix, such as `de`.
+  facts line (`guests` and `bedrooms` take `{count}`, with a `one` and an `other` form), and the
+  arrival and departure times as Beds24's `HH:MM`: `checkIn.both` takes `{from}` and `{until}`,
+  `checkIn.from` and `checkIn.until` serve a property that sets only one bound, and `checkOut` takes
+  `{until}`. The name and the pictures come from the apartment's file. The guests, size, address,
+  times, description and house rules come from Beds24, in the page's language by its address prefix,
+  such as `de`.
 - **The amenities** (`amenities` in `site.json`) sort Beds24's feature codes into areas for the
   apartment page, in their order:
   `{ "area": "kitchen", "icon": "cooking-pot", "codes": ["KITCHEN", "DISHWASHER"] }`, or a code
   standing alone with its own icon: `{ "code": "PETS_NOT_ALLOWED", "icon": "paw-print" }`. A code is
-  listed once. The property's codes and the room's are merged; a code listed nowhere is not shown. A
-  texts file names each area under `amenities.areas` and labels each listed code under
-  `amenities.codes`.
+  listed once. The property's codes and the room's, a room's fittings included, are merged; a code
+  listed nowhere is not shown. A texts file names each area under `amenities.areas` and labels each
+  listed code under `amenities.codes`.
 - **The rooms** (`rooms` in `site.json`) are the codes that open a Beds24 room group, such as
   `BEDROOM`, each with an icon: `{ "code": "BEDROOM", "icon": "bed-double" }`. The page lists each
   such group in Beds24's order, numbered where a room comes more than once. A texts file names each
