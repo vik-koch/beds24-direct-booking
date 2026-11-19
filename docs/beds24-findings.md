@@ -127,8 +127,9 @@ read-only token, for the free-weeks list:
 
 - **A room is the listing; a property groups rooms.** Every inventory call is keyed by `roomId` and
   returns `propertyId` beside it.
-- **Facts:** on the property the address, city, country, coordinates, check-in and check-out times,
-  `permit` and `featureCodes`; on the room `roomSize`, `maxPeople`, `minStay`, `maxStay` and its own
+- **Facts:** on the property the address, city, country, coordinates, check-in and check-out times
+  (`checkInStart`, `checkInEnd`, `checkOutEnd` as `HH:MM`; midnight is `"24:00"`), `permit` and
+  `featureCodes`; on the room `roomSize`, `maxPeople`, `minStay`, `maxStay` and its own
   `featureCodes`.
 - **Feature codes** come as two lists, the property's and the room's. The control panel shows the
   property's codes as applied to each of its rooms; the API does not merge them. Each entry is a

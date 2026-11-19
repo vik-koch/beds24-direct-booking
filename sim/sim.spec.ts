@@ -58,7 +58,7 @@ describe('properties', () => {
   });
 
   it('keeps the oddities of the wire', async () => {
-    const [property] = (await (await get(everything)).json()).data;
+    const [property, farn] = (await (await get(everything)).json()).data;
     expect(property.bookingPageMultiplier).toBe('*0.9');
     expect(property.texts.map((text: { language: string }) => text.language)).toEqual(['de', 'en']);
     expect(property.texts[1].upsellItemName1).toBe('Local tax');
@@ -71,19 +71,54 @@ describe('properties', () => {
       period: 'daily',
     });
     expect(property.upsellItems[1].type).toBe('notUsed');
-    expect(Object.keys(property.texts[0])).toHaveLength(28 + 20);
+    for (const text of property.texts)
+      expect(Object.keys(text).sort()).toEqual(
+        [
+          'language',
+          'headline',
+          'propertyDescription',
+          'locationDescription',
+          'directions',
+          'houseRules',
+          'generalPolicy',
+          'cancellationPolicy',
+          'propertyDescription1',
+          'propertyDescription2',
+          'propertyDescriptionBookingPage1',
+          'propertyDescriptionBookingPage2',
+          'guestDetailsHeader',
+          'guestEnquiryHeader',
+          'confirmBookingButtonMessage',
+          'roomNotAvailableMessage',
+          'roomNoPriceMessage',
+          'noRoomsAvailableMessage',
+          ...Array.from({ length: 10 }, (_, i) => `customQuestion${i + 1}`),
+          ...Array.from({ length: 20 }, (_, i) => `upsellItemName${i + 1}`),
+        ].sort(),
+      );
     const [room, second] = property.roomTypes;
     expect(room.texts.map((text: { language: string }) => text.language)).toEqual([
       'de',
       'en',
       'it',
     ]);
-    for (const text of room.texts) expect(Object.keys(text)).toHaveLength(8);
+    for (const text of room.texts)
+      expect(Object.keys(text).sort()).toEqual(
+        [
+          'language',
+          'displayName',
+          'accommodationType',
+          'roomDescription',
+          'auxiliary',
+          'marketing',
+          'contentHeadline',
+          'contentDescription',
+        ].sort(),
+      );
     expect(room.texts[2]).toMatchObject({ roomDescription: '', accommodationType: 'Camera' });
     expect(room.texts[1].roomDescription).toMatch(/^<p><h3 class="">.*<\/p><\/p>/);
-    expect(room.texts[1].roomDescription).toContain('﻿');
+    expect(room.texts[1].roomDescription).toContain('\ufeff');
     expect(second.texts[0].roomDescription).toContain('<b>');
-    const [, farn] = (await (await get(everything)).json()).data;
     expect(farn.roomTypes[0].featureCodes).toContainEqual(['BOOT_DRYER']);
     expect(farn.roomTypes[1].texts[1].roomDescription).toBe('<p><br></p>');
     const rules = property.roomTypes[0].priceRules;
