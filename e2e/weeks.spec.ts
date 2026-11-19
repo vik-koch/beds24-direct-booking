@@ -36,10 +36,11 @@ test('the next season lists its weeks with a price or "booked" per apartment', a
     /^Zirbe · \d guests · \d+ square metres$/,
   );
   const dates = await panel(page).getByRole('rowheader').first().innerText();
-  expect(dates.replace(/\s+/g, ' ').trim()).toMatch(/^Sat \d\d\/\d\d – Sat \d\d\/\d\d$/);
+  // Older locale data puts a comma after the weekday, as WebKit on Ubuntu 24.04 does.
+  expect(dates.replace(/\s+/g, ' ').trim()).toMatch(/^Sat,? \d\d\/\d\d – Sat,? \d\d\/\d\d$/);
   // The headers say the week and the apartment, so a cell says only its own price or "booked".
   await expect(panel(page).getByRole('rowheader').first()).toHaveAccessibleName(
-    /^Saturday \d+ \w+ – Saturday \d+ \w+$/,
+    /^Saturday,? \d+ \w+ – Saturday,? \d+ \w+$/,
   );
   await expect(panel(page).locator('.stay').first()).toHaveAccessibleName(/^€[\d,.]+$/);
   await expect(panel(page).locator('.booked').first()).toHaveAccessibleName('booked');

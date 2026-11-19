@@ -17,6 +17,12 @@ concurrency:
 jobs:
   check:
     runs-on: ubuntu-latest
+    # The browsers and their system packages come with the image (ADR 9). Firefox refuses to run
+    # as root in another user's home, so the job runs as the runner's user.
+    container:
+      image: mcr.microsoft.com/playwright:v1.65.0-resolute
+      options: --user 1001
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -24,10 +30,17 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
+      - name: Check that the image's browsers belong to the installed Playwright
+        run: |
+          image=$(grep -oP 'playwright:v\K[0-9.]+' .github/workflows/ci.yml)
+          package=$(node -p "require('@playwright/test/package.json').version")
+          if [ "$image" != "$package" ]; then
+            echo "::error::the Playwright image is $image, @playwright/test is $package; change the image's tag in ci.yml"
+            exit 1
+          fi
       - run: npm run format:check
       - run: npm run lint
       - run: npm test
-      - run: npx playwright install --with-deps chromium webkit firefox
       - run: npm run e2e
       - uses: actions/upload-artifact@v7
         if: failure()
