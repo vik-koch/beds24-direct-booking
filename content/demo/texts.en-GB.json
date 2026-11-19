@@ -95,6 +95,65 @@
     "continue": "Continue to booking",
     "clear": "Clear the chosen week"
   },
+  "apartment": {
+    "back": "All apartments",
+    "guests": { "one": "Up to {count} guest", "other": "Up to {count} guests" },
+    "bedrooms": { "one": "1 bedroom", "other": "{count} bedrooms" },
+    "description": "The apartment",
+    "more": "Read more",
+    "rooms": "Rooms and beds",
+    "features": "Amenities",
+    "allFeatures": "All {count} amenities",
+    "goodToKnow": "Good to know",
+    "times": "Arrival and departure",
+    "checkIn": {
+      "both": "Arrival from {from} to {until}.",
+      "from": "Arrival from {from}.",
+      "until": "Arrival by {until}."
+    },
+    "checkOut": "Departure by {until}.",
+    "houseRules": "House rules",
+    "unavailable": "The details of this apartment cannot be loaded just now. Please try again in a few minutes.",
+    "generated": "AI image"
+  },
+  "amenities": {
+    "areas": {
+      "general": "General",
+      "kitchen": "Kitchen",
+      "sleeping": "Sleeping and bathing",
+      "house": "House and location"
+    },
+    "codes": {
+      "SMOKING_NOT_ALLOWED": "Non-smoking",
+      "PETS_NOT_ALLOWED": "No pets",
+      "WIFI": "Wi-Fi",
+      "HEATING": "Heating",
+      "ELEVATOR": "Lift",
+      "WASHER": "Washing machine",
+      "KITCHEN": "Kitchen with oven",
+      "DISHWASHER": "Dishwasher",
+      "COFFEE_MAKER": "Coffee machine",
+      "LINENS": "Bed linen",
+      "TOWELS": "Towels",
+      "BALCONY": "Balcony",
+      "MOUNTAIN_VIEW": "Mountain view",
+      "DOWNTOWN": "In the village centre",
+      "SKI_STORAGE": "Ski room",
+      "BOOT_DRYER": "Ski boot dryer",
+      "PARKING_PAID": "Paid parking",
+      "BED_DOUBLE": "Double bed",
+      "BED_BUNK": "Bunk bed",
+      "BED_SOFA": "Sofa bed",
+      "BATH_TUB": "Bath",
+      "BATH_SHOWER": "Shower",
+      "BATH_TOILET": "Toilet"
+    },
+    "rooms": {
+      "BEDROOM": "Bedroom",
+      "BATHROOM": "Bathroom",
+      "BEDROOM_OTHER_SLEEPING_AREA": "Living room"
+    }
+  },
   "placeholder": "This page is still being built.",
   "notFound": {
     "title": "Page not found",

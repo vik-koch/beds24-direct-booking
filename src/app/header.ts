@@ -1,6 +1,6 @@
 import { DOCUMENT, ViewportScroller } from '@angular/common';
 import { afterNextRender, Component, DestroyRef, inject, input, signal } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideGlobe, lucideMenu } from '@ng-icons/lucide';
 import { HlmNavigationMenuImports } from '@spartan-ng/helm/navigation-menu';
@@ -10,11 +10,11 @@ import { letters } from '../content/names';
 import { SeasonSwitch } from './season-switch';
 import { address, LANGUAGE, TEXTS } from './texts';
 
-// Links to the home page load it in full: in the browser, only the server's answer carries
-// the apartments (ADR 6), until the availability route exists.
+// Links to the home page and the apartments' pages load them in full: in the browser, only the
+// server's answer carries their data (ADR 6), until the availability route exists.
 @Component({
   selector: 'app-header',
-  imports: [RouterLink, NgIcon, HlmNavigationMenuImports, HlmSheetImports, SeasonSwitch],
+  imports: [NgIcon, HlmNavigationMenuImports, HlmSheetImports, SeasonSwitch],
   providers: [provideIcons({ lucideGlobe, lucideMenu })],
   template: `
     <header class="column flex min-h-[4.5rem] items-center gap-3">
@@ -44,7 +44,7 @@ import { address, LANGUAGE, TEXTS } from './texts';
                 </li>
                 @for (apartment of apartments; track apartment.path) {
                   <li>
-                    <a hlmNavigationMenuLink [routerLink]="apartment.path">{{ apartment.name }}</a>
+                    <a hlmNavigationMenuLink [href]="apartment.path">{{ apartment.name }}</a>
                   </li>
                 }
               </ul>
@@ -109,9 +109,7 @@ import { address, LANGUAGE, TEXTS } from './texts';
                 <ul>
                   @for (apartment of apartments; track apartment.path) {
                     <li>
-                      <a (click)="follow(menu)" [routerLink]="apartment.path">{{
-                        apartment.name
-                      }}</a>
+                      <a (click)="follow(menu)" [href]="apartment.path">{{ apartment.name }}</a>
                     </li>
                   }
                 </ul>

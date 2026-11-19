@@ -86,6 +86,43 @@
     "continue": "Verder naar de boeking",
     "clear": "Gekozen week wissen"
   },
+  "apartment": {
+    "back": "Alle appartementen",
+    "guests": { "one": "Tot {count} gast", "other": "Tot {count} gasten" },
+    "bedrooms": { "one": "1 slaapkamer", "other": "{count} slaapkamers" },
+    "description": "Het appartement",
+    "more": "Lees meer",
+    "rooms": "Kamers en bedden",
+    "features": "Voorzieningen",
+    "allFeatures": "Alle {count} voorzieningen",
+    "goodToKnow": "Goed om te weten",
+    "times": "Aankomst en vertrek",
+    "checkIn": {
+      "both": "Aankomst van {from} tot {until}.",
+      "from": "Aankomst vanaf {from}.",
+      "until": "Aankomst tegen {until}."
+    },
+    "checkOut": "Vertrek tegen {until}.",
+    "houseRules": "Huisregels",
+    "unavailable": "De gegevens van dit appartement kunnen nu niet worden geladen.",
+    "generated": "AI-beeld"
+  },
+  "amenities": {
+    "areas": { "comfort": "Comfort" },
+    "codes": {
+      "PETS_NOT_ALLOWED": "Geen huisdieren",
+      "WIFI": "Wifi",
+      "HEATING": "Verwarming",
+      "KITCHEN": "Keuken",
+      "DISHWASHER": "Vaatwasser",
+      "BED_DOUBLE": "Tweepersoonsbed",
+      "BED_BUNK": "Stapelbed",
+      "BATH_TUB": "Bad",
+      "BATH_SHOWER": "Douche",
+      "BATH_TOILET": "Toilet"
+    },
+    "rooms": { "BEDROOM": "Slaapkamer", "BATHROOM": "Badkamer" }
+  },
   "placeholder": "Deze pagina wordt nog gemaakt.",
   "notFound": {
     "title": "Pagina niet gevonden",

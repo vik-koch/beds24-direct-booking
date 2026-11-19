@@ -132,6 +132,9 @@ test('the language menu leads to the same page in the other language', async ({ 
   await expect(page).toHaveURL('/en/apartments/laerche');
   await expect(page.locator('html')).toHaveAttribute('lang', 'en-GB');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Lärche');
+  // Inside the app: the server's answer carried every language's texts.
+  await expect(page.locator('.prose')).toContainText('on the second floor');
+  await expect(page.locator('.rooms h3').first()).toHaveText('Bedroom 1');
 });
 
 // Where an element stands against the header's lower edge, in pixels.

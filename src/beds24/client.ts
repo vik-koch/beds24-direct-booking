@@ -1,16 +1,30 @@
+import { richText } from './rich-text';
+
 // What the site reads of Beds24. Each room is its own room type: one unit per room type is
 // assumed, the hotel case of several units of one type is not supported.
-export interface Room {
+export interface Room extends Listing {
   id: number;
   propertyId: number;
-  maxPeople: number;
-  size: number;
   currency: string;
   // The earliest arrival is this many days after today.
   leadDays: number;
   // The property's booking page multiplier; null when it cannot be read, and then no price.
   multiplier: number | null;
   tax: Tax | null;
+}
+
+// What a room's page shows of it.
+export interface Listing {
+  maxPeople: number;
+  size: number;
+  address: string;
+  // HH:MM, midnight as 24:00; null where the property sets none.
+  checkIn: { from: string | null; until: string | null };
+  checkOut: string | null;
+  // The property's codes, each a group of its own, then the room's groups in their order.
+  features: string[][];
+  // Per Beds24 language code, such as de, empty where nothing is written; rich text sanitised.
+  texts: Record<string, { description: string; houseRules: string }>;
 }
 
 // The tourist tax per adult, per night or once per stay.
@@ -34,16 +48,28 @@ export interface Inventory {
   days: Record<number, Day[]>;
 }
 
+type Texts<K extends string> = ({ language: string } & Record<K, string>)[];
+
 interface Properties {
   data: {
     id: number;
     currency: string;
+    address: string;
+    city: string;
+    checkInStart: string;
+    checkInEnd: string;
+    checkOutEnd: string;
+    featureCodes: string[][];
+    // Missing when the property has no text at all.
+    texts?: Texts<'houseRules'>;
     bookingPageMultiplier?: string;
     upsellItems?: { type: string; amount: number; per: string; period: string }[];
     roomTypes: {
       id: number;
       maxPeople: number;
       roomSize: number;
+      featureCodes: string[][];
+      texts: Texts<'roomDescription'>;
       priceRules?: { minDaysUntilCheckin?: number }[];
     }[];
   }[];
@@ -85,7 +111,8 @@ const get = async <T>(path: string): Promise<T> => {
 export const loadInventory = async (first: string, last: string): Promise<Inventory> => {
   const [properties, calendars] = await Promise.all([
     get<Properties>(
-      '/properties?includeAllRooms=true&includePriceRules=true&includeUpsellItems=true',
+      '/properties?includeAllRooms=true&includePriceRules=true&includeUpsellItems=true' +
+        '&includeTexts=all&includeLanguages=all',
     ),
     get<Calendars>(
       `/inventory/rooms/calendar?startDate=${first}&endDate=${last}` +
@@ -111,6 +138,22 @@ export const loadInventory = async (first: string, last: string): Promise<Invent
         leadDays: leads.length ? Math.min(...leads) : 0,
         multiplier: multiplier(property.bookingPageMultiplier),
         tax: tax ? { amount: tax.amount, per: tax.period === 'daily' ? 'night' : 'stay' } : null,
+        address: [property.address, property.city].filter(Boolean).join(', '),
+        checkIn: { from: property.checkInStart || null, until: property.checkInEnd || null },
+        checkOut: property.checkOutEnd || null,
+        features: [...property.featureCodes, ...room.featureCodes],
+        texts: Object.fromEntries(
+          room.texts.map((text) => [
+            text.language,
+            {
+              description: richText(text.roomDescription),
+              houseRules:
+                property.texts
+                  ?.find(({ language }) => language === text.language)
+                  ?.houseRules.trim() ?? '',
+            },
+          ]),
+        ),
       };
     });
   });
@@ -139,3 +182,21 @@ export const loadInventory = async (first: string, last: string): Promise<Invent
   );
   return { rooms, days };
 };
+
+// A room's listing for its page, with the texts of the site's languages only.
+export function listingOf(rooms: Room[], id: number, languages: string[]): Listing {
+  const room = rooms.find((one) => one.id === id);
+  if (!room) throw new Error(`Beds24 has no room ${id}`);
+  const { maxPeople, size, address, checkIn, checkOut, features, texts } = room;
+  return {
+    maxPeople,
+    size,
+    address,
+    checkIn,
+    checkOut,
+    features,
+    texts: Object.fromEntries(
+      languages.flatMap((code) => (texts[code] ? [[code, texts[code]]] : [])),
+    ),
+  };
+}

@@ -117,6 +117,30 @@ export const siteSchema = z.strictObject({
     .array(z.strictObject({ key: segment, icon: segment }))
     .max(5, 'at most five features')
     .refine((list) => unique(list, (f) => f.key), 'a feature key is listed twice'),
+  // The apartment page's features: Beds24's codes sorted into areas, each with a Lucide icon,
+  // in their order, or a code standing alone with its own. Each language's texts name the
+  // areas and the codes. A code listed nowhere is not shown.
+  amenities: z
+    .array(
+      z.union([
+        z.strictObject({ code: text, icon: segment }),
+        z.strictObject({ area: segment, icon: segment, codes: z.array(text).min(1) }),
+      ]),
+    )
+    .refine(
+      (list) =>
+        unique(
+          list.flatMap((entry) => ('code' in entry ? [entry.code] : entry.codes)),
+          (code) => code,
+        ),
+      'a code is listed twice',
+    ),
+  // The rooms the apartment page names, by the code that opens a Beds24 room group, such as
+  // BEDROOM, each with a Lucide icon. Each language's texts name them. A group whose code is
+  // listed nowhere is not a room: its codes count as amenities.
+  rooms: z
+    .array(z.strictObject({ code: text, icon: segment }))
+    .refine((list) => unique(list, (room) => room.code), 'a room code is listed twice'),
   // The footer shows what is listed, and no contact without one: a site may give its details
   // on its imprint page instead.
   contact: z
@@ -146,6 +170,8 @@ export const apartmentSchema = z.strictObject({
             'not a file in pictures/ or an https address',
           ),
         alt: z.record(z.string(), text),
+        // Made by an image model: the page labels it so.
+        generated: z.literal(true).optional(),
       }),
     )
     .min(1, 'at least one picture'),
@@ -231,6 +257,32 @@ export const textsSchema = z.strictObject({
     continue: text,
     clear: text,
   }),
+  // The apartment page. {count}, {from} and {until} are filled in by the page.
+  apartment: z.strictObject({
+    back: text,
+    guests: z.strictObject({ one: text, other: text }),
+    bedrooms: z.strictObject({ one: text, other: text }),
+    description: text,
+    more: text,
+    rooms: text,
+    features: text,
+    allFeatures: text,
+    goodToKnow: text,
+    times: text,
+    // By the bounds Beds24 sets: both, only the start or only the end.
+    checkIn: z.strictObject({ both: text, from: text, until: text }),
+    checkOut: text,
+    houseRules: text,
+    unavailable: text,
+    generated: text,
+  }),
+  // The names of the areas and the rooms site.json lists, and the labels of Beds24's codes: the
+  // amenities' and the beds' and fittings' in a room.
+  amenities: z.strictObject({
+    areas: z.record(segment, text),
+    codes: z.record(text, text),
+    rooms: z.record(text, text),
+  }),
   placeholder: text,
   notFound: z.strictObject({ title: text, text, home: text }),
   footer: z.strictObject({ label: text, contact: text, more: text }),
@@ -248,6 +300,7 @@ export type Language = { tag: string; code: string; name: string } & Pick<
 // each file by its width, narrowest first.
 export interface Picture {
   alt: Record<string, string>;
+  generated?: true;
   width: number;
   height: number;
   sources: { width: number; url: string }[];

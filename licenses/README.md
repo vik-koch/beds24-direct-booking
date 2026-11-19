@@ -20,7 +20,7 @@ are kept here.
 <!-- prettier-ignore -->
 | Work | Source | Licence | What is here |
 |---|---|---|---|
-| spartan/ui components | [spartan-ng/spartan](https://github.com/spartan-ng/spartan) | MIT | `spartan/LICENSE` from the tag `v1.9.0`. The navigation menu, the sheet and their helpers are copied from that tag into `src/ui/`, with the changes the design needed. |
+| spartan/ui components | [spartan-ng/spartan](https://github.com/spartan-ng/spartan) | MIT | `spartan/LICENSE` from the tag `v1.9.0`. The accordion, the navigation menu, the sheet and their helpers are copied from that tag into `src/ui/`, with the changes the design needed. |
 
 ## Design mock-up
 

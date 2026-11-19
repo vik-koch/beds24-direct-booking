@@ -205,6 +205,8 @@ test('the generated site gives each picture its files and its texts by address p
   const value = JSON.parse(site.slice(site.indexOf('= ') + 2, site.lastIndexOf(';\nexport')));
   const [first] = value.apartments[0].pictures;
   assert.deepEqual(Object.keys(first.alt), ['de', 'en']);
+  // Generated: the page labels it.
+  assert.equal(first.generated, true);
   assert.deepEqual([first.width, first.height], [1536, 1024]);
   assert.deepEqual(
     first.sources.map((s) => s.width),
@@ -363,6 +365,65 @@ test('every language names exactly the features the site lists', () => {
   assert.throws(
     () => readContent(other),
     /hero\.features\.parking: a feature site\.json does not list$/,
+  );
+});
+
+test('an amenity names a Lucide icon, and its icon is imported', async () => {
+  const wrong = changed('site.json', (site) => (site.amenities[2].icon = 'chalet'));
+  assert.throws(
+    () => readContent(wrong),
+    /site\.json\n {2}amenities\.2\.icon: chalet is not a Lucide icon/,
+  );
+  const out = mkdtempSync(join(root, 'generated-'));
+  await writeContent('content/demo', out, cache);
+  assert.match(readFileSync(join(out, 'icons.ts'), 'utf8'), /lucideCookingPot/);
+});
+
+test('a code is listed once, in an area or alone', () => {
+  const dir = changed('site.json', (site) => site.amenities[2].codes.push('PETS_NOT_ALLOWED'));
+  assert.throws(() => readContent(dir), /site\.json\n {2}amenities: a code is listed twice/);
+});
+
+test('every language names exactly the areas the site lists, and labels each code', () => {
+  const missing = changed('texts.en-GB.json', (texts) => delete texts.amenities.areas.kitchen);
+  assert.throws(
+    () => readContent(missing),
+    /texts\.en-GB\.json\n {2}amenities\.areas\.kitchen: missing/,
+  );
+  const extra = bothTexts((texts) => (texts.amenities.areas.garden = 'x'));
+  assert.throws(
+    () => readContent(extra),
+    /texts\.de-AT\.json\n {2}amenities\.areas\.garden: an area site\.json does not list/,
+  );
+  const unlabelled = bothTexts((texts) => delete texts.amenities.codes.WIFI);
+  assert.throws(
+    () => readContent(unlabelled),
+    /texts\.de-AT\.json\n {2}amenities\.codes\.WIFI: missing/,
+  );
+  const none = changed('site.json', (site) => (site.amenities = []));
+  assert.throws(
+    () => readContent(none),
+    /amenities\.areas\.general: an area site\.json does not list/,
+  );
+});
+
+test('a room names a Lucide icon once, and every language names exactly the listed rooms', () => {
+  const icon = changed('site.json', (site) => (site.rooms[0].icon = 'chalet'));
+  assert.throws(
+    () => readContent(icon),
+    /site\.json\n {2}rooms\.0\.icon: chalet is not a Lucide icon/,
+  );
+  const twice = changed('site.json', (site) => site.rooms.push({ ...site.rooms[0] }));
+  assert.throws(() => readContent(twice), /site\.json\n {2}rooms: a room code is listed twice/);
+  const missing = changed('texts.de-AT.json', (texts) => delete texts.amenities.rooms.BATHROOM);
+  assert.throws(
+    () => readContent(missing),
+    /texts\.de-AT\.json\n {2}amenities\.rooms\.BATHROOM: missing/,
+  );
+  const extra = bothTexts((texts) => (texts.amenities.rooms.KITCHEN = 'Küche'));
+  assert.throws(
+    () => readContent(extra),
+    /texts\.de-AT\.json\n {2}amenities\.rooms\.KITCHEN: a room site\.json does not list/,
   );
 });
 

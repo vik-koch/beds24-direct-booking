@@ -56,7 +56,7 @@ export async function convertPictures(dir, apartments, out, cache) {
   const pictures = {};
   for (const { slug, pictures: list } of apartments) {
     pictures[slug] = [];
-    for (const [index, { file, alt }] of list.entries()) {
+    for (const [index, { file, alt, generated }] of list.entries()) {
       try {
         const { bytes, keep } = await read(dir, file, cache);
         const size = await sharp(bytes)
@@ -91,6 +91,7 @@ export async function convertPictures(dir, apartments, out, cache) {
         const largest = sizes.at(-1);
         pictures[slug].push({
           alt,
+          ...(generated && { generated }),
           width: largest,
           height: Math.round((largest * height) / width),
           sources,

@@ -106,6 +106,33 @@ export function readContent(dir) {
         throw new Error(
           `${join(dir, `texts.${tag}.json`)}\n  hero.features.${key}: ${keys.includes(key) ? 'missing' : 'a feature site.json does not list'}`,
         );
+  for (const key of ['amenities', 'rooms'])
+    site[key].forEach(({ icon }, index) => {
+      if (!(lucideName(icon) in lucide))
+        throw new Error(
+          `${join(dir, 'site.json')}\n  ${key}.${index}.icon: ${icon} is not a Lucide icon`,
+        );
+    });
+  // Each area and room site.json lists is named, and each code it lists labelled, in every
+  // language; nothing else is named.
+  const areas = site.amenities.flatMap((entry) => entry.area ?? []);
+  const rooms = site.rooms.map((room) => room.code);
+  const codes = site.amenities.flatMap((entry) => entry.codes ?? entry.code);
+  for (const tag of site.languages) {
+    const { amenities } = texts[prefix(tag)];
+    for (const [part, listed] of [
+      ['areas', areas],
+      ['rooms', rooms],
+    ])
+      for (const key of new Set([...listed, ...Object.keys(amenities[part])]))
+        if (!listed.includes(key) || !Object.hasOwn(amenities[part], key))
+          throw new Error(
+            `${join(dir, `texts.${tag}.json`)}\n  amenities.${part}.${key}: ${listed.includes(key) ? 'missing' : `${part === 'areas' ? 'an area' : 'a room'} site.json does not list`}`,
+          );
+    for (const code of codes)
+      if (!Object.hasOwn(amenities.codes, code))
+        throw new Error(`${join(dir, `texts.${tag}.json`)}\n  amenities.codes.${code}: missing`);
+  }
   // Every language renders the same elements, so a change of language finds the reader's place.
   const [first, ...others] = site.languages;
   for (const tag of others) {
@@ -202,7 +229,9 @@ export async function writeContent(dir, out, cache) {
     cpSync(join(dir, 'fonts'), join(out, 'fonts'), { recursive: true });
   // Only the icons site.json names are imported, so the bundle holds no others. Two names can
   // be one icon: heading-1 and heading1 are both lucideHeading1.
-  const icons = [...new Set(site.features.map((f) => lucideName(f.icon)))];
+  const icons = [
+    ...new Set([...site.features, ...site.amenities, ...site.rooms].map((f) => lucideName(f.icon))),
+  ];
   writeFileSync(
     join(out, 'icons.ts'),
     (icons.length ? `import { ${icons.join(', ')} } from '@ng-icons/lucide';\n\n` : '') +
