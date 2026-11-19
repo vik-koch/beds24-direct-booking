@@ -9,7 +9,8 @@ content. The application has no wording, no colour and no typeface of its own. T
 <!-- prettier-ignore -->
 | File | What it holds |
 |---|---|
-| `site.json` | The site's name, its languages in order as language tags, the apartments (slug, Beds24 room ID, name), the seasons, the hero's features and the contact. |
+| `site.json` | The site's name, its languages in order as language tags, the apartments' slugs in their order, the seasons, the hero's features and the contact. |
+| `apartments/<slug>.json` | One apartment: its Beds24 room ID and its name. One file for each slug `site.json` lists, and no other. |
 | `texts.<tag>.json` | Everything one language says: the wording, the address parts and the anchors. One file per language listed in `site.json`, such as `texts.en-GB.json`. |
 | `theme.css` | The palette and the typeface as custom properties on `:root`, and the typeface's `@font-face`. |
 | `fonts/` | Optional: the font files `theme.css` refers to, as `fonts/<file>`. |
@@ -31,6 +32,10 @@ content. The application has no wording, no colour and no typeface of its own. T
 - **The address parts** (`paths` in a texts file) are the translated fixed parts of
   [`site-map.md`](site-map.md)'s addresses, such as `wohnungen` for `apartments`; `anchors` are the
   home page's section anchors. An apartment's slug is the same in every language.
+- **An apartment** is a file of its own, named by its slug: `site.json` lists
+  `"apartments": ["zirbe", "laerche"]` and `apartments/zirbe.json` holds
+  `{ "roomId": 9001011, "name": "Zirbe" }`. The room ID is the Beds24 room the apartment is, and the
+  name is how the site calls it in every language.
 - **The notice** (`notice` in a texts file) is an optional line above the header, with an optional
   link. Left out, no line is shown.
 - **The seasons** (`seasons` in `site.json`) are `winter`, `summer` or both, each with its hero
@@ -100,10 +105,11 @@ which is not committed. It runs before every `start`, `build`, `test` and `lint`
 missing in one language, optional ones such as `notice` included, a key the schema does not know, a
 missing texts file, a tag that is not canonical, two tags with one language each, a season named in
 the texts but not in `site.json` or the other way round, a feature without its text or a text
-without its feature, a missing picture, and a part beyond its boundary stop the build with the file
-and the key named. The schema, not the demo's files, defines the keys, so the compiler checks every
-template against the same keys for every site. Every language has the same keys, so every language
-renders the same elements and a change of language finds the reader's place.
+without its feature, a missing picture, an apartment without its file or a file in `apartments/`
+that `site.json` does not list, and a part beyond its boundary stop the build with the file and the
+key named. The schema, not the demo's files, defines the keys, so the compiler checks every template
+against the same keys for every site. Every language has the same keys, so every language renders
+the same elements and a change of language finds the reader's place.
 
 ## Another folder
 

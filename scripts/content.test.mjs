@@ -79,37 +79,71 @@ test('a content folder beyond a limit fails, and the message names the limit', (
     [(site) => (site.name = 'x'.repeat(16)), /site\.json\n {2}name: at most 15 characters/],
     [(site) => (site.languages = ['de-AT', 'en-GB', 'it']), /languages: exactly two languages/],
     [(site) => (site.apartments = []), /apartments: at least one apartment/],
-    [
-      (site) =>
-        site.apartments.push(
-          { slug: 'd', roomId: 1, name: 'D' },
-          { slug: 'e', roomId: 2, name: 'E' },
-        ),
-      /apartments: at most four apartments/,
-    ],
-    [
-      (site) => (site.apartments[0].name = 'x'.repeat(21)),
-      /apartments\.0\.name: at most 20 characters/,
-    ],
+    [(site) => site.apartments.push('d', 'e'), /apartments: at most four apartments/],
   ];
   for (const [change, message] of cases)
     assert.throws(() => readContent(changed('site.json', change)), message);
-  const at = changed('site.json', (site) => {
-    site.name = 'x'.repeat(15);
-    site.apartments[0].name = 'x'.repeat(20);
-    site.apartments.push({ slug: 'd', roomId: 1, name: 'D' });
-  });
+  assert.throws(
+    () => readContent(changed('apartments/zirbe.json', (a) => (a.name = 'x'.repeat(21)))),
+    /apartments\/zirbe\.json\n {2}name: at most 20 characters/,
+  );
+  const at = changed(
+    'site.json',
+    (site) => {
+      site.name = 'x'.repeat(15);
+      site.apartments.push('d');
+    },
+    'apartments/zirbe.json',
+    (apartment) => (apartment.name = 'x'.repeat(20)),
+  );
+  writeFileSync(join(at, 'apartments/d.json'), JSON.stringify({ roomId: 1, name: 'D' }));
   assert.equal(readContent(at).site.apartments.length, 4);
   // A letter with its accent as a code point of its own counts once.
   const accent = (count) => 'x'.repeat(count - 1) + 'e\u0301';
-  const accents = changed('site.json', (site) => {
-    site.name = accent(15);
-    site.apartments[0].name = accent(20);
-  });
+  const accents = changed(
+    'site.json',
+    (site) => (site.name = accent(15)),
+    'apartments/zirbe.json',
+    (apartment) => (apartment.name = accent(20)),
+  );
   assert.equal(readContent(accents).site.name, accent(15));
   assert.throws(
     () => readContent(changed('site.json', (site) => (site.name = accent(16)))),
     /name: at most 15 characters/,
+  );
+});
+
+test('each apartment is a file of its own, in the order site.json lists them', () => {
+  assert.deepEqual(readContent('content/demo').site.apartments[0], {
+    slug: 'zirbe',
+    roomId: 9001011,
+    name: 'Zirbe',
+  });
+  assert.deepEqual(
+    readContent('content/demo').site.apartments.map((a) => a.slug),
+    ['zirbe', 'laerche', 'ahorn'],
+  );
+  const missing = changed('site.json', () => undefined);
+  rmSync(join(missing, 'apartments/ahorn.json'));
+  assert.throws(
+    () => readContent(missing),
+    /site\.json\n {2}apartments\.2: apartments\/ahorn\.json does not exist/,
+  );
+  assert.throws(
+    () => readContent(changed('site.json', (site) => site.apartments.pop())),
+    /apartments\/ahorn\.json\n {2}\(file\): not an apartment site\.json lists/,
+  );
+  assert.throws(
+    () => readContent(changed('site.json', (site) => site.apartments.push('zirbe'))),
+    /site\.json\n {2}apartments: an apartment slug is listed twice/,
+  );
+  assert.throws(
+    () => readContent(changed('apartments/zirbe.json', (a) => (a.roomId = 'x'))),
+    /apartments\/zirbe\.json\n {2}roomId/,
+  );
+  assert.throws(
+    () => readContent(changed('apartments/zirbe.json', (a) => (a.slug = 'zirbe'))),
+    /apartments\/zirbe\.json\n {2}\(file\): Unrecognized key/,
   );
 });
 

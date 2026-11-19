@@ -11,7 +11,14 @@ import {
 import { join, resolve } from 'node:path';
 import * as lucide from '@ng-icons/lucide';
 import { JSDOM } from 'jsdom';
-import { lucideName, prefix, seasonNames, siteSchema, textsSchema } from '../src/content/schema.ts';
+import {
+  apartmentSchema,
+  lucideName,
+  prefix,
+  seasonNames,
+  siteSchema,
+  textsSchema,
+} from '../src/content/schema.ts';
 
 // Every key one of two texts has and the other lacks, and whether the second lacks it.
 function differences(a, b, path = []) {
@@ -45,6 +52,17 @@ export function readContent(dir) {
     throw new Error(`${join(dir, file)}\n${issues.join('\n')}`);
   };
   const site = read('site.json', siteSchema);
+  const apartments = site.apartments.map((slug, index) => {
+    const file = `apartments/${slug}.json`;
+    if (!existsSync(join(dir, file)))
+      throw new Error(`${join(dir, 'site.json')}\n  apartments.${index}: ${file} does not exist`);
+    return { slug, ...read(file, apartmentSchema) };
+  });
+  for (const file of readdirSync(join(dir, 'apartments')))
+    if (!site.apartments.some((slug) => file === `${slug}.json`))
+      throw new Error(
+        `${join(dir, 'apartments', file)}\n  (file): not an apartment site.json lists`,
+      );
   const texts = Object.fromEntries(
     site.languages.map((tag) => [prefix(tag), read(`texts.${tag}.json`, textsSchema)]),
   );
@@ -113,7 +131,7 @@ export function readContent(dir) {
     const { paths, anchors } = texts[code];
     return { tag, code, name: name[0].toLocaleUpperCase(tag) + name.slice(1), paths, anchors };
   });
-  return { site: { ...site, languages }, texts };
+  return { site: { ...site, languages, apartments }, texts };
 }
 
 export function writeContent(dir, out) {

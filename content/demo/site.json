@@ -1,23 +1,7 @@
 {
   "name": "Firn & Farn",
   "languages": ["de-AT", "en-GB"],
-  "apartments": [
-    {
-      "slug": "zirbe",
-      "roomId": 9001011,
-      "name": "Zirbe"
-    },
-    {
-      "slug": "laerche",
-      "roomId": 9001012,
-      "name": "Lärche"
-    },
-    {
-      "slug": "ahorn",
-      "roomId": 9001021,
-      "name": "Ahorn"
-    }
-  ],
+  "apartments": ["zirbe", "laerche", "ahorn"],
   "seasons": {
     "winter": {
       "start": "09-01",
