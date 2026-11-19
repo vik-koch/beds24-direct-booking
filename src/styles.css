@@ -1304,7 +1304,7 @@
 
   /* About six lines of the description, on a phone only. */
   .prose-fold {
-    @media (max-width: 47.9375rem) {
+    @media (width < 48rem) {
       --cut: 10.5rem;
     }
   }
@@ -1355,7 +1355,7 @@
     }
 
     /* On a phone an area's entries are one line, so the list stays short. */
-    @media (max-width: 47.9375rem) {
+    @media (width < 48rem) {
       li li {
         display: inline;
       }
