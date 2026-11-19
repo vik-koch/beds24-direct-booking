@@ -145,14 +145,23 @@ Run by the maintainer on 2026-11-15 on two fresh Ubuntu 24.04 VMs at Hetzner, a 
 `VERSION` at `0.1.0`. Both ended with the site live behind a certificate from Let's Encrypt; the ARM
 machine was set up from `infra/cloud-init.yml` as it is now.
 
+On 2026-11-18 the maintainer deployed a second site, from the same private repository with `VERSION`
+raised to `0.2.0`, onto an x64 machine that already ran another site. The steps of "A second site on
+the same machine" were followed with `SITE_PASSWORD` set. The first run went through: the new site
+answered 401 with a `WWW-Authenticate` header without the password and kept its `X-Robots-Tag`, and
+the other site kept answering.
+
 - **Tried:** the machine from nothing on both architectures; the proxy with its certificate and the
   redirect from HTTP; the template from a private repository with a private image; the site against
-  a real Beds24 account; a failed check of the address, which turns the run red.
+  a real Beds24 account; a failed check of the address, which turns the run red; a second site
+  beside another one behind the same proxy; a site closed with a password; a new release in the
+  template's `VERSION`, onto a machine that had not run the site before.
 - **Not tried:** the set-up stopping on an address that was not filled in, beyond the check itself
   run by hand; the simulator beside the app (`SIM_IMAGE`); opening the site to search engines
-  (`INDEXED`); a move to a new release and going back by a revert; a run for a commit that is no
-  longer the head of `main`; a deployment by hand from a workstation; a restart of the machine; a
-  certificate's renewal; another provider.
+  (`INDEXED`); a move to a new release on a machine that runs the old one, and going back by a
+  revert; two sites deployed at the same moment; a run for a commit that is no longer the head of
+  `main`; a deployment by hand from a workstation; a restart of the machine; a certificate's
+  renewal; another provider.
 - **Checked without a machine:** `infra/cloud-init.yml` against cloud-init's schema, the Compose
   files with `docker compose config`, and the template's deploy step against stand-ins for `ssh` and
   `scripts/deploy.sh`.
