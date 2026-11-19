@@ -91,8 +91,13 @@ read-only token, for the free-weeks list:
   evening, Central European Time). The site counts from the server's today and takes the smallest
   value among the rules that carry one; the two rooms had different lead times.
 - **The site's week prices equal `offers`** to the cent for sixteen weeks of both rooms (the sum of
-  the nights times `*0.9`, rounded to the cent). The account had no bookings, so a taken week was
-  checked against the simulator only.
+  the nights times `*0.9`, rounded to the cent).
+- **A booked week** (checked on 19 November 2026, with one booking of a week in one room): its seven
+  nights come back with `numAvail` 0 and keep their `price1`, so it is told apart from an unpriced
+  week; its departure day has `numAvail` 1 again. `offers` returns the room without an `offers`
+  array for that week and offers the weeks before and after it. The site shows the week as booked
+  for that room only, the other room's week priced, and the neighbouring weeks at the `offers`
+  price.
 - **The tourist tax** was an upsell item of type `obligatory` on one property and `obligatoryTax` on
   the other, both per adult and night; the site reads both.
 - **A day the calendar does not list** counts as closed and unpriced (not seen on the wire).
