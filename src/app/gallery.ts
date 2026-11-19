@@ -60,7 +60,14 @@ const srcset = (picture: Picture) =>
       }
     </section>
 
-    <dialog #dialog class="viewer" [attr.aria-label]="texts.gallery.name" (close)="opener?.focus()">
+    <!-- Focus on the dialog itself: on its close button, the first key would ring it. -->
+    <dialog
+      #dialog
+      class="viewer"
+      tabindex="-1"
+      [attr.aria-label]="texts.gallery.name"
+      (close)="opener?.focus()"
+    >
       <p class="viewer-count" aria-live="polite">{{ position(index()) }}</p>
       <button
         class="icon-button viewer-close"
@@ -90,15 +97,17 @@ const srcset = (picture: Picture) =>
           (scroll)="slid()"
         >
           @for (picture of pictures(); track $index) {
-            <img
-              [attr.srcset]="srcset(picture)"
-              sizes="100vw"
-              [src]="picture.sources[0].url"
-              [width]="picture.width"
-              [height]="picture.height"
-              alt=""
-              [attr.loading]="near($index) ? 'eager' : 'lazy'"
-            />
+            <div class="viewer-slide">
+              <img
+                [attr.srcset]="srcset(picture)"
+                sizes="100vw"
+                [src]="picture.sources[0].url"
+                [width]="picture.width"
+                [height]="picture.height"
+                alt=""
+                [attr.loading]="near($index) ? 'eager' : 'lazy'"
+              />
+            </div>
           }
         </div>
         @if (pictures().length > 1) {
@@ -138,7 +147,7 @@ const srcset = (picture: Picture) =>
               type="button"
               [attr.aria-label]="position($index)"
               [attr.aria-current]="$index === index() ? 'true' : null"
-              (click)="go($index)"
+              (click)="go($index, $index - index())"
             >
               <img [src]="picture.sources[0].url" alt="" loading="lazy" />
             </button>
@@ -168,31 +177,30 @@ export class Gallery {
   protected readonly index = signal(0);
   // The picture shown before, whose text fades out.
   protected readonly from = signal(0);
+  // The viewer's pictures load only once it has opened.
+  private readonly opened = signal(false);
   protected opener: HTMLElement | null = null;
   // Where the track is headed, so that a step pressed while it slides goes on from there, and
   // where it set off: lined up anywhere else, it has arrived or been swiped.
   private target = 0;
   private start = 0;
+  // The frame's width when last measured: a scroll at any other width is the browser snapping
+  // after a resize, which the observer undoes.
+  private width = 0;
 
   private readonly dialog = viewChild.required<ElementRef<HTMLDialogElement>>('dialog');
   private readonly track = viewChild.required<ElementRef<HTMLElement>>('track');
   private readonly thumbs = viewChild<ElementRef<HTMLElement>>('thumbs');
 
   constructor() {
-    // A frame resized keeps its picture: the browser would snap to whichever lies nearest.
     afterRenderEffect((onCleanup) => {
       const track = this.track().nativeElement;
-      const observer = new ResizeObserver(() =>
-        track.scrollTo({ left: this.index() * track.clientWidth, behavior: 'instant' }),
-      );
+      const observer = new ResizeObserver(() => {
+        this.width = this.measure(track);
+        track.scrollTo({ left: this.target * this.width, behavior: 'instant' });
+      });
       observer.observe(track);
       onCleanup(() => observer.disconnect());
-    });
-    afterRenderEffect(() => {
-      const row = this.thumbs()?.nativeElement;
-      const thumb = row?.children[this.index()] as HTMLElement | undefined;
-      if (row && thumb)
-        row.scrollTo({ left: thumb.offsetLeft - (row.clientWidth - thumb.offsetWidth) / 2 });
     });
   }
 
@@ -203,7 +211,7 @@ export class Gallery {
   // The current picture and its neighbours load at once, so a step never slides in a blank.
   protected near(index: number) {
     const count = this.pictures().length;
-    return [0, 1, count - 1].includes((index - this.index() + count) % count);
+    return this.opened() && [0, 1, count - 1].includes((index - this.index() + count) % count);
   }
 
   protected stripped(event: Event) {
@@ -215,42 +223,68 @@ export class Gallery {
     this.opener = opener as HTMLElement;
     this.from.set(index);
     this.index.set(index);
-    this.dialog().nativeElement.showModal();
-    this.go(index, 'instant');
+    this.opened.set(true);
+    const dialog = this.dialog().nativeElement;
+    dialog.showModal();
+    dialog.focus();
+    this.go(index, 0);
   }
 
-  // A neighbour slides in; a jump, over the ends too, is instant.
-  protected go(index: number, behavior?: ScrollBehavior) {
+  // A neighbour slides in. A jump, over the ends too, is instant, and the picture arrives from
+  // the side it was asked for; on opening (no direction) it is simply there.
+  protected go(index: number, direction: number) {
     const count = this.pictures().length;
-    this.target = (index + count) % count;
     const track = this.track().nativeElement;
-    this.start = Math.round(track.scrollLeft / track.clientWidth);
+    // Its own width, not clientWidth: a 4:3 frame is often a fraction of a pixel wider.
+    const width = this.measure(track);
+    this.start = Math.round(track.scrollLeft / width);
+    this.target = (index + count) % count;
     const far = Math.abs(this.target - this.start) > 1;
     track.scrollTo({
-      left: this.target * track.clientWidth,
-      behavior: behavior ?? (far ? 'instant' : undefined),
+      left: this.target * width,
+      behavior: far || !direction ? 'instant' : undefined,
     });
+    if (far && direction && !matchMedia('(prefers-reduced-motion: reduce)').matches)
+      // The picture, not its slide: Firefox would snap the track along with a moving slide.
+      track.children[this.target].firstElementChild!.animate(
+        [
+          { opacity: 0, transform: `translateX(${Math.sign(direction) * 8}%)` },
+          { opacity: 1, transform: 'none' },
+        ],
+        { duration: 400, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' },
+      );
   }
 
   protected step(by: number) {
-    this.go(this.target + by);
+    this.go(this.target + by, by);
   }
 
   protected slid() {
     const track = this.track().nativeElement;
-    const index = Math.round(track.scrollLeft / track.clientWidth);
+    if (this.measure(track) !== this.width) return;
+    const index = Math.round(track.scrollLeft / this.width);
     if (index !== this.index()) {
       this.from.set(this.index());
       this.index.set(index);
     }
-    if (Math.abs(track.scrollLeft - index * track.clientWidth) < 1 && index !== this.start)
+    if (Math.abs(track.scrollLeft - index * this.width) < 1 && index !== this.start)
       this.start = this.target = index;
   }
 
+  // Plain arrows only: with a modifier they are the browser's, such as Alt+Left for back. From a
+  // thumbnail the focus follows the picture.
   protected key(event: KeyboardEvent) {
     const by = { ArrowLeft: -1, ArrowRight: 1 }[event.key];
-    if (!by || !this.dialog().nativeElement.open || this.pictures().length < 2) return;
+    const modified = event.altKey || event.ctrlKey || event.metaKey || event.shiftKey;
+    if (!by || modified || !this.dialog().nativeElement.open || this.pictures().length < 2) return;
     event.preventDefault();
     this.step(by);
+    const thumbs = this.thumbs()?.nativeElement;
+    if (thumbs?.contains(event.target as Node))
+      (thumbs.children[this.target] as HTMLElement).focus();
+  }
+
+  private measure(track: HTMLElement) {
+    return parseFloat(getComputedStyle(track).width);
   }
 }

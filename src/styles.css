@@ -1173,22 +1173,25 @@
     aspect-ratio: 4 / 3;
     overflow: hidden;
     scroll-snap-align: start;
+    isolation: isolate;
     background: var(--color-line);
     cursor: zoom-in;
 
-    /* Out of the flow: a picture's own height must not size the mosaic's rows. */
+    /* Out of the flow: a picture's own height must not size the mosaic's rows. Beneath its cell,
+       which would otherwise paint its ring under it. */
     img {
       position: absolute;
+      z-index: -1;
       inset: 0;
       width: 100%;
       height: 100%;
       object-fit: cover;
     }
 
+    /* Inside the cell: the mosaic's rounded edge would cut a ring outside it. */
     &:focus-visible {
-      outline-offset: -5px;
-      outline-color: var(--color-surface);
-      box-shadow: inset 0 0 0 7px var(--color-accent);
+      outline-width: 3px;
+      outline-offset: -3px;
     }
   }
 
@@ -1212,8 +1215,8 @@
     bottom: 0.75rem;
     padding: 0.1875rem 0.625rem;
     border-radius: var(--radius-control);
-    background: rgb(39 50 58 / 0.72);
-    color: var(--color-on-accent);
+    background: color-mix(in srgb, var(--color-surface) 92%, transparent);
+    color: var(--color-ink);
     font-size: 0.8125rem;
     font-weight: 500;
   }
@@ -1243,14 +1246,6 @@
 
       &[data-beyond] {
         display: none;
-      }
-
-      img {
-        transition: scale 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-      }
-
-      &:hover img {
-        scale: 1.025;
       }
     }
 
@@ -1285,6 +1280,16 @@
     }
   }
 
+  @media (width >= 48rem) and (prefers-reduced-motion: no-preference) {
+    .tile img {
+      transition: scale 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .tile:hover img {
+      scale: 1.025;
+    }
+  }
+
   /* The viewer: the picture in a 4:3 frame on the page's own ground, its buttons beside it, its
      text and the thumbnails below. */
   .viewer {
@@ -1295,6 +1300,10 @@
     padding: 0.75rem 1rem 1rem;
     background: var(--color-ground);
     color: var(--color-ink);
+
+    &:focus {
+      outline: none;
+    }
 
     &[open] {
       display: grid;
@@ -1308,14 +1317,10 @@
     }
 
     .icon-button {
-      border: 1px solid var(--color-edge);
       background: var(--color-surface);
-      transition:
-        border-color 0.2s,
-        color 0.2s;
+      transition: color 0.2s;
 
       &:hover {
-        border-color: var(--color-accent);
         color: var(--color-accent);
       }
     }
@@ -1348,20 +1353,44 @@
     container-type: size;
   }
 
+  /* The buttons' room is kept only where there are buttons. */
   .viewer-track {
     display: flex;
-    width: min(100cqw - 2 * (var(--size-control) + 1rem), 100cqh * 4 / 3);
+    width: min(100cqw - var(--beside, 0px), 100cqh * 4 / 3);
     aspect-ratio: 4 / 3;
     overflow-x: auto;
     scroll-snap-type: x mandatory;
     scrollbar-width: none;
 
+    .viewer-previous + & {
+      --beside: 2 * (var(--size-control) + 1rem);
+    }
+
+    &:focus-visible {
+      outline: none;
+    }
+  }
+
+  /* Each picture whole and at its own ratio, so that the ring fits it; the padding keeps the
+     ring inside the track, which would cut it. */
+  .viewer-slide {
+    display: flex;
+    flex: 0 0 100%;
+    align-items: center;
+    justify-content: center;
+    padding: 5px;
+    scroll-snap-align: start;
+
     img {
-      flex: 0 0 100%;
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      scroll-snap-align: start;
+      max-width: 100%;
+      max-height: 100%;
+      width: auto;
+      height: auto;
+
+      .viewer-track:focus-visible & {
+        outline: 2px solid var(--color-accent);
+        outline-offset: 3px;
+      }
     }
   }
 
@@ -1371,8 +1400,8 @@
     }
   }
 
-  /* The old text fades out as the new one fades in, in the same place; two lines kept free so
-     that a longer text does not move the frame. */
+  /* The old text and the new one in the same place; two lines kept free so that a longer text
+     does not move the frame. */
   .viewer-caption {
     grid-column: 1 / -1;
     display: grid;
@@ -1387,13 +1416,14 @@
     }
   }
 
+  /* The new text starts as the old one is nearly gone: the two are never read together. */
   .caption-in {
-    animation: caption-in 0.3s ease-out;
+    animation: caption-in 0.25s 0.12s ease-out backwards;
   }
 
   .caption-out {
     opacity: 0;
-    animation: caption-out 0.2s ease-in;
+    animation: caption-out 0.15s ease-in;
   }
 
   @keyframes caption-in {
@@ -1429,15 +1459,14 @@
     }
   }
 
-  /* Padded, so that the scrolling row does not cut the rings. */
+  /* In rows, however many: nothing scrolls, so nothing cuts a ring. */
   .viewer-thumbs {
     grid-column: 1 / -1;
     display: flex;
+    flex-wrap: wrap;
     gap: 0.5rem;
-    justify-content: safe center;
-    padding: 0.5rem;
-    overflow-x: auto;
-    scrollbar-width: none;
+    justify-content: center;
+    padding-block: 0.25rem;
 
     button {
       flex: none;
