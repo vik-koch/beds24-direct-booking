@@ -1289,7 +1289,9 @@
       }
     }
 
-    &[data-open] {
+    /* Only while it cuts: a fold that fits needs no limit, and one widened past its cut drops
+       the old height at once instead of moving to the new one. */
+    &[data-long][data-open] {
       max-height: var(--full);
     }
 

@@ -219,7 +219,9 @@ test('on a phone a long description opens with its button, a short one has none'
   await expect(more).toHaveAttribute('aria-expanded', 'true');
   await page.setViewportSize({ width: 1280, height: 800 });
   await expect(more).toBeHidden();
-  expect(await prose.evaluate((element) => element.scrollHeight - element.clientHeight)).toBe(0);
+  await expect
+    .poll(() => prose.evaluate((element) => element.scrollHeight - element.clientHeight))
+    .toBe(0);
   await page.setViewportSize({ width: 320, height: 700 });
   await expect(more).toBeVisible();
   await expect(more).toHaveAttribute('aria-expanded', 'true');
