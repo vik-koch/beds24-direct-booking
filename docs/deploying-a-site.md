@@ -146,10 +146,10 @@ Run by the maintainer on 2026-11-15 on two fresh Ubuntu 24.04 VMs at Hetzner, a 
 machine was set up from `infra/cloud-init.yml` as it is now.
 
 On 2026-11-18 the maintainer deployed a second site, from the same private repository with `VERSION`
-raised to `0.2.0`, onto the demo's machine (x64), which already ran the demo. The steps of "A second
-site on the same machine" were followed with `SITE_PASSWORD` set. The first run went through: the
-new site answered 401 with a `WWW-Authenticate` header without the password and kept its
-`X-Robots-Tag`, and the demo kept answering.
+raised to `0.2.0`, onto an x64 machine that already ran another site. The steps of "A second site on
+the same machine" were followed with `SITE_PASSWORD` set. The first run went through: the new site
+answered 401 with a `WWW-Authenticate` header without the password and kept its `X-Robots-Tag`, and
+the other site kept answering.
 
 - **Tried:** the machine from nothing on both architectures; the proxy with its certificate and the
   redirect from HTTP; the template from a private repository with a private image; the site against

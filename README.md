@@ -6,9 +6,9 @@ payment. The site shows the free weeks with their prices and hands over to the B
 
 **Status:** `0.2.0` is the current release. The home page shows the two seasons, each with its hero
 picture and tab icon, and the free weeks of every apartment with their prices from Beds24. The other
-pages of the site map stand in both languages, with the header, the footer and the demo notice, and
-are placeholders until their slice; all of it comes from a deployment's
-[content folder](docs/content.md). A site of its own is deployed from a release, also beside another
+pages of the site map stand in both languages, with the header, the footer and the demo notice, all
+from a deployment's [content folder](docs/content.md); apart from the picture credits they are
+placeholders until their slice. A site of its own is deployed from a release, also beside another
 one on the same machine and closed with a password while it is under test. The demo is live at
 <https://beds24.vikkoch.com/> and follows `main`. This repository carries a fictional demo only:
 _Firn & Farn_, an invented business in Saalbach in Austria, in German and English. Its Beds24 is a
