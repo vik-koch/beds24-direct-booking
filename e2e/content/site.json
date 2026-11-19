@@ -1,28 +1,7 @@
 {
   "name": "Casa Prova Alta",
   "languages": ["it", "nl-BE"],
-  "apartments": [
-    {
-      "slug": "vista",
-      "roomId": 9001011,
-      "name": "Vista sul Ghiacciaio"
-    },
-    {
-      "slug": "castagno",
-      "roomId": 9001012,
-      "name": "Sotto i Castagni Due"
-    },
-    {
-      "slug": "zonneterras",
-      "roomId": 9001021,
-      "name": "Zonneterraswoningen"
-    },
-    {
-      "slug": "fienile",
-      "roomId": 9001022,
-      "name": "Il Fienile del Prato"
-    }
-  ],
+  "apartments": ["vista", "castagno", "zonneterras", "fienile"],
   "seasons": {
     "summer": {
       "hero": {

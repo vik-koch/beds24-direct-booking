@@ -104,17 +104,12 @@ export const siteSchema = z.strictObject({
       (list) => unique(list, (value) => value.split('-')[0].toLowerCase()),
       'two languages would share one address prefix',
     ),
+  // Each slug names a file of its own, apartments/<slug>.json; the order is the site's.
   apartments: z
-    .array(
-      z.strictObject({
-        slug: segment,
-        roomId: z.number().int(),
-        name: text.refine((value) => letters(value) <= 20, 'at most 20 characters'),
-      }),
-    )
+    .array(segment)
     .min(1, 'at least one apartment')
     .max(4, 'at most four apartments')
-    .refine((list) => unique(list, (a) => a.slug), 'an apartment slug is listed twice'),
+    .refine((list) => unique(list, (slug) => slug), 'an apartment slug is listed twice'),
   seasons,
   // The hero's features, in their order, each with a Lucide icon by its name on lucide.dev; the
   // content script checks it exists. Each language's texts name them by their keys.
@@ -133,6 +128,11 @@ export const siteSchema = z.strictObject({
     })
     .refine((value) => Object.keys(value).length > 0, 'lists nothing: leave the contact out')
     .optional(),
+});
+
+export const apartmentSchema = z.strictObject({
+  roomId: z.number().int(),
+  name: text.refine((value) => letters(value) <= 20, 'at most 20 characters'),
 });
 
 export const textsSchema = z.strictObject({
@@ -228,4 +228,8 @@ export type Language = { tag: string; code: string; name: string } & Pick<
   Texts,
   'paths' | 'anchors'
 >;
-export type Site = Omit<z.infer<typeof siteSchema>, 'languages'> & { languages: Language[] };
+export type Apartment = { slug: string } & z.infer<typeof apartmentSchema>;
+export type Site = Omit<z.infer<typeof siteSchema>, 'languages' | 'apartments'> & {
+  languages: Language[];
+  apartments: Apartment[];
+};
