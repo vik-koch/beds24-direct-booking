@@ -302,8 +302,8 @@ export class Apartment {
     };
   })();
 
-  // On a phone a long description shows its first lines, and a long list of amenities its first
-  // rows on any screen, until their buttons open them.
+  // A long description and a long list of amenities show their first lines until their buttons
+  // open them; where they are cut is the stylesheet's (--cut).
   protected readonly description = fold();
   private readonly prose = viewChild<ElementRef<HTMLElement>>('prose');
   private readonly amenityList = viewChild<ElementRef<HTMLElement>>('amenityList');
