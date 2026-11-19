@@ -38,9 +38,9 @@ test('each apartment shows its facts, picture, description, rooms, amenities and
       path.startsWith('/de') ? 'KI-Bild' : 'AI image',
     );
     await expect(page.locator('.prose')).not.toBeEmpty();
-    await expect(page.locator('.rooms strong')).toHaveText([...rooms]);
+    await expect(page.locator('.rooms h3')).toHaveText([...rooms]);
     await expect(page.locator('.amenities')).toBeVisible();
-    await expect(page.locator('.disclosures summary')).toHaveCount(2);
+    await expect(page.locator('hlm-accordion-trigger')).toHaveCount(2);
   }
 });
 
@@ -69,45 +69,78 @@ test('a room and a bed are named in Beds24’s order, a sofa bed included', asyn
   ]);
 });
 
-test('each area shows three amenities until the button opens all of them', async ({ page }) => {
+test('the amenities show their first rows until the button opens all of them', async ({ page }) => {
   await page.goto('/de/wohnungen/ahorn');
   const amenities = section(page, 'Ausstattung');
-  const house = amenities.locator('.area').filter({ hasText: 'Haus und Lage' });
-  await expect(house.locator('li:visible')).toHaveText(['Balkon', 'Bergblick', 'Im Ortszentrum']);
+  const fold = amenities.locator('.amenities-fold');
+  const height = () => fold.evaluate((element) => element.clientHeight);
+  const full = await amenities.locator('.amenities').evaluate((element) => element.offsetHeight);
+  const cut = await height();
+  expect(cut).toBeLessThan(full);
   // The property's codes and the room's: the boot dryer is the room's own.
-  await expect(house.locator('li', { hasText: 'Skischuhtrockner' })).toBeHidden();
-  await expect(amenities.locator('.single')).toHaveText(['Nichtraucherwohnung', 'Keine Haustiere']);
+  await expect(amenities.getByText('Skischuhtrockner')).toBeAttached();
+  await expect(amenities.locator('.amenities > li:not(:has(ul))')).toHaveText([
+    'Nichtraucherwohnung',
+    'Keine Haustiere',
+  ]);
   const more = amenities.getByRole('button', { name: 'Alle 16 Merkmale' });
   await expect(more).toHaveAttribute('aria-expanded', 'false');
   await more.focus();
   await page.keyboard.press('Enter');
   await expect(more).toHaveAttribute('aria-expanded', 'true');
   await expect(more).toBeFocused();
-  await expect(house.locator('li:visible')).toHaveCount(6);
+  await expect.poll(height).toBe(full);
   await page.keyboard.press('Space');
-  await expect(house.locator('li:visible')).toHaveCount(3);
-  // An area of three or fewer needs no button.
-  await page.goto('/de/wohnungen/zirbe');
-  await expect(
-    page.locator('.area').filter({ hasText: 'Küche' }).locator('li:visible'),
-  ).toHaveCount(3);
+  await expect.poll(height).toBe(cut);
+  // A list that fits needs no button.
+  await page.goto('http://localhost:4002/it/appartamenti/castagno');
+  await expect(page.locator('.amenities')).toBeVisible();
+  await expect(page.locator('.amenities-fold + .text-button')).toBeHidden();
 });
 
-test('arrival, departure and the house rules open by keyboard', async ({ page }) => {
+test('arrival, departure and the house rules open one at a time, by keyboard too', async ({
+  page,
+}) => {
   await page.goto('/de/wohnungen/laerche');
   const terms = section(page, 'Gut zu wissen');
-  const times = terms.locator('summary', { hasText: 'Anreise und Abreise' });
-  await expect(terms.getByText('Anreise von')).toBeHidden();
+  const times = terms.getByRole('button', { name: 'Anreise und Abreise' });
+  const rules = terms.getByRole('button', { name: 'Hausordnung' });
+  const [timesText, rulesText] = [0, 1].map((i) => terms.locator('hlm-accordion-content').nth(i));
+  // Closed, a row's content takes no height and is out of reach.
+  const closed = async (content: typeof timesText) => {
+    await expect(content).toHaveAttribute('inert');
+    await expect.poll(() => content.evaluate((element) => element.clientHeight)).toBe(0);
+  };
+  await closed(timesText);
   await times.focus();
   await page.keyboard.press('Enter');
-  await expect(terms.locator('details[open] p')).toHaveText(
+  await expect(times).toHaveAttribute('aria-expanded', 'true');
+  await expect(terms.getByRole('region', { name: 'Anreise und Abreise' })).toHaveText(
     'Anreise von 16:00 bis 20:00 Uhr. Abreise bis 10:00 Uhr.',
   );
-  await terms.locator('summary', { hasText: 'Hausordnung' }).click();
-  await expect(terms.locator('details[open] p').last()).toHaveText(
+  await rules.click();
+  await expect(terms.getByRole('region', { name: 'Hausordnung' })).toHaveText(
     'Nichtraucherhaus. Haustiere sind nicht erlaubt.\nNachtruhe von 22 bis 7 Uhr.',
     { useInnerText: true },
   );
+  await expect(times).toHaveAttribute('aria-expanded', 'false');
+  await closed(timesText);
+  await rules.click();
+  await expect(rules).toHaveAttribute('aria-expanded', 'false');
+  await closed(rulesText);
+});
+
+test('with reduced motion the folds and the rows open at once', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/de/wohnungen/ahorn');
+  for (const selector of ['.amenities-fold', 'hlm-accordion-content'])
+    expect(
+      await page
+        .locator(selector)
+        .first()
+        .evaluate((element) => getComputedStyle(element).transitionDuration),
+      selector,
+    ).toBe('0s');
 });
 
 test('on a phone a long description opens with its button, a short one has none', async ({
@@ -115,7 +148,7 @@ test('on a phone a long description opens with its button, a short one has none'
 }) => {
   await page.setViewportSize({ width: 320, height: 700 });
   await page.goto('/en/apartments/zirbe');
-  const prose = page.locator('.prose');
+  const prose = page.locator('.prose-fold');
   const more = page.getByRole('button', { name: 'Read more' });
   await expect(more).toBeVisible();
   const closed = await prose.evaluate((element) => element.clientHeight);
@@ -142,9 +175,9 @@ test('a language Beds24 has no texts in leaves the description and the house rul
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Sotto i Castagni Due');
   await expect(page.locator('.facts')).toContainText('Fino a 4 ospiti');
   await expect(page.locator('.prose')).toHaveCount(0);
-  await expect(page.locator('.rooms strong')).toHaveText(['Camera 1', 'Camera 2', 'Bagno']);
+  await expect(page.locator('.rooms h3')).toHaveText(['Camera 1', 'Camera 2', 'Bagno']);
   await expect(page.locator('.amenities')).toContainText('Wi-Fi');
-  await expect(page.locator('.disclosures summary')).toHaveText(['Arrivo e partenza']);
+  await expect(page.locator('hlm-accordion-trigger')).toHaveText(['Arrivo e partenza']);
   // A picture not marked as generated carries no label.
   await expect(page.locator('.ai-label')).toHaveCount(0);
 });
@@ -157,7 +190,9 @@ test('without Beds24 the page answers 503 with the name, the picture and a sente
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Zirbe');
   await expect(page.locator('.apartment-picture img')).toBeVisible();
   await expect(page.getByText('cannot be loaded just now')).toBeVisible();
-  await expect(page.locator('.facts, .prose, .rooms, .amenities, .disclosures')).toHaveCount(0);
+  await expect(page.locator('.facts, .prose, .rooms, .amenities, .spartan-accordion')).toHaveCount(
+    0,
+  );
 });
 
 test('at 320 px nothing scrolls sideways, in both seasons and languages', async ({ page }) => {
@@ -208,8 +243,8 @@ test('every tab stop on an apartment page shows a focus ring', async ({ page, br
   expect(seen).toEqual([
     'a Alle Wohnungen',
     'button Alle 16 Merkmale',
-    'summary Anreise und Abreise',
-    'summary Hausordnung',
+    'button Anreise und Abreise',
+    'button Hausordnung',
   ]);
 });
 
@@ -218,8 +253,8 @@ test('the page passes axe with everything open', async ({ page }) => {
     await page.goto(path);
     const { violations } = await new AxeBuilder({ page }).include('main').analyze();
     expect(violations).toEqual([]);
-    await page.locator('.amenities + .text-button').click();
-    for (const summary of await page.locator('summary').all()) await summary.click();
+    await page.locator('.amenities-fold + .text-button').click();
+    await page.locator('hlm-accordion-trigger button').last().click();
     const open = await new AxeBuilder({ page }).include('main').analyze();
     expect(open.violations).toEqual([]);
   }

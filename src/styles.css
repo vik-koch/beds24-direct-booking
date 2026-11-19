@@ -1238,18 +1238,6 @@
       color: var(--color-accent);
       font-weight: 500;
     }
-
-    /* On a phone a long description shows about six lines until its button opens it. */
-    @media (max-width: 47.9375rem) {
-      &:not([data-open]) {
-        max-height: 10.5rem;
-        overflow: hidden;
-      }
-
-      &[data-long]:not([data-open]) {
-        mask-image: linear-gradient(to bottom, #000 60%, transparent);
-      }
-    }
   }
 
   /* A text with an arrow that opens more; its focus ring is a pill with air at its sides. */
@@ -1286,128 +1274,89 @@
     }
   }
 
-  .more-text {
-    @media (min-width: 48rem) {
-      display: none;
+  /* A block cut to a height with a fade until its button opens it; the height moves to the
+     content's measured one (--full). */
+  .fold {
+    overflow: hidden;
+    transition: max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+
+    &:not([data-open]) {
+      max-height: var(--cut, none);
+    }
+
+    &[data-open] {
+      max-height: var(--full);
+    }
+
+    &[data-long]:not([data-open]) {
+      mask-image: linear-gradient(to bottom, #000 calc(100% - 3rem), transparent);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
+  }
+
+  /* About six lines of the description, on a phone only. */
+  .prose-fold {
+    @media (max-width: 47.9375rem) {
+      --cut: 10.5rem;
+    }
+  }
+
+  .amenities-fold {
+    --cut: 13.5rem;
+  }
+
+  /* A room or an area: its icon and name, and below them what it holds in the softer text. */
+  .entries {
+    h3 {
+      display: flex;
+      align-items: center;
+      gap: 0.625rem;
+      font-weight: 500;
+    }
+
+    ng-icon {
+      --ng-icon__size: 1.25rem;
+      flex: none;
+      color: var(--color-ink-soft);
+    }
+
+    p,
+    ul {
+      padding-left: 1.875rem;
+      color: var(--color-ink-soft);
+      font-size: 0.9375rem;
+      line-height: 1.6;
     }
   }
 
   .rooms {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
-    gap: 1rem;
-
-    strong {
-      display: block;
-      font-weight: 500;
-    }
-
-    span {
-      color: var(--color-ink-soft);
-      font-size: 0.9375rem;
-    }
+    grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+    gap: 1rem 1.5rem;
   }
 
   /* Areas run in as many columns as there is room for, each kept whole. */
   .amenities {
     columns: 13rem;
     column-gap: 2rem;
-  }
 
-  .area {
-    break-inside: avoid;
-    margin-bottom: 1.5rem;
-
-    h3 {
-      display: flex;
-      align-items: center;
-      gap: 0.625rem;
-      margin-bottom: 0.375rem;
-      font-size: 1.0625rem;
-      font-weight: 500;
-    }
-
-    ng-icon {
-      color: var(--color-ink-soft);
-    }
-
-    ul {
-      padding-left: 1.75rem;
-      line-height: 1.75;
-    }
-
-    li[hidden] {
-      display: none;
+    > li {
+      break-inside: avoid;
+      padding-bottom: 1rem;
     }
 
     /* On a phone an area's entries are one line, so the list stays short. */
     @media (max-width: 47.9375rem) {
-      margin-bottom: 1rem;
-
-      li {
+      li li {
         display: inline;
       }
 
-      li:not([hidden]) + li:not([hidden])::before {
+      li li + li::before {
         content: ', ';
       }
-    }
-
-    &.single {
-      display: flex;
-      align-items: center;
-      gap: 0.625rem;
-      margin-bottom: 1rem;
-      font-size: 1.0625rem;
-      font-weight: 500;
-    }
-  }
-
-  /* Disclosures: rows on a white sheet, a hairline between them. */
-  .disclosures {
-    border-radius: var(--radius-card);
-    background: var(--color-surface);
-
-    details + details {
-      border-top: 1px solid var(--color-line);
-    }
-
-    summary {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      min-height: 3.5rem;
-      padding: 0.5rem 1.25rem;
-      border-radius: var(--radius-card);
-      font-weight: 500;
-      list-style: none;
-      cursor: pointer;
-
-      &::-webkit-details-marker {
-        display: none;
-      }
-
-      &:focus-visible {
-        outline-offset: -3px;
-      }
-
-      ng-icon:first-child {
-        color: var(--color-ink-soft);
-      }
-
-      ng-icon:last-child {
-        margin-left: auto;
-        transition: rotate 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-      }
-    }
-
-    [open] summary ng-icon:last-child {
-      rotate: 180deg;
-    }
-
-    details p {
-      padding: 0 1.25rem 1.25rem 3.375rem;
-      color: var(--color-ink-soft);
     }
   }
 }

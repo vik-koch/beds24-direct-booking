@@ -1,4 +1,12 @@
-import { afterRenderEffect, Component, ElementRef, inject, signal, viewChild } from '@angular/core';
+import {
+  afterRenderEffect,
+  Component,
+  ElementRef,
+  inject,
+  signal,
+  viewChild,
+  type Signal,
+} from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import {
@@ -12,25 +20,28 @@ import {
   lucideSparkles,
   lucideUsers,
 } from '@ng-icons/lucide';
+import { HlmAccordionImports } from '@spartan-ng/helm/accordion';
 import type { Listing } from '../beds24/client';
 import { icons } from '../content/generated/icons';
 import site from '../content/generated/site';
 import { lucideName } from '../content/names';
 import { address, fill, LANGUAGE, TEXTS } from './texts';
 
-// Each area shows this many entries until the button opens all of them.
-const shown = 3;
-
-// An area with its entries, or a code shown alone (items null).
+// A room or an area of amenities: its icon, its name and what it holds; a code shown alone has
+// no items.
 interface Entry {
   icon: string;
   name: string;
-  items: string[] | null;
+  items: string[];
 }
+
+// A block cut to a height until its button opens it, its full height measured for the motion.
+const fold = () => ({ open: signal(false), long: signal(false), full: signal(0) });
+type Fold = ReturnType<typeof fold>;
 
 @Component({
   selector: 'app-apartment',
-  imports: [NgIcon],
+  imports: [NgIcon, HlmAccordionImports],
   providers: [
     provideIcons({
       ...icons,
@@ -102,20 +113,20 @@ interface Entry {
           <section>
             <h2>{{ texts.apartment.description }}</h2>
             <div
-              #prose
-              id="description"
-              class="prose"
-              [attr.data-open]="open() ? '' : null"
-              [attr.data-long]="long() ? '' : null"
-              [innerHTML]="text.description"
-            ></div>
+              class="fold prose-fold"
+              [attr.data-open]="description.open() ? '' : null"
+              [attr.data-long]="description.long() ? '' : null"
+              [style.--full.px]="description.full()"
+            >
+              <div #prose id="description" class="prose" [innerHTML]="text.description"></div>
+            </div>
             <button
-              class="text-button more-text"
+              class="text-button"
               type="button"
               aria-controls="description"
-              [attr.aria-expanded]="open()"
-              [hidden]="!long()"
-              (click)="open.set(!open())"
+              [attr.aria-expanded]="description.open()"
+              [hidden]="!description.long()"
+              (click)="description.open.set(!description.open())"
             >
               {{ texts.apartment.more }}<ng-icon name="lucideChevronDown" aria-hidden="true" />
             </button>
@@ -124,12 +135,12 @@ interface Entry {
         @if (rooms.length) {
           <section>
             <h2>{{ texts.apartment.rooms }}</h2>
-            <ul class="rooms">
+            <ul class="entries rooms">
               @for (room of rooms; track $index) {
                 <li>
-                  <strong>{{ room.name }}</strong>
-                  @if (room.items) {
-                    <span>{{ room.items }}</span>
+                  <h3><ng-icon [name]="room.icon" aria-hidden="true" />{{ room.name }}</h3>
+                  @if (room.items.length) {
+                    <p>{{ room.items.join(', ') }}</p>
                   }
                 </li>
               }
@@ -139,68 +150,74 @@ interface Entry {
         @if (amenities.entries.length) {
           <section>
             <h2>{{ texts.apartment.features }}</h2>
-            <div id="amenities" class="amenities">
-              @for (entry of amenities.entries; track entry.icon + entry.name) {
-                @if (entry.items) {
-                  <div class="area">
+            <div
+              class="fold amenities-fold"
+              [attr.data-open]="amenities.fold.open() ? '' : null"
+              [attr.data-long]="amenities.fold.long() ? '' : null"
+              [style.--full.px]="amenities.fold.full()"
+            >
+              <ul #amenityList id="amenities" class="entries amenities">
+                @for (entry of amenities.entries; track entry.icon + entry.name) {
+                  <li>
                     <h3><ng-icon [name]="entry.icon" aria-hidden="true" />{{ entry.name }}</h3>
-                    <ul>
-                      @for (item of entry.items; track item; let i = $index) {
-                        <li [hidden]="i >= shown && !allAmenities()">{{ item }}</li>
-                      }
-                    </ul>
-                  </div>
-                } @else {
-                  <p class="area single">
-                    <ng-icon [name]="entry.icon" aria-hidden="true" />{{ entry.name }}
-                  </p>
+                    @if (entry.items.length) {
+                      <ul>
+                        @for (item of entry.items; track item) {
+                          <li>{{ item }}</li>
+                        }
+                      </ul>
+                    }
+                  </li>
                 }
-              }
+              </ul>
             </div>
-            @if (amenities.more) {
-              <button
-                class="text-button"
-                type="button"
-                aria-controls="amenities"
-                [attr.aria-expanded]="allAmenities()"
-                (click)="allAmenities.set(!allAmenities())"
-              >
-                {{ fill(texts.apartment.allFeatures, { count: amenities.total }) }}
-                <ng-icon name="lucideChevronDown" aria-hidden="true" />
-              </button>
-            }
+            <button
+              class="text-button"
+              type="button"
+              aria-controls="amenities"
+              [attr.aria-expanded]="amenities.fold.open()"
+              [hidden]="!amenities.fold.long()"
+              (click)="amenities.fold.open.set(!amenities.fold.open())"
+            >
+              {{ fill(texts.apartment.allFeatures, { count: amenities.total }) }}
+              <ng-icon name="lucideChevronDown" aria-hidden="true" />
+            </button>
           </section>
         }
         @if (listing?.checkIn || listing?.checkOut || text.houseRules) {
           <section>
             <h2>{{ texts.apartment.goodToKnow }}</h2>
-            <div class="disclosures">
+            <div hlmAccordion>
               @if (listing!.checkIn || listing!.checkOut) {
-                <details>
-                  <summary>
-                    <ng-icon name="lucideClock" aria-hidden="true" />{{ texts.apartment.times }}
-                    <ng-icon name="lucideChevronDown" aria-hidden="true" />
-                  </summary>
-                  <p>
-                    @if (listing!.checkIn; as checkIn) {
-                      {{ fill(texts.apartment.checkIn, checkIn) }}
-                    }
-                    @if (listing!.checkOut; as until) {
-                      {{ fill(texts.apartment.checkOut, { until }) }}
-                    }
-                  </p>
-                </details>
+                <div hlmAccordionItem>
+                  <hlm-accordion-trigger>
+                    <ng-icon name="lucideClock" aria-hidden="true" /><span>{{
+                      texts.apartment.times
+                    }}</span>
+                  </hlm-accordion-trigger>
+                  <hlm-accordion-content>
+                    <p>
+                      @if (listing!.checkIn; as checkIn) {
+                        {{ fill(texts.apartment.checkIn, checkIn) }}
+                      }
+                      @if (listing!.checkOut; as until) {
+                        {{ fill(texts.apartment.checkOut, { until }) }}
+                      }
+                    </p>
+                  </hlm-accordion-content>
+                </div>
               }
               @if (text.houseRules) {
-                <details>
-                  <summary>
-                    <ng-icon name="lucideScrollText" aria-hidden="true" />{{
+                <div hlmAccordionItem>
+                  <hlm-accordion-trigger>
+                    <ng-icon name="lucideScrollText" aria-hidden="true" /><span>{{
                       texts.apartment.houseRules
-                    }}
-                    <ng-icon name="lucideChevronDown" aria-hidden="true" />
-                  </summary>
-                  <p class="whitespace-pre-line">{{ text.houseRules }}</p>
-                </details>
+                    }}</span>
+                  </hlm-accordion-trigger>
+                  <hlm-accordion-content>
+                    <p class="whitespace-pre-line">{{ text.houseRules }}</p>
+                  </hlm-accordion-content>
+                </div>
               }
             </div>
           </section>
@@ -213,7 +230,6 @@ export class Apartment {
   protected readonly texts = inject(TEXTS);
   protected readonly language = inject(LANGUAGE);
   protected readonly fill = fill;
-  protected readonly shown = shown;
   private readonly route = inject(ActivatedRoute).snapshot;
   protected readonly apartment = site.apartments.find(
     ({ slug }) => slug === this.route.params['slug'],
@@ -232,26 +248,29 @@ export class Apartment {
   private readonly labels = this.texts.amenities;
   private readonly groups = this.listing?.features ?? [];
   protected readonly bedrooms = this.groups.filter(([code]) => code === 'BEDROOM').length;
-  // Groups that open with a room's code, numbered where a room comes more than once.
-  protected readonly rooms = this.groups
-    .filter(([code]) => Object.hasOwn(this.labels.rooms, code))
-    .map(([code, ...items], index, all) => {
-      const same = all.filter(([other]) => other === code);
-      const nth = all.slice(0, index + 1).filter(([other]) => other === code).length;
-      return {
+  // Groups that open with a listed room's code, numbered where a room comes more than once.
+  protected readonly rooms: Entry[] = this.groups.flatMap(([code, ...items], index, all) => {
+    const room = site.rooms.find((one) => one.code === code);
+    if (!room) return [];
+    const same = all.filter(([other]) => other === code);
+    const nth = all.slice(0, index + 1).filter(([other]) => other === code).length;
+    return [
+      {
+        icon: lucideName(room.icon),
         name: this.labels.rooms[code] + (same.length > 1 ? ` ${nth}` : ''),
-        items: items.flatMap((item) => this.labels.codes[item] ?? []).join(', '),
-      };
-    });
+        items: items.flatMap((item) => this.labels.codes[item] ?? []),
+      },
+    ];
+  });
   protected readonly amenities = (() => {
     const codes = new Set(
-      this.groups.filter(([code]) => !Object.hasOwn(this.labels.rooms, code)).flat(),
+      this.groups.filter(([code]) => !site.rooms.some((room) => room.code === code)).flat(),
     );
     const entries = site.amenities.flatMap((entry): Entry[] => {
       const icon = lucideName(entry.icon);
       if ('code' in entry)
         return codes.has(entry.code)
-          ? [{ icon, name: this.labels.codes[entry.code], items: null }]
+          ? [{ icon, name: this.labels.codes[entry.code], items: [] }]
           : [];
       const items = entry.codes
         .filter((code) => codes.has(code))
@@ -260,25 +279,34 @@ export class Apartment {
     });
     return {
       entries,
-      total: entries.reduce((sum, { items }) => sum + (items?.length ?? 1), 0),
-      more: entries.some(({ items }) => (items?.length ?? 0) > shown),
+      total: entries.reduce((sum, { items }) => sum + (items.length || 1), 0),
+      fold: fold(),
     };
   })();
-  protected readonly allAmenities = signal(false);
 
-  // On a phone a long description shows its first lines until the button opens it.
-  protected readonly open = signal(false);
-  protected readonly long = signal(false);
+  // On a phone a long description shows its first lines, and a long list of amenities its first
+  // rows on any screen, until their buttons open them.
+  protected readonly description = fold();
   private readonly prose = viewChild<ElementRef<HTMLElement>>('prose');
+  private readonly amenityList = viewChild<ElementRef<HTMLElement>>('amenityList');
 
   constructor() {
+    this.measure(this.description, this.prose);
+    this.measure(this.amenities.fold, this.amenityList);
+  }
+
+  // The fold's content is its only child: a fold is long while it cuts its content.
+  private measure(fold: Fold, content: Signal<ElementRef<HTMLElement> | undefined>) {
     afterRenderEffect((onCleanup) => {
-      const element = this.prose()?.nativeElement;
+      const element = content()?.nativeElement;
       if (!element) return;
       const observer = new ResizeObserver(() => {
-        if (!this.open()) this.long.set(element.scrollHeight > element.clientHeight + 1);
+        fold.full.set(element.offsetHeight);
+        if (!fold.open())
+          fold.long.set(element.offsetHeight > element.parentElement!.clientHeight + 1);
       });
       observer.observe(element);
+      observer.observe(element.parentElement!);
       onCleanup(() => observer.disconnect());
     });
   }
