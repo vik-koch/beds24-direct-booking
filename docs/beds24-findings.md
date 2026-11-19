@@ -130,20 +130,51 @@ read-only token, for the free-weeks list:
 - **Facts:** on the property the address, city, country, coordinates, check-in and check-out times,
   `permit` and `featureCodes`; on the room `roomSize`, `maxPeople`, `minStay`, `maxStay` and its own
   `featureCodes`.
-- **Feature codes** are fixed codes such as `FIREPLACE` or `ICE_SKATING`: labels and icons are the
-  site's. Room codes carry the sleeping layout as groups, such as `["BEDROOM", "BED_DOUBLE"]`.
-- **Plain texts** come per account language, with empty strings where nothing is written and `\r\n`
-  line breaks. Property: `headline`, `propertyDescription`, `locationDescription`, `directions`,
-  `houseRules` and the policies. Room: `displayName`, `contentHeadline`, `contentDescription`,
-  `roomDescription`, `accommodationType`.
-- **Rich texts** are the booking page's content slots in `texts[]`: `propertyDescription1`,
-  `propertyDescription2`, `propertyDescriptionBookingPage1` and `…2`. They are raw editor HTML with
-  inline styles, so they pass a sanitiser with a small allowlist.
-- **Pictures are not in the API.** `includePictures=true` returns no picture field, and the picture
-  schema is commented out in the OpenAPI file. The control panel shows a public URL per picture,
-  built from the property ID and a two-digit number. The files load without a token: PNGs of about 1
-  MB, at most about 1100 px wide, without cache headers, around forty per listing. The numbers carry
-  no order.
+- **Feature codes** come as two lists, the property's and the room's. The control panel shows the
+  property's codes as applied to each of its rooms; the API does not merge them. Each entry is a
+  group: a property code is a group of one (`["WIFI"]`), and a room's groups carry the sleeping
+  layout, such as `["BEDROOM", "BED_DOUBLE"]` or `["BEDROOM_OTHER_SLEEPING_AREA", "BED_SOFA"]`.
+  Labels and icons are the site's.
+- **A code is any string.** The OpenAPI file lists none, and a code of one's own typed into a room's
+  list arrives as a group of its own, `["SOME_CODE"]` (checked on 19 November 2026). How a channel
+  treats a code it does not know is not known.
+- **A room's groups relate to one another only by their order.** Nothing says which bathroom belongs
+  to which bedroom.
+- **Texts come per language**, each language an entry in `texts[]` with all its keys and empty
+  strings where nothing is written. A room has an entry for every language the account ever had, a
+  switched-off one included. A property without any text has no `texts` key; one with any text has
+  all its keys in each of its languages. Plain texts keep `\r\n` line breaks and may end in spaces.
+- **Where each text is written** (marked with its control-panel name on 19 November 2026):
+
+  <!-- prettier-ignore -->
+  | Control panel | Key | Kind |
+  |---|---|---|
+  | Room: Room Headline | `contentHeadline` | plain |
+  | Room: Room Description | `contentDescription` | plain |
+  | Room: Booking Engine, Room Description 1 | `roomDescription` | rich |
+  | Room: Auxiliary Text, for message templates | `auxiliary` | rich |
+  | Property: Headline, Property Description, Location Description, Directions, House Rules, General Policy, Cancellation Policy | `headline`, `propertyDescription`, `locationDescription`, `directions`, `houseRules`, `generalPolicy`, `cancellationPolicy` | plain |
+  | Property: Property Description 1 and 2, Booking Page 1 and 2, the guest form's headers and messages | `propertyDescription1`, `propertyDescription2`, `propertyDescriptionBookingPage1`, `propertyDescriptionBookingPage2`, `guestDetailsHeader`, `guestEnquiryHeader`, `confirmBookingButtonMessage`, `roomNotAvailableMessage`, `roomNoPriceMessage`, `noRoomsAvailableMessage` | rich |
+
+- **Rich text is the Summernote 0.9 editor's HTML, stored as written:**
+  - blocks (headings, quotes, `pre`, tables) nested inside a `<p>`, which an HTML parser repairs;
+  - `<b>`, `<i>`, `<u>`, `<strike>`, `<sup>`, `<sub>`, and bold also as
+    `<span style="font-weight: bolder">`;
+  - `<font color face>`, inline styles on any element and `class=""` on blocks;
+  - U+FEFF characters at the start of styled spans;
+  - `<p><br></p>` as spacing, and a text left empty as `<p><br></p>`;
+  - tables with Bootstrap classes and no header cells;
+  - links with `http://` and `target="_blank"`, and an empty link around a `<br>`;
+  - pictures as `<img>` from the Beds24 picture host, with a fixed width and no alternative text.
+
+  The property's slots also carry styles pasted from the control panel itself. Rich text passes a
+  sanitiser with a small allowlist.
+
+- **Pictures are not in the API** (checked again on 19 November 2026). `includePictures=true`
+  returns no picture field, and the picture schema is commented out in the OpenAPI file. The control
+  panel shows a public URL per picture, built from the property ID and a two-digit number. The files
+  load without a token: PNGs of about 1 MB, at most about 1100 px wide, without cache headers,
+  around forty per listing. The numbers carry no order.
 
 ## The booking page
 
