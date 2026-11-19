@@ -98,10 +98,13 @@ test('a picture whose pixels are damaged stops the build, naming it', async () =
     .toBuffer();
   // The header and the size are intact; the pixels stop half way.
   const dir = await folder({ 'cut.png': whole.subarray(0, whole.length / 2) });
+  const cache = temp('cache');
   await assert.rejects(
-    convert(dir, listing('pictures/cut.png')),
+    convert(dir, listing('pictures/cut.png'), cache),
     /apartments\/one\.json\n {2}pictures\.0: pictures\/cut\.png cannot be converted: /,
   );
+  // The failed write leaves nothing behind in the cache.
+  assert.deepEqual(readdirSync(cache), []);
 });
 
 test('a damaged download is not kept, so the next run fetches the address again', async () => {

@@ -6,6 +6,7 @@ import {
   mkdirSync,
   readFileSync,
   renameSync,
+  rmSync,
   writeFileSync,
 } from 'node:fs';
 import { join } from 'node:path';
@@ -20,8 +21,12 @@ const digest = (data) => createHash('sha256').update(data).digest('hex');
 // two builds share the cache.
 const place = async (path, write) => {
   const part = `${path}.${process.pid}-${randomUUID()}.part`;
-  await write(part);
-  renameSync(part, path);
+  try {
+    await write(part);
+    renameSync(part, path);
+  } finally {
+    rmSync(part, { force: true });
+  }
 };
 
 // A file of the content folder, or an address; a download is kept in the cache only once its
