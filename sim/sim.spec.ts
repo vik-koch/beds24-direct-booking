@@ -71,6 +71,21 @@ describe('properties', () => {
       period: 'daily',
     });
     expect(property.upsellItems[1].type).toBe('notUsed');
+    expect(Object.keys(property.texts[0])).toHaveLength(28 + 20);
+    const [room, second] = property.roomTypes;
+    expect(room.texts.map((text: { language: string }) => text.language)).toEqual([
+      'de',
+      'en',
+      'it',
+    ]);
+    for (const text of room.texts) expect(Object.keys(text)).toHaveLength(8);
+    expect(room.texts[2]).toMatchObject({ roomDescription: '', accommodationType: 'Camera' });
+    expect(room.texts[1].roomDescription).toMatch(/^<p><h3 class="">.*<\/p><\/p>/);
+    expect(room.texts[1].roomDescription).toContain('﻿');
+    expect(second.texts[0].roomDescription).toContain('<b>');
+    const [, farn] = (await (await get(everything)).json()).data;
+    expect(farn.roomTypes[0].featureCodes).toContainEqual(['BOOT_DRYER']);
+    expect(farn.roomTypes[1].texts[1].roomDescription).toBe('<p><br></p>');
     const rules = property.roomTypes[0].priceRules;
     expect(rules).toHaveLength(16);
     expect(rules[0].minDaysUntilCheckin).toBe(7);
