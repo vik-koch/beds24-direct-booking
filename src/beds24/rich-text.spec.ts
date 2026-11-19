@@ -49,13 +49,13 @@ describe('richText', () => {
     ).toBe('<p>a</p>');
   });
 
-  it('keeps links to web, mail and phone without a target, and unwraps the rest', () => {
+  it('keeps links to web, mail and phone without a target, and unwraps the rest, relative ones too', () => {
     expect(
       richText(
-        '<p><a href="http://a.test" target="_blank">a</a> <a href="mailto:b@c.test">b</a> <a href="tel:+43">c</a> <a href="javascript:alert(1)">d</a> <a href="//e.test">e</a></p>',
+        '<p><a href="http://a.test" target="_blank">a</a> <a href="mailto:b@c.test">b</a> <a href="tel:+43">c</a> <a href="javascript:alert(1)">d</a> <a href="//e.test">e</a> <a href="arrival">f</a> <a href="/de">g</a> <a href="#top">h</a></p>',
       ),
     ).toBe(
-      '<p><a href="http://a.test">a</a> <a href="mailto:b@c.test">b</a> <a href="tel:+43">c</a> d e</p>',
+      '<p><a href="http://a.test">a</a> <a href="mailto:b@c.test">b</a> <a href="tel:+43">c</a> d e f g h</p>',
     );
   });
 

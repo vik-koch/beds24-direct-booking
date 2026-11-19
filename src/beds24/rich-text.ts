@@ -17,6 +17,11 @@ export function richText(html: string): string {
       // Dropped with their content; any other tag not allowed is unwrapped, its text kept.
       nonTextTags: ['script', 'style', 'textarea', 'option', 'noscript', 'video', 'iframe'],
       transformTags: {
+        // Kept only with one of the schemes: a relative address would lead under the page's own.
+        a: (tagName, { href = '' }): sanitizeHtml.Tag => ({
+          tagName,
+          attribs: /^(https?|mailto|tel):/i.test(href) ? { href } : {},
+        }),
         tr: 'p',
         b: 'strong',
         i: 'em',
