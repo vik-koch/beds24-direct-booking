@@ -40,6 +40,17 @@ test('a language without its texts file fails', () => {
   assert.throws(() => readContent(dir), /texts\.en-GB\.json/);
 });
 
+test('a file that is not valid JSON is named', () => {
+  for (const file of ['site.json', 'texts.en-GB.json', 'apartments/zirbe.json']) {
+    const dir = changed('site.json', () => undefined);
+    writeFileSync(join(dir, file), '{ "name": "x", }');
+    assert.throws(
+      () => readContent(dir),
+      new RegExp(`${file.replace('.', '\\.')}\\n {2}\\(file\\): Expected double-quoted`),
+    );
+  }
+});
+
 test('the notice may be left out, in every language', () => {
   const dir = bothTexts((texts) => delete texts.notice);
   assert.equal(readContent(dir).texts.de.notice, undefined);

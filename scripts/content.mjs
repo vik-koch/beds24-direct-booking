@@ -44,7 +44,13 @@ const isSvg = (bytes) => {
 
 export function readContent(dir) {
   const read = (file, schema) => {
-    const result = schema.safeParse(JSON.parse(readFileSync(join(dir, file), 'utf8')));
+    let value;
+    try {
+      value = JSON.parse(readFileSync(join(dir, file), 'utf8'));
+    } catch (error) {
+      throw new Error(`${join(dir, file)}\n  (file): ${error.message}`);
+    }
+    const result = schema.safeParse(value);
     if (result.success) return result.data;
     const issues = result.error.issues.map(
       (i) => `  ${i.path.join('.') || '(file)'}: ${i.message}`,
