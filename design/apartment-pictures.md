@@ -9,20 +9,23 @@ pictures follow those descriptions.
 | --------- | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | -------- |
 | Zirbe     | 34 m², first floor  | One room with a double bed, a kitchenette and a window seat; a rain shower; stone pine and loden; a view of the Schattberg; no balcony | 3        |
 | Lärche    | 61 m², second floor | Two bedrooms (a double bed, a bunk bed), a kitchen-living room, a bath tub, a south-facing balcony                                     | 5        |
-| Ahorn     | 96 m², two floors   | Three bedrooms (two double beds, a bunk bed), two bathrooms, one large table for six, a terrace, a sauna of its own                    | 6        |
+| Ahorn     | 96 m², two floors   | Three bedrooms (two double beds, a bunk bed), two bathrooms, one large table for six, a terrace, a sauna of its own                    | 9        |
 
-All 14 pictures have been generated. They are in the demo's content, `content/demo/pictures/`, as
+All 17 pictures have been generated. They are in the demo's content, `content/demo/pictures/`, as
 WebP; `design/generated/` has one note per apartment: the prompts as they were sent, the reference
 image of each, a suggested alternative text per picture, what the review found, and the terms they
 are published under.
 
 Each bedroom has a picture. The kitchen is part of the living picture where the apartment has a
-kitchen-living room; only Zirbe, a single room, shows its kitchenette apart. Each apartment shows
-one bathroom.
+kitchen-living room; Zirbe, a single room, shows its kitchenette apart, and Ahorn its kitchen up
+close as well. Zirbe and Lärche show one bathroom, Ahorn both, and its stairs: with nine pictures it
+fills the gallery's largest layout and has one more.
 
 ## How to run them
 
-- **Landscape 3:2**, 1536 × 1024 or the closest the generator offers, like the hero photos.
+- **Landscape 3:2**, 1536 × 1024 or the closest the generator offers, like the hero photos. A shot
+  marked square is 1:1, 1024 × 1024, so that the demo also shows how the site treats a square
+  picture.
 - **Start each apartment with its first picture**, choose the best result, and give it as a
   reference image with each later prompt of the same apartment, so that wood, fabrics and windows
   stay the same.
@@ -46,6 +49,8 @@ one bathroom.
 ## Ending
 
 > Landscape 3:2, 1536 × 1024. One photograph, no collage.
+>
+> For a square shot the first sentence is: Square 1:1, 1024 × 1024.
 >
 > Input image: reference for the same apartment's wood, fabrics, window frames and architecture;
 > generate a new photograph of the requested room, not a collage or a copy of the reference
@@ -216,3 +221,34 @@ dark blue. A house on two floors with a terrace and a sauna.
 > foreground and most of the picture. No dining table or sofa of the room in frame, at most a slim
 > door frame at the edge. The whole long table with two benches for three each is visible. The
 > terrace is the main subject.
+
+### ahorn-7: the open kitchen (square)
+
+> [Shared style paragraph as above.]
+>
+> The open kitchen of the same maple house, closer than in the living room picture: pale maple
+> fronts without handles, a sand-coloured stone worktop, a built-in oven and hob, open maple shelves
+> with white crockery and glass jars, a wooden chopping board with bread and a bowl of apples. A
+> window above the worktop with a view of the forested slope.
+>
+> Framing: square, the worktop at the centre, part of the long maple table at the lower edge.
+
+### ahorn-8: the stairs
+
+> [Shared style paragraph as above.]
+>
+> The staircase between the two floors of the same maple house: straight open stairs with pale maple
+> treads and a slim maple handrail along a white plastered wall, a tall narrow window on the landing
+> with a view of the forested slope, a sage green runner on the landing floor, a small plant on the
+> windowsill.
+>
+> Framing: seen from the bottom of the stairs on the ground floor, looking up to the landing.
+
+### ahorn-9: the shower room upstairs
+
+> [Shared style paragraph as above.]
+>
+> The second bathroom of the same maple house, upstairs under the sloping wooden ceiling: a walk-in
+> shower with a glass screen and white tiles, a single basin on a pale maple vanity, a round mirror,
+> a toilet, dark blue towels, a skylight. Smaller and simpler than the bathroom downstairs; no
+> sauna, no bath tub.

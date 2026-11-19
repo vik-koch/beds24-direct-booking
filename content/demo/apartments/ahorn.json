@@ -11,6 +11,14 @@
       }
     },
     {
+      "file": "pictures/ahorn-7.webp",
+      "generated": true,
+      "alt": {
+        "de-AT": "Küche aus Ahorn mit Steinarbeitsplatte, offenen Regalen, Backofen und frischem Brot am Fenster.",
+        "en-GB": "Maple kitchen with a stone worktop, open shelves, an oven and fresh bread by the window."
+      }
+    },
+    {
       "file": "pictures/ahorn-2.webp",
       "generated": true,
       "alt": {
@@ -43,11 +51,27 @@
       }
     },
     {
+      "file": "pictures/ahorn-9.webp",
+      "generated": true,
+      "alt": {
+        "de-AT": "Duschbad im Obergeschoss unter schräger Holzdecke, mit Dachfenster, bodenebener Dusche und Waschtisch aus Ahorn.",
+        "en-GB": "Upstairs shower room under a sloping timber ceiling, with a skylight, walk-in shower and maple vanity."
+      }
+    },
+    {
       "file": "pictures/ahorn-6.webp",
       "generated": true,
       "alt": {
         "de-AT": "Holzterrasse mit Esstisch für sechs, gepolsterten Bänken und Blick auf bewaldete Berge.",
         "en-GB": "Wooden terrace with outdoor dining for six, cushioned benches and a forested mountain view."
+      }
+    },
+    {
+      "file": "pictures/ahorn-8.webp",
+      "generated": true,
+      "alt": {
+        "de-AT": "Offene Treppe aus Ahorn hinauf zum Absatz mit hohem Fenster zum Wald.",
+        "en-GB": "Open maple stairs up to a landing with a tall window onto the forest."
       }
     }
   ]
