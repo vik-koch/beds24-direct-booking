@@ -124,7 +124,7 @@
 @layer components {
   .column {
     width: 100%;
-    max-width: 66rem;
+    max-width: 72rem;
     margin-inline: auto;
     padding-inline: 1rem;
 
@@ -491,7 +491,7 @@
       justify-self: start;
       max-width: 46rem;
       /* The card's left edge is the edge of the page's centred column. */
-      margin: 6.5rem 2rem clamp(2rem, 100svh - 40rem, 10rem) max(2rem, calc(50% - 31rem));
+      margin: 6.5rem 2rem clamp(2rem, 100svh - 40rem, 10rem) max(2rem, calc(50% - 34rem));
       padding: 2.25rem 2.5rem 2.5rem;
     }
 
