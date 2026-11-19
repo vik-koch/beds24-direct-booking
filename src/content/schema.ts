@@ -135,6 +135,12 @@ export const siteSchema = z.strictObject({
         ),
       'a code is listed twice',
     ),
+  // The rooms the apartment page names, by the code that opens a Beds24 room group, such as
+  // BEDROOM, each with a Lucide icon. Each language's texts name them. A group whose code is
+  // listed nowhere is not a room: its codes count as amenities.
+  rooms: z
+    .array(z.strictObject({ code: text, icon: segment }))
+    .refine((list) => unique(list, (room) => room.code), 'a room code is listed twice'),
   // The footer shows what is listed, and no contact without one: a site may give its details
   // on its imprint page instead.
   contact: z
@@ -269,8 +275,8 @@ export const textsSchema = z.strictObject({
     unavailable: text,
     generated: text,
   }),
-  // The names of the areas site.json lists; the labels of Beds24's codes, the features' and
-  // the beds' and bathrooms' in a room; the rooms by their codes, such as BEDROOM.
+  // The names of the areas and the rooms site.json lists, and the labels of Beds24's codes: the
+  // amenities' and the beds' and fittings' in a room.
   amenities: z.strictObject({
     areas: z.record(segment, text),
     codes: z.record(text, text),

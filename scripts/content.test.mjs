@@ -407,6 +407,26 @@ test('every language names exactly the areas the site lists, and labels each cod
   );
 });
 
+test('a room names a Lucide icon once, and every language names exactly the listed rooms', () => {
+  const icon = changed('site.json', (site) => (site.rooms[0].icon = 'chalet'));
+  assert.throws(
+    () => readContent(icon),
+    /site\.json\n {2}rooms\.0\.icon: chalet is not a Lucide icon/,
+  );
+  const twice = changed('site.json', (site) => site.rooms.push({ ...site.rooms[0] }));
+  assert.throws(() => readContent(twice), /site\.json\n {2}rooms: a room code is listed twice/);
+  const missing = changed('texts.de-AT.json', (texts) => delete texts.amenities.rooms.BATHROOM);
+  assert.throws(
+    () => readContent(missing),
+    /texts\.de-AT\.json\n {2}amenities\.rooms\.BATHROOM: missing/,
+  );
+  const extra = bothTexts((texts) => (texts.amenities.rooms.KITCHEN = 'Küche'));
+  assert.throws(
+    () => readContent(extra),
+    /texts\.de-AT\.json\n {2}amenities\.rooms\.KITCHEN: a room site\.json does not list/,
+  );
+});
+
 test('the contact may list any of its lines, or be left out', () => {
   const name = changed('site.json', (site) => (site.contact = { name: 'Only a name' }));
   assert.deepEqual(readContent(name).site.contact, { name: 'Only a name' });

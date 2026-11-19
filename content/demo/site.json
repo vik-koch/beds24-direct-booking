@@ -52,6 +52,11 @@
       "icon": "tag"
     }
   ],
+  "rooms": [
+    { "code": "BEDROOM", "icon": "bed-double" },
+    { "code": "BEDROOM_OTHER_SLEEPING_AREA", "icon": "sofa" },
+    { "code": "BATHROOM", "icon": "bath" }
+  ],
   "amenities": [
     { "code": "SMOKING_NOT_ALLOWED", "icon": "cigarette-off" },
     { "code": "PETS_NOT_ALLOWED", "icon": "paw-print" },
