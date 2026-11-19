@@ -14,13 +14,17 @@ server the project does not control.
 ## Decision
 
 1. **The `check` job runs in Microsoft's Playwright image** for the version of `@playwright/test` in
-   the lock file (`mcr.microsoft.com/playwright:v<version>-noble`). The browsers and their system
+   the lock file, on the Ubuntu release of `ubuntu-latest`
+   (`mcr.microsoft.com/playwright:v<version>-resolute`, Ubuntu 26.04). The browsers and their system
    packages are in the image; the install step is gone. The job runs as the runner's user, as
    Firefox refuses to start as root in another user's home.
 2. **A step compares the image's tag with the installed `@playwright/test`** and fails the run with
    both versions named, so an upgrade of the package must move the image in the same change.
 3. **The job has a time limit of 20 minutes,** about two and a half times a normal run, so a stalled
    step fails instead of holding the branch's run.
+4. **The image's Ubuntu follows the runner's.** WebKit takes its date formats from the system's ICU:
+   on the image for Ubuntu 24.04 it wrote "Sat, 03/04" where 26.04 writes "Sat 03/04", and the e2e
+   suite failed on it.
 
 ## Options
 
