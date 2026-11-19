@@ -74,6 +74,14 @@
       <symbol id="i-chevron-down" viewBox="0 0 24 24">
         <path d="m6 9 6 6 6-6" />
       </symbol>
+      <symbol id="i-sparkles" viewBox="0 0 24 24">
+        <path
+          d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"
+        ></path>
+        <path d="M20 2v4"></path>
+        <path d="M22 4h-4"></path>
+        <circle cx="4" cy="20" r="2"></circle>
+      </symbol>
     </svg>
     <a class="skip" href="#freie-wochen">Zu den freien Wochen</a>
     <p class="notice">Demo: Firn &amp; Farn ist erfunden. Die Häuser und Preise gibt es nicht.</p>
@@ -99,9 +107,9 @@
           </summary>
           <div class="submenu">
             <a href="#wohnungen">Alle im Überblick</a>
-            <a href="#">Zirbe</a>
-            <a href="#">Lärche</a>
-            <a href="#">Ahorn</a>
+            <a href="apartment.html?apartment=zirbe">Zirbe</a>
+            <a href="apartment.html?apartment=laerche">Lärche</a>
+            <a href="apartment.html?apartment=ahorn">Ahorn</a>
           </div>
         </details>
         <a href="#lage">Lage</a>
@@ -191,6 +199,102 @@
           <output aria-live="polite"></output>
           <a class="button" href="#">Weiter zur Buchung</a>
         </div>
+      </section>
+
+      <section class="apartments" id="wohnungen">
+        <h2>Die Wohnungen</h2>
+        <ul class="teasers">
+          <li class="teaser">
+            <a
+              class="teaser-picture"
+              href="apartment.html?apartment=zirbe"
+              tabindex="-1"
+              aria-hidden="true"
+            >
+              <img src="../content/demo/pictures/zirbe-1.webp" alt="" loading="lazy" />
+              <span class="ai-label"
+                ><svg class="icon" aria-hidden="true"><use href="#i-sparkles" /></svg> KI-Bild</span
+              >
+            </a>
+            <h3><a href="apartment.html?apartment=zirbe">Zirbe</a></h3>
+            <p class="teaser-headline">Für zwei, mit Regendusche</p>
+            <ul class="teaser-facts">
+              <li>Bis 2 Gäste</li>
+              <li>1 Schlafzimmer</li>
+              <li>34 m²</li>
+            </ul>
+            <p class="teaser-price">
+              <span data-for="winter">Im Winter ausgebucht</span
+              ><span data-for="summer">ab <strong>690 €</strong> pro Woche</span>
+            </p>
+            <p class="teaser-links">
+              <a href="apartment.html?apartment=zirbe"
+                >Zur Wohnung<svg class="icon" aria-hidden="true"><use href="#i-arrow-right" /></svg
+              ></a>
+              <a href="#freie-wochen" data-room-link="zirbe">Freie Wochen</a>
+            </p>
+          </li>
+          <li class="teaser">
+            <a
+              class="teaser-picture"
+              href="apartment.html?apartment=laerche"
+              tabindex="-1"
+              aria-hidden="true"
+            >
+              <img src="../content/demo/pictures/laerche-1.webp" alt="" loading="lazy" />
+              <span class="ai-label"
+                ><svg class="icon" aria-hidden="true"><use href="#i-sparkles" /></svg> KI-Bild</span
+              >
+            </a>
+            <h3><a href="apartment.html?apartment=laerche">Lärche</a></h3>
+            <p class="teaser-headline">Für vier, mit Südbalkon und Badewanne</p>
+            <ul class="teaser-facts">
+              <li>Bis 4 Gäste</li>
+              <li>2 Schlafzimmer</li>
+              <li>61 m²</li>
+            </ul>
+            <p class="teaser-price">
+              <span data-for="winter">ab <strong>1.490 €</strong> pro Woche</span
+              ><span data-for="summer">ab <strong>990 €</strong> pro Woche</span>
+            </p>
+            <p class="teaser-links">
+              <a href="apartment.html?apartment=laerche"
+                >Zur Wohnung<svg class="icon" aria-hidden="true"><use href="#i-arrow-right" /></svg
+              ></a>
+              <a href="#freie-wochen" data-room-link="laerche">Freie Wochen</a>
+            </p>
+          </li>
+          <li class="teaser">
+            <a
+              class="teaser-picture"
+              href="apartment.html?apartment=ahorn"
+              tabindex="-1"
+              aria-hidden="true"
+            >
+              <img src="../content/demo/pictures/ahorn-1.webp" alt="" loading="lazy" />
+              <span class="ai-label"
+                ><svg class="icon" aria-hidden="true"><use href="#i-sparkles" /></svg> KI-Bild</span
+              >
+            </a>
+            <h3><a href="apartment.html?apartment=ahorn">Ahorn</a></h3>
+            <p class="teaser-headline">Für sechs, mit Terrasse und Sauna</p>
+            <ul class="teaser-facts">
+              <li>Bis 6 Gäste</li>
+              <li>3 Schlafzimmer</li>
+              <li>96 m²</li>
+            </ul>
+            <p class="teaser-price">
+              <span data-for="winter">ab <strong>2.190 €</strong> pro Woche</span
+              ><span data-for="summer">ab <strong>1.490 €</strong> pro Woche</span>
+            </p>
+            <p class="teaser-links">
+              <a href="apartment.html?apartment=ahorn"
+                >Zur Wohnung<svg class="icon" aria-hidden="true"><use href="#i-arrow-right" /></svg
+              ></a>
+              <a href="#freie-wochen" data-room-link="ahorn">Freie Wochen</a>
+            </p>
+          </li>
+        </ul>
       </section>
     </main>
 

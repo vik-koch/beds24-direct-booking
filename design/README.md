@@ -18,6 +18,28 @@ are invented.
   opens with the fourth price selected.
 - **Narrow form:** below 768 px the list shows one apartment at a time.
 
+## The apartment page
+
+`apartment.html` is one apartment's page and its booking step, from the simulator's texts and the
+demo's pictures, with `apartment.css` on top of `home.css`; the weeks and prices are the free-weeks
+list's invented ones. `home.html` has the apartments' teasers below the free weeks.
+
+- **Apartment:** `?apartment=zirbe`, `laerche` (the default) or `ahorn`.
+- **Season:** the switch in the header or the panel's text button; `?season=summer` opens in summer.
+- **A chosen week:** pick one in the list or the calendar; `?week=3` opens with the fourth week of
+  the season chosen, `&view=calendar` in the calendar.
+- **Pictures:** `?pictures=1`, `3` or `20` shows that many; `?viewer=1` opens the viewer at the
+  second picture. Each generated picture carries a label that says so.
+- **Booking step:** `?step=book&week=3`, the stay beside a stand-in for Beds24's form.
+- **States:** `?state=no-text` (no headline, no description), `?state=booked` (every week booked),
+  `?state=unreachable` (Beds24 does not answer), and with Ahorn `?state=sofa` (a sofa bed in the
+  living room, so up to 8 guests in 3 bedrooms).
+- **Narrow form:** below 64rem the panel follows the content and a bar at the screen's foot leads to
+  it; below 48rem the pictures are a strip to swipe instead of a mosaic.
+
+The sheets `screenshots/apartment-*.jpg` and `screenshots/teaser.jpg` show it at 320, 768 and 1280
+px in both seasons.
+
 ## Tokens
 
 The stylesheet starts with its tokens as custom properties, named as Tailwind's theme names them
