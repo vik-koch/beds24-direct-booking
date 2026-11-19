@@ -4,7 +4,7 @@ import { letters, seasonNames } from './names.ts';
 export { lucideName, seasonNames, type SeasonName } from './names.ts';
 
 const segment = z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/);
-const text = z.string().min(1);
+const text = z.string().refine((value) => value.trim() !== '', 'empty or only spaces');
 
 const unique = <T>(list: T[], key: (item: T) => unknown) =>
   new Set(list.map(key)).size === list.length;

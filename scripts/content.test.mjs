@@ -174,6 +174,14 @@ test("a picture has its alternative text in exactly the site's languages", () =>
     /pictures\.0\.alt\.it: a language site\.json does not list$/,
   );
   assert.throws(
+    () => readContent(changed('apartments/zirbe.json', (a) => (a.pictures[0].alt['en-GB'] = ' '))),
+    /apartments\/zirbe\.json\n {2}pictures\.0\.alt\.en-GB: empty or only spaces/,
+  );
+  assert.throws(
+    () => readContent(changed('texts.en-GB.json', (texts) => (texts.nav.weeks = ''))),
+    /texts\.en-GB\.json\n {2}nav\.weeks: empty or only spaces/,
+  );
+  assert.throws(
     () => readContent(changed('apartments/zirbe.json', (a) => (a.pictures = []))),
     /apartments\/zirbe\.json\n {2}pictures: at least one picture/,
   );
