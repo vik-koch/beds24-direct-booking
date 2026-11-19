@@ -34,7 +34,19 @@ const roomType = (property: Property, room: Room, has: (name: string) => boolean
   taxPerson: 0,
   cleaningFee: 0,
   roomSize: room.roomSize,
-  ...(has('includeTexts') && { texts: perLanguage(room.texts, ['auxiliary', 'marketing']) }),
+  // A language switched off in the account keeps its entry, empty but for the default type.
+  ...(has('includeTexts') && {
+    texts: [
+      ...perLanguage(room.texts, ['auxiliary', 'marketing']),
+      {
+        language: 'it',
+        ...Object.fromEntries(
+          [...Object.keys(room.texts), 'auxiliary', 'marketing'].map((key) => [key, '']),
+        ),
+        accommodationType: 'Camera',
+      },
+    ],
+  }),
   featureCodes: room.featureCodes,
   ...(has('includePriceRules') && {
     priceRules: [
@@ -82,6 +94,13 @@ export const propertyList = (query: URLSearchParams) => {
           'propertyDescriptionBookingPage2',
           'generalPolicy',
           'cancellationPolicy',
+          'guestDetailsHeader',
+          'guestEnquiryHeader',
+          'confirmBookingButtonMessage',
+          'roomNotAvailableMessage',
+          'roomNoPriceMessage',
+          'noRoomsAvailableMessage',
+          ...numbered('customQuestion', 1, 10),
           ...numbered('upsellItemName', 2, 20),
         ]),
       }),

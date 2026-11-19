@@ -91,8 +91,8 @@
               "en": "One room with a double bed, a kitchenette and a window seat. No balcony."
             },
             "roomDescription": {
-              "de": "34 m² im ersten Stock",
-              "en": "34 m² on the first floor"
+              "de": "<p><h3 class=\"\">Die Wohnung</h3><p class=\"\"><span style=\"font-weight: bolder;\">﻿34 m²</span> im ersten Stock: ein Doppelbett aus Zirbe, eine Küchenzeile und eine Sitzecke am Fenster mit Blick auf den Schattberg.</p><p><br></p><ul><li>Regendusche</li><li>Bettwäsche und Handtücher</li></ul><p style=\"line-height: 1.5;\"><font color=\"#104a5a\" face=\"sans-serif\">Der Skiraum ist im Keller.</font></p><p>Anreise: <a href=\"http://firn-und-farn.example/anreise\" target=\"_blank\" style=\"cursor: pointer;\">firn-und-farn.example/anreise</a></p><p><img src=\"https://media.xmlcal.com/pic/p0090/0101/01.png\" style=\"width: 1099.98px;\"></p></p><p><a href=\"http://firn-und-farn.example/\" target=\"_blank\" style=\"cursor: pointer;\"><br></a></p>",
+              "en": "<p><h3 class=\"\">The apartment</h3><p class=\"\"><span style=\"font-weight: bolder;\">﻿34 m²</span> on the first floor: a stone pine double bed, a kitchenette and a window seat with a view of the Schattberg.</p><p><br></p><ul><li>Rain shower</li><li>Bed linen and towels</li></ul><p style=\"line-height: 1.5;\"><font color=\"#104a5a\" face=\"sans-serif\">The ski room is in the cellar.</font></p><p>Getting here: <a href=\"http://firn-und-farn.example/arrival\" target=\"_blank\" style=\"cursor: pointer;\">firn-und-farn.example/arrival</a></p><p><img src=\"https://media.xmlcal.com/pic/p0090/0101/01.png\" style=\"width: 1099.98px;\"></p></p><p><a href=\"http://firn-und-farn.example/\" target=\"_blank\" style=\"cursor: pointer;\"><br></a></p>"
             }
           }
         },
@@ -129,8 +129,8 @@
               "en": "Two bedrooms, a kitchen-living room and a balcony on the sunny side."
             },
             "roomDescription": {
-              "de": "61 m² im zweiten Stock",
-              "en": "61 m² on the second floor"
+              "de": "<p><span style=\"font-family: sans-serif;\">﻿<b>61 m²</b> im zweiten Stock, mit <i>Südbalkon</i>.</span></p><p><span style=\"font-family: sans-serif;\">Ein Schlafzimmer mit Doppelbett, eines mit Stockbett für Kinder.</span><br></p>",
+              "en": "<p><span style=\"font-family: sans-serif;\">﻿<b>61 m²</b> on the second floor, with a <i>south-facing balcony</i>.</span></p><p><span style=\"font-family: sans-serif;\">One bedroom with a double bed, one with a bunk bed for children.</span><br></p>"
             }
           }
         }
@@ -196,7 +196,8 @@
             ["BEDROOM", "BED_DOUBLE"],
             ["BEDROOM", "BED_BUNK"],
             ["BATHROOM", "BATH_TUB", "BATH_TOILET"],
-            ["BATHROOM", "BATH_SHOWER", "BATH_TOILET"]
+            ["BATHROOM", "BATH_SHOWER", "BATH_TOILET"],
+            ["BOOT_DRYER"]
           ],
           "prices": {
             "summer": 310.5,
@@ -221,8 +222,8 @@
               "en": "Three bedrooms, two bathrooms and one large table for everyone."
             },
             "roomDescription": {
-              "de": "96 m² auf zwei Etagen",
-              "en": "96 m² on two floors"
+              "de": "<p><h4 class=\"\">Zwei Etagen</h4><table class=\"table table-bordered\" style=\"width: 100%; border-collapse: collapse; border: 1px solid #dee2e6;\"><tbody><tr><td style=\"border: 1px solid #dee2e6; padding: 8px;\">Unten</td><td style=\"border: 1px solid #dee2e6; padding: 8px;\">Wohnküche, Bad, Sauna</td></tr><tr><td style=\"border: 1px solid #dee2e6; padding: 8px;\">Oben</td><td style=\"border: 1px solid #dee2e6; padding: 8px;\">Drei Schlafzimmer, Duschbad</td></tr></tbody></table></p><p><br></p><p><br></p>",
+              "en": "<p><h4 class=\"\">Two floors</h4><table class=\"table table-bordered\" style=\"width: 100%; border-collapse: collapse; border: 1px solid #dee2e6;\"><tbody><tr><td style=\"border: 1px solid #dee2e6; padding: 8px;\">Below</td><td style=\"border: 1px solid #dee2e6; padding: 8px;\">Kitchen and living room, bathroom, sauna</td></tr><tr><td style=\"border: 1px solid #dee2e6; padding: 8px;\">Above</td><td style=\"border: 1px solid #dee2e6; padding: 8px;\">Three bedrooms, shower room</td></tr></tbody></table></p><p><br></p><p><br></p>"
             }
           }
         },
@@ -258,8 +259,8 @@
               "en": "One room with a kitchenette and a roof window facing the slope."
             },
             "roomDescription": {
-              "de": "28 m² im Dachgeschoss",
-              "en": "28 m² in the attic"
+              "de": "<p><br></p>",
+              "en": "<p><br></p>"
             }
           }
         }
