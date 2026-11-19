@@ -116,6 +116,13 @@
     "unavailable": "Die Einzelheiten zu dieser Wohnung können gerade nicht geladen werden. Bitte versuchen Sie es in ein paar Minuten noch einmal.",
     "generated": "KI-Bild"
   },
+  "gallery": {
+    "name": "Bilder",
+    "position": "Bild {index} von {count}",
+    "previous": "Voriges Bild",
+    "next": "Nächstes Bild",
+    "more": { "one": "+{count} Bild", "other": "+{count} Bilder" }
+  },
   "amenities": {
     "areas": {
       "general": "Allgemein",

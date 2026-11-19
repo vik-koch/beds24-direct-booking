@@ -65,6 +65,12 @@ content. The application has no wording, no colour and no typeface of its own. T
   `{until}`. The name and the pictures come from the apartment's file. The guests, size, address,
   times, description and house rules come from Beds24, in the page's language by its address prefix,
   such as `de`.
+- **The gallery** (`gallery` in a texts file) is the wording of the pictures' mosaic and viewer:
+  `name` for both, `position` such as "Picture {index} of {count}", `previous` and `next` for the
+  viewer's buttons, and `more` for the last cell of the mosaic when pictures follow beyond it,
+  taking `{count}` with a `one` and an `other` form. The mosaic shows 8, 5 or 3 cells, or the first
+  picture alone, by the number of pictures; the viewer shows each picture whole with its alternative
+  text below it.
 - **The amenities** (`amenities` in `site.json`) sort Beds24's feature codes into areas for the
   apartment page, in their order:
   `{ "area": "kitchen", "icon": "cooking-pot", "codes": ["KITCHEN", "DISHWASHER"] }`, or a code

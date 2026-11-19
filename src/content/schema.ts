@@ -276,6 +276,14 @@ export const textsSchema = z.strictObject({
     unavailable: text,
     generated: text,
   }),
+  // The pictures' mosaic and viewer; {index} counts from 1.
+  gallery: z.strictObject({
+    name: text,
+    position: text,
+    previous: text,
+    next: text,
+    more: z.strictObject({ one: text, other: text }),
+  }),
   // The names of the areas and the rooms site.json lists, and the labels of Beds24's codes: the
   // amenities' and the beds' and fittings' in a room.
   amenities: z.strictObject({

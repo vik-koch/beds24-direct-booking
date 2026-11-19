@@ -107,6 +107,13 @@
     "unavailable": "I dettagli di questo appartamento non si possono caricare ora.",
     "generated": "Immagine IA"
   },
+  "gallery": {
+    "name": "Immagini",
+    "position": "Immagine {index} di {count}",
+    "previous": "Immagine precedente",
+    "next": "Immagine successiva",
+    "more": { "one": "+{count} immagine", "other": "+{count} immagini" }
+  },
   "amenities": {
     "areas": { "comfort": "Comfort" },
     "codes": {
