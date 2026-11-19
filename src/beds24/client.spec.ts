@@ -1,4 +1,4 @@
-import { loadInventory, multiplier } from './client';
+import { listingOf, loadInventory, multiplier } from './client';
 
 describe('loadInventory', () => {
   const properties = {
@@ -8,6 +8,16 @@ describe('loadInventory', () => {
       {
         id: 1,
         currency: 'EUR',
+        address: 'Musterweg 1',
+        city: 'Saalbach',
+        checkInStart: '16:00',
+        checkInEnd: '20:00',
+        checkOutEnd: '10:00',
+        featureCodes: [['WIFI'], ['PARKING_PAID']],
+        texts: [
+          { language: 'de', houseRules: 'Nachtruhe ab 22 Uhr. \r\n' },
+          { language: 'en', houseRules: '' },
+        ],
         bookingPageMultiplier: '*0.9',
         upsellItems: [
           { index: 1, type: 'notUsed', amount: 0, per: 'booking', period: 'oneTime' },
@@ -18,11 +28,47 @@ describe('loadInventory', () => {
             id: 11,
             maxPeople: 4,
             roomSize: 61,
+            featureCodes: [['BEDROOM', 'BED_DOUBLE'], ['BOOT_DRYER']],
+            texts: [
+              {
+                language: 'de',
+                contentHeadline: 'Für vier ',
+                contentDescription: 'Zwei Schlafzimmer.',
+                roomDescription: '<p><b>61 m²</b> mit Balkon.<br></p>',
+              },
+              {
+                language: 'en',
+                contentHeadline: '',
+                contentDescription: '',
+                roomDescription: '<p><br></p>',
+              },
+            ],
             priceRules: [{ id: 1, minDaysUntilCheckin: 7 }, { id: 2 }],
           },
         ],
       },
-      { id: 2, currency: 'EUR', roomTypes: [{ id: 21, maxPeople: 2, roomSize: 34 }] },
+      // Without any text, Beds24 leaves the key out; its times are not set.
+      {
+        id: 2,
+        currency: 'EUR',
+        address: '',
+        city: 'Saalbach',
+        checkInStart: '',
+        checkInEnd: '',
+        checkOutEnd: '',
+        featureCodes: [],
+        roomTypes: [
+          {
+            id: 21,
+            maxPeople: 2,
+            roomSize: 34,
+            featureCodes: [],
+            texts: [
+              { language: 'de', contentHeadline: '', contentDescription: '', roomDescription: '' },
+            ],
+          },
+        ],
+      },
     ],
   };
   const calendars = {
@@ -70,6 +116,19 @@ describe('loadInventory', () => {
         leadDays: 7,
         multiplier: 0.9,
         tax: { amount: 2.5, per: 'night' },
+        address: 'Musterweg 1, Saalbach',
+        checkIn: { from: '16:00', until: '20:00' },
+        checkOut: '10:00',
+        features: [['WIFI'], ['PARKING_PAID'], ['BEDROOM', 'BED_DOUBLE'], ['BOOT_DRYER']],
+        texts: {
+          de: {
+            headline: 'Für vier',
+            summary: 'Zwei Schlafzimmer.',
+            description: '<p><strong>61 m²</strong> mit Balkon.</p>',
+            houseRules: 'Nachtruhe ab 22 Uhr.',
+          },
+          en: { headline: '', summary: '', description: '', houseRules: '' },
+        },
       },
       {
         id: 21,
@@ -80,6 +139,11 @@ describe('loadInventory', () => {
         leadDays: 0,
         multiplier: 1,
         tax: null,
+        address: 'Saalbach',
+        checkIn: null,
+        checkOut: null,
+        features: [],
+        texts: { de: { headline: '', summary: '', description: '', houseRules: '' } },
       },
     ]);
     expect(days[11]).toEqual([
@@ -93,6 +157,15 @@ describe('loadInventory', () => {
     expect(fetch).toHaveBeenCalledWith(
       'http://beds24.test/v2/inventory/rooms/calendar?startDate=2027-01-01&endDate=2027-01-05&includeNumAvail=true&includePrices=true&includeOverride=true',
       expect.objectContaining({ headers: { token: 'secret' } }),
+    );
+  });
+
+  it('asks for the texts in every language', async () => {
+    answer(200, properties, calendars);
+    await loadInventory('2027-01-01', '2027-01-05');
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringMatching(/\/properties\?.*includeTexts=all&includeLanguages=all/),
+      expect.anything(),
     );
   });
 
@@ -119,5 +192,45 @@ describe('multiplier', () => {
     expect(multiplier(undefined)).toBe(1);
     expect(multiplier('0.9')).toBeNull();
     expect(multiplier('*x')).toBeNull();
+  });
+});
+
+describe('listingOf', () => {
+  const room = {
+    id: 11,
+    propertyId: 1,
+    maxPeople: 4,
+    size: 61,
+    currency: 'EUR',
+    leadDays: 0,
+    multiplier: 1,
+    tax: null,
+    address: 'Musterweg 1, Saalbach',
+    checkIn: null,
+    checkOut: '10:00',
+    features: [['WIFI']],
+    texts: Object.fromEntries(
+      ['de', 'en', 'it'].map((code) => [
+        code,
+        { headline: code, summary: '', description: '', houseRules: '' },
+      ]),
+    ),
+  };
+
+  it("keeps the page's facts and the site's languages only", () => {
+    const listing = listingOf([room], 11, ['de', 'en', 'fr']);
+    expect(listing).toEqual({
+      maxPeople: 4,
+      size: 61,
+      address: 'Musterweg 1, Saalbach',
+      checkIn: null,
+      checkOut: '10:00',
+      features: [['WIFI']],
+      texts: { de: room.texts['de'], en: room.texts['en'] },
+    });
+  });
+
+  it('fails for a room Beds24 does not list', () => {
+    expect(() => listingOf([room], 12, ['de'])).toThrow('Beds24 has no room 12');
   });
 });
