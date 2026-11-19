@@ -4,9 +4,11 @@ import { Routes } from '@angular/router';
 import site from '../content/generated/site';
 import { loadTexts } from '../content/generated/texts';
 import type { Language } from '../content/schema';
+import { Apartment } from './apartment';
 import { Credits } from './credits';
 import { weeks } from './free-weeks';
 import { Home } from './home';
+import { listing } from './listing';
 import { NotFound } from './not-found';
 import { Placeholder } from './placeholder';
 import { Shell } from './shell';
@@ -28,7 +30,7 @@ const pages = ({ paths }: Language): Routes => [
     path: `${paths.apartments}/:slug`,
     canMatch: [(_route, segments) => site.apartments.some(({ slug }) => slug === segments[1].path)],
     children: [
-      { path: '', component: Placeholder, data: { page: 'apartment' } },
+      { path: '', component: Apartment, resolve: { listing }, data: { page: 'apartment' } },
       { path: paths.book, component: Placeholder, data: { page: 'book' } },
     ],
   },

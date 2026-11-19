@@ -1082,4 +1082,332 @@
       --ng-icon__size: 1.375rem;
     }
   }
+
+  /* The apartment page: from 64rem the picture and the content on the left, the right column
+     free for the booking panel. */
+  .apartment {
+    padding-top: 1rem;
+
+    h1 {
+      margin-top: 0.5rem;
+    }
+
+    h2 {
+      margin-bottom: 1rem;
+      font-size: clamp(1.375rem, 1.2rem + 0.8vw, 1.75rem);
+      font-weight: 500;
+      letter-spacing: -0.01em;
+    }
+  }
+
+  .back {
+    --air: 0.875rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    min-height: var(--size-control);
+    margin-inline: calc(-1 * var(--air));
+    padding-inline: var(--air);
+    border-radius: var(--radius-control);
+    color: var(--color-accent);
+    font-weight: 500;
+    text-decoration: underline transparent;
+    text-underline-offset: 0.3em;
+    transition: text-decoration-color 0.2s;
+
+    &:hover {
+      text-decoration-color: currentColor;
+    }
+  }
+
+  .facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.5rem;
+    margin-top: 0.75rem;
+    font-weight: 500;
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    ng-icon {
+      color: var(--color-ink-soft);
+    }
+  }
+
+  .apartment-columns {
+    display: grid;
+    gap: 2rem;
+    margin-top: 1.5rem;
+
+    @media (min-width: 64rem) {
+      grid-template-columns: minmax(0, 1fr) 24rem;
+      column-gap: 3.5rem;
+
+      > * {
+        grid-column: 1;
+      }
+    }
+  }
+
+  .apartment-picture {
+    position: relative;
+
+    img {
+      width: 100%;
+      height: auto;
+      aspect-ratio: 4 / 3;
+      object-fit: cover;
+      border-radius: var(--radius-card);
+      background: var(--color-line);
+    }
+  }
+
+  /* Each generated picture says so on itself, where no viewer can miss it. */
+  .ai-label {
+    position: absolute;
+    top: 0.75rem;
+    left: 0.75rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3125rem;
+    padding: 0.1875rem 0.625rem 0.1875rem 0.5rem;
+    border-radius: var(--radius-control);
+    background: rgb(255 255 255 / 0.92);
+    color: var(--color-ink);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.5;
+
+    ng-icon {
+      --ng-icon__size: 0.875rem;
+    }
+  }
+
+  .prose {
+    max-width: 40rem;
+
+    h3 {
+      margin: 1.25rem 0 0.375rem;
+      font-size: 1.1875rem;
+      font-weight: 500;
+
+      &:first-child {
+        margin-top: 0;
+      }
+    }
+
+    p,
+    ul,
+    ol,
+    blockquote {
+      margin-bottom: 0.625rem;
+    }
+
+    ul,
+    ol {
+      padding-left: 1.25rem;
+    }
+
+    ul {
+      list-style: disc;
+    }
+
+    ol {
+      list-style: decimal;
+    }
+
+    blockquote {
+      padding-left: 1rem;
+      border-left: 2px solid var(--color-line);
+    }
+
+    hr {
+      margin: 1rem 0;
+      border-color: var(--color-line);
+    }
+
+    strong {
+      font-weight: 600;
+    }
+
+    a {
+      color: var(--color-accent);
+      font-weight: 500;
+    }
+
+    /* On a phone a long description shows about six lines until its button opens it. */
+    @media (max-width: 47.9375rem) {
+      &:not([data-open]) {
+        max-height: 10.5rem;
+        overflow: hidden;
+      }
+
+      &[data-long]:not([data-open]) {
+        mask-image: linear-gradient(to bottom, #000 60%, transparent);
+      }
+    }
+  }
+
+  /* A text with an arrow that opens more; its focus ring is a pill with air at its sides. */
+  .text-button {
+    --air: 0.875rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    min-height: var(--size-control);
+    margin-inline: calc(-1 * var(--air));
+    padding-inline: var(--air);
+    border-radius: var(--radius-control);
+    color: var(--color-accent);
+    font-weight: 500;
+    text-decoration: underline transparent;
+    text-underline-offset: 0.3em;
+    transition: text-decoration-color 0.2s;
+    cursor: pointer;
+
+    &:hover {
+      text-decoration-color: currentColor;
+    }
+
+    ng-icon {
+      transition: rotate 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    &[aria-expanded='true'] ng-icon {
+      rotate: 180deg;
+    }
+
+    &[hidden] {
+      display: none;
+    }
+  }
+
+  .more-text {
+    @media (min-width: 48rem) {
+      display: none;
+    }
+  }
+
+  .rooms {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
+    gap: 1rem;
+
+    strong {
+      display: block;
+      font-weight: 500;
+    }
+
+    span {
+      color: var(--color-ink-soft);
+      font-size: 0.9375rem;
+    }
+  }
+
+  /* Areas run in as many columns as there is room for, each kept whole. */
+  .amenities {
+    columns: 13rem;
+    column-gap: 2rem;
+  }
+
+  .area {
+    break-inside: avoid;
+    margin-bottom: 1.5rem;
+
+    h3 {
+      display: flex;
+      align-items: center;
+      gap: 0.625rem;
+      margin-bottom: 0.375rem;
+      font-size: 1.0625rem;
+      font-weight: 500;
+    }
+
+    ng-icon {
+      color: var(--color-ink-soft);
+    }
+
+    ul {
+      padding-left: 1.75rem;
+      line-height: 1.75;
+    }
+
+    li[hidden] {
+      display: none;
+    }
+
+    /* On a phone an area's entries are one line, so the list stays short. */
+    @media (max-width: 47.9375rem) {
+      margin-bottom: 1rem;
+
+      li {
+        display: inline;
+      }
+
+      li:not([hidden]) + li:not([hidden])::before {
+        content: ', ';
+      }
+    }
+
+    &.single {
+      display: flex;
+      align-items: center;
+      gap: 0.625rem;
+      margin-bottom: 1rem;
+      font-size: 1.0625rem;
+      font-weight: 500;
+    }
+  }
+
+  /* Disclosures: rows on a white sheet, a hairline between them. */
+  .disclosures {
+    border-radius: var(--radius-card);
+    background: var(--color-surface);
+
+    details + details {
+      border-top: 1px solid var(--color-line);
+    }
+
+    summary {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      min-height: 3.5rem;
+      padding: 0.5rem 1.25rem;
+      border-radius: var(--radius-card);
+      font-weight: 500;
+      list-style: none;
+      cursor: pointer;
+
+      &::-webkit-details-marker {
+        display: none;
+      }
+
+      &:focus-visible {
+        outline-offset: -3px;
+      }
+
+      ng-icon:first-child {
+        color: var(--color-ink-soft);
+      }
+
+      ng-icon:last-child {
+        margin-left: auto;
+        transition: rotate 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+    }
+
+    [open] summary ng-icon:last-child {
+      rotate: 180deg;
+    }
+
+    details p {
+      padding: 0 1.25rem 1.25rem 3.375rem;
+      color: var(--color-ink-soft);
+    }
+  }
 }
