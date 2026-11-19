@@ -183,7 +183,7 @@ amounts can be compared down a column.
   docked developer tool, the page keeps its 320 px layout and scrolls sideways instead of squeezing.
   The minimum is in px, not rem, so that zoom up to 400% at 1280 px, which leaves 320 CSS px, still
   reflows.
-- **Column:** content sits in a centred column of 66rem with a gutter of 1rem on a phone and 2rem
+- **Column:** content sits in a centred column of 72rem with a gutter of 1rem on a phone and 2rem
   from 48rem up. The hero photo and, later, the map run edge to edge up to 120rem.
 - **Hero:** the photo fills the first screen, the header lying over its top, which fades to the
   ground colour behind the header's text. The text is a white card near the bottom of the screen,

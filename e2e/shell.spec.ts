@@ -380,6 +380,26 @@ test('the wordmark keeps one line on a phone', async ({ page }) => {
   }
 });
 
+test('the wordmark, the hero card and the free weeks start on the 72rem column’s edge', async ({
+  page,
+}) => {
+  for (const width of [1280, 1440, 1920]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto('/de');
+    // A classic scrollbar takes its width from the page, which centres the column in the rest.
+    const inner = await page.evaluate(() => document.documentElement.clientWidth);
+    const edge = (inner - 72 * 16) / 2 + 32;
+    for (const selector of ['.wordmark', '.hero-copy', '.weeks-head'])
+      expect(
+        await page
+          .locator(selector)
+          .first()
+          .evaluate((e) => e.getBoundingClientRect().left),
+        `${selector} at ${width}`,
+      ).toBe(edge);
+  }
+});
+
 test('narrower than 320 px the page keeps its 320 px layout and scrolls sideways', async ({
   page,
 }) => {
