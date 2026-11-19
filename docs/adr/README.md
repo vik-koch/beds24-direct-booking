@@ -25,6 +25,7 @@ The technology the site is built with and runs on.
 | [6](0006-beds24-data-in-a-page.md) | Beds24 data reaches a page through a resolver whose source exists on the server only | Accepted |
 | [7](0007-hosting-and-delivery.md) | Hosting and delivery: CI builds the images and pushes the demo over SSH; a tag names a release | Accepted |
 | [8](0008-the-season-in-the-page.md) | The season in the page: both seasons in the HTML, an inline script picks one before the first paint, local storage remembers a choice | Accepted |
+| [10](0010-pictures-converted-at-build-time.md) | Apartment pictures are converted to WebP in several widths at build time, with sharp | Accepted |
 
 ## Process
 

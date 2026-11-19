@@ -48,7 +48,7 @@ credits page.
 
 ## Generated apartment pictures
 
-The 14 pictures in `design/generated/` show the demo's invented apartments. They are
+The 14 pictures `zirbe-1.webp` to `ahorn-6.webp` in `content/demo/pictures/` show the demo's invented apartments. They are
 AI-generated with OpenAI's image generation, directed through Codex, from the prompts in
 `design/apartment-pictures.md`; no photographs went in. They are supplied under this
 repository's licence to the extent that copyright or other rights exist in them. OpenAI's

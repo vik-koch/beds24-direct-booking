@@ -13,11 +13,11 @@ are invented interiors and scenery, not photographs of a real property.
 All final files are landscape 1536 × 1024 (3:2). The generator gave PNG; the repository holds them
 as WebP at quality 85.
 
-| File                         | Reference                                                          | Suggested English alternative text                                                                                                          |
-| ---------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| [zirbe-1.webp](zirbe-1.webp) | None                                                               | Stone pine studio with a double bed, moss green blanket, round table for two and a grey cushioned window seat overlooking a forested slope. |
-| [zirbe-2.webp](zirbe-2.webp) | zirbe-1.webp for generation; generated kitchenette draft for edits | Stone pine kitchenette with a two-ring hob, sink, open shelf, plain ivory kettle and part of the grey window seat.                          |
-| [zirbe-3.webp](zirbe-3.webp) | zirbe-1.webp                                                       | Bathroom with a floating stone pine vanity, round mirror, walk-in rain shower and frosted window.                                           |
+| File                                                     | Reference                                                          | Suggested English alternative text                                                                                                          |
+| -------------------------------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| [zirbe-1.webp](../../content/demo/pictures/zirbe-1.webp) | None                                                               | Stone pine studio with a double bed, moss green blanket, round table for two and a grey cushioned window seat overlooking a forested slope. |
+| [zirbe-2.webp](../../content/demo/pictures/zirbe-2.webp) | zirbe-1.webp for generation; generated kitchenette draft for edits | Stone pine kitchenette with a two-ring hob, sink, open shelf, plain ivory kettle and part of the grey window seat.                          |
+| [zirbe-3.webp](../../content/demo/pictures/zirbe-3.webp) | zirbe-1.webp                                                       | Bathroom with a floating stone pine vanity, round mirror, walk-in rain shower and frosted window.                                           |
 
 ## Reuse and disclosure
 

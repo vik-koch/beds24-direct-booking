@@ -11,9 +11,10 @@ pictures follow those descriptions.
 | Lärche    | 61 m², second floor | Two bedrooms (a double bed, a bunk bed), a kitchen-living room, a bath tub, a south-facing balcony                                     | 5        |
 | Ahorn     | 96 m², two floors   | Three bedrooms (two double beds, a bunk bed), two bathrooms, one large table for six, a terrace, a sauna of its own                    | 6        |
 
-All 14 pictures have been generated. They are in `design/generated/` as WebP, with one note per
-apartment: the prompts as they were sent, the reference image of each, a suggested alternative text
-per picture, what the review found, and the terms they are published under.
+All 14 pictures have been generated. They are in the demo's content, `content/demo/pictures/`, as
+WebP; `design/generated/` has one note per apartment: the prompts as they were sent, the reference
+image of each, a suggested alternative text per picture, what the review found, and the terms they
+are published under.
 
 Each bedroom has a picture. The kitchen is part of the living picture where the apartment has a
 kitchen-living room; only Zirbe, a single room, shows its kitchenette apart. Each apartment shows
@@ -34,9 +35,9 @@ one bathroom.
   clocks, impossible windows or doors, and the details the simulator promises (the window seat, the
   bunk bed, the bath tub, the sauna).
 - **Name the files** by apartment and number, as in the headings: `zirbe-1` and so on.
-- **Keep them in `design/generated/`,** not in `content/`: the content folder's `pictures/` is
-  served as it is. The repository holds them as WebP at quality 85; the pictures a site shows go
-  into its content when its pages use them.
+- **Put them into the demo's content,** `content/demo/pictures/`, as WebP at quality 85, and list
+  them in the apartment's file with their alternative texts. The build serves them only as their
+  converted files.
 - **Write down beside them** the prompts as they were sent, the reference image of each, a suggested
   alternative text per picture, and what the review found.
 - **Season:** the views show early autumn without snow, so that the pictures suit both seasons of
