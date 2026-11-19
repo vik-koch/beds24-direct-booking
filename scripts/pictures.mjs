@@ -42,7 +42,8 @@ async function read(dir, file, cache) {
 }
 
 // Each apartment's pictures by slug, written to `out`, and how many files had to be converted. A
-// conversion is kept in the cache under the source's digest and published under a digest of the file itself, so a different encoding gets a new address.
+// conversion is kept in the cache under the source's digest and published under a digest of the
+// file itself, so a different encoding gets a new address.
 export async function convertPictures(dir, apartments, out, cache) {
   mkdirSync(cache, { recursive: true });
   mkdirSync(out, { recursive: true });
