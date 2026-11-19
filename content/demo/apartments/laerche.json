@@ -1,4 +1,41 @@
 {
   "roomId": 9001012,
-  "name": "Lärche"
+  "name": "Lärche",
+  "pictures": [
+    {
+      "file": "pictures/laerche-1.webp",
+      "alt": {
+        "de-AT": "Wohnküche aus Lärche mit Tisch und vier Stühlen, anthrazitfarbenem Sofa, rostroten Polstern und Glastüren zu einem sonnigen Holzbalkon.",
+        "en-GB": "Larch kitchen-living room with a table and four chairs, charcoal sofa, rust cushions and glass doors to a sunny wooden balcony."
+      }
+    },
+    {
+      "file": "pictures/laerche-2.webp",
+      "alt": {
+        "de-AT": "Doppelzimmer mit Kopfteil aus Lärche, rostroter Wolldecke, Leselampen am Bett und Einbauschrank.",
+        "en-GB": "Double bedroom with a larch headboard, rust wool throw, bedside reading lamps and a built-in wardrobe."
+      }
+    },
+    {
+      "file": "pictures/laerche-3.webp",
+      "alt": {
+        "de-AT": "Kinderzimmer aus Lärche mit Stockbett und Leiter, Schreibtisch unter dem Fenster und Wandhaken aus Holz.",
+        "en-GB": "Larch bunk bedroom with a ladder, desk under the window and wooden wall hooks."
+      }
+    },
+    {
+      "file": "pictures/laerche-4.webp",
+      "alt": {
+        "de-AT": "Bad mit weißer Badewanne und Handbrause, Waschtisch aus Lärche, Milchglasfenster und rostroten und cremeweißen Handtüchern.",
+        "en-GB": "Bathroom with a white bath tub and hand shower, larch vanity, frosted window and rust and off-white towels."
+      }
+    },
+    {
+      "file": "pictures/laerche-5.webp",
+      "alt": {
+        "de-AT": "Sonniger Holzbalkon mit Klapptisch und zwei Stühlen mit rostroten Polstern, Blick über Dächer des Orts und einen bewaldeten Berghang.",
+        "en-GB": "Sunny wooden balcony with a folding table and two rust-cushioned chairs overlooking village roofs and a forested mountain slope."
+      }
+    }
+  ]
 }

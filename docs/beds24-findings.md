@@ -174,8 +174,13 @@ read-only token, for the free-weeks list:
 - **Pictures are not in the API** (checked again on 19 November 2026). `includePictures=true`
   returns no picture field, and the picture schema is commented out in the OpenAPI file. The control
   panel shows a public URL per picture, built from the property ID and a two-digit number. The files
-  load without a token: PNGs of about 1 MB, at most about 1100 px wide, without cache headers,
-  around forty per listing. The numbers carry no order.
+  load without a token, as PNGs without cache headers or an ETag; a missing number answers 404 with
+  an HTML body. An upload of 4080 × 3072 px was stored as 2000 × 1506 px with an alpha channel, 3.6
+  MB; older uploads are 1100 px wide or less, around 1 MB. The number is given at upload and carries
+  no order.
+- **The control panel keeps more per picture than the URL:** an ID such as `P<property ID>-19`, a
+  position that orders the gallery without changing the number, a resize setting, a caption per
+  language and tags. The API sends none of it yet.
 
 ## The booking page
 

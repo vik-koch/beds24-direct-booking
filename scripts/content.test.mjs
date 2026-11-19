@@ -1,13 +1,17 @@
 import assert from 'node:assert/strict';
-import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { test } from 'node:test';
+import { after, test } from 'node:test';
 import { readContent, writeContent } from './content.mjs';
+
+// Every folder a test makes, removed when the file's tests are done.
+const root = mkdtempSync(join(tmpdir(), 'content-test-'));
+after(() => rmSync(root, { recursive: true, force: true }));
 
 // A copy of the demo's content with files changed, each given by its name and then its change.
 function changed(...edits) {
-  const dir = mkdtempSync(join(tmpdir(), 'content-'));
+  const dir = mkdtempSync(join(root, 'content-'));
   cpSync('content/demo', dir, { recursive: true });
   for (let i = 0; i < edits.length; i += 2) {
     const value = JSON.parse(readFileSync(join(dir, edits[i]), 'utf8'));
@@ -16,6 +20,10 @@ function changed(...edits) {
   }
   return dir;
 }
+
+// The project's cache, which the content script before the tests has filled with the demo's
+// pictures; scripts/pictures.test.mjs converts into empty caches.
+const cache = 'node_modules/.cache/pictures';
 
 const bothTexts = (change) => changed('texts.de-AT.json', change, 'texts.en-GB.json', change);
 
@@ -107,7 +115,10 @@ test('a content folder beyond a limit fails, and the message names the limit', (
     'apartments/zirbe.json',
     (apartment) => (apartment.name = 'x'.repeat(20)),
   );
-  writeFileSync(join(at, 'apartments/d.json'), JSON.stringify({ roomId: 1, name: 'D' }));
+  writeFileSync(
+    join(at, 'apartments/d.json'),
+    readFileSync('content/demo/apartments/zirbe.json', 'utf8'),
+  );
   assert.equal(readContent(at).site.apartments.length, 4);
   // A letter with its accent as a code point of its own counts once.
   const accent = (count) => 'x'.repeat(count - 1) + 'e\u0301';
@@ -125,11 +136,8 @@ test('a content folder beyond a limit fails, and the message names the limit', (
 });
 
 test('each apartment is a file of its own, in the order site.json lists them', () => {
-  assert.deepEqual(readContent('content/demo').site.apartments[0], {
-    slug: 'zirbe',
-    roomId: 9001011,
-    name: 'Zirbe',
-  });
+  const { slug, roomId, name } = readContent('content/demo').site.apartments[0];
+  assert.deepEqual({ slug, roomId, name }, { slug: 'zirbe', roomId: 9001011, name: 'Zirbe' });
   assert.deepEqual(
     readContent('content/demo').site.apartments.map((a) => a.slug),
     ['zirbe', 'laerche', 'ahorn'],
@@ -156,6 +164,65 @@ test('each apartment is a file of its own, in the order site.json lists them', (
     () => readContent(changed('apartments/zirbe.json', (a) => (a.slug = 'zirbe'))),
     /apartments\/zirbe\.json\n {2}\(file\): Unrecognized key/,
   );
+});
+
+test("a picture has its alternative text in exactly the site's languages", () => {
+  const missing = changed('apartments/zirbe.json', (a) => delete a.pictures[1].alt['en-GB']);
+  assert.throws(
+    () => readContent(missing),
+    /apartments\/zirbe\.json\n {2}pictures\.1\.alt\.en-GB: missing$/,
+  );
+  const extra = changed('apartments/zirbe.json', (a) => (a.pictures[0].alt['it'] = 'Foto'));
+  assert.throws(
+    () => readContent(extra),
+    /pictures\.0\.alt\.it: a language site\.json does not list$/,
+  );
+  assert.throws(
+    () => readContent(changed('apartments/zirbe.json', (a) => (a.pictures[0].alt['en-GB'] = ' '))),
+    /apartments\/zirbe\.json\n {2}pictures\.0\.alt\.en-GB: empty or only spaces/,
+  );
+  assert.throws(
+    () => readContent(changed('texts.en-GB.json', (texts) => (texts.nav.weeks = ''))),
+    /texts\.en-GB\.json\n {2}nav\.weeks: empty or only spaces/,
+  );
+  assert.throws(
+    () => readContent(changed('apartments/zirbe.json', (a) => (a.pictures = []))),
+    /apartments\/zirbe\.json\n {2}pictures: at least one picture/,
+  );
+  assert.throws(
+    () =>
+      readContent(
+        changed('apartments/zirbe.json', (a) => (a.pictures[0].file = 'http://example.com/a.png')),
+      ),
+    /pictures\.0\.file: not a file in pictures\/ or an https address/,
+  );
+});
+
+test('the generated site gives each picture its files and its texts by address prefix', async () => {
+  const out = mkdtempSync(join(root, 'generated-'));
+  await writeContent('content/demo', out, cache);
+  const site = readFileSync(join(out, 'site.ts'), 'utf8');
+  const value = JSON.parse(site.slice(site.indexOf('= ') + 2, site.lastIndexOf(';\nexport')));
+  const [first] = value.apartments[0].pictures;
+  assert.deepEqual(Object.keys(first.alt), ['de', 'en']);
+  assert.deepEqual([first.width, first.height], [1536, 1024]);
+  assert.deepEqual(
+    first.sources.map((s) => s.width),
+    [480, 960, 1440, 1536],
+  );
+  assert.match(first.sources[0].url, /^\/pictures\/apartments\/zirbe-1-480\.[0-9a-f]{8}\.webp$/);
+  assert.ok(existsSync(join(out, first.sources[0].url)));
+  // The source is served only as its converted files.
+  assert.ok(!existsSync(join(out, 'pictures', 'zirbe-1.webp')));
+  assert.ok(existsSync(join(out, 'pictures', 'hero-winter.webp')));
+  assert.equal(await writeContent('content/demo', out, cache), 0);
+  // A hero that is also an apartment's picture is still served as it is.
+  const shared = changed(
+    'apartments/zirbe.json',
+    (a) => (a.pictures[0].file = 'pictures/hero-winter.webp'),
+  );
+  await writeContent(shared, out, cache);
+  assert.ok(existsSync(join(out, 'pictures', 'hero-winter.webp')));
 });
 
 test('two languages with one address prefix are refused', () => {
@@ -252,13 +319,13 @@ test('a feature names any Lucide icon, and only those', () => {
   );
 });
 
-test('two names of one icon import it once', () => {
+test('two names of one icon import it once', async () => {
   const dir = changed('site.json', (site) => {
     site.features[0].icon = 'heading-1';
     site.features[1].icon = 'heading1';
   });
-  const out = mkdtempSync(join(tmpdir(), 'generated-'));
-  writeContent(dir, out);
+  const out = mkdtempSync(join(root, 'generated-'));
+  await writeContent(dir, out, cache);
   const icons = readFileSync(join(out, 'icons.ts'), 'utf8');
   assert.equal(icons.match(/lucideHeading1/g).length, 2);
 });

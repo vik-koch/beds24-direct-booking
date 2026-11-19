@@ -10,7 +10,7 @@ content. The application has no wording, no colour and no typeface of its own. T
 | File | What it holds |
 |---|---|
 | `site.json` | The site's name, its languages in order as language tags, the apartments' slugs in their order, the seasons, the hero's features and the contact. |
-| `apartments/<slug>.json` | One apartment: its Beds24 room ID and its name. One file for each slug `site.json` lists, and no other. |
+| `apartments/<slug>.json` | One apartment: its Beds24 room ID, its name and its pictures. One file for each slug `site.json` lists, and no other. |
 | `texts.<tag>.json` | Everything one language says: the wording, the address parts and the anchors. One file per language listed in `site.json`, such as `texts.en-GB.json`. |
 | `theme.css` | The palette and the typeface as custom properties on `:root`, and the typeface's `@font-face`. |
 | `fonts/` | Optional: the font files `theme.css` refers to, as `fonts/<file>`. |
@@ -33,9 +33,28 @@ content. The application has no wording, no colour and no typeface of its own. T
   [`site-map.md`](site-map.md)'s addresses, such as `wohnungen` for `apartments`; `anchors` are the
   home page's section anchors. An apartment's slug is the same in every language.
 - **An apartment** is a file of its own, named by its slug: `site.json` lists
-  `"apartments": ["zirbe", "laerche"]` and `apartments/zirbe.json` holds
-  `{ "roomId": 9001011, "name": "Zirbe" }`. The room ID is the Beds24 room the apartment is, and the
-  name is how the site calls it in every language.
+  `"apartments": ["zirbe", "laerche"]`, and `apartments/zirbe.json` holds
+
+  ```json
+  {
+    "roomId": 9001011,
+    "name": "Zirbe",
+    "pictures": [{ "file": "pictures/zirbe-1.webp", "alt": { "de-AT": "…", "en-GB": "…" } }]
+  }
+  ```
+
+  The room ID is the Beds24 room the apartment is, and the name is how the site calls it in every
+  language.
+
+- **An apartment's pictures** (`pictures` in its file) are listed in the order the site shows them,
+  at least one, each a `file` and its alternative text `alt` in each of the site's languages by tag.
+  A picture is landscape or square, from 1:1 to 2:1 with 1% to spare either way. The file is in
+  `pictures/` or is an `https` address, such as a Beds24 picture's. The build converts each to WebP
+  at quality 80 in widths of 480, 960, 1440 and 1920 px, none wider than the source, and serves only
+  those, at `/pictures/apartments/` under names that change with the picture
+  ([ADR 10](adr/0010-pictures-converted-at-build-time.md)). Give the build sources of at least 1920
+  px where there are any: Beds24 keeps an upload at up to 2000 px. A local run keeps its downloads
+  and conversions in `node_modules/.cache/pictures`; delete it to fetch the addresses again.
 - **The notice** (`notice` in a texts file) is an optional line above the header, with an optional
   link. Left out, no line is shown.
 - **The seasons** (`seasons` in `site.json`) are `winter`, `summer` or both, each with its hero
@@ -89,6 +108,7 @@ beyond a limit fails its build, with the limit named.
 | Languages | Exactly 2 | The language menu and the address prefixes have not been tried with a third | The schema |
 | Seasons | 1 or 2 | Winter and summer, one each | The schema |
 | Hero features | Up to 5 | The hero's card | The schema |
+| An apartment's picture | Square to 2:1, landscape, with 1% to spare | The gallery's frames; tested with 1:1, 4:3 and 3:2 | The content script; the demo has 3:2, the e2e test site 1:1 and 4:3 |
 
 **The site name's size comes from its length,** at an assumed 0.55em per letter: the widest
 mixed-case average measured in the demo's font (Jost at weight 500: 0.547em in "Wohnen am Wald").
@@ -105,11 +125,12 @@ which is not committed. It runs before every `start`, `build`, `test` and `lint`
 missing in one language, optional ones such as `notice` included, a key the schema does not know, a
 missing texts file, a tag that is not canonical, two tags with one language each, a season named in
 the texts but not in `site.json` or the other way round, a feature without its text or a text
-without its feature, a missing picture, an apartment without its file or a file in `apartments/`
-that `site.json` does not list, and a part beyond its boundary stop the build with the file and the
-key named. The schema, not the demo's files, defines the keys, so the compiler checks every template
-against the same keys for every site. Every language has the same keys, so every language renders
-the same elements and a change of language finds the reader's place.
+without its feature, a missing picture, an apartment picture that is not one, does not answer, is
+portrait or wider than 2:1 or lacks its alternative text in a language, an apartment without its
+file or a file in `apartments/` that `site.json` does not list, and a part beyond its boundary stop
+the build with the file and the key named. The schema, not the demo's files, defines the keys, so
+the compiler checks every template against the same keys for every site. Every language has the same
+keys, so every language renders the same elements and a change of language finds the reader's place.
 
 ## Another folder
 

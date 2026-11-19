@@ -13,13 +13,13 @@ are invented interiors and scenery, not photographs of a real property.
 All final files are landscape 1536 × 1024 (3:2). The generator gave PNG; the repository holds them
 as WebP at quality 85.
 
-| File                             | Reference      | Suggested English alternative text                                                                                               |
-| -------------------------------- | -------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| [laerche-1.webp](laerche-1.webp) | None           | Larch kitchen-living room with a table and four chairs, charcoal sofa, rust cushions and glass doors to a sunny wooden balcony.  |
-| [laerche-2.webp](laerche-2.webp) | laerche-1.webp | Double bedroom with a larch headboard, rust wool throw, bedside reading lamps and a built-in wardrobe.                           |
-| [laerche-3.webp](laerche-3.webp) | laerche-1.webp | Larch bunk bedroom with a ladder, desk under the window and wooden wall hooks.                                                   |
-| [laerche-4.webp](laerche-4.webp) | laerche-1.webp | Bathroom with a white bath tub and hand shower, larch vanity, frosted window and rust and off-white towels.                      |
-| [laerche-5.webp](laerche-5.webp) | laerche-1.webp | Sunny wooden balcony with a folding table and two rust-cushioned chairs overlooking village roofs and a forested mountain slope. |
+| File                                                         | Reference      | Suggested English alternative text                                                                                               |
+| ------------------------------------------------------------ | -------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| [laerche-1.webp](../../content/demo/pictures/laerche-1.webp) | None           | Larch kitchen-living room with a table and four chairs, charcoal sofa, rust cushions and glass doors to a sunny wooden balcony.  |
+| [laerche-2.webp](../../content/demo/pictures/laerche-2.webp) | laerche-1.webp | Double bedroom with a larch headboard, rust wool throw, bedside reading lamps and a built-in wardrobe.                           |
+| [laerche-3.webp](../../content/demo/pictures/laerche-3.webp) | laerche-1.webp | Larch bunk bedroom with a ladder, desk under the window and wooden wall hooks.                                                   |
+| [laerche-4.webp](../../content/demo/pictures/laerche-4.webp) | laerche-1.webp | Bathroom with a white bath tub and hand shower, larch vanity, frosted window and rust and off-white towels.                      |
+| [laerche-5.webp](../../content/demo/pictures/laerche-5.webp) | laerche-1.webp | Sunny wooden balcony with a folding table and two rust-cushioned chairs overlooking village roofs and a forested mountain slope. |
 
 ## Reuse and disclosure
 

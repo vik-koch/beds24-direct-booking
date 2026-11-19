@@ -1,4 +1,20 @@
 {
   "roomId": 9001011,
-  "name": "Vista sul Ghiacciaio"
+  "name": "Vista sul Ghiacciaio",
+  "pictures": [
+    {
+      "file": "pictures/square.png",
+      "alt": {
+        "it": "Immagine di prova quadrata",
+        "nl-BE": "Vierkante testafbeelding"
+      }
+    },
+    {
+      "file": "pictures/four-three.png",
+      "alt": {
+        "it": "Immagine di prova in formato 4:3",
+        "nl-BE": "Testafbeelding in 4:3"
+      }
+    }
+  ]
 }

@@ -47,5 +47,6 @@ The sheets in `screenshots/` show the page on a phone and on a desktop, in both 
 ## Apartment pictures
 
 [`apartment-pictures.md`](apartment-pictures.md) is the shot list and the prompts for the demo
-apartments' pictures; [`generated/`](generated/) holds the 14 generated pictures with a note per
-apartment. They are AI-generated, see [`licenses/README.md`](../licenses/README.md).
+apartments' pictures; [`generated/`](generated/) holds a note per apartment on its generated
+pictures, which are in [`content/demo/pictures/`](../content/demo/pictures/). They are AI-generated,
+see [`licenses/README.md`](../licenses/README.md).

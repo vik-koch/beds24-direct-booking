@@ -4,7 +4,7 @@ import { letters, seasonNames } from './names.ts';
 export { lucideName, seasonNames, type SeasonName } from './names.ts';
 
 const segment = z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/);
-const text = z.string().min(1);
+const text = z.string().refine((value) => value.trim() !== '', 'empty or only spaces');
 
 const unique = <T>(list: T[], key: (item: T) => unknown) =>
   new Set(list.map(key)).size === list.length;
@@ -130,9 +130,25 @@ export const siteSchema = z.strictObject({
     .optional(),
 });
 
+// An apartment's pictures in their order: a file in the content folder's pictures/ or an https
+// address, such as a Beds24 picture's, and its alternative text in each of the site's languages
+// by tag; the content script checks the languages and converts the pictures.
 export const apartmentSchema = z.strictObject({
   roomId: z.number().int(),
   name: text.refine((value) => letters(value) <= 20, 'at most 20 characters'),
+  pictures: z
+    .array(
+      z.strictObject({
+        file: z
+          .string()
+          .regex(
+            /^(pictures\/[\w.-]+|https:\/\/\S+)$/,
+            'not a file in pictures/ or an https address',
+          ),
+        alt: z.record(z.string(), text),
+      }),
+    )
+    .min(1, 'at least one picture'),
 });
 
 export const textsSchema = z.strictObject({
@@ -228,7 +244,18 @@ export type Language = { tag: string; code: string; name: string } & Pick<
   Texts,
   'paths' | 'anchors'
 >;
-export type Apartment = { slug: string } & z.infer<typeof apartmentSchema>;
+// A converted picture: its alternative text by address prefix, the size of its widest file, and
+// each file by its width, narrowest first.
+export interface Picture {
+  alt: Record<string, string>;
+  width: number;
+  height: number;
+  sources: { width: number; url: string }[];
+}
+export type Apartment = { slug: string; pictures: Picture[] } & Omit<
+  z.infer<typeof apartmentSchema>,
+  'pictures'
+>;
 export type Site = Omit<z.infer<typeof siteSchema>, 'languages' | 'apartments'> & {
   languages: Language[];
   apartments: Apartment[];

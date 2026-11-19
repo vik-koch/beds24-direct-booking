@@ -1,4 +1,13 @@
 {
   "roomId": 9001022,
-  "name": "Il Fienile del Prato"
+  "name": "Il Fienile del Prato",
+  "pictures": [
+    {
+      "file": "pictures/four-three.png",
+      "alt": {
+        "it": "Immagine di prova in formato 4:3",
+        "nl-BE": "Testafbeelding in 4:3"
+      }
+    }
+  ]
 }

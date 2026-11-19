@@ -14,14 +14,14 @@ scenery, not photographs of a real property. No external reference photographs w
 All six files are landscape 1536 × 1024 (3:2). The generator gave PNG; the repository holds them as
 WebP at quality 85.
 
-| File                         | Suggested English alternative text                                                               |
-| ---------------------------- | ------------------------------------------------------------------------------------------------ |
-| [ahorn-1.webp](ahorn-1.webp) | Living and dining room with a maple table for six, an open kitchen, sage sofa and terrace doors. |
-| [ahorn-2.webp](ahorn-2.webp) | Upstairs double bedroom with a sloping timber ceiling, skylight and blue blanket.                |
-| [ahorn-3.webp](ahorn-3.webp) | Second double bedroom with a sage upholstered headboard and maple chest of drawers.              |
-| [ahorn-4.webp](ahorn-4.webp) | Children’s bedroom with a maple bunk bed, ladder and reading corner.                             |
-| [ahorn-5.webp](ahorn-5.webp) | Bathroom with two basins, a walk-in shower and a private sauna behind glass.                     |
-| [ahorn-6.webp](ahorn-6.webp) | Wooden terrace with outdoor dining for six, cushioned benches and a forested mountain view.      |
+| File                                                     | Suggested English alternative text                                                               |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| [ahorn-1.webp](../../content/demo/pictures/ahorn-1.webp) | Living and dining room with a maple table for six, an open kitchen, sage sofa and terrace doors. |
+| [ahorn-2.webp](../../content/demo/pictures/ahorn-2.webp) | Upstairs double bedroom with a sloping timber ceiling, skylight and blue blanket.                |
+| [ahorn-3.webp](../../content/demo/pictures/ahorn-3.webp) | Second double bedroom with a sage upholstered headboard and maple chest of drawers.              |
+| [ahorn-4.webp](../../content/demo/pictures/ahorn-4.webp) | Children’s bedroom with a maple bunk bed, ladder and reading corner.                             |
+| [ahorn-5.webp](../../content/demo/pictures/ahorn-5.webp) | Bathroom with two basins, a walk-in shower and a private sauna behind glass.                     |
+| [ahorn-6.webp](../../content/demo/pictures/ahorn-6.webp) | Wooden terrace with outdoor dining for six, cushioned benches and a forested mountain view.      |
 
 ## Reuse and disclosure
 

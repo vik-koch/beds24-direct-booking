@@ -658,6 +658,18 @@ test('a site with a password answers only with it, under any user name', async (
   expect(await page.text()).toContain('Zirbe');
 });
 
+test("an apartment picture is served converted, with a year's cache, and its source is not", async ({
+  request,
+}) => {
+  const pictures = readdirSync('dist/beds24-direct-booking/browser/pictures/apartments');
+  const name = pictures.find((file) => /^zirbe-1-480\.[0-9a-f]{8}\.webp$/.test(file));
+  const response = await request.get(`/pictures/apartments/${name}`);
+  expect(response.status()).toBe(200);
+  expect(response.headers()['content-type']).toBe('image/webp');
+  expect(response.headers()['cache-control']).toBe('public, max-age=31536000');
+  expect((await request.get('/pictures/zirbe-1.webp')).status()).toBe(404);
+});
+
 test('the browser bundle does not know the token', () => {
   const browser = 'dist/beds24-direct-booking/browser';
   const scripts = readdirSync(browser).filter((file) => file.endsWith('.js'));
