@@ -9,7 +9,7 @@ content. The application has no wording, no colour and no typeface of its own. T
 <!-- prettier-ignore -->
 | File | What it holds |
 |---|---|
-| `site.json` | The site's name, its languages in order as language tags, the apartments' slugs in their order, the seasons, the hero's features and the contact. |
+| `site.json` | The site's name, its languages in order as language tags, the apartments' slugs in their order, the seasons, the hero's features, the apartment page's amenities and the contact. |
 | `apartments/<slug>.json` | One apartment: its Beds24 room ID, its name and its pictures. One file for each slug `site.json` lists, and no other. |
 | `texts.<tag>.json` | Everything one language says: the wording, the address parts and the anchors. One file per language listed in `site.json`, such as `texts.en-GB.json`. |
 | `theme.css` | The palette and the typeface as custom properties on `:root`, and the typeface's `@font-face`. |
@@ -54,7 +54,24 @@ content. The application has no wording, no colour and no typeface of its own. T
   those, at `/pictures/apartments/` under names that change with the picture
   ([ADR 10](adr/0010-pictures-converted-at-build-time.md)). Give the build sources of at least 1920
   px where there are any: Beds24 keeps an upload at up to 2000 px. A local run keeps its downloads
-  and conversions in `node_modules/.cache/pictures`; delete it to fetch the addresses again.
+  and conversions in `node_modules/.cache/pictures`; delete it to fetch the addresses again. A
+  picture made by an image model is marked `"generated": true`, and the page puts a label on it in
+  the words of `apartment.generated`, such as "AI image": an image model's terms may ask for a
+  disclosure no viewer could miss.
+- **The apartment page** (`apartment` in a texts file) is the page's wording: its headings, the
+  facts line (`guests` and `bedrooms` take `{count}`), and the arrival and departure times
+  (`checkIn` takes `{from}` and `{until}`, `checkOut` `{until}`, each as Beds24's `HH:MM`). The name
+  and the pictures come from the apartment's file. The guests, size, address, times, description and
+  house rules come from Beds24, in the page's language by its address prefix, such as `de`.
+- **The amenities** (`amenities` in `site.json`) sort Beds24's feature codes into areas for the
+  apartment page, in their order:
+  `{ "area": "kitchen", "icon": "cooking-pot", "codes": ["KITCHEN", "DISHWASHER"] }`, or a code
+  standing alone with its own icon: `{ "code": "PETS_NOT_ALLOWED", "icon": "paw-print" }`. A code is
+  listed once. The property's codes and the room's are merged; a code listed nowhere is not shown. A
+  texts file names each area under `amenities.areas` and labels each listed code under
+  `amenities.codes`. Beds24's rooms (a group that opens with a code such as `BEDROOM`) are named
+  under `amenities.rooms`, and their beds and fittings under `amenities.codes` too: a room whose
+  code has no name there is not shown, and neither is a bed without a label.
 - **The notice** (`notice` in a texts file) is an optional line above the header, with an optional
   link. Left out, no line is shown.
 - **The seasons** (`seasons` in `site.json`) are `winter`, `summer` or both, each with its hero
@@ -125,12 +142,14 @@ which is not committed. It runs before every `start`, `build`, `test` and `lint`
 missing in one language, optional ones such as `notice` included, a key the schema does not know, a
 missing texts file, a tag that is not canonical, two tags with one language each, a season named in
 the texts but not in `site.json` or the other way round, a feature without its text or a text
-without its feature, a missing picture, an apartment picture that is not one, does not answer, is
-portrait or wider than 2:1 or lacks its alternative text in a language, an apartment without its
-file or a file in `apartments/` that `site.json` does not list, and a part beyond its boundary stop
-the build with the file and the key named. The schema, not the demo's files, defines the keys, so
-the compiler checks every template against the same keys for every site. Every language has the same
-keys, so every language renders the same elements and a change of language finds the reader's place.
+without its feature, an amenity's icon that is not Lucide's, a code listed twice, an area without
+its name or a name without its area, a listed code without its label, a missing picture, an
+apartment picture that is not one, does not answer, is portrait or wider than 2:1 or lacks its
+alternative text in a language, an apartment without its file or a file in `apartments/` that
+`site.json` does not list, and a part beyond its boundary stop the build with the file and the key
+named. The schema, not the demo's files, defines the keys, so the compiler checks every template
+against the same keys for every site. Every language has the same keys, so every language renders
+the same elements and a change of language finds the reader's place.
 
 ## Another folder
 

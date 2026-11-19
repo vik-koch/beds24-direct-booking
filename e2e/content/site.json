@@ -24,6 +24,10 @@
       "icon": "mountain"
     }
   ],
+  "amenities": [
+    { "code": "PETS_NOT_ALLOWED", "icon": "paw-print" },
+    { "area": "comfort", "icon": "sofa", "codes": ["WIFI", "HEATING", "KITCHEN", "DISHWASHER"] }
+  ],
   "contact": {
     "name": "Casa Prova",
     "email": "ciao@casa-prova.example"

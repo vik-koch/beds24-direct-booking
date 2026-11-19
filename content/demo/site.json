@@ -52,6 +52,22 @@
       "icon": "tag"
     }
   ],
+  "amenities": [
+    { "code": "SMOKING_NOT_ALLOWED", "icon": "cigarette-off" },
+    { "code": "PETS_NOT_ALLOWED", "icon": "paw-print" },
+    { "area": "general", "icon": "house", "codes": ["WIFI", "HEATING", "ELEVATOR", "WASHER"] },
+    {
+      "area": "kitchen",
+      "icon": "cooking-pot",
+      "codes": ["KITCHEN", "DISHWASHER", "COFFEE_MAKER"]
+    },
+    { "area": "sleeping", "icon": "bed-double", "codes": ["LINENS", "TOWELS"] },
+    {
+      "area": "house",
+      "icon": "mountain",
+      "codes": ["BALCONY", "MOUNTAIN_VIEW", "DOWNTOWN", "SKI_STORAGE", "BOOT_DRYER", "PARKING_PAID"]
+    }
+  ],
   "contact": {
     "name": "Firn & Farn Appartements",
     "address": ["Musterweg 0", "5753 Saalbach", "Österreich"],

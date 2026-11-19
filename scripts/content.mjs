@@ -106,6 +106,26 @@ export function readContent(dir) {
         throw new Error(
           `${join(dir, `texts.${tag}.json`)}\n  hero.features.${key}: ${keys.includes(key) ? 'missing' : 'a feature site.json does not list'}`,
         );
+  site.amenities.forEach(({ icon }, index) => {
+    if (!(lucideName(icon) in lucide))
+      throw new Error(
+        `${join(dir, 'site.json')}\n  amenities.${index}.icon: ${icon} is not a Lucide icon`,
+      );
+  });
+  // Each area site.json lists is named, and each code it lists labelled, in every language.
+  const areas = site.amenities.flatMap((entry) => entry.area ?? []);
+  const codes = site.amenities.flatMap((entry) => entry.codes ?? entry.code);
+  for (const tag of site.languages) {
+    const { amenities } = texts[prefix(tag)];
+    for (const area of new Set([...areas, ...Object.keys(amenities.areas)]))
+      if (!areas.includes(area) || !Object.hasOwn(amenities.areas, area))
+        throw new Error(
+          `${join(dir, `texts.${tag}.json`)}\n  amenities.areas.${area}: ${areas.includes(area) ? 'missing' : 'an area site.json does not list'}`,
+        );
+    for (const code of codes)
+      if (!Object.hasOwn(amenities.codes, code))
+        throw new Error(`${join(dir, `texts.${tag}.json`)}\n  amenities.codes.${code}: missing`);
+  }
   // Every language renders the same elements, so a change of language finds the reader's place.
   const [first, ...others] = site.languages;
   for (const tag of others) {
@@ -202,7 +222,7 @@ export async function writeContent(dir, out, cache) {
     cpSync(join(dir, 'fonts'), join(out, 'fonts'), { recursive: true });
   // Only the icons site.json names are imported, so the bundle holds no others. Two names can
   // be one icon: heading-1 and heading1 are both lucideHeading1.
-  const icons = [...new Set(site.features.map((f) => lucideName(f.icon)))];
+  const icons = [...new Set([...site.features, ...site.amenities].map((f) => lucideName(f.icon)))];
   writeFileSync(
     join(out, 'icons.ts'),
     (icons.length ? `import { ${icons.join(', ')} } from '@ng-icons/lucide';\n\n` : '') +

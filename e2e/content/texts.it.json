@@ -86,6 +86,39 @@
     "continue": "Continua con la prenotazione",
     "clear": "Annulla la settimana scelta"
   },
+  "apartment": {
+    "back": "Tutti gli appartamenti",
+    "guests": "Fino a {count} ospiti",
+    "bedrooms": { "one": "1 camera", "other": "{count} camere" },
+    "description": "L'appartamento",
+    "more": "Leggi di più",
+    "rooms": "Stanze e letti",
+    "features": "Servizi",
+    "allFeatures": "Tutti i {count} servizi",
+    "goodToKnow": "Da sapere",
+    "times": "Arrivo e partenza",
+    "checkIn": "Arrivo dalle {from} alle {until}.",
+    "checkOut": "Partenza entro le {until}.",
+    "houseRules": "Regole della casa",
+    "unavailable": "I dettagli di questo appartamento non si possono caricare ora.",
+    "generated": "Immagine IA"
+  },
+  "amenities": {
+    "areas": { "comfort": "Comfort" },
+    "codes": {
+      "PETS_NOT_ALLOWED": "Niente animali",
+      "WIFI": "Wi-Fi",
+      "HEATING": "Riscaldamento",
+      "KITCHEN": "Cucina",
+      "DISHWASHER": "Lavastoviglie",
+      "BED_DOUBLE": "Letto matrimoniale",
+      "BED_BUNK": "Letto a castello",
+      "BATH_TUB": "Vasca",
+      "BATH_SHOWER": "Doccia",
+      "BATH_TOILET": "WC"
+    },
+    "rooms": { "BEDROOM": "Camera", "BATHROOM": "Bagno" }
+  },
   "placeholder": "Questa pagina è in costruzione.",
   "notFound": {
     "title": "Pagina non trovata",

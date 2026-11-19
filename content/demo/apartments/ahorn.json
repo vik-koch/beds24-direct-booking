@@ -4,6 +4,7 @@
   "pictures": [
     {
       "file": "pictures/ahorn-1.webp",
+      "generated": true,
       "alt": {
         "de-AT": "Wohn- und Essraum mit Ahorntisch für sechs, offener Küche, salbeigrünem Sofa und Terrassentüren.",
         "en-GB": "Living and dining room with a maple table for six, an open kitchen, sage sofa and terrace doors."
@@ -11,6 +12,7 @@
     },
     {
       "file": "pictures/ahorn-2.webp",
+      "generated": true,
       "alt": {
         "de-AT": "Doppelzimmer im Obergeschoss mit schräger Holzdecke, Dachfenster und blauer Decke.",
         "en-GB": "Upstairs double bedroom with a sloping timber ceiling, skylight and blue blanket."
@@ -18,6 +20,7 @@
     },
     {
       "file": "pictures/ahorn-3.webp",
+      "generated": true,
       "alt": {
         "de-AT": "Zweites Doppelzimmer mit salbeigrün gepolstertem Kopfteil und Kommode aus Ahorn.",
         "en-GB": "Second double bedroom with a sage upholstered headboard and maple chest of drawers."
@@ -25,6 +28,7 @@
     },
     {
       "file": "pictures/ahorn-4.webp",
+      "generated": true,
       "alt": {
         "de-AT": "Kinderzimmer mit Stockbett aus Ahorn, Leiter und Leseecke.",
         "en-GB": "Children’s bedroom with a maple bunk bed, ladder and reading corner."
@@ -32,6 +36,7 @@
     },
     {
       "file": "pictures/ahorn-5.webp",
+      "generated": true,
       "alt": {
         "de-AT": "Bad mit zwei Waschbecken, bodenebener Dusche und eigener Sauna hinter Glas.",
         "en-GB": "Bathroom with two basins, a walk-in shower and a private sauna behind glass."
@@ -39,6 +44,7 @@
     },
     {
       "file": "pictures/ahorn-6.webp",
+      "generated": true,
       "alt": {
         "de-AT": "Holzterrasse mit Esstisch für sechs, gepolsterten Bänken und Blick auf bewaldete Berge.",
         "en-GB": "Wooden terrace with outdoor dining for six, cushioned benches and a forested mountain view."
