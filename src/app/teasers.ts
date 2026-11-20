@@ -133,7 +133,7 @@ type Season = FreeWeeks['seasons'][number];
         align-content: start;
 
         &:has(a:focus-visible) {
-          outline: 2px solid var(--color-accent);
+          outline: var(--focus-ring);
           outline-offset: 0.5rem;
           border-radius: var(--radius-card);
         }
@@ -155,29 +155,7 @@ type Season = FreeWeeks['seasons'][number];
       }
 
       .teaser-picture {
-        position: relative;
-        overflow: hidden;
         aspect-ratio: 3 / 2;
-        border-radius: var(--radius-card);
-        background: var(--color-line);
-
-        img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-        }
-      }
-
-      @media (prefers-reduced-motion: no-preference) {
-        /* Its own layer for good: dropped when the zoom ends, it would be painted anew and jump. */
-        .teaser-picture img {
-          transition: scale 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-          will-change: scale;
-        }
-
-        .teaser:hover img {
-          scale: 1.025;
-        }
       }
 
       .teaser h3 {
@@ -199,12 +177,6 @@ type Season = FreeWeeks['seasons'][number];
       .teaser-price {
         margin-top: 0.75rem;
         color: var(--color-ink-soft);
-
-        strong {
-          color: var(--color-ink);
-          font-size: 1.1875rem;
-          font-weight: 500;
-        }
       }
     }
   `,

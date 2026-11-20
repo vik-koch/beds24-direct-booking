@@ -383,9 +383,6 @@ const addDays = (date: string, days: number) =>
       .panel {
         --inset: 1.25rem;
         padding: 1.5rem var(--inset);
-        border-radius: var(--radius-card);
-        background: var(--color-surface);
-        box-shadow: var(--shadow-card);
 
         @media (min-width: 48rem) {
           --inset: 2rem;
@@ -406,7 +403,7 @@ const addDays = (date: string, days: number) =>
         }
 
         label:has(:focus-visible) {
-          outline: 2px solid var(--color-accent);
+          outline: var(--focus-ring);
           outline-offset: 2px;
         }
 
@@ -444,16 +441,9 @@ const addDays = (date: string, days: number) =>
 
       /* Two icons in a pill; the accent part glides to the chosen one, as in the season switch. */
       .views {
-        --narrow: var(--size-control-small);
-        --pad: calc((var(--size-control) - var(--narrow)) / 2);
-        position: relative;
-        display: grid;
         grid-template-columns: repeat(2, var(--narrow));
-        height: var(--size-control);
         margin-block: -0.3125rem;
         margin-left: auto;
-        padding: var(--pad);
-        border-radius: var(--radius-control);
         background: var(--color-ground);
 
         label {
@@ -611,7 +601,7 @@ const addDays = (date: string, days: number) =>
         }
 
         &:has(:focus-visible) {
-          outline: 2px solid var(--color-accent);
+          outline: var(--focus-ring);
           outline-offset: 2px;
         }
 
@@ -675,7 +665,7 @@ const addDays = (date: string, days: number) =>
           outline: none;
 
           > * {
-            outline: 2px solid var(--color-accent);
+            outline: var(--focus-ring);
             outline-offset: 2px;
           }
         }
@@ -876,12 +866,6 @@ const addDays = (date: string, days: number) =>
 
       .from {
         color: var(--color-ink-soft);
-
-        strong {
-          color: var(--color-ink);
-          font-size: 1.1875rem;
-          font-weight: 500;
-        }
       }
 
       .button.wide {

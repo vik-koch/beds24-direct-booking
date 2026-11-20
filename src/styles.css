@@ -44,6 +44,8 @@
   --radius-card: 1.5rem;
   --radius-menu: 1rem;
   --shadow-card: 0 1.5rem 3rem -1.5rem rgb(39 50 58 / 0.25);
+  /* The focus ring of every control; each sets its own offset. */
+  --focus-ring: 2px solid var(--color-accent);
 }
 
 @layer base {
@@ -74,7 +76,7 @@
   }
 
   :focus-visible {
-    outline: 2px solid var(--color-accent);
+    outline: var(--focus-ring);
     outline-offset: 3px;
   }
 
@@ -234,16 +236,20 @@
   /* The season switch: a white pill with the chosen season's label in the accent. Both names
      sit in one hidden cell (the sizer), so the pill keeps one width; the accent part is as
      wide as the chosen name, so beside a short name the white part grows. */
-  .season-switch {
-    /* As tall as a menu entry's hover pill beside it, with white around the accent part. */
+  /* A track as tall as a control, padded around a narrow knob: the season switch, beside a menu
+     entry's hover pill of the same height, and the booking panel's view toggle. */
+  :is(.season-switch, .views) {
     --narrow: var(--size-control-small);
     --pad: calc((var(--size-control) - var(--narrow)) / 2);
     position: relative;
     display: grid;
-    grid-template-columns: var(--narrow) auto;
     height: var(--size-control);
     padding: var(--pad);
     border-radius: var(--radius-control);
+  }
+
+  .season-switch {
+    grid-template-columns: var(--narrow) auto;
     background: var(--color-surface);
   }
 
@@ -366,7 +372,7 @@
 
   /* The ring goes round the whole switch: the chosen side moves while it glides. */
   .season-switch:has(:focus-visible) {
-    outline: 2px solid var(--color-accent);
+    outline: var(--focus-ring);
     outline-offset: 3px;
   }
 
@@ -484,9 +490,6 @@
     /* Below the header, however short the screen. */
     margin: 5.5rem 1rem clamp(1rem, 100svh - 36rem, 4rem);
     padding: 1.5rem 1.25rem;
-    border-radius: var(--radius-card);
-    background: var(--color-surface);
-    box-shadow: var(--shadow-card);
 
     @media (min-width: 48rem) {
       justify-self: start;
@@ -559,20 +562,65 @@
     }
   }
 
-  /* Each generated picture says so on itself, in the gallery and on the home page's cards. */
-  .ai-label {
+  /* A card on the page's ground: the hero's text, the free weeks and the booking panel. */
+  :is(.hero-copy, .sheet, .panel) {
+    border-radius: var(--radius-card);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-card);
+  }
+
+  /* The lowest price of a season, in the booking panel and on an apartment's card. */
+  :is(.from, .teaser-price) strong {
+    color: var(--color-ink);
+    font-size: 1.1875rem;
+    font-weight: 500;
+  }
+
+  /* A picture filling its frame, on the home page's cards and in the gallery. */
+  :is(.tile, .teaser-picture) {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--radius-card);
+    background: var(--color-line);
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  @media (width >= 48rem) and (prefers-reduced-motion: no-preference) {
+    /* Its own layer for good: dropped when the zoom ends, it would be painted anew and jump. */
+    :is(.tile, .teaser-picture) img {
+      transition: scale 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+      will-change: scale;
+    }
+
+    :is(.tile, .teaser):hover img {
+      scale: 1.025;
+    }
+  }
+
+  /* A small label on a picture: a generated one says so, the gallery's strip counts. */
+  :is(.ai-label, .strip-count) {
     position: absolute;
-    top: 0.75rem;
-    left: 0.75rem;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3125rem;
-    padding: 0.1875rem 0.625rem 0.1875rem 0.5rem;
+    padding: 0.1875rem 0.625rem;
     border-radius: var(--radius-control);
     background: color-mix(in srgb, var(--color-surface) 92%, transparent);
     color: var(--color-ink);
     font-size: 0.8125rem;
     font-weight: 500;
+  }
+
+  /* Each generated picture says so on itself, where no viewer can miss it. */
+  .ai-label {
+    top: 0.75rem;
+    left: 0.75rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3125rem;
+    padding-left: 0.5rem;
     line-height: 1.5;
 
     ng-icon {
@@ -679,7 +727,7 @@
     }
 
     &:focus-visible > span {
-      outline: 2px solid var(--color-accent);
+      outline: var(--focus-ring);
       outline-offset: 3px;
     }
 
@@ -773,7 +821,7 @@
   }
 
   .room-tabs :focus-visible + span {
-    outline: 2px solid var(--color-accent);
+    outline: var(--focus-ring);
     outline-offset: 3px;
   }
 
@@ -786,9 +834,6 @@
     --end: 1rem;
     padding: 0.5rem var(--pad) 0;
     overflow-x: auto;
-    border-radius: var(--radius-card);
-    background: var(--color-surface);
-    box-shadow: var(--shadow-card);
 
     html[data-script] & {
       overflow: clip;
@@ -1002,7 +1047,7 @@
     outline: none;
 
     > * {
-      outline: 2px solid var(--color-accent);
+      outline: var(--focus-ring);
       outline-offset: 3px;
     }
   }
