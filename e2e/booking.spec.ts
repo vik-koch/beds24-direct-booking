@@ -277,7 +277,7 @@ test('the week, the view and the guests can be chosen by keyboard alone', async 
   // The month's weeks are one tab stop after the month's buttons; Space and Enter choose a
   // week and, on the chosen one, choose none. A booked week is passed by.
   const focused = month(page).locator('[role=gridcell]:focus');
-  for (let i = 0; i < 4 && !(await focused.count()); i++) await page.keyboard.press('Tab');
+  for (let i = 0; i < 6 && !(await focused.count()); i++) await page.keyboard.press('Tab');
   await expect(focused).toHaveCount(1);
   const passed = () => page.evaluate(() => document.activeElement!.closest('.full, .outside'));
   // The grid moves the focus a frame after the key, so each step waits for it.
@@ -299,7 +299,7 @@ test('the week, the view and the guests can be chosen by keyboard alone', async 
   const pick = await focused.getAttribute('data-date');
   await page.getByRole('radio', { name: 'Liste' }).focus();
   await page.keyboard.press('ArrowRight');
-  for (let i = 0; i < 4 && !(await focused.count()); i++) await page.keyboard.press('Tab');
+  for (let i = 0; i < 6 && !(await focused.count()); i++) await page.keyboard.press('Tab');
   await expect(focused).toHaveAttribute('data-date', pick!);
   await page.keyboard.press('ArrowLeft');
   await expect(focused).not.toHaveAttribute('data-date', pick!);
@@ -385,15 +385,15 @@ test('a shared link opens at its week’s season, whatever season the page would
 }) => {
   await open(page, '/de/wohnungen/laerche');
   const other = await page.locator('html').getAttribute('data-season');
-  await panel(page).locator('.season-arrow').click();
+  await panel(page).locator('.other-season').click();
   await expect(page.locator('html')).not.toHaveAttribute('data-season', other!);
   const shown = await page.locator('html').getAttribute('data-season');
   await (await firstFree(page)).click();
   await expect(page).toHaveURL(new RegExp(`season=${shown}`));
   // Away from the week's season and back: the address names it again.
-  await panel(page).locator('.season-arrow').click();
+  await panel(page).locator('.other-season').click();
   await expect(page).not.toHaveURL(/season=/);
-  await panel(page).locator('.season-arrow').click();
+  await panel(page).locator('.other-season').click();
   await expect(page).toHaveURL(new RegExp(`season=${shown}`));
   // Opened afresh, in this language and in the other.
   const english = await page.locator('link[rel=alternate][hreflang=en-GB]').getAttribute('href');
@@ -421,7 +421,7 @@ test('a full season, one not open yet and an unreachable Beds24 each say so', as
   // not open yet.
   await open(page, 'http://localhost:4003/en/apartments/laerche');
   await expect(panel(page).locator('.panel-empty:visible')).toContainText('is free any more');
-  await panel(page).locator('.season-arrow').click();
+  await panel(page).locator('.other-season').click();
   await expect(season(page).locator('.panel-empty')).toContainText('are not open yet');
   const response = await open(page, 'http://localhost:4001/en/apartments/laerche');
   expect(response!.status()).toBe(503);
@@ -434,12 +434,9 @@ test('the panel’s season button slides the other season in and keeps the guest
 }) => {
   await open(page, '/de/wohnungen/laerche');
   await pickCount(page, 'adults', 3);
-  const button = panel(page).locator('.season-arrow');
+  const button = panel(page).locator('.other-season');
   const before = await page.locator('html').getAttribute('data-season');
-  // An arrow named with the season it leads to, which is then named beside it.
-  const label = (await button.getAttribute('aria-label'))!;
-  expect(label).toMatch(/^(Nächste|Aktuelle) Saison: /);
-  await expect(button).toHaveAttribute('title', label);
+  const label = (await button.locator('span:visible').innerText()).trim();
   const moves = () =>
     page.evaluate(() =>
       document
@@ -452,10 +449,7 @@ test('the panel’s season button slides the other season in and keeps the guest
   await expect.poll(moves).toContainEqual(expect.stringMatching(/^[1-9][\d.]*px/));
   await expect(page.locator('html')).not.toHaveAttribute('data-season', before!);
   const after = await page.locator('html').getAttribute('data-season');
-  await expect(panel(page).locator(`#booking-season > [data-for=${after}]`)).toHaveText(
-    label.split(': ')[1],
-  );
-  await expect(button).not.toHaveAttribute('aria-label', label);
+  await expect(panel(page).locator(`#booking-season > [data-for=${after}]`)).toHaveText(label);
   await expect(page.locator('#adults')).toHaveText('3');
   await expect(button).toBeFocused();
 });

@@ -113,31 +113,27 @@ const addDays = (date: string, days: number) =>
         }
       </div>
       @if (weeks?.seasons?.[0]?.years) {
-        <div class="panel-line">
-          <span id="booking-season" class="weeks-season stack">
-            @for (season of weeks!.seasons; track season.name) {
-              <span [attr.data-for]="season.name">{{ dated(season) }}</span>
-            }
-          </span>
-          @if (limits && weeks!.seasons.length === 2) {
-            <!-- One button, which keeps the focus; its arrow and its name follow the season. -->
-            <button
-              type="button"
-              class="icon-button season-arrow stack"
-              [attr.aria-label]="otherSeason()"
-              [title]="otherSeason()"
-              (click)="slide()"
-            >
-              @for (season of weeks!.seasons; track season.name) {
-                <ng-icon
-                  [attr.data-for]="season.name"
-                  [name]="$first ? 'lucideArrowRight' : 'lucideArrowLeft'"
-                  aria-hidden="true"
-                />
-              }
-            </button>
+        <p id="booking-season" class="weeks-season stack">
+          @for (season of weeks!.seasons; track season.name) {
+            <span [attr.data-for]="season.name">{{ dated(season) }}</span>
           }
-        </div>
+        </p>
+        @if (limits && weeks!.seasons.length === 2) {
+          <!-- One button whose label follows the season, so that it keeps the focus. -->
+          <button type="button" class="other-season stack" (click)="slide()">
+            @for (season of weeks!.seasons; track season.name) {
+              <span [attr.data-for]="season.name">
+                @if ($first) {
+                  {{ dated(other(season.name)) }}
+                  <ng-icon name="lucideArrowRight" aria-hidden="true" />
+                } @else {
+                  <ng-icon name="lucideArrowLeft" aria-hidden="true" />
+                  {{ dated(other(season.name)) }}
+                }
+              </span>
+            }
+          </button>
+        }
       }
       @if (weeks && limits) {
         <p class="sr-only" aria-live="polite">{{ announced() }}</p>
@@ -420,35 +416,29 @@ const addDays = (date: string, days: number) =>
         }
       }
 
-      /* Two lines nearly as close as a heading's: the title with the view's switch, which
-         reaches a little past its line, and the season with the way to the other one. */
+      /* The title with the view's switch, which reaches a little past the line so that the
+         season's name stands as close below as a heading's second line; then the way to the
+         other season. */
       .panel-line {
         display: flex;
         align-items: center;
         justify-content: space-between;
         column-gap: 1rem;
-
-        + .panel-line {
-          margin-top: 0.375rem;
-        }
-
-        .weeks-season {
-          font-size: var(--size-heading);
-          letter-spacing: -0.01em;
-          line-height: 1.2;
-        }
       }
 
-      /* As small as a line of the season's name; grey on hover, as the months' buttons. */
-      .season-arrow {
-        width: var(--size-control-small);
-        height: var(--size-control-small);
-        color: var(--color-accent);
-        font-size: 1.125rem;
-        transition: background-color 0.2s;
+      .panel > .weeks-season {
+        display: grid;
+        font-size: var(--size-heading);
+        letter-spacing: -0.01em;
+        line-height: 1.2;
+      }
 
-        &:hover {
-          background: var(--color-ground);
+      .panel .other-season {
+        margin-top: 0.125rem;
+        font-size: 0.9375rem;
+
+        @media (min-width: 48rem) {
+          justify-items: start;
         }
       }
 
@@ -983,14 +973,6 @@ export class BookingPanel {
   private direction = 0;
   private readonly swapSeason = swapper();
   private readonly swapMonth = swapper();
-
-  // The season button's name: the way on to the next season, or back to the current one.
-  protected readonly otherSeason = computed(() => {
-    const [first, second] = this.weeks!.seasons;
-    return this.season.current() === first.name
-      ? fill(this.texts.weeks.next, { season: this.dated(second) })
-      : fill(this.texts.weeks.current, { season: this.dated(first) });
-  });
 
   protected readonly taxLine = computed(() => {
     const tax = this.weeks?.tax;
