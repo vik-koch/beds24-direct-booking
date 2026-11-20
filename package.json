@@ -21,7 +21,8 @@
     "lint": "ng lint --max-warnings 0 && tsc -p sim",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "e2e": "npm run build && playwright test"
+    "e2e": "npm run build && playwright test",
+    "e2e:webkit": "npm run build && scripts/e2e-webkit.sh"
   },
   "dependencies": {
     "@angular/aria": "^22.2.7",
