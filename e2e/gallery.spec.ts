@@ -2,10 +2,6 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Locator, type Page } from '@playwright/test';
 
 const box = async (locator: Locator) => (await locator.boundingBox())!;
-const ratio = async (locator: Locator) => {
-  const { width, height } = await box(locator);
-  return width / height;
-};
 const viewer = (page: Page) => page.locator('dialog.viewer');
 // The viewer scales in as it opens: measured before that ends, it is a little smaller.
 const settled = async (page: Page) =>
@@ -28,9 +24,13 @@ test('the mosaic shows the first picture at 4:3 and the others square, eight at 
     await page.goto(path);
     const shown = page.locator('.tile:visible');
     await expect(shown, path).toHaveCount(cells);
-    expect(await ratio(shown.first()), path).toBeCloseTo(4 / 3, 1);
-    for (const cell of (await shown.all()).slice(1))
-      expect(Math.abs((await ratio(cell)) - 1), path).toBeLessThan(0.05);
+    // To within a pixel, gaps and all.
+    const first = await box(shown.first());
+    expect(Math.abs(first.height * (4 / 3) - first.width), path).toBeLessThan(1);
+    for (const cell of (await shown.all()).slice(1)) {
+      const { width, height } = await box(cell);
+      expect(Math.abs(width - height), path).toBeLessThan(1);
+    }
     if (more) await expect(shown.last().locator('.more'), path).toHaveText(more);
     else await expect(page.locator('.more:visible'), path).toHaveCount(0);
   }
@@ -43,7 +43,7 @@ test('the mosaic shows the first picture at 4:3 and the others square, eight at 
   expect(label.y).toBeGreaterThan(cell.y + cell.height / 2);
   await last.focus();
   await expect(last).toHaveCSS('outline-offset', '3px');
-  await expect(page.locator('.tiles')).toHaveCSS('column-gap', '12px');
+  await expect(page.locator('.tiles')).toHaveCSS('column-gap', '8px');
 });
 
 test('a picture opens full screen, and the buttons, the keys and the thumbnails move', async ({
@@ -86,13 +86,13 @@ test('a picture opens full screen, and the buttons, the keys and the thumbnails 
   await thumb.click();
   await expect(count).toHaveText('Bild 9 von 9');
   await expect(thumb).toHaveAttribute('aria-current', 'true');
-  // Shown by its full colour alone: a line around it would look like the focus ring.
-  await expect(thumb).toHaveCSS('opacity', '1');
+  // Shown by its full colour alone: a line around it would look like the focus ring. Only the
+  // picture dims, so that a ring around another button keeps its contrast.
+  const other = viewer(page).getByRole('button', { name: 'Bild 8 von 9' });
+  await expect(thumb.locator('img')).toHaveCSS('opacity', '1');
   await expect(thumb).toHaveCSS('box-shadow', 'none');
-  await expect(viewer(page).getByRole('button', { name: 'Bild 8 von 9' })).toHaveCSS(
-    'opacity',
-    '0.4',
-  );
+  await expect(other.locator('img')).toHaveCSS('opacity', '0.4');
+  await expect(other).toHaveCSS('opacity', '1');
   // Past the last picture the first follows.
   await page.keyboard.press('ArrowRight');
   await expect(count).toHaveText('Bild 1 von 9');
@@ -167,21 +167,32 @@ test('each picture is shown whole, at its own ratio, inside the 4:3 frame', asyn
   }
 });
 
-test('twenty pictures: the thumbnails stand in rows, and the focus follows the keys', async ({
+test('twenty pictures: two rows of thumbnails in view, and the current one and its focus follow', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 768, height: 900 });
   await page.goto('http://localhost:4002/it/appartamenti/zonneterras');
   await page.locator('.tile').first().click();
   const thumbs = viewer(page).locator('.viewer-thumbs');
-  // Nothing scrolls, so nothing cuts the current thumbnail's ring.
-  await expect(thumbs).toHaveCSS('overflow-x', 'visible');
-  for (const thumb of await thumbs.getByRole('button').all())
-    await expect(thumb).toBeInViewport({ ratio: 1 });
+  const height = (await box(thumbs.getByRole('button').first())).height;
+  expect((await box(thumbs)).height).toBeLessThan(3 * height);
   await thumbs.getByRole('button').first().focus();
   await page.keyboard.press('ArrowLeft');
   await expect(viewer(page).locator('.viewer-count')).toHaveText('Immagine 20 di 20');
-  await expect(thumbs.getByRole('button', { name: 'Immagine 20 di 20' })).toBeFocused();
+  const last = thumbs.getByRole('button', { name: 'Immagine 20 di 20' });
+  await expect(last).toBeFocused();
+  // Whole, its ring with it: the padding keeps the ring's room inside the scroll.
+  await expect(last).toBeInViewport({ ratio: 1 });
+  const rows = await box(thumbs);
+  const shown = await box(last);
+  expect(shown.y + shown.height + 8).toBeLessThanOrEqual(rows.y + rows.height + 0.5);
+  // Next brings the first back into view, by the rows' scroll alone.
+  const before = await page.evaluate(() => scrollY);
+  await viewer(page).getByRole('button', { name: 'Immagine successiva' }).click();
+  await expect(thumbs.getByRole('button', { name: 'Immagine 1 di 20' })).toBeInViewport({
+    ratio: 1,
+  });
+  expect(await page.evaluate(() => scrollY)).toBe(before);
   // On a short screen, a landscape phone or a zoomed window, they would leave the picture no room.
   await page.setViewportSize({ width: 768, height: 360 });
   await expect(thumbs).toBeHidden();

@@ -203,6 +203,15 @@ export class Gallery {
       observer.observe(track);
       onCleanup(() => observer.disconnect());
     });
+    // The current thumbnail stays in view, by the rows' own scroll: the page behind holds still.
+    afterRenderEffect(() => {
+      const thumbs = this.thumbs()?.nativeElement;
+      const thumb = thumbs?.children[this.index()] as HTMLElement | undefined;
+      if (!thumbs || !thumb) return;
+      const room = parseFloat(getComputedStyle(thumbs).paddingTop);
+      const below = thumb.offsetTop + thumb.offsetHeight + room - thumbs.clientHeight;
+      thumbs.scrollTop = Math.min(Math.max(thumbs.scrollTop, below), thumb.offsetTop - room);
+    });
   }
 
   protected position(index: number) {
@@ -272,13 +281,14 @@ export class Gallery {
       this.start = this.target = index;
   }
 
-  // It fades out as it came in. Escape waits for that too, unless the browser will not let it.
+  // It fades out as it came in, along the opening's curve run backwards. Escape waits for that
+  // too, unless the browser will not let it.
   protected close(event?: Event) {
     const dialog = this.dialog().nativeElement;
     if (event && !event.cancelable) return;
     event?.preventDefault();
     if (matchMedia('(prefers-reduced-motion: reduce)').matches) return dialog.close();
-    const fade = { duration: 200, easing: 'cubic-bezier(0.7, 0, 0.84, 0)' };
+    const fade = { duration: 500, easing: 'cubic-bezier(0.7, 0, 0.84, 0)' };
     dialog.animate({ opacity: [1, 0], scale: [1, 0.98] }, fade);
     dialog
       .animate({ opacity: [1, 0] }, { ...fade, pseudoElement: '::backdrop' })

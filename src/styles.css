@@ -1157,6 +1157,7 @@
      square cells beside and below it, all cropping their pictures. */
   .gallery {
     position: relative;
+    container-type: inline-size;
   }
 
   .tiles {
@@ -1231,13 +1232,16 @@
     }
   }
 
-  /* Beside a 4:3 picture of 8 parts, two rows of squares take 3 parts each. Square cells, so that
-     a ring around one fits it; the gaps leave it room. */
+  /* Beside a 4:3 picture, columns of two squares. The picture's width is solved from the
+     gallery's, so that a square plus a gap is half its height. Square cells, so that a ring
+     around one fits it; the gaps leave it room. */
   @media (width >= 48rem) {
     .tiles {
+      --gap: 0.5rem;
+      --lead: calc((100cqw - var(--columns, 1) * var(--gap) / 2) * 8 / (8 + 3 * var(--columns, 1)));
       display: grid;
-      grid-template-columns: 8fr repeat(var(--columns, 1), 3fr);
-      gap: 0.75rem;
+      grid-template-columns: var(--lead) repeat(var(--columns, 1), 1fr);
+      gap: var(--gap);
       overflow: visible;
     }
 
@@ -1268,20 +1272,27 @@
       --columns: 2;
     }
 
-    /* Eight: two squares beside, five below; 15 tracks share them out with the gaps. */
+    /* Eight: as three, with five squares below. The picture's edge falls inside the fourth of
+       them, which therefore spans two tracks. */
     .gallery[data-shown='8'] .tiles {
-      grid-template-columns: repeat(15, 1fr);
+      --cell: calc((100cqw - 4 * var(--gap)) / 5);
+      grid-template-columns:
+        repeat(3, var(--cell)) calc(var(--lead) - 3 * (var(--cell) + var(--gap)))
+        1fr var(--cell);
 
       .tile:first-child {
-        grid-column: span 11;
-      }
-
-      .tile:is(:nth-child(2), :nth-child(3)) {
         grid-column: span 4;
       }
 
+      .tile:is(:nth-child(2), :nth-child(3)) {
+        grid-column: 5 / span 2;
+      }
+
+      .tile:nth-child(7) {
+        grid-column: span 2;
+      }
+
       .tile:nth-child(n + 4) {
-        grid-column: span 3;
         aspect-ratio: 1;
       }
     }
@@ -1322,7 +1333,7 @@
       display: grid;
       grid-template: minmax(0, 1fr) auto auto / 1fr;
       gap: 0.75rem;
-      animation: viewer-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      animation: viewer-in 0.5s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     &::backdrop {
@@ -1330,7 +1341,7 @@
     }
 
     &[open]::backdrop {
-      animation: fade-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      animation: fade-in 0.5s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .icon-button {
@@ -1492,41 +1503,46 @@
     }
   }
 
-  /* In rows, however many: nothing scrolls, so nothing cuts a ring. */
+  /* In rows, two at most in view and the rest scrolled to; the padding keeps a ring inside. */
   .viewer-thumbs {
     grid-column: 1 / -1;
+    position: relative;
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
     justify-content: center;
-    padding-block: 0.25rem;
+    max-height: calc(2 * 3rem + 0.5rem + 2 * 0.5rem);
+    padding: 0.5rem;
+    overflow-y: auto;
+    scrollbar-width: thin;
 
-    /* The current one only by its full colour: a line around it would look like the ring. */
     button {
       flex: none;
       width: 4.5rem;
       height: 3rem;
-      opacity: 0.4;
       cursor: pointer;
-      transition: opacity 0.2s;
-
-      &:hover {
-        opacity: 0.75;
-      }
-
-      &[aria-current] {
-        opacity: 1;
-      }
 
       &:focus-visible {
         outline-offset: 6px;
       }
+
+      &:hover img {
+        opacity: 0.75;
+      }
+
+      &[aria-current] img {
+        opacity: 1;
+      }
     }
 
+    /* The current one only by its full colour: a line around it would look like the ring. On the
+       picture, not the button, so that the ring keeps its own. */
     img {
       width: 100%;
       height: 100%;
       object-fit: cover;
+      opacity: 0.4;
+      transition: opacity 0.2s;
     }
   }
 
