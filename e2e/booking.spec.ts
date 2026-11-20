@@ -27,6 +27,16 @@ const euro = (value: number) => {
   }).format(value);
 };
 
+// The server dates the seasons by today, and the season shown by date may have no week left.
+// The simulator prices every season ahead of today, so the next season always has free weeks:
+// tests that need them open the page in it.
+async function openNext(page: Page, path: string) {
+  await open(page, path);
+  const later = await page.locator('.panel-season').last().getAttribute('data-for');
+  if ((await page.locator('html').getAttribute('data-season')) !== later)
+    await open(page, `${path}${path.includes('?') ? '&' : '?'}season=${later}`);
+}
+
 // The first month of the shown season with a free week of its own, and that week's cell.
 async function firstFree(page: Page) {
   for (let i = 0; i < 12; i++) {
@@ -55,7 +65,7 @@ test('a week and the guests make the total, and the button takes them on to book
   page,
 }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
-  await open(page, '/de/wohnungen/laerche');
+  await openNext(page, '/de/wohnungen/laerche');
   await expect(panel(page).getByRole('button', { name: 'Erst eine Woche wählen' })).toBeDisabled();
   await expect(panel(page).locator('.from:visible')).toHaveText(/ab €\s[\d.,]+ pro Woche/);
   const week = await firstFree(page);
@@ -73,9 +83,11 @@ test('a week and the guests make the total, and the button takes them on to book
   await expect(total.locator('div').nth(1)).toContainText('3 Erwachsene × 7 Nächte');
   await expect(total.locator('.sum dd')).toHaveText(euro(price + 73.5));
   // The address keeps the choice, so a reload shows it again.
-  await expect(page).toHaveURL(
-    /arrival=\d{4}-\d\d-\d\d&departure=\d{4}-\d\d-\d\d&season=\w+&adults=3&children=1/,
-  );
+  await expect(page).toHaveURL(/adults=3&children=1/);
+  const kept = new URL(page.url()).searchParams;
+  expect(kept.get('arrival')).toMatch(/^\d{4}-\d\d-\d\d$/);
+  expect(kept.get('departure')).toMatch(/^\d{4}-\d\d-\d\d$/);
+  expect(kept.get('season')).toBe(await page.locator('html').getAttribute('data-season'));
   // So does the other language's link.
   const english = new URL(
     (await page.locator('link[rel=alternate][hreflang=en-GB]').getAttribute('href'))!,
@@ -104,7 +116,7 @@ test('the counts offer what Beds24 allows, and more adults make room by fewer ch
   page,
 }) => {
   // Lärche: four guests, any of them adults, up to three children.
-  await open(page, '/de/wohnungen/laerche');
+  await openNext(page, '/de/wohnungen/laerche');
   expect(await options(page, 'adults')).toEqual([1, 2, 3, 4]);
   expect(await options(page, 'children')).toEqual([0, 1, 2]);
   await pickCount(page, 'adults', 1);
@@ -121,6 +133,7 @@ test('the counts offer what Beds24 allows, and more adults make room by fewer ch
   expect(await options(page, 'children')).toEqual([0, 1, 2, 3, 4]);
 
   // Zirbe asks Beds24 for no children: one count of guests, each taxed as an adult.
+  // Zirbe is free only in summer, so in the last week of a summer it has none to choose.
   await open(page, '/de/wohnungen/zirbe?season=summer');
   await expect(page.locator('#children')).toHaveCount(0);
   await expect(page.getByRole('combobox', { name: 'Gäste' })).toHaveText('2');
@@ -142,16 +155,16 @@ test('an address over the limits opens at them, and an arrival from the list is 
   await expect(page.locator('#children')).toHaveText('3');
 
   // A week in a later month, as the free-weeks list links it.
-  await open(page, '/de/wohnungen/laerche');
+  await openNext(page, '/de/wohnungen/laerche');
   await next(page).click();
   const week = await firstFree(page);
   const name = await monthName(page).innerText();
   await week.click();
   const url = new URL(page.url());
-  await open(
-    page,
-    `/de/wohnungen/laerche?arrival=${url.searchParams.get('arrival')}&departure=${url.searchParams.get('departure')}`,
+  const stay = ['arrival', 'departure', 'season'].map(
+    (name) => `${name}=${url.searchParams.get(name)}`,
   );
+  await open(page, `/de/wohnungen/laerche?${stay.join('&')}`);
   await expect(monthName(page)).toHaveText(name);
   await expect(chosen(page)).toHaveCount(1);
   await expect(panel(page).getByRole('link', { name: 'Weiter zur Buchung' })).toBeVisible();
@@ -162,7 +175,7 @@ test('an address over the limits opens at them, and an arrival from the list is 
 
 test('the calendar shows the list’s month and week, at the same height', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
-  await open(page, '/de/wohnungen/laerche');
+  await openNext(page, '/de/wohnungen/laerche');
   const week = await firstFree(page);
   const name = await monthName(page).innerText();
   const height = await month(page)
@@ -200,7 +213,7 @@ test('the calendar shows the list’s month and week, at the same height', async
 test('the months page by their buttons, slide in from their side and keep the focus', async ({
   page,
 }) => {
-  await open(page, '/en/apartments/laerche');
+  await openNext(page, '/en/apartments/laerche');
   const back = page
     .locator('.panel-season:visible')
     .getByRole('button', { name: 'Previous month' });
@@ -252,7 +265,7 @@ test('the months page by their buttons, slide in from their side and keep the fo
 });
 
 test('the week, the view and the guests can be chosen by keyboard alone', async ({ page }) => {
-  await open(page, '/de/wohnungen/laerche');
+  await openNext(page, '/de/wohnungen/laerche');
   await firstFree(page);
   // The view: two radios, one tab stop.
   await page.getByRole('radio', { name: 'Liste' }).focus();
@@ -281,9 +294,14 @@ test('the week, the view and the guests can be chosen by keyboard alone', async 
   await page.keyboard.press('Enter');
   await expect(focused).toHaveAttribute('aria-selected', 'true');
   await expect(panel(page).getByRole('link', { name: 'Weiter zur Buchung' })).toBeVisible();
-  // Booked weeks can be reached, but Tab enters the month again at the chosen week.
+  // Booked weeks and plain days can be reached, but Tab enters a month again at its chosen
+  // week: in the calendar, where the chosen day always has another beside it.
   const pick = await focused.getAttribute('data-date');
-  await page.keyboard.press('ArrowUp');
+  await page.getByRole('radio', { name: 'Liste' }).focus();
+  await page.keyboard.press('ArrowRight');
+  for (let i = 0; i < 4 && !(await focused.count()); i++) await page.keyboard.press('Tab');
+  await expect(focused).toHaveAttribute('data-date', pick!);
+  await page.keyboard.press('ArrowLeft');
   await expect(focused).not.toHaveAttribute('data-date', pick!);
   await page.keyboard.press('Shift+Tab');
   await page.keyboard.press('Tab');
@@ -307,7 +325,7 @@ test('the week, the view and the guests can be chosen by keyboard alone', async 
 test('a week or a day of the month before or after chooses its week and shows its month', async ({
   page,
 }) => {
-  await open(page, '/en/apartments/laerche');
+  await openNext(page, '/en/apartments/laerche');
   // In the list, the week that ends in the month, from the month before.
   const row = month(page).locator('.week.outside:not(.full)');
   for (let i = 0; i < 12 && !(await row.count()); i++) await next(page).click();
@@ -336,7 +354,7 @@ test('a week or a day of the month before or after chooses its week and shows it
 });
 
 test('a change of language or a reload keeps the view and the month', async ({ page }) => {
-  await open(page, '/de/wohnungen/laerche');
+  await openNext(page, '/de/wohnungen/laerche');
   // A week chosen, then the calendar and another month shown.
   await (await firstFree(page)).click();
   await page.getByRole('radio', { name: 'Kalender' }).check({ force: true });
@@ -449,7 +467,7 @@ test('on a phone a bar leads to the panel while it is out of view, then on to bo
   page,
 }) => {
   await page.setViewportSize({ width: 375, height: 700 });
-  await open(page, '/de/wohnungen/laerche');
+  await openNext(page, '/de/wohnungen/laerche');
   const bar = page.locator('.booking-bar');
   await expect(bar).toBeVisible();
   await expect(bar.locator('output:visible')).toHaveText(/ab €\s[\d.,]+ pro Woche/);
@@ -477,7 +495,7 @@ test('the panel passes axe with a week chosen, in both views and with a list ope
 }) => {
   for (const width of [320, 1280]) {
     await page.setViewportSize({ width, height: 800 });
-    await open(page, '/en/apartments/laerche');
+    await openNext(page, '/en/apartments/laerche');
     await (await firstFree(page)).click();
     const scan = async (place: string) => {
       // Once the new view has faded in.

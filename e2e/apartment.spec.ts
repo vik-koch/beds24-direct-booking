@@ -424,7 +424,10 @@ test('from 64rem the panel stands beside the content from the facts down, below 
 
 test('every tab stop on an apartment page shows a focus ring', async ({ page, browserName }) => {
   test.skip(browserName === 'webkit', 'Safari tabs only to fields unless told otherwise');
+  // In the next season, which always has free weeks; the one shown by date may have none left.
   await page.goto('/de/wohnungen/ahorn');
+  const later = await page.locator('.panel-season').last().getAttribute('data-for');
+  await page.goto(`/de/wohnungen/ahorn?season=${later}`);
   await page.locator('.back').focus();
   const seen: string[] = [];
   const panel: string[] = [];
