@@ -14,7 +14,7 @@ const month = (page: Page) => season(page).locator('.month[data-current]:not([da
 const chosen = (page: Page) => month(page).locator('[aria-selected=true]');
 const monthName = (page: Page) => month(page).locator('.month-name');
 
-const next = (page: Page) => season(page).getByRole('button', { name: /Nächster|Next/ });
+const next = (page: Page) => season(page).getByRole('button', { name: /Nächster|Next|successivo/ });
 // German money, as the page writes it: "€ 1.669,50", "€ 49".
 const amount = (text: string) => Number(text.replace(/[^\d,]/g, '').replace(',', '.'));
 const euro = (value: number) => {
@@ -132,15 +132,15 @@ test('the counts offer what Beds24 allows, and more adults make room by fewer ch
   expect(await options(page, 'adults')).toEqual([1, 2, 3, 4]);
   expect(await options(page, 'children')).toEqual([0, 1, 2, 3, 4]);
 
-  // Zirbe asks Beds24 for no children: one count of guests, each taxed as an adult.
-  // Zirbe is free only in summer, so in the last week of a summer it has none to choose.
-  await open(page, '/de/wohnungen/zirbe?season=summer');
+  // Zirbe's room asks Beds24 for no children: one count of guests, each taxed as an adult. The
+  // second site's Vista is that room, in a season of a whole year that always has free weeks.
+  await open(page, 'http://localhost:4002/it/appartamenti/vista');
   await expect(page.locator('#children')).toHaveCount(0);
-  await expect(page.getByRole('combobox', { name: 'Gäste' })).toHaveText('2');
+  await expect(page.getByRole('combobox', { name: 'Ospiti' })).toHaveText('2');
   expect(await options(page, 'adults')).toEqual([1, 2]);
   await (await firstFree(page)).click();
   await expect(panel(page).locator('.outcome:visible .total')).toContainText(
-    'Ortstaxe: 2 Gäste × 7 Nächte',
+    'Tassa di soggiorno: 2 ospiti × 7 notti',
   );
 });
 
@@ -411,16 +411,13 @@ test('a shared link opens at its week’s season, whatever season the page would
 });
 
 test('a full season, one not open yet and an unreachable Beds24 each say so', async ({ page }) => {
-  // Zirbe is booked all winter.
-  await open(page, '/de/wohnungen/zirbe?season=winter');
+  // Where Beds24 has prices only up to today, the season shown by date is full and the next one
+  // not open yet; neither has a total.
+  await open(page, 'http://localhost:4003/en/apartments/laerche');
   await expect(panel(page).locator('.panel-empty:visible')).toHaveText(
-    /Im Winter \d{4}\/\d\d ist keine Woche mehr frei\./,
+    /No week of (Winter \d{4}\/\d\d|Summer \d{4}) is free any more\./,
   );
   await expect(panel(page).locator('.outcome:visible')).toHaveCount(0);
-  // Where Beds24 has prices only up to today, the season shown by date is full and the next one
-  // not open yet.
-  await open(page, 'http://localhost:4003/en/apartments/laerche');
-  await expect(panel(page).locator('.panel-empty:visible')).toContainText('is free any more');
   await panel(page).locator('.other-season').click();
   await expect(season(page).locator('.panel-empty')).toContainText('are not open yet');
   const response = await open(page, 'http://localhost:4001/en/apartments/laerche');
@@ -486,9 +483,9 @@ test('on a phone a bar leads to the panel while it is out of view, then on to bo
   );
   await page.setViewportSize({ width: 1280, height: 800 });
   await expect(bar).toBeHidden();
-  // A season with no week to choose has no bar.
+  // A season with no week to choose has no bar: the full one of a site with prices up to today.
   await page.setViewportSize({ width: 375, height: 700 });
-  await open(page, '/de/wohnungen/zirbe?season=winter');
+  await open(page, 'http://localhost:4003/de/wohnungen/laerche');
   await page.evaluate(() => scrollTo({ top: 0, behavior: 'instant' }));
   await expect(bar).toBeHidden();
 });

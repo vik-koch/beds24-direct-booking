@@ -486,14 +486,16 @@ test('every tab stop on an apartment page shows a focus ring', async ({ page, br
   );
 });
 
-// One test per language: sixteen scans in one would outlast the test's time limit.
+// One test per language and width: more scans in one come too close to the test's time limit.
 for (const path of ['/de/wohnungen/zirbe', '/en/apartments/zirbe'])
-  test(`${path} passes axe in both seasons and widths, with everything open`, async ({ page }) => {
-    for (const width of [320, 1280])
+  for (const width of [320, 1280])
+    test(`${path} passes axe at ${width} px in both seasons, with everything open`, async ({
+      page,
+    }) => {
       for (const season of ['winter', 'summer']) {
         await page.setViewportSize({ width, height: 800 });
         await page.goto(`${path}?season=${season}`);
-        const place = `at ${width} in ${season}`;
+        const place = `in ${season}`;
         const { violations } = await new AxeBuilder({ page }).include('main').analyze();
         expect(violations, place).toEqual([]);
         // Every fold's button the width shows, in the page's language.
@@ -503,4 +505,4 @@ for (const path of ['/de/wohnungen/zirbe', '/en/apartments/zirbe'])
         const open = await new AxeBuilder({ page }).include('main').analyze();
         expect(open.violations, place).toEqual([]);
       }
-  });
+    });
