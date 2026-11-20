@@ -67,9 +67,11 @@ jobs:
       - run: npm run lint
       - run: npm test
 
-  # The suite in three parts on runners of their own, as one runner takes no more than two
-  # workers (ADR 12). Not for documentation alone, which format, lint and unit tests check.
+  # The suite in parts on runners of their own, as one runner takes no more than two workers:
+  # one engine each, WebKit's slow frames over two (ADR 12). Not for documentation alone, which
+  # format, lint and unit tests check.
   e2e:
+    name: e2e (${{ matrix.part }})
     needs: changes
     if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
@@ -82,7 +84,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3]
+        include:
+          - part: chromium
+            args: --project chromium
+          - part: firefox
+            args: --project firefox
+          - part: webkit-1
+            args: --project webkit-phone --shard=1/2
+          - part: webkit-2
+            args: --project webkit-phone --shard=2/2
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -109,11 +119,11 @@ jobs:
             echo "::error::the Playwright image is $image, @playwright/test is $package; change the image's tag in ci.yml"
             exit 1
           fi
-      - run: npm run e2e -- --shard=${{ matrix.shard }}/3
+      - run: npm run e2e -- ${{ matrix.args }}
       - uses: actions/upload-artifact@v7
         if: failure()
         with:
-          name: playwright-report-${{ matrix.shard }}
+          name: playwright-report-${{ matrix.part }}
           path: playwright-report
 
   # One result for the jobs before the images, whatever their layout.
