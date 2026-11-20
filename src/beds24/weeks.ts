@@ -18,7 +18,15 @@ export interface Period {
 
 // What the free-weeks list shows: per season one row per week, one price per apartment.
 export interface FreeWeeks {
-  apartments: { slug: string; name: string; guests: number; size: number }[];
+  apartments: {
+    slug: string;
+    name: string;
+    guests: number;
+    size: number;
+    bedrooms: number;
+    // Per Beds24 language code of the site, empty where nothing is written.
+    headline: Record<string, string>;
+  }[];
   currency: string;
   // Shown once beside the prices, so only when every apartment has the same.
   tax: Tax | null;
@@ -54,6 +62,7 @@ export function freeWeeks(
   apartments: { slug: string; roomId: number; name: string }[],
   periods: Period[],
   today: string,
+  languages: string[],
 ): FreeWeeks {
   const listed = apartments.flatMap((apartment) => {
     const room = inventory.rooms.find((one) => one.id === apartment.roomId);
@@ -74,6 +83,8 @@ export function freeWeeks(
       name: apartment.name,
       guests: room.maxPeople,
       size: room.size,
+      bedrooms: room.bedrooms,
+      headline: Object.fromEntries(languages.map((code) => [code, room.headlines[code] ?? ''])),
     })),
     currency: listed[0].room.currency,
     tax: taxes.size === 1 ? listed[0].room.tax : null,

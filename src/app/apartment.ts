@@ -82,7 +82,7 @@ type Fold = ReturnType<typeof fold>;
                   )
                 }}
               </li>
-              @if (bedrooms) {
+              @if (listing.bedrooms; as bedrooms) {
                 <li>
                   <ng-icon name="lucideBedDouble" aria-hidden="true" />{{
                     fill(
@@ -544,7 +544,6 @@ export class Apartment {
 
   private readonly labels = this.texts.amenities;
   private readonly groups = this.listing?.features ?? [];
-  protected readonly bedrooms = this.groups.filter(([code]) => code === 'BEDROOM').length;
   // Groups that open with a listed room's code, numbered where a room comes more than once.
   protected readonly rooms: Entry[] = this.groups.flatMap(([code, ...items], index, all) => {
     const room = site.rooms.find((one) => one.code === code);

@@ -11,6 +11,7 @@ import { LISTING } from './listing';
 import { dayOf, seasonState, starts } from './season';
 
 const minute = 60_000;
+const languages = site.languages.map(({ code }) => code);
 // Two calls cost about 3 of Beds24's 100 credits per 5 minutes. The last good answer is
 // served for a day while Beds24 cannot be reached, which is asked again a minute after a
 // failure at the soonest.
@@ -42,17 +43,12 @@ const serverConfig: ApplicationConfig = {
       useValue: async (slug?: string) => {
         const now = new Date();
         const apartments = site.apartments.filter((one) => !slug || one.slug === slug);
-        return freeWeeks(await inventory(), apartments, periods(now), dayOf(now));
+        return freeWeeks(await inventory(), apartments, periods(now), dayOf(now), languages);
       },
     },
     {
       provide: LISTING,
-      useValue: async (roomId: number) =>
-        listingOf(
-          (await inventory()).rooms,
-          roomId,
-          site.languages.map(({ code }) => code),
-        ),
+      useValue: async (roomId: number) => listingOf((await inventory()).rooms, roomId, languages),
     },
   ],
 };

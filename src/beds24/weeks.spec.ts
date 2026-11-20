@@ -8,6 +8,7 @@ const room = (overrides: Partial<Room> = {}): Room => ({
   maxAdults: 4,
   maxChildren: 0,
   size: 61,
+  bedrooms: 2,
   currency: 'EUR',
   leadDays: 0,
   multiplier: 1,
@@ -17,6 +18,7 @@ const room = (overrides: Partial<Room> = {}): Room => ({
   checkOut: null,
   features: [],
   texts: {},
+  headlines: { de: 'Für vier', en: 'For four' },
   ...overrides,
 });
 
@@ -102,10 +104,24 @@ describe('freeWeeks', () => {
   const summer: Period = { name: 'summer', years: '2027', start: '2027-01-16', end: '2027-08-31' };
 
   it('puts the apartments in the content order and the week into the season of its arrival', () => {
-    const list = freeWeeks(inventory(), apartments, [january, summer], '2026-12-01');
+    const list = freeWeeks(inventory(), apartments, [january, summer], '2026-12-01', ['de', 'fr']);
     expect(list.apartments).toEqual([
-      { slug: 'two', name: 'Two', guests: 2, size: 34 },
-      { slug: 'one', name: 'One', guests: 4, size: 61 },
+      {
+        slug: 'two',
+        name: 'Two',
+        guests: 2,
+        size: 34,
+        bedrooms: 2,
+        headline: { de: 'Für vier', fr: '' },
+      },
+      {
+        slug: 'one',
+        name: 'One',
+        guests: 4,
+        size: 61,
+        bedrooms: 2,
+        headline: { de: 'Für vier', fr: '' },
+      },
     ]);
     expect(list.seasons[0]).toEqual({
       name: 'winter',
@@ -121,11 +137,13 @@ describe('freeWeeks', () => {
   });
 
   it('counts the lead time from today', () => {
-    const list = freeWeeks(inventory(), apartments, [january], '2027-01-01');
+    const list = freeWeeks(inventory(), apartments, [january], '2027-01-01', ['de']);
     expect(list.seasons[0].weeks).toHaveLength(2);
     const later = inventory();
     later.rooms.forEach((one) => (one.leadDays = 7));
-    expect(freeWeeks(later, apartments, [january], '2027-01-01').seasons[0].weeks).toHaveLength(1);
+    expect(
+      freeWeeks(later, apartments, [january], '2027-01-01', ['de']).seasons[0].weeks,
+    ).toHaveLength(1);
   });
 
   it('tells a season not open yet from one that is full or has begun', () => {
@@ -134,11 +152,15 @@ describe('freeWeeks', () => {
       {},
     );
     none.days[12] = calendar(() => ({ price: null }));
-    expect(freeWeeks(none, apartments, [summer], '2026-12-01').seasons[0].state).toBe('notOpen');
-    expect(freeWeeks(none, apartments, [summer], '2027-01-20').seasons[0].state).toBe('full');
+    expect(freeWeeks(none, apartments, [summer], '2026-12-01', ['de']).seasons[0].state).toBe(
+      'notOpen',
+    );
+    expect(freeWeeks(none, apartments, [summer], '2027-01-20', ['de']).seasons[0].state).toBe(
+      'full',
+    );
     const taken = inventory(calendar(() => ({ free: false })));
     taken.days[12] = calendar(() => ({ free: false }));
-    expect(freeWeeks(taken, apartments, [summer], '2026-12-01').seasons[0]).toMatchObject({
+    expect(freeWeeks(taken, apartments, [summer], '2026-12-01', ['de']).seasons[0]).toMatchObject({
       state: 'full',
       weeks: [],
     });
@@ -150,6 +172,7 @@ describe('freeWeeks', () => {
       apartments,
       [january],
       '2026-12-01',
+      ['de'],
     );
     expect(list.tax).toBeNull();
   });
@@ -157,8 +180,10 @@ describe('freeWeeks', () => {
   it('leaves out an apartment Beds24 does not know, and fails without any', () => {
     vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     const unknown = [...apartments, { slug: 'three', roomId: 99, name: 'Three' }];
-    expect(freeWeeks(inventory(), unknown, [january], '2026-12-01').apartments).toHaveLength(2);
-    expect(() => freeWeeks(inventory(), [unknown[2]], [january], '2026-12-01')).toThrow(
+    expect(
+      freeWeeks(inventory(), unknown, [january], '2026-12-01', ['de']).apartments,
+    ).toHaveLength(2);
+    expect(() => freeWeeks(inventory(), [unknown[2]], [january], '2026-12-01', ['de'])).toThrow(
       'none of the rooms',
     );
   });

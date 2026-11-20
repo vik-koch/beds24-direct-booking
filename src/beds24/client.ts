@@ -11,6 +11,8 @@ export interface Room extends Listing {
   // The property's booking page multiplier; null when it cannot be read, and then no price.
   multiplier: number | null;
   tax: Tax | null;
+  // Per Beds24 language code, empty where nothing is written.
+  headlines: Record<string, string>;
 }
 
 // What a room's page shows of it.
@@ -21,6 +23,7 @@ export interface Listing {
   maxAdults: number;
   maxChildren: number;
   size: number;
+  bedrooms: number;
   address: string;
   // HH:MM, midnight as 24:00; null where the property sets none.
   checkIn: { from: string | null; until: string | null };
@@ -76,7 +79,7 @@ interface Properties {
       maxChildren: number | null;
       roomSize: number;
       featureCodes: string[][];
-      texts: Texts<'roomDescription'>;
+      texts: Texts<'contentHeadline' | 'roomDescription'>;
       priceRules?: { minDaysUntilCheckin?: number }[];
     }[];
   }[];
@@ -143,6 +146,7 @@ export const loadInventory = async (first: string, last: string): Promise<Invent
         maxAdults: Math.min(room.maxAdult ?? room.maxPeople, room.maxPeople),
         maxChildren: room.maxChildren ?? 0,
         size: room.roomSize,
+        bedrooms: room.featureCodes.filter(([code]) => code === 'BEDROOM').length,
         currency: property.currency,
         leadDays: leads.length ? Math.min(...leads) : 0,
         multiplier: multiplier(property.bookingPageMultiplier),
@@ -151,6 +155,9 @@ export const loadInventory = async (first: string, last: string): Promise<Invent
         checkIn: { from: property.checkInStart || null, until: property.checkInEnd || null },
         checkOut: property.checkOutEnd || null,
         features: [...property.featureCodes, ...room.featureCodes],
+        headlines: Object.fromEntries(
+          room.texts.map((text) => [text.language, text.contentHeadline.trim()]),
+        ),
         texts: Object.fromEntries(
           room.texts.map((text) => [
             text.language,
@@ -196,13 +203,14 @@ export const loadInventory = async (first: string, last: string): Promise<Invent
 export function listingOf(rooms: Room[], id: number, languages: string[]): Listing {
   const room = rooms.find((one) => one.id === id);
   if (!room) throw new Error(`Beds24 has no room ${id}`);
-  const { maxPeople, maxAdults, maxChildren, size, address, checkIn, checkOut, features, texts } =
-    room;
+  const { maxPeople, maxAdults, maxChildren, size, bedrooms, address } = room;
+  const { checkIn, checkOut, features, texts } = room;
   return {
     maxPeople,
     maxAdults,
     maxChildren,
     size,
+    bedrooms,
     address,
     checkIn,
     checkOut,
