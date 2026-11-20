@@ -268,7 +268,9 @@ test('on a phone a language change keeps the apartment of the chosen tab', async
     await page.locator('.room-tabs label').nth(2).click();
     await expect(tabs.nth(2)).toBeChecked({ timeout: 500 });
   }).toPass();
+  // The radio is checked at once, its apartment's weeks a frame later.
   const stay = page.locator('.weeks-body:visible [data-pick]:visible').first();
+  await expect(stay).toHaveAttribute('data-pick', /^2-/);
   const pick = (await stay.getAttribute('data-pick'))!;
   await stay.evaluate((cell) => {
     const edge = document.querySelector('app-header')!.getBoundingClientRect().bottom;

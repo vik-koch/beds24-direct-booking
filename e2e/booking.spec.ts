@@ -320,6 +320,8 @@ test('the week, the view and the guests can be chosen by keyboard alone', async 
   const pick = await focused.getAttribute('data-date');
   await page.getByRole('radio', { name: 'Liste' }).focus();
   await page.keyboard.press('ArrowRight');
+  // Tab only once the calendar is there, or it would go through the list's cells.
+  await expect(month(page).locator('.calendar')).toBeVisible();
   for (let i = 0; i < 6 && !(await focused.count()); i++) await page.keyboard.press('Tab');
   await expect(focused).toHaveAttribute('data-date', pick!);
   await page.keyboard.press('ArrowLeft');
