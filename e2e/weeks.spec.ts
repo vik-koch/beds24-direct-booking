@@ -488,13 +488,20 @@ test('the card moves to the new rows’ own height, so nothing jumps at the end'
   for (let i = 0; i < 2; i++) {
     const before = await size();
     await button(page).click();
-    const end = await bodies.evaluate((box) => {
-      const resize = box.getAnimations().at(-1);
-      return resize ? (resize.effect as KeyframeEffect).getKeyframes().at(-1)?.['height'] : null;
-    });
+    // Read once the swap has started, which is a frame after the click.
+    const end = await (
+      await page.waitForFunction(() => {
+        const box = document.querySelector('.weeks-bodies')!;
+        if (!box.querySelector('[data-leaving]')) return false;
+        const resize = box.getAnimations().at(-1);
+        return [
+          resize ? (resize.effect as KeyframeEffect).getKeyframes().at(-1)?.['height'] : null,
+        ];
+      })
+    ).jsonValue();
     await settled(page);
     const after = await size();
-    if (Math.abs(after - before) > 1) expect(parseFloat(String(end))).toBeCloseTo(after, 0);
+    if (Math.abs(after - before) > 1) expect(parseFloat(String(end[0]))).toBeCloseTo(after, 0);
   }
 });
 
