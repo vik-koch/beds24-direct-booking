@@ -857,7 +857,7 @@
 
   /* Every week starts on the same weekday, so the narrowest screens leave it out of the rows;
      the row header's label still names it. */
-  [role='rowheader'] {
+  :where(.weeks-grid) [role='rowheader'] {
     padding-block: 0.75rem;
     white-space: nowrap;
 
@@ -868,7 +868,7 @@
     }
   }
 
-  [role='gridcell'] {
+  :where(.weeks-grid) [role='gridcell'] {
     padding-left: 1rem;
     text-align: right;
     white-space: nowrap;
