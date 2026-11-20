@@ -25,3 +25,14 @@ export function address(language: Language, page: Page, slug?: string): string {
 // Puts values into a text's {placeholders}.
 export const fill = (text: string, values: Record<string, string | number>) =>
   text.replace(/\{(\w+)\}/g, (_, key: string) => String(values[key] ?? ''));
+
+// Whole amounts without cents, as the prices are; any other amount with both digits.
+export function formatMoney(tag: string, currency: string, amount: number) {
+  const digits = Number.isInteger(amount) ? 0 : 2;
+  return new Intl.NumberFormat(tag, {
+    style: 'currency',
+    currency,
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
+  }).format(amount);
+}

@@ -18,7 +18,7 @@ import type { FreeWeeks } from '../beds24/weeks';
 import type { SeasonName } from '../content/names';
 import { Season } from './season';
 import { swapper } from './swap';
-import { address, fill, LANGUAGE, TEXTS } from './texts';
+import { address, fill, formatMoney, LANGUAGE, TEXTS } from './texts';
 
 type SeasonWeeks = FreeWeeks['seasons'][number];
 interface Week {
@@ -375,13 +375,7 @@ export class FreeWeeksList {
   }
 
   protected money(amount: number) {
-    const digits = Number.isInteger(amount) ? 0 : 2;
-    return new Intl.NumberFormat(this.language.tag, {
-      style: 'currency',
-      currency: this.weeks()!.currency,
-      minimumFractionDigits: digits,
-      maximumFractionDigits: digits,
-    }).format(amount);
+    return formatMoney(this.language.tag, this.weeks()!.currency, amount);
   }
 
   // With the week's season, which the apartment page then shows, also to whoever the link is
