@@ -384,10 +384,12 @@ export class FreeWeeksList {
     }).format(amount);
   }
 
+  // With the week's season, which the apartment page then shows, also to whoever the link is
+  // sent to.
   protected link(season: SeasonWeeks, apartment: number, row: number) {
     const { arrival, departure } = season.weeks[row];
     const { slug } = this.weeks()!.apartments[apartment];
-    const query = new URLSearchParams({ arrival, departure });
+    const query = new URLSearchParams({ arrival, departure, season: season.name });
     return `${address(this.language, 'apartment', slug)}?${query}`;
   }
 

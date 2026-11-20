@@ -94,7 +94,10 @@ test('a click without a pointer chooses a free cell from anywhere, and never a b
   await expect(stay).toHaveAttribute('aria-selected', 'true');
 });
 
-test('a chosen week leads to its apartment with the stay', async ({ page }) => {
+test('a chosen week leads to its apartment with the stay, also in a fresh browser', async ({
+  page,
+  browser,
+}) => {
   await page.goto('/de');
   await toOtherSeason(page);
   const first = panel(page).locator('.stay:visible').first();
@@ -111,7 +114,7 @@ test('a chosen week leads to its apartment with the stay', async ({ page }) => {
   );
   await page.getByRole('link', { name: 'Weiter zur Buchung' }).click();
   await expect(page).toHaveURL(
-    /\/de\/wohnungen\/(zirbe|laerche|ahorn)\?arrival=\d{4}-\d\d-\d\d&departure=\d{4}-\d\d-\d\d$/,
+    /\/de\/wohnungen\/(zirbe|laerche|ahorn)\?arrival=\d{4}-\d\d-\d\d&departure=\d{4}-\d\d-\d\d&season=(winter|summer)$/,
   );
   const url = new URL(page.url());
   const days =
@@ -119,6 +122,17 @@ test('a chosen week leads to its apartment with the stay', async ({ page }) => {
       Date.parse(url.searchParams.get('arrival')!)) /
     864e5;
   expect(days).toBe(7);
+  // Sent on: whoever opens it sees the week's season and the week chosen.
+  const fresh = await browser.newPage();
+  await fresh.goto(page.url());
+  await expect(fresh.locator('html')).toHaveAttribute(
+    'data-season',
+    url.searchParams.get('season')!,
+  );
+  await expect(
+    fresh.locator('.panel-season:visible .month[data-current] [aria-selected=true]'),
+  ).toHaveCount(1);
+  await fresh.close();
 });
 
 test('a chosen week is cleared by a second click, Enter, Space or the bar, and waits for its season', async ({
