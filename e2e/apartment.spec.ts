@@ -227,6 +227,43 @@ test('on a phone a long description opens with its button, a short one has none'
   await expect(more).toHaveAttribute('aria-expanded', 'true');
 });
 
+test('the apartment page is styled from its first frame, on a full load and in the app', async ({
+  page,
+}) => {
+  // Before every frame, whether the page's and the gallery's own rules apply to what is there.
+  await page.addInitScript(() => {
+    const frames: boolean[] = [];
+    Object.assign(window, { frames_: frames });
+    const sample = () => {
+      const [apartment, gallery] = ['.apartment', '.gallery'].map((s) => document.querySelector(s));
+      if (apartment && gallery)
+        frames.push(
+          getComputedStyle(apartment).paddingTop === '16px' &&
+            getComputedStyle(gallery).containerType === 'inline-size',
+        );
+      requestAnimationFrame(sample);
+    };
+    requestAnimationFrame(sample);
+  });
+  const frames = () => page.evaluate(() => (window as unknown as { frames_: boolean[] }).frames_);
+  await page.goto('/en/apartments/zirbe');
+  await expect.poll(async () => (await frames()).length).toBeGreaterThan(2);
+  expect(await frames()).not.toContain(false);
+  await page.getByRole('link', { name: 'Frequently asked questions' }).click();
+  await expect(page).toHaveURL('/en/faq');
+  // Off the page its rules are gone, so the way back adds them again.
+  expect(await page.evaluate(() => document.head.innerHTML.includes('.gallery{'))).toBe(false);
+  await page.evaluate(() => {
+    (window as unknown as { frames_: boolean[] }).frames_.length = 0;
+    Object.assign(window, { kept: true });
+  });
+  await page.goBack();
+  await expect.poll(async () => (await frames()).length).toBeGreaterThan(2);
+  expect(await frames()).not.toContain(false);
+  // Still the same document, so the app drew the page.
+  expect(await page.evaluate(() => 'kept' in window)).toBe(true);
+});
+
 test('a language Beds24 has no texts in leaves the description and the house rules out', async ({
   page,
 }) => {
