@@ -39,3 +39,5 @@ How the project is developed, reviewed and released.
 | [3](0003-agent-identities.md) | Each agent has its own identity on GitHub | Accepted |
 | [9](0009-ci-in-the-playwright-image.md) | The CI check runs in the Playwright image, whose tag must match the installed package | Accepted |
 | [12](0012-ci-in-parallel-jobs.md) | The CI check runs in parallel jobs: the e2e suite in three shards, the static checks beside them | Accepted |
+
+<!-- A trial line for #191: only documentation changes here. -->
