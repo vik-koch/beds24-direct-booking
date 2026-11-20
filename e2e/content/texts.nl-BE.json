@@ -107,6 +107,13 @@
     "unavailable": "De gegevens van dit appartement kunnen nu niet worden geladen.",
     "generated": "AI-beeld"
   },
+  "gallery": {
+    "name": "Foto's",
+    "position": "Foto {index} van {count}",
+    "previous": "Vorige foto",
+    "next": "Volgende foto",
+    "more": { "one": "+{count} foto", "other": "+{count} foto's" }
+  },
   "amenities": {
     "areas": { "comfort": "Comfort" },
     "codes": {

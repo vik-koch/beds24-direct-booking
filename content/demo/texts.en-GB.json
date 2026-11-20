@@ -116,6 +116,13 @@
     "unavailable": "The details of this apartment cannot be loaded just now. Please try again in a few minutes.",
     "generated": "AI image"
   },
+  "gallery": {
+    "name": "Pictures",
+    "position": "Picture {index} of {count}",
+    "previous": "Previous picture",
+    "next": "Next picture",
+    "more": { "one": "+{count} picture", "other": "+{count} pictures" }
+  },
   "amenities": {
     "areas": {
       "general": "General",

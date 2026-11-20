@@ -4,9 +4,149 @@
   "pictures": [
     {
       "file": "pictures/square.png",
+      "generated": true,
       "alt": {
-        "it": "Immagine di prova quadrata",
-        "nl-BE": "Vierkante testafbeelding"
+        "it": "Immagine di prova 1",
+        "nl-BE": "Testafbeelding 1"
+      }
+    },
+    {
+      "file": "pictures/four-three.png",
+      "alt": {
+        "it": "Immagine di prova 2",
+        "nl-BE": "Testafbeelding 2"
+      }
+    },
+    {
+      "file": "pictures/square.png",
+      "alt": {
+        "it": "Immagine di prova 3",
+        "nl-BE": "Testafbeelding 3"
+      }
+    },
+    {
+      "file": "pictures/four-three.png",
+      "generated": true,
+      "alt": {
+        "it": "Immagine di prova 4",
+        "nl-BE": "Testafbeelding 4"
+      }
+    },
+    {
+      "file": "pictures/square.png",
+      "alt": {
+        "it": "Immagine di prova 5",
+        "nl-BE": "Testafbeelding 5"
+      }
+    },
+    {
+      "file": "pictures/four-three.png",
+      "alt": {
+        "it": "Immagine di prova 6",
+        "nl-BE": "Testafbeelding 6"
+      }
+    },
+    {
+      "file": "pictures/square.png",
+      "generated": true,
+      "alt": {
+        "it": "Immagine di prova 7",
+        "nl-BE": "Testafbeelding 7"
+      }
+    },
+    {
+      "file": "pictures/four-three.png",
+      "alt": {
+        "it": "Immagine di prova 8",
+        "nl-BE": "Testafbeelding 8"
+      }
+    },
+    {
+      "file": "pictures/square.png",
+      "alt": {
+        "it": "Immagine di prova 9",
+        "nl-BE": "Testafbeelding 9"
+      }
+    },
+    {
+      "file": "pictures/four-three.png",
+      "generated": true,
+      "alt": {
+        "it": "Immagine di prova 10",
+        "nl-BE": "Testafbeelding 10"
+      }
+    },
+    {
+      "file": "pictures/square.png",
+      "alt": {
+        "it": "Immagine di prova 11",
+        "nl-BE": "Testafbeelding 11"
+      }
+    },
+    {
+      "file": "pictures/four-three.png",
+      "alt": {
+        "it": "Immagine di prova 12",
+        "nl-BE": "Testafbeelding 12"
+      }
+    },
+    {
+      "file": "pictures/square.png",
+      "generated": true,
+      "alt": {
+        "it": "Immagine di prova 13",
+        "nl-BE": "Testafbeelding 13"
+      }
+    },
+    {
+      "file": "pictures/four-three.png",
+      "alt": {
+        "it": "Immagine di prova 14",
+        "nl-BE": "Testafbeelding 14"
+      }
+    },
+    {
+      "file": "pictures/square.png",
+      "alt": {
+        "it": "Immagine di prova 15",
+        "nl-BE": "Testafbeelding 15"
+      }
+    },
+    {
+      "file": "pictures/four-three.png",
+      "generated": true,
+      "alt": {
+        "it": "Immagine di prova 16",
+        "nl-BE": "Testafbeelding 16"
+      }
+    },
+    {
+      "file": "pictures/square.png",
+      "alt": {
+        "it": "Immagine di prova 17",
+        "nl-BE": "Testafbeelding 17"
+      }
+    },
+    {
+      "file": "pictures/four-three.png",
+      "alt": {
+        "it": "Immagine di prova 18",
+        "nl-BE": "Testafbeelding 18"
+      }
+    },
+    {
+      "file": "pictures/square.png",
+      "generated": true,
+      "alt": {
+        "it": "Immagine di prova 19",
+        "nl-BE": "Testafbeelding 19"
+      }
+    },
+    {
+      "file": "pictures/four-three.png",
+      "alt": {
+        "it": "Immagine di prova 20",
+        "nl-BE": "Testafbeelding 20"
       }
     }
   ]

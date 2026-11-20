@@ -17,7 +17,6 @@ import {
   lucideMapPin,
   lucideRuler,
   lucideScrollText,
-  lucideSparkles,
   lucideUsers,
 } from '@ng-icons/lucide';
 import { HlmAccordionImports } from '@spartan-ng/helm/accordion';
@@ -25,6 +24,7 @@ import type { Listing } from '../beds24/client';
 import { icons } from '../content/generated/icons';
 import site from '../content/generated/site';
 import { lucideName } from '../content/names';
+import { Gallery } from './gallery';
 import { address, fill, LANGUAGE, TEXTS } from './texts';
 
 // A room or an area of amenities: its icon, its name and what it holds; a code shown alone has
@@ -41,7 +41,7 @@ type Fold = ReturnType<typeof fold>;
 
 @Component({
   selector: 'app-apartment',
-  imports: [NgIcon, HlmAccordionImports],
+  imports: [NgIcon, HlmAccordionImports, Gallery],
   providers: [
     provideIcons({
       ...icons,
@@ -52,7 +52,6 @@ type Fold = ReturnType<typeof fold>;
       lucideMapPin,
       lucideRuler,
       lucideScrollText,
-      lucideSparkles,
       lucideUsers,
     }),
   ],
@@ -99,23 +98,7 @@ type Fold = ReturnType<typeof fold>;
         </ul>
       }
       <div class="apartment-columns">
-        <div class="apartment-picture">
-          <img
-            [attr.srcset]="srcset"
-            sizes="(min-width: 64rem) 41rem, 100vw"
-            [src]="picture.sources.at(-1)!.url"
-            [width]="picture.width"
-            [height]="picture.height"
-            [alt]="picture.alt[language.code]"
-          />
-          @if (picture.generated) {
-            <span class="ai-label"
-              ><ng-icon name="lucideSparkles" aria-hidden="true" />{{
-                texts.apartment.generated
-              }}</span
-            >
-          }
-        </div>
+        <app-gallery [pictures]="apartment.pictures" />
         @if (!listing) {
           <p class="text-ink-soft">{{ texts.apartment.unavailable }}</p>
         }
@@ -259,10 +242,6 @@ export class Apartment {
     return text && fill(text, { from: from ?? '', until: until ?? '' });
   })();
   protected readonly back = `${address(this.language, 'home')}#${this.language.anchors.apartments}`;
-  protected readonly picture = this.apartment.pictures[0];
-  protected readonly srcset = this.picture.sources
-    .map(({ url, width }) => `${url} ${width}w`)
-    .join(', ');
 
   private readonly labels = this.texts.amenities;
   private readonly groups = this.listing?.features ?? [];
