@@ -94,13 +94,15 @@ nothing is built or tested for it.
   Firefox desktop. The suite is small, the visitors are tourists on phones, and most
   browser-specific breakage is Safari's.
 - **The e2e suite runs against the simulator,** never against Beds24.
+- **WebKit runs locally before a push,** not only in CI. Where the machine's own WebKit cannot
+  start, `npm run e2e:webkit` runs it in the Playwright image CI uses.
 - **The screenshot matrix** (2 languages × 2 seasons × phone and desktop) stays on Chromium and the
   WebKit phone, or it is too large to review.
 - **Playwright's WebKit is not Safari.** It is a first signal for layout and forms. Cookie blocking
   and wallet payments differ, so anything that depends on them (the booking frame) is confirmed in
   the check on real Apple devices below.
 - **A feature's done-when names neither Safari nor VoiceOver.** No feature could meet them: the
-  maintainer has no Apple hardware, and no emulator stands in for it. WebKit in CI is the signal for
+  maintainer has no Apple hardware, and no emulator stands in for it. WebKit is the signal for
   Safari's engine, NVDA on Windows the manual screen-reader check. What only Apple devices show is
   checked once, on a real iPhone and a real Mac, before a release guests rely on
   ([issue 100](https://github.com/vik-koch/beds24-direct-booking/issues/100)).

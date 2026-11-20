@@ -40,6 +40,7 @@ Node 24 and npm. After `npm ci`:
 | `npm run lint` and `npm run format:check` | ESLint and Prettier. `npm run format` rewrites. |
 | `npm test` | The unit tests, once. |
 | `npm run e2e` | Builds, starts the simulator and the built server and runs the e2e suite on Chromium, WebKit with an iPhone device and Firefox. The browsers are installed once with `npx playwright install --with-deps`. |
+| `npm run e2e:webkit` | Builds and runs the e2e suite's WebKit project in the Playwright image CI uses, through Docker, for a machine whose own WebKit lacks its system libraries. Arguments go to Playwright, after `--`: `npm run e2e:webkit -- e2e/apartment.spec.ts`. |
 | `npm run build`, then `npm run serve` | The built server on `localhost:4000`. It answers only for the hosts in `NG_ALLOWED_HOSTS`, for example `NG_ALLOWED_HOSTS=localhost`. It reads the Beds24 address and token from `BEDS24_URL` and `BEDS24_TOKEN`; for the simulator these are `http://localhost:4300/v2` and `simulator`. |
 
 ## Running it in containers
