@@ -23,17 +23,22 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: 24
-      # Restored whole while the lock file is unchanged; the build's picture cache stays out
-      # (ADR 10), or a changed picture behind the same address would be served old.
+          package-manager-cache: false
+      # Saved straight after npm ci, before the build keeps its pictures inside node_modules
+      # (ADR 10): a changed picture behind the same address would be served old. package.json
+      # is in the key, so a lock file that does not match it still reaches npm ci and fails.
       - id: modules
-        uses: actions/cache@v5
+        uses: actions/cache/restore@v5
         with:
-          path: |
-            node_modules
-            !node_modules/.cache
-          key: modules-static-node24-${{ hashFiles('package-lock.json') }}
+          path: node_modules
+          key: modules-static-node24-${{ hashFiles('package.json', 'package-lock.json') }}
       - if: steps.modules.outputs.cache-hit != 'true'
         run: npm ci
+      - if: steps.modules.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: node_modules
+          key: ${{ steps.modules.outputs.cache-primary-key }}
       - run: npm run format:check
       - run: npm run lint
       - run: npm test
@@ -57,15 +62,19 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: 24
+          package-manager-cache: false
       - id: modules
-        uses: actions/cache@v5
+        uses: actions/cache/restore@v5
         with:
-          path: |
-            node_modules
-            !node_modules/.cache
-          key: modules-playwright-node24-${{ hashFiles('package-lock.json') }}
+          path: node_modules
+          key: modules-playwright-node24-${{ hashFiles('package.json', 'package-lock.json') }}
       - if: steps.modules.outputs.cache-hit != 'true'
         run: npm ci
+      - if: steps.modules.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: node_modules
+          key: ${{ steps.modules.outputs.cache-primary-key }}
       - name: Check that the image's browsers belong to the installed Playwright
         run: |
           image=$(grep -oP 'playwright:v\K[0-9.]+' .github/workflows/ci.yml)
