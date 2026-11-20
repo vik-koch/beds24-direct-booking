@@ -265,7 +265,6 @@ export const textsSchema = z.strictObject({
     back: text,
     guests: z.strictObject({ one: text, other: text }),
     bedrooms: z.strictObject({ one: text, other: text }),
-    description: text,
     more: text,
     rooms: text,
     features: text,

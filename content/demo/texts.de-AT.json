@@ -99,7 +99,6 @@
     "back": "Alle Wohnungen",
     "guests": { "one": "Bis {count} Gast", "other": "Bis {count} Gäste" },
     "bedrooms": { "one": "1 Schlafzimmer", "other": "{count} Schlafzimmer" },
-    "description": "Die Wohnung",
     "more": "Mehr lesen",
     "rooms": "Räume und Betten",
     "features": "Ausstattung",

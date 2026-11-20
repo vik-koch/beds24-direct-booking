@@ -47,7 +47,7 @@ test('each apartment shows its facts, pictures, description, rooms, amenities an
 test('the description keeps its structure and none of the editor’s styling', async ({ page }) => {
   await page.goto('/de/wohnungen/ahorn');
   const prose = page.locator('.prose');
-  await expect(prose.locator('h3')).toHaveText('Zwei Etagen');
+  await expect(prose.locator('h2')).toHaveText('Zwei Etagen');
   await expect(prose.locator('p')).toHaveText([
     'Unten – Wohnküche, Bad, Sauna',
     'Oben – Drei Schlafzimmer, Duschbad',

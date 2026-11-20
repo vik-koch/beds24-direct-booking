@@ -10,7 +10,7 @@ export function richText(html: string): string {
   const clean = sanitizeHtml(
     html.replace(/\uFEFF/g, '').replace(/<\/t[dh]>\s*(?=<t[dh][\s>])/g, ' – $&'),
     {
-      allowedTags: 'p br ul ol li blockquote hr sup sub a strong em h3'.split(' '),
+      allowedTags: 'p br ul ol li blockquote hr sup sub a strong em h2'.split(' '),
       allowedAttributes: { a: ['href'] },
       allowedSchemes: ['http', 'https', 'mailto', 'tel'],
       allowProtocolRelative: false,
@@ -25,7 +25,7 @@ export function richText(html: string): string {
         tr: 'p',
         b: 'strong',
         i: 'em',
-        ...Object.fromEntries(['h1', 'h2', 'h4', 'h5', 'h6'].map((tag) => [tag, 'h3'])),
+        ...Object.fromEntries(['h1', 'h3', 'h4', 'h5', 'h6'].map((tag) => [tag, 'h2'])),
         span: (_, attribs) => ({
           tagName: bold.test(attribs['style'] ?? '')
             ? 'strong'
@@ -36,13 +36,13 @@ export function richText(html: string): string {
         }),
       },
       exclusiveFilter: (frame) =>
-        ['p', 'a', 'strong', 'em', 'h3', 'li'].includes(frame.tag) &&
+        ['p', 'a', 'strong', 'em', 'h2', 'li'].includes(frame.tag) &&
         !frame.text.trim() &&
         !frame.mediaChildren.length,
     },
   );
   return clean
     .replace(/<a>(.*?)<\/a>/g, '$1')
-    .replace(/(<br \/>\s*)+(<\/(p|li|h3)>)/g, '$2')
+    .replace(/(<br \/>\s*)+(<\/(p|li|h2)>)/g, '$2')
     .trim();
 }

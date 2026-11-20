@@ -109,8 +109,7 @@ type Fold = ReturnType<typeof fold>;
             <p class="text-ink-soft">{{ texts.apartment.unavailable }}</p>
           }
           @if (text.description) {
-            <section>
-              <h2>{{ texts.apartment.description }}</h2>
+            <div>
               <div
                 class="fold prose-fold"
                 (focusin)="description.open.set(true)"
@@ -130,7 +129,7 @@ type Fold = ReturnType<typeof fold>;
               >
                 {{ texts.apartment.more }}<ng-icon name="lucideChevronDown" aria-hidden="true" />
               </button>
-            </section>
+            </div>
           }
           @if (rooms.length) {
             <section>
@@ -257,6 +256,7 @@ type Fold = ReturnType<typeof fold>;
         padding-inline: var(--air);
         border-radius: var(--radius-control);
         color: var(--color-accent);
+        font-size: 0.9375rem;
         font-weight: 500;
         text-decoration: underline transparent;
         text-underline-offset: 0.3em;
@@ -325,10 +325,11 @@ type Fold = ReturnType<typeof fold>;
         display: flow-root;
         max-width: 40rem;
 
-        h3 {
+        h2 {
           margin: 1.25rem 0 0.375rem;
           font-size: 1.1875rem;
           font-weight: 500;
+          letter-spacing: normal;
 
           &:first-child {
             margin-top: 0;

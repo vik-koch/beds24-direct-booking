@@ -495,7 +495,7 @@ function apartmentPage() {
     </div>
     <div class="columns">
       ${gallery()}
-      ${apartment.prose ? `<section class="prose-section"><h2>Die Wohnung</h2><div class="prose" id="beschreibung">${apartment.prose}</div><button class="text-button more-text" type="button" aria-expanded="false" aria-controls="beschreibung" data-prose>Mehr lesen${icon('chevron-down')}</button></section>` : ''}
+      ${apartment.prose ? `<section class="prose-section"><div class="prose" id="beschreibung">${apartment.prose}</div><button class="text-button more-text" type="button" aria-expanded="false" aria-controls="beschreibung" data-prose>Mehr lesen${icon('chevron-down')}</button></section>` : ''}
       <section><h2>Räume und Betten</h2>${rooms()}</section>
       <section><h2>Ausstattung</h2>${features()}</section>
       <aside>${panel()}</aside>
