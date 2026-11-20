@@ -8,10 +8,10 @@ async function open(page: Page, path: string) {
   await expect(page.locator('html')).toHaveAttribute('data-smooth', '');
   return response;
 }
-// The shown season's shown month.
-// The shown season, and not one leaving after a change.
+// The shown season, and not one leaving after a change, and its shown month.
 const season = (page: Page) => page.locator('.panel-season:visible:not([data-leaving])');
-const month = (page: Page) => season(page).locator('.month[data-current]');
+const month = (page: Page) => season(page).locator('.month[data-current]:not([data-leaving])');
+const chosen = (page: Page) => month(page).locator('[aria-selected=true]');
 const monthName = (page: Page) => season(page).locator('.month-head h3');
 const next = (page: Page) => season(page).getByRole('button', { name: /Nächster|Next/ });
 // German money, as the page writes it: "€ 1.669,50", "€ 49".
@@ -26,10 +26,10 @@ const euro = (value: number) => {
   }).format(value);
 };
 
-// The first month of the shown season with a free week, and that week's row.
+// The first month of the shown season with a free week of its own, and that week's cell.
 async function firstFree(page: Page) {
   for (let i = 0; i < 12; i++) {
-    const free = month(page).locator('label.stay');
+    const free = month(page).locator('.week:not(.full, .outside) [role=gridcell]');
     if (await free.count()) return free.first();
     await next(page).click();
   }
@@ -58,9 +58,9 @@ test('a week and the guests make the total, and the button takes them on to book
   await expect(panel(page).getByRole('button', { name: 'Erst eine Woche wählen' })).toBeDisabled();
   await expect(panel(page).locator('.from:visible')).toHaveText(/ab €\s[\d.,]+ pro Woche/);
   const week = await firstFree(page);
-  const price = amount(await week.locator('.price').innerText());
+  const price = amount(await week.innerText());
   await week.click();
-  await expect(week.locator('input')).toBeChecked();
+  await expect(week).toHaveAttribute('aria-selected', 'true');
   const total = panel(page).locator('.outcome:visible .total');
   await expect(total.locator('div').nth(1)).toHaveText(
     /Ortstaxe: 2 Erwachsene × 7 Nächte × €\s3,50\s*€\s49/,
@@ -84,7 +84,7 @@ test('a week and the guests make the total, and the button takes them on to book
   await page.reload();
   await expect(page.locator('#adults')).toHaveText('3');
   await expect(page.locator('#children')).toHaveText('1');
-  await expect(month(page).locator('input:checked')).toHaveCount(1);
+  await expect(chosen(page)).toHaveCount(1);
 
   const link = panel(page).getByRole('link', { name: 'Weiter zur Buchung' });
   const href = new URL((await link.getAttribute('href'))!, 'http://localhost');
@@ -152,11 +152,11 @@ test('an address over the limits opens at them, and an arrival from the list is 
     `/de/wohnungen/laerche?arrival=${url.searchParams.get('arrival')}&departure=${url.searchParams.get('departure')}`,
   );
   await expect(monthName(page)).toHaveText(name);
-  await expect(month(page).locator('input:checked')).toHaveCount(1);
+  await expect(chosen(page)).toHaveCount(1);
   await expect(panel(page).getByRole('link', { name: 'Weiter zur Buchung' })).toBeVisible();
   // A week that is not free is not chosen.
   await open(page, '/de/wohnungen/laerche?arrival=2020-01-04&departure=2020-01-11');
-  await expect(panel(page).locator('input[name^=week]:checked')).toHaveCount(0);
+  await expect(panel(page).locator('[aria-selected=true]')).toHaveCount(0);
 });
 
 test('the calendar shows the list’s month and week, at the same height', async ({ page }) => {
@@ -177,20 +177,23 @@ test('the calendar shows the list’s month and week, at the same height', async
       .evaluate((box) => box.offsetHeight),
   ).toBe(height);
   const day = Number(arrival.slice(8));
-  const start = month(page).locator('label.start', { has: page.locator('input:checked') });
+  const start = chosen(page);
   await expect(start).toHaveText(String(day));
   // The band runs from the arrival to the departure, its ends under their circles.
   await expect(month(page).locator('.band-start')).toHaveCount(1);
   expect(await month(page).locator('.in-band').count()).toBeGreaterThanOrEqual(
     Math.min(6, new Date(Date.UTC(2000, Number(arrival.slice(5, 7)), 0)).getUTCDate() - day),
   );
-  // A free week's first day is a radio named with its stay and price.
-  await expect(start.locator('input')).toHaveAttribute(
+  // A free week's first day is named with its stay and price, another day with its date.
+  await expect(start).toHaveAttribute('aria-label', /^Samstag, .+ – Samstag, .+, €\s/);
+  await expect(month(page).locator('.day:not(:has(.start))').first()).toHaveAttribute(
     'aria-label',
-    /^Samstag, .+ – Samstag, .+, €\s/,
+    /^\d+\. \p{L}+(, belegt)?$/u,
   );
+  // Six weeks in both views, the days of the months around half seen.
+  await expect(month(page).locator('[role=row]')).toHaveCount(7);
   await page.getByRole('radio', { name: 'Liste' }).check({ force: true });
-  await expect(month(page).locator('label.stay input:checked')).toHaveCount(1);
+  await expect(month(page).locator('.week [aria-selected=true]')).toHaveCount(1);
 });
 
 test('the months page by their buttons, slide in from their side and keep the focus', async ({
@@ -209,11 +212,36 @@ test('the months page by their buttons, slide in from their side and keep the fo
         .map((one) => (one.effect as KeyframeEffect).getKeyframes()[0]['translate'])
         .filter(Boolean),
     );
+  // The guests' place in the panel, every frame of a move in each view.
+  const below = () =>
+    page.evaluate(
+      () =>
+        new Promise<number[]>((done) => {
+          const guests = document.querySelector('.guests')!;
+          const card = document.querySelector('.panel')!;
+          const tops = new Set<number>();
+          const frame = (left: number) => {
+            tops.add(
+              Math.round(guests.getBoundingClientRect().top - card.getBoundingClientRect().top),
+            );
+            if (left) requestAnimationFrame(() => frame(left - 1));
+            else done([...tops]);
+          };
+          frame(30);
+        }),
+    );
+  const width = await panel(page).evaluate((card) => card.offsetWidth);
+  const moved = below();
   await next(page).click();
-  await expect
-    .poll(moves)
-    .toEqual([expect.stringMatching(/^0/), expect.stringMatching(/^[1-9][\d.]*px/)]);
+  // The new month comes in from beyond the card's edge.
+  await expect.poll(moves).toEqual(['0px', `${width}px`]);
+  expect(await moved).toHaveLength(1);
   await expect(monthName(page)).not.toHaveText(first);
+  await page.getByRole('radio', { name: 'Calendar' }).check({ force: true });
+  const paged = below();
+  await back.click();
+  expect(await paged).toHaveLength(1);
+  await next(page).click();
   await expect(back).toBeEnabled();
   // By keyboard to the season's last month: there the focus moves to the other button.
   await next(page).focus();
@@ -231,14 +259,27 @@ test('the week, the view and the guests can be chosen by keyboard alone', async 
   await expect(page.getByRole('radio', { name: 'Kalender' })).toBeChecked();
   await expect(month(page).locator('.calendar')).toBeVisible();
   await page.keyboard.press('ArrowLeft');
-  await expect(month(page).locator('label.stay').first()).toBeVisible();
-  // The month's weeks are one tab stop after the month's buttons; Space chooses.
-  const focused = page.locator('input[name^=week]:focus');
+  await expect(month(page).locator('.week').first()).toBeVisible();
+  // The month's weeks are one tab stop after the month's buttons; Space and Enter choose a
+  // week and, on the chosen one, choose none. A booked week is passed by.
+  const focused = month(page).locator('[role=gridcell]:focus');
   for (let i = 0; i < 4 && !(await focused.count()); i++) await page.keyboard.press('Tab');
   await expect(focused).toHaveCount(1);
+  const passed = () => page.evaluate(() => document.activeElement!.closest('.full, .outside'));
+  while (await passed()) await page.keyboard.press('ArrowDown');
   await page.keyboard.press('Space');
-  await expect(focused).toBeChecked();
+  await expect(focused).toHaveAttribute('aria-selected', 'true');
+  await page.keyboard.press('Enter');
+  await expect(chosen(page)).toHaveCount(0);
+  await expect(page).not.toHaveURL(/arrival=/);
+  await page.keyboard.press('Enter');
+  await expect(focused).toHaveAttribute('aria-selected', 'true');
   await expect(panel(page).getByRole('link', { name: 'Weiter zur Buchung' })).toBeVisible();
+  // Page Down shows the next month, at the same place.
+  const first = await monthName(page).innerText();
+  await page.keyboard.press('PageDown');
+  await expect(monthName(page)).not.toHaveText(first);
+  await expect(focused).toHaveCount(1);
   // The counts: Enter opens, the arrows move, Enter chooses.
   await page.locator('#adults').focus();
   await page.keyboard.press('Enter');
@@ -248,6 +289,53 @@ test('the week, the view and the guests can be chosen by keyboard alone', async 
   await expect(page.locator('#adults')).toHaveText('3');
   await expect(page.getByRole('listbox')).toHaveCount(0);
   await expect(page.locator('#adults')).toBeFocused();
+});
+
+test('a week or a day of the month before or after chooses its week and shows its month', async ({
+  page,
+}) => {
+  await open(page, '/en/apartments/laerche');
+  // In the list, the week that ends in the month, from the month before.
+  const row = month(page).locator('.week.outside:not(.full)');
+  for (let i = 0; i < 12 && !(await row.count()); i++) await next(page).click();
+  const arrival = await row.locator('[role=gridcell]').getAttribute('data-date');
+  const shown = await monthName(page).innerText();
+  await row.locator('[role=gridcell]').click();
+  await expect(monthName(page)).not.toHaveText(shown);
+  await expect(chosen(page)).toHaveAttribute('data-date', arrival!);
+  await expect(page).toHaveURL(new RegExp(`arrival=${arrival}`));
+  // In the calendar, a free week's first day in the month after.
+  await page.getByRole('radio', { name: 'Calendar' }).check({ force: true });
+  const day = month(page).locator('.day.outside:has(.start)');
+  for (let i = 0; i < 12 && !(await day.count()); i++) await next(page).click();
+  const start = await day.last().getAttribute('data-date');
+  await day.last().click();
+  await expect(chosen(page)).toHaveAttribute('data-date', start!);
+  await expect(monthName(page)).toHaveText(
+    new Intl.DateTimeFormat('en-GB', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(
+      new Date(start!),
+    ),
+  );
+  // A click on the chosen week chooses none.
+  await chosen(page).click();
+  await expect(chosen(page)).toHaveCount(0);
+  await expect(page).not.toHaveURL(/arrival=/);
+});
+
+test('a change of language keeps the view and the month', async ({ page }) => {
+  await open(page, '/de/wohnungen/laerche');
+  await page.getByRole('radio', { name: 'Kalender' }).check({ force: true });
+  await next(page).click();
+  const shown = await month(page).getAttribute('data-month');
+  // From the header's menu on a phone, else from its language control.
+  const menu = page.locator('.header-narrow .icon-button');
+  const control = (await menu.isVisible()) ? menu : page.locator('[data-language]');
+  const box = (await control.boundingBox())!;
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+  await page.getByRole('link', { name: 'English' }).click();
+  await expect(page).toHaveURL(/\/en\/apartments\/laerche/);
+  await expect(page.getByRole('radio', { name: 'Calendar' })).toBeChecked();
+  await expect(month(page)).toHaveAttribute('data-month', shown!);
 });
 
 test('a full season, one not open yet and an unreachable Beds24 each say so', async ({ page }) => {
@@ -336,6 +424,12 @@ test('the panel passes axe with a week chosen, in both views and with a list ope
       expect(violations, `${place} at ${width}`).toEqual([]);
     };
     await scan('list');
+    expect(
+      await month(page)
+        .locator('.week')
+        .evaluateAll((rows) => rows.every((row) => row.scrollWidth <= row.clientWidth)),
+      `rows fit at ${width}`,
+    ).toBe(true);
     await page.getByRole('radio', { name: 'Calendar' }).check({ force: true });
     await scan('calendar');
     await page.locator('#adults').click();

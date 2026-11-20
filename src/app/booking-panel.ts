@@ -1,3 +1,4 @@
+import { Grid, GridCell, GridRow } from '@angular/aria/grid';
 import { Location } from '@angular/common';
 import {
   afterNextRender,
@@ -6,6 +7,7 @@ import {
   DestroyRef,
   ElementRef,
   inject,
+  InjectionToken,
   Injector,
   signal,
   ViewEncapsulation,
@@ -36,19 +38,32 @@ interface Stay {
   departure: string;
   price: number | null;
 }
-// A day of a month's calendar; a free week's first day starts it. Blank before the first.
+// A day of a month's calendar, which may be one of the month before or after; a free week's
+// first day starts it.
 interface Day {
   date: string;
-  day: number | null;
+  day: number;
   start?: Stay;
   booked: boolean;
+  label: string;
 }
 interface Month {
   key: string;
   name: string;
   stays: Stay[];
-  days: Day[];
+  rows: Day[][];
 }
+type View = 'list' | 'calendar';
+
+// In the root injector, so the view and each season's month, by its key, outlive a change of
+// language, which replaces the page's components.
+const shownState = new InjectionToken('booking panel view', {
+  providedIn: 'root',
+  factory: () => ({
+    view: signal<View>('list'),
+    months: signal<Partial<Record<SeasonName, string>>>({}),
+  }),
+});
 
 const day = 864e5;
 const addDays = (date: string, days: number) =>
@@ -61,7 +76,7 @@ const addDays = (date: string, days: number) =>
 @Component({
   encapsulation: ViewEncapsulation.None,
   selector: 'app-booking-panel',
-  imports: [NgIcon, HlmSelectImports, BookingBar],
+  imports: [NgIcon, HlmSelectImports, BookingBar, Grid, GridRow, GridCell],
   providers: [
     provideIcons({
       lucideArrowLeft,
@@ -74,7 +89,7 @@ const addDays = (date: string, days: number) =>
   ],
   template: `
     <section id="booking" class="panel" aria-labelledby="booking-title">
-      <h2 id="booking-title" tabindex="-1">
+      <h2 id="booking-title" class="panel-title" tabindex="-1">
         {{ texts.panel.title }}
         @if (weeks?.seasons?.[0]?.years) {
           <span class="weeks-season stack">
@@ -127,7 +142,7 @@ const addDays = (date: string, days: number) =>
           @for (season of weeks.seasons; track season.name) {
             <div class="panel-season" [attr.data-for]="season.name">
               @if (season.state === 'open') {
-                @let shown = month(season.name);
+                @let shown = month(season);
                 @let months = monthsOf(season);
                 <div class="month-head">
                   <button
@@ -150,78 +165,113 @@ const addDays = (date: string, days: number) =>
                     <ng-icon name="lucideChevronRight" aria-hidden="true" />
                   </button>
                 </div>
+                <!-- The grids give their cells the tab stop, which the rule does not see. -->
+                <!-- eslint-disable @angular-eslint/template/interactive-supports-focus -->
                 <div class="months">
                   @for (month of months; track month.key) {
                     <div
                       class="month"
-                      role="radiogroup"
-                      [attr.aria-labelledby]="'month-' + season.name"
                       [attr.data-month]="$index"
                       [attr.data-current]="$index === shown ? '' : null"
                     >
+                      <!-- As on the home page: a grid whose cells choose a week, and choose it no
+                           more when it is chosen. A row or a day of the month before or after
+                           leads to that month. -->
                       @if (view() === 'list') {
-                        <!-- Every week starts on the same weekday, so a row leaves it out; the
-                             radio's name says it. -->
-                        @for (stay of month.stays; track stay.arrival) {
-                          @if (stay.price === null) {
-                            <p class="stay booked">
-                              <span>{{ stayText(stay, short) }}</span>
-                              <span>{{ texts.weeks.taken }}</span>
-                            </p>
-                          } @else {
-                            <label class="stay">
-                              <input
-                                type="radio"
-                                [name]="'week-' + month.key"
-                                [checked]="isChosen(season.name, stay)"
-                                (change)="choose(season.name, stay)"
-                                [attr.aria-label]="
-                                  stayText(stay, spoken) + ', ' + money(stay.price)
-                                "
-                              />
-                              <span>{{ stayText(stay, short) }}</span>
-                              <span class="price">{{ money(stay.price) }}</span>
-                            </label>
-                          }
-                        }
-                      } @else {
-                        <div class="calendar">
-                          @for (name of weekdays; track $index) {
-                            <span class="weekday-name" aria-hidden="true">{{ name }}</span>
-                          }
-                          @for (cell of month.days; track $index) {
-                            @let band = bandOf(season.name, cell.date);
-                            <span
-                              class="day"
-                              [class.in-band]="band.in"
-                              [class.band-start]="band.start"
-                              [class.band-end]="band.end"
+                        <div
+                          class="month-weeks"
+                          ngGrid
+                          enableSelection
+                          selectionMode="explicit"
+                          rowWrap="nowrap"
+                          colWrap="nowrap"
+                          [attr.aria-labelledby]="'month-' + season.name"
+                        >
+                          @for (stay of month.stays; track stay.arrival) {
+                            <div
+                              class="week"
+                              ngGridRow
+                              [class.full]="stay.price === null"
+                              [class.outside]="!stay.arrival.startsWith(month.key)"
                             >
-                              @if (cell.start; as stay) {
-                                <label class="start">
-                                  <input
-                                    type="radio"
-                                    [name]="'week-' + month.key"
-                                    [checked]="isChosen(season.name, stay)"
-                                    (change)="choose(season.name, stay)"
-                                    [attr.aria-label]="
-                                      stayText(stay, spoken) + ', ' + money(stay.price!)
-                                    "
-                                  />
-                                  <span>{{ cell.day }}</span>
-                                </label>
-                              } @else if (cell.day) {
-                                <span [class.booked]="cell.booked" aria-hidden="true">{{
-                                  cell.day
-                                }}</span>
+                              <!-- Every week starts on the same weekday, so a row leaves it
+                                   out; the row header's label says it. -->
+                              <span
+                                role="rowheader"
+                                aria-colindex="1"
+                                [attr.aria-label]="stayText(stay, spoken)"
+                                >{{ stayText(stay, short) }}</span
+                              >
+                              <span
+                                ngGridCell
+                                class="week-cell"
+                                [colIndex]="2"
+                                [selectable]="stay.price !== null"
+                                [selected]="isChosen(season.name, stay)"
+                                (selectedChange)="select($event, season, stay)"
+                                [attr.data-date]="stay.arrival"
+                                (click)="guard($event, stay.price !== null)"
+                                (keydown)="keys($event, season, stay.price !== null)"
+                                >{{
+                                  stay.price === null ? texts.weeks.taken : money(stay.price)
+                                }}</span
+                              >
+                            </div>
+                          }
+                        </div>
+                      } @else {
+                        <div
+                          class="calendar"
+                          ngGrid
+                          enableSelection
+                          selectionMode="explicit"
+                          rowWrap="nowrap"
+                          colWrap="nowrap"
+                          [attr.aria-labelledby]="'month-' + season.name"
+                        >
+                          <div class="calendar-row" role="row" aria-rowindex="1">
+                            @for (name of weekdays; track $index) {
+                              <span
+                                role="columnheader"
+                                class="weekday-name"
+                                [attr.aria-label]="name.long"
+                                >{{ name.short }}</span
+                              >
+                            }
+                          </div>
+                          @for (row of month.rows; track $index) {
+                            <div class="calendar-row" ngGridRow [rowIndex]="$index + 2">
+                              @for (cell of row; track cell.date) {
+                                @let band = bandOf(season.name, cell.date);
+                                <span
+                                  ngGridCell
+                                  class="day"
+                                  [class.outside]="!cell.date.startsWith(month.key)"
+                                  [class.in-band]="band.in"
+                                  [class.band-start]="band.start"
+                                  [class.band-end]="band.end"
+                                  [selectable]="!!cell.start"
+                                  [selected]="!!cell.start && isChosen(season.name, cell.start)"
+                                  (selectedChange)="
+                                    cell.start && select($event, season, cell.start)
+                                  "
+                                  [attr.aria-label]="cell.label"
+                                  [attr.data-date]="cell.date"
+                                  (click)="guard($event, !!cell.start)"
+                                  (keydown)="keys($event, season, !!cell.start)"
+                                  ><span [class.start]="cell.start" [class.booked]="cell.booked">{{
+                                    cell.day
+                                  }}</span></span
+                                >
                               }
-                            </span>
+                            </div>
                           }
                         </div>
                       }
                     </div>
                   }
                 </div>
+                <!-- eslint-enable @angular-eslint/template/interactive-supports-focus -->
               } @else {
                 <p class="panel-empty">
                   {{ fill(texts.weeks[season.state], { season: dated(season) }) }}
@@ -341,13 +391,14 @@ const addDays = (date: string, days: number) =>
           padding-block: 2rem;
         }
 
-        /* Sized as the page's other headings. */
-        h2 {
+        /* A step below the page's headings: the panel's parts stand under it. */
+        .panel-title {
           margin: 0;
-          line-height: 1.2;
+          font-size: 1.1875rem;
+          line-height: 1.3;
         }
 
-        /* The radios are the labels round them, which draw their rings. */
+        /* The view's radios are the labels round them, which draw their rings. */
         input[type='radio'] {
           position: absolute;
           opacity: 0;
@@ -442,18 +493,22 @@ const addDays = (date: string, days: number) =>
         }
       }
 
-      /* The seasons, and in each its months, lie in one place, so one can slide over another;
-         the focus rings of the rows at the edges have room inside the clip. */
-      .panel-seasons {
+      /* The seasons, and in each its months, lie in one place, so one can slide over another.
+         Each clips at the card's edges, which a move crosses whole; the focus rings of the parts
+         at the sides have room inside. */
+      .panel-seasons,
+      .months {
         display: grid;
-        margin: 0.75rem calc(-1 * var(--inset)) 0;
+        margin-inline: calc(-1 * var(--inset));
         padding-inline: var(--inset);
         overflow: clip;
       }
 
+      /* The room above is the season's, so the ring of a month's button fits in its clip. */
       .panel-season {
         grid-area: 1 / 1;
         align-self: start;
+        padding-top: 0.75rem;
       }
 
       .month-head {
@@ -477,16 +532,17 @@ const addDays = (date: string, days: number) =>
         }
       }
 
-      /* As tall as the calendar's longest month, in both views, so nothing below moves. */
+      /* Six lines in both views, the list's below as much room as the calendar's weekdays: as
+         tall as each other in every month, so nothing below moves. */
       .months {
         --day: var(--size-control-small);
-        display: grid;
-        height: calc(1.75rem + 6 * var(--day) + 5 * 0.25rem + 0.5rem);
+        --gap: 0.25rem;
+        --head: 1.5rem;
+        height: calc(var(--head) + 7 * var(--gap) + 6 * var(--day) + 0.75rem);
         margin-top: 0.25rem;
 
         > * {
           grid-area: 1 / 1;
-          align-self: start;
         }
 
         > :not([data-current], [data-leaving]) {
@@ -500,61 +556,94 @@ const addDays = (date: string, days: number) =>
       }
 
       .month {
-        display: grid;
-        gap: 0.25rem;
-        padding-block: 0.25rem;
+        padding-block: 0.375rem;
       }
 
-      .stay {
+      .month-weeks,
+      .calendar {
+        display: grid;
+        gap: var(--gap);
+      }
+
+      .month-weeks {
+        padding-top: calc(var(--head) + var(--gap));
+      }
+
+      /* The cell is the price, but the whole row chooses it and is its pill. */
+      .week {
+        position: relative;
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 1rem;
-        min-height: var(--size-control-small);
+        min-height: var(--day);
         padding: 1px 0.75rem 0;
         border-radius: var(--radius-control);
         white-space: nowrap;
 
-        &.booked {
+        &.full {
           color: var(--color-ink-soft);
         }
 
-        &:not(.booked) {
+        &:not(.full) {
           cursor: pointer;
-          transition: background-color 0.2s;
         }
 
-        &:not(.booked, :has(:checked)):hover {
-          background: var(--color-accent-soft);
-        }
-
-        &:has(:checked) {
+        &:has([aria-selected='true']) {
           background: var(--color-accent);
           color: var(--color-on-accent);
-
-          .price {
-            color: inherit;
-          }
         }
 
-        .price {
-          color: var(--color-accent);
-          font-weight: 500;
+        &:has(:focus-visible) {
+          outline: 2px solid var(--color-accent);
+          outline-offset: 2px;
+        }
+
+        /* On the narrowest screens a smaller size keeps both on one line. */
+        @media (max-width: 22.4375rem) {
+          font-size: 1rem;
         }
       }
 
+      .week-cell {
+        &:focus-visible {
+          outline: none;
+        }
+
+        &::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+        }
+
+        .week:not(.full) & {
+          font-weight: 500;
+        }
+
+        .week:not(.full, :has([aria-selected='true'])) & {
+          color: var(--color-accent);
+        }
+      }
+
+      /* Weeks and days of the month before or after, there to lead to it, in the soft ink. */
+      .week.outside:not(:has([aria-selected='true'])),
+      .week.outside:not(:has([aria-selected='true'])) .week-cell,
+      .day.outside:not(.band-start, .band-end) > * {
+        border-color: currentcolor;
+        color: var(--color-ink-soft);
+      }
+
       /* A week's band runs from its first day to its last, and rounds off at a row's ends. */
-      .calendar {
+      .calendar-row {
         display: grid;
-        grid-template-columns: repeat(7, 1fr);
-        row-gap: 0.25rem;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
         text-align: center;
       }
 
       .weekday-name {
         color: var(--color-ink-soft);
         font-size: 0.8125rem;
-        line-height: 1.75rem;
+        line-height: var(--head);
       }
 
       .day {
@@ -562,10 +651,23 @@ const addDays = (date: string, days: number) =>
         place-items: center;
         height: var(--day);
 
+        &:has(.start) {
+          cursor: pointer;
+        }
+
+        &:focus-visible {
+          outline: none;
+
+          > * {
+            outline: 2px solid var(--color-accent);
+            outline-offset: 2px;
+          }
+        }
+
         > * {
           display: grid;
           place-items: center;
-          width: var(--day);
+          width: min(2.5rem, 100%);
           height: var(--day);
           border-radius: var(--radius-control);
         }
@@ -578,16 +680,16 @@ const addDays = (date: string, days: number) =>
         &.in-band {
           background: var(--color-accent-soft);
 
-          &:nth-child(7n + 1) {
+          &:first-child {
             border-radius: var(--radius-control) 0 0 var(--radius-control);
           }
 
-          &:nth-child(7n) {
+          &:last-child {
             border-radius: 0 var(--radius-control) var(--radius-control) 0;
           }
         }
 
-        /* The band starts and ends under the middle of its circles, not at the cell's edge. */
+        /* The band starts and ends under the middle of its pills, not at the cell's edge. */
         &.band-start {
           background: linear-gradient(to right, transparent 50%, var(--color-accent-soft) 50%);
         }
@@ -605,16 +707,9 @@ const addDays = (date: string, days: number) =>
       }
 
       .start {
-        position: relative;
         border: 1px solid var(--color-accent);
         color: var(--color-accent);
         font-weight: 500;
-        cursor: pointer;
-        transition: background-color 0.2s;
-
-        &:hover {
-          background: var(--color-accent-soft);
-        }
       }
 
       .panel-empty {
@@ -825,23 +920,28 @@ export class BookingPanel {
     year: 'numeric',
     timeZone: 'UTC',
   });
+  private readonly dayMonth = new Intl.DateTimeFormat(this.language.tag, {
+    day: 'numeric',
+    month: 'long',
+    timeZone: 'UTC',
+  });
   private readonly plural = new Intl.PluralRules(this.language.tag);
   // Monday first; a short weekday's full stop, as in "Mo.", is left out.
-  protected readonly weekdays = Array.from({ length: 7 }, (_, i) =>
-    new Intl.DateTimeFormat(this.language.tag, { weekday: 'short', timeZone: 'UTC' })
-      .format(new Date(Date.UTC(2024, 0, 1 + i)))
-      .replace('.', ''),
-  );
+  protected readonly weekdays = Array.from({ length: 7 }, (_, i) => {
+    const date = new Date(Date.UTC(2024, 0, 1 + i));
+    const name = (weekday: 'short' | 'long') =>
+      new Intl.DateTimeFormat(this.language.tag, { weekday, timeZone: 'UTC' }).format(date);
+    return { short: name('short').replace('.', ''), long: name('long') };
+  });
 
-  protected readonly view = signal<'list' | 'calendar'>('list');
+  private readonly state = inject(shownState);
+  protected readonly view = this.state.view;
   protected readonly chosen = signal<{ season: SeasonName; arrival: string } | null>(null);
   protected readonly adults = signal(1);
   protected readonly children = signal(0);
   protected readonly roomForChildren = computed(() =>
     Math.min(this.limits?.maxChildren ?? 0, (this.limits?.maxPeople ?? 0) - this.adults()),
   );
-  // The month each season shows, by its index in the season.
-  private readonly months = signal<Partial<Record<SeasonName, number>>>({});
   protected readonly announced = signal('');
   protected readonly barShown = signal(false);
   // Set by the panel's button: the next season comes from the right, the current from the left.
@@ -927,8 +1027,7 @@ export class BookingPanel {
     );
     if (season && arrival) {
       this.chosen.set({ season: season.name, arrival });
-      const index = this.monthsOf(season).findIndex(({ key }) => key === arrival.slice(0, 7));
-      this.months.set({ [season.name]: index });
+      this.state.months.update((months) => ({ ...months, [season.name]: arrival.slice(0, 7) }));
     }
     const count = (name: string, fallback: number) =>
       Math.floor(Number(query.get(name) ?? fallback)) || 0;
@@ -936,7 +1035,8 @@ export class BookingPanel {
     this.children.set(Math.min(Math.max(count('children', 0), 0), this.roomForChildren()));
   }
 
-  // The weeks by the month they arrive in, each month also as a calendar of six rows.
+  // The weeks by the month they arrive in, with the week before that ends in it, and each month
+  // as a calendar of six rows from the Monday before its first day.
   private readonly monthCache = new Map<SeasonName, Month[]>();
   protected monthsOf(season: SeasonWeeks): Month[] {
     const cached = this.monthCache.get(season.name);
@@ -948,33 +1048,46 @@ export class BookingPanel {
     }));
     const keys = [...new Set(stays.map(({ arrival }) => arrival.slice(0, 7)))];
     const months = keys.map((key) => {
-      const [year, month] = key.split('-').map(Number);
-      const first = Date.UTC(year, month - 1, 1);
-      const lead = (new Date(first).getUTCDay() + 6) % 7;
-      const length = new Date(Date.UTC(year, month, 0)).getUTCDate();
+      const first = new Date(`${key}-01`);
+      const lead = (first.getUTCDay() + 6) % 7;
       const days = Array.from({ length: 42 }, (_, i): Day => {
-        const number = i - lead + 1;
         const date = addDays(`${key}-01`, i - lead);
-        if (number < 1 || number > length) return { date, day: null, booked: false };
         const start = stays.find((stay) => stay.arrival === date && stay.price !== null);
         const booked = stays.some(
           (stay) => stay.price === null && stay.arrival <= date && date < stay.departure,
         );
-        return { date, day: number, start, booked };
+        const named = this.dayMonth.format(new Date(date));
+        return {
+          date,
+          day: Number(date.slice(8)),
+          start,
+          booked,
+          label: start
+            ? `${this.stayText(start, this.spoken)}, ${this.money(start.price!)}`
+            : booked
+              ? `${named}, ${this.texts.weeks.taken}`
+              : named,
+        };
       });
       return {
         key,
-        name: this.monthYear.format(new Date(first)),
-        stays: stays.filter(({ arrival }) => arrival.startsWith(key)),
-        days,
+        name: this.monthYear.format(first),
+        stays: stays.filter(
+          ({ arrival, departure }) => departure.startsWith(key) || arrival.startsWith(key),
+        ),
+        rows: Array.from({ length: 6 }, (_, row) => days.slice(row * 7, row * 7 + 7)),
       };
     });
     this.monthCache.set(season.name, months);
     return months;
   }
 
-  protected month(season: SeasonName) {
-    return this.months()[season] ?? 0;
+  protected month(season: SeasonWeeks) {
+    const key = this.state.months()[season.name];
+    return Math.max(
+      this.monthsOf(season).findIndex((month) => month.key === key),
+      0,
+    );
   }
 
   protected dated(season: SeasonWeeks) {
@@ -1043,9 +1156,32 @@ export class BookingPanel {
     return `${address(this.language, 'book', this.slug)}?${query}`;
   }
 
-  protected choose(season: SeasonName, stay: Stay) {
-    this.chosen.set({ season, arrival: stay.arrival });
+  // A week chosen in the month before or after shows that month.
+  protected select(selected: boolean, season: SeasonWeeks, stay: Stay) {
+    if (selected) this.chosen.set({ season: season.name, arrival: stay.arrival });
+    else if (this.isChosen(season.name, stay)) this.chosen.set(null);
     this.keep();
+    const to = this.monthsOf(season).findIndex(({ key }) => stay.arrival.startsWith(key));
+    const from = this.month(season);
+    if (selected && to !== from) this.page(season, to - from, stay.arrival);
+  }
+
+  // A click on a day or a booked week that does not start a free one would clear the chosen
+  // week; so would Enter or Space on it. Page Up and Page Down show the month before or after.
+  protected guard(event: Event, free: boolean) {
+    if (!free) event.stopPropagation();
+  }
+
+  protected keys(event: KeyboardEvent, season: SeasonWeeks, free: boolean) {
+    if ((event.key === 'Enter' || event.key === ' ') && !free) {
+      event.stopPropagation();
+      event.preventDefault();
+    }
+    const by = { PageUp: -1, PageDown: 1 }[event.key];
+    if (!by) return;
+    event.preventDefault();
+    const to = this.month(season) + by;
+    if (to >= 0 && to < this.monthsOf(season).length) this.page(season, by);
   }
 
   // More adults than leave room for the children lower the children's count.
@@ -1069,6 +1205,9 @@ export class BookingPanel {
     if (stay) {
       params.set('arrival', stay.arrival);
       params.set('departure', stay.departure);
+    } else {
+      params.delete('arrival');
+      params.delete('departure');
     }
     params.set('adults', String(this.adults()));
     if (this.limits?.maxChildren) params.set('children', String(this.children()));
@@ -1076,7 +1215,7 @@ export class BookingPanel {
   }
 
   // A change of view fades the new one in; the month and the chosen week stay.
-  protected show(name: 'list' | 'calendar') {
+  protected show(name: View) {
     this.view.set(name);
     afterNextRender(
       {
@@ -1094,19 +1233,28 @@ export class BookingPanel {
   }
 
   // The next or the previous month slides in from its side. At the season's first or last month
-  // the button turns off, and the focus goes to the other one.
-  protected page(season: SeasonWeeks, by: -1 | 1) {
-    const from = this.month(season.name);
+  // the button turns off, and the focus goes to the other one. A focused cell's place, or the
+  // given day, keeps the focus in the new month.
+  protected page(season: SeasonWeeks, by: number, date?: string) {
+    const from = this.month(season);
     const box = this.host.querySelector<HTMLElement>(`[data-for=${season.name}] .months`)!;
     const old = box.querySelector<HTMLElement>(`[data-month="${from}"]`)!;
+    const cells = (month: Element) => [...month.querySelectorAll<HTMLElement>('[role=gridcell]')];
+    const place = cells(old).indexOf(document.activeElement as HTMLElement);
     const height = box.offsetHeight;
-    this.months.update((months) => ({ ...months, [season.name]: from + by }));
-    this.announced.set(this.monthsOf(season)[from + by].name);
+    const month = this.monthsOf(season)[from + by];
+    this.state.months.update((months) => ({ ...months, [season.name]: month.key }));
+    this.announced.set(month.name);
     afterNextRender(
       {
         write: () => {
           const next = box.querySelector<HTMLElement>(`[data-month="${from + by}"]`)!;
           this.swapMonth(box, old, next, by, height);
+          const all = cells(next);
+          const cell = date
+            ? next.querySelector<HTMLElement>(`[data-date="${date}"]`)
+            : all[Math.min(place, all.length - 1)];
+          if (place >= 0) cell?.focus({ preventScroll: true });
           const head = box.previousElementSibling!;
           const buttons = [...head.querySelectorAll('button')];
           if (buttons.some((button) => button.disabled && button === document.activeElement))

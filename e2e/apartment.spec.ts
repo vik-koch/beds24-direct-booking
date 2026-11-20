@@ -431,8 +431,12 @@ test('every tab stop on an apartment page shows a focus ring', async ({ page, br
   for (let i = 0; i < 30; i++) {
     const stop = await page.evaluate(() => {
       const element = document.activeElement as HTMLElement;
-      // A radio's ring is its label's, the season button's its shown label's.
-      const ringed = [element, element.closest('label'), ...element.querySelectorAll(':scope > *')];
+      // A radio's ring is its label's, a week's its row's, the season button's its shown label's.
+      const ringed = [
+        element,
+        element.closest('label, .week'),
+        ...element.querySelectorAll(':scope > *'),
+      ];
       const ring = ringed.some((one) => {
         const style = one && getComputedStyle(one);
         return style && style.outlineStyle !== 'none' && parseFloat(style.outlineWidth) >= 2;
@@ -472,6 +476,7 @@ test('every tab stop on an apartment page shows a focus ring', async ({ page, br
       expect.stringMatching(/^button Sommer/),
       'input Liste',
       'button Nächster Monat',
+      expect.stringMatching(/^span (€|belegt)/),
       'button 2',
       'button 0',
     ]),
