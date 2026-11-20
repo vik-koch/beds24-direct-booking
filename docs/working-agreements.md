@@ -101,6 +101,11 @@ nothing is built or tested for it.
 - **The e2e suite runs against the simulator,** never against Beds24.
 - **WebKit runs locally before a push,** not only in CI. Where the machine's own WebKit cannot
   start, `npm run e2e:webkit` runs it in the Playwright image CI uses.
+- **A new or changed e2e test runs 20 times under load before its push:** `-g "<its title>"
+  --repeat-each 20 --workers 4`, in WebKit through `npm run e2e:webkit --` and in Chromium and
+  Firefox directly. A test that reads the page straight after a step, before the page shows it,
+  passes every single run on a developer machine and fails in CI now and then; under this load
+  some of those races show.
 - **The screenshot matrix** (2 languages × 2 seasons × phone and desktop) stays on Chromium and the
   WebKit phone, or it is too large to review.
 - **Playwright's WebKit is not Safari.** It is a first signal for layout and forms. Cookie blocking
