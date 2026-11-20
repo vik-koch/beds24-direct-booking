@@ -864,10 +864,6 @@ const addDays = (date: string, days: number) =>
         }
       }
 
-      .from {
-        color: var(--color-ink-soft);
-      }
-
       .button.wide {
         justify-content: center;
         gap: 0.5rem;

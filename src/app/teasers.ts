@@ -176,7 +176,6 @@ type Season = FreeWeeks['seasons'][number];
 
       .teaser-price {
         margin-top: 0.75rem;
-        color: var(--color-ink-soft);
       }
     }
   `,
