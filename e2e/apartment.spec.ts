@@ -299,6 +299,14 @@ test('on a phone a description that fits above the cut but for its last margin i
   });
   await expect(more).toBeHidden();
   await expect(page.locator('.prose-fold')).not.toHaveAttribute('data-long');
+  // Text after a rule is cut by less than the rule's margin: the button stays.
+  await page.locator('.prose').evaluate((prose) => {
+    const cut = parseFloat(getComputedStyle(prose.parentElement!).getPropertyValue('--cut'));
+    prose.innerHTML = '<p>Short.</p><hr>Last words.';
+    const first = prose.firstElementChild as HTMLElement;
+    first.style.height = `calc(${cut}rem + 8px - ${prose.offsetHeight - first.offsetHeight}px)`;
+  });
+  await expect(more).toBeVisible();
 });
 
 test('a link in the description’s last line shows its whole focus ring', async ({ page }) => {

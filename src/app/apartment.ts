@@ -564,9 +564,9 @@ export class Apartment {
   }
 
   // The fold's content is its only child. Long is measured against the cut (in rem, unset where
-  // nothing is cut), also while open: a window widened past the cut drops the button. The last
-  // child's bottom margin is opened with the rest but needs no button. The page's root is observed
-  // too, since crossing a breakpoint may change neither box.
+  // nothing is cut), also while open: a window widened past the cut drops the button. A bottom
+  // margin with no text after it is opened with the rest but needs no button. The page's root is
+  // observed too, since crossing a breakpoint may change neither box.
   private measure(fold: Fold, content: Signal<ElementRef<HTMLElement> | undefined>) {
     afterRenderEffect((onCleanup) => {
       const element = content()?.nativeElement;
@@ -575,8 +575,10 @@ export class Apartment {
       const observer = new ResizeObserver(() => {
         const cut = parseFloat(getComputedStyle(element.parentElement!).getPropertyValue('--cut'));
         const rem = parseFloat(getComputedStyle(root).fontSize);
-        const last = element.lastElementChild;
-        const margin = last ? parseFloat(getComputedStyle(last).marginBottom) : 0;
+        const nodes = [...element.childNodes].reverse();
+        const last = nodes.find((node) => node instanceof Element || node.textContent!.trim());
+        const margin =
+          last instanceof Element ? parseFloat(getComputedStyle(last).marginBottom) : 0;
         fold.full.set(element.offsetHeight);
         fold.long.set(element.offsetHeight - margin > cut * rem + 1);
       });
