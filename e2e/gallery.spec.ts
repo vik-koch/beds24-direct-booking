@@ -276,7 +276,8 @@ test('on a phone the pictures are a strip, and the viewer’s buttons sit under 
   await expect(viewer(page).locator('.viewer-count')).toHaveText('Bild 4 von 9');
   await settled(page);
   const frame = await box(viewer(page).locator('.viewer-track'));
-  expect(frame.width).toBe(320);
+  // The dialog's width: a desktop keeps its scrollbar's room beside it; a phone has none.
+  expect(frame.width).toBe((await box(viewer(page))).width);
   for (const button of ['.viewer-previous', '.viewer-next'])
     expect((await box(viewer(page).locator(button))).y).toBeGreaterThan(frame.y + frame.height);
   await expect(viewer(page).locator('.viewer-thumbs')).toBeHidden();
@@ -295,6 +296,8 @@ test('the page behind the viewer holds still, and keeps its place when it closes
   const cell = await box(page.locator('.tile').nth(4));
   await page.mouse.click(cell.x + 20, cell.y + 20);
   await expect(viewer(page)).toBeVisible();
+  // The scrollbar's room stays, so the page seen through the fades does not shift.
+  await expect(page.locator('html')).toHaveCSS('scrollbar-gutter', 'stable');
   await page.mouse.move(640, 400);
   await page.mouse.wheel(0, 600);
   await page.keyboard.press('Escape');
