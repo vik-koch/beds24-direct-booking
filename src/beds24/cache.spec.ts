@@ -1,4 +1,4 @@
-import { cached } from './cache';
+import { cached, reported } from './cache';
 
 describe('cached', () => {
   let time = 0;
@@ -66,6 +66,27 @@ describe('cached', () => {
     time = 50;
     await expect(get()).rejects.toThrow('down');
     expect(load).toHaveBeenCalledTimes(2);
+  });
+
+  it('logs a failure once, in one line, however many pages meet it', async () => {
+    const log = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const get = cached(
+      async () => {
+        throw new Error('Beds24 answered 401 to /properties');
+      },
+      100,
+      1000,
+      50,
+      now,
+    );
+    const errors = await Promise.all([1, 2].map(() => get().catch((error: unknown) => error)));
+    // During the pause the same failure answers, and is not logged again.
+    time = 20;
+    errors.push(await get().catch((error: unknown) => error));
+    expect(log).toHaveBeenCalledOnce();
+    expect(log).toHaveBeenCalledWith('Beds24 refresh failed: Beds24 answered 401 to /properties');
+    expect(errors.every(reported)).toBe(true);
+    expect(reported(new Error('elsewhere'))).toBe(false);
   });
 
   it('does not refresh a stale answer behind it during the pause', async () => {

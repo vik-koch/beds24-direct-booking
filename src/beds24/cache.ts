@@ -1,3 +1,7 @@
+const logged = new WeakSet<object>();
+// An error the cache has logged already, once for every page that is answered without Beds24.
+export const reported = (error: unknown) => error instanceof Object && logged.has(error);
+
 // Keeps the last good answer. Within `fresh` it is served as it is; after that it is still
 // served while a refresh runs behind it, until it is `keep` old and a page has to wait for
 // Beds24, or fail. Callers at the same moment share one call, and after a failed call none
@@ -21,6 +25,8 @@ export function cached<T>(
         },
         (error: unknown) => {
           failed = { error, at: now() };
+          console.error(`Beds24 refresh failed: ${error instanceof Error ? error.message : error}`);
+          if (error instanceof Object) logged.add(error);
           throw error;
         },
       )
@@ -29,7 +35,7 @@ export function cached<T>(
     const age = last ? now() - last.at : Infinity;
     const waiting = failed !== undefined && now() - failed.at < pause;
     if (last && age >= fresh && age < keep && !pending && !waiting)
-      refresh().catch((error: unknown) => console.error('Beds24 refresh failed:', error));
+      refresh().catch(() => undefined);
     if (last && age < keep) return last.value;
     if (waiting) throw failed!.error;
     return refresh();
