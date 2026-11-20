@@ -692,7 +692,12 @@ function keepGuests() {
   history.replaceState(null, '', `?${params}`);
 }
 function panelLink(week, step) {
-  const link = new URLSearchParams({ apartment: slug, week: week.i, adults: choice.adults });
+  const link = new URLSearchParams({
+    apartment: slug,
+    season: week.season,
+    week: week.i,
+    adults: choice.adults,
+  });
   if (apartment.children) link.set('children', choice.children);
   if (step) link.set('step', step);
   return `?${link}`;

@@ -141,8 +141,9 @@ Checked on 20 November 2026 on a real account with a read-only token.
   requires one adult itself.
 - **Beds24 has no age for a child or a baby** anywhere in `properties`. Where a child ends depends
   on the place, usually on its tourist tax exemption, so the age limit is a deployment's content.
-- **The tourist tax item is per adult,** so the guest form does not charge children. That holds only
-  where the room asks for children: with "Don't Ask" they count as adults.
+- **The tourist tax item is set up per adult** on the test account. That children are then not
+  charged is the panel's calculation, not yet seen on the guest form (see below); with "Don't Ask"
+  every guest counts as an adult.
 - **A booking question,** such as a cot as a tick box, is configured on the property as
   `bookingQuestions.customQuestion1`, its text per language in `customQuestion1`. Whether the guest
   form's link can pre-tick it is not checked.
