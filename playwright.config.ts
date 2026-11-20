@@ -10,6 +10,8 @@ const today = new Date().toISOString().slice(0, 10);
 
 export default defineConfig({
   testDir: 'e2e',
+  // Each test stands alone, so the suite's shards split by test rather than by file.
+  fullyParallel: true,
   forbidOnly: !!process.env['CI'],
   reporter: process.env['CI'] ? [['github'], ['html', { open: 'never' }]] : 'list',
   use: { baseURL: 'http://localhost:4000', trace: 'retain-on-failure' },
