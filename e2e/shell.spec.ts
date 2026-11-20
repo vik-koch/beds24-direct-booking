@@ -35,61 +35,71 @@ async function open(page: Page, name: string) {
 // The header is folded where there is no hover or less than 64rem of width.
 const folded = (page: Page) => page.getByRole('button', { name: 'Menü' }).isVisible();
 
-test('every page of the site map answers in both languages and names the other', async ({
-  request,
-}) => {
-  for (const [de, en] of pages)
-    for (const [path, lang] of [
-      [de, 'de-AT'],
-      [en, 'en-GB'],
-    ]) {
-      const response = await request.get(path);
-      expect(response.status(), path).toBe(200);
-      const html = await response.text();
-      expect(html, path).toContain(`<html lang="${lang}"`);
-      expect(html, path).toMatch(/<h1[^>]*>[^<]+<\/h1>/);
-      // A stylesheet loaded after the first paint makes the text change its font.
-      expect(html, path).not.toContain('media="print"');
-      expect(html, path).toContain(
-        '<link rel="preload" as="font" type="font/woff2" href="/fonts/jost-latin-wght-normal.woff2" crossorigin="">',
-      );
-      expect(html, path).toContain(`<link rel="alternate" hreflang="de-AT" href="${de}">`);
-      expect(html, path).toContain(`<link rel="alternate" hreflang="en-GB" href="${en}">`);
+test(
+  'every page of the site map answers in both languages and names the other',
+  { tag: '@any-engine' },
+  async ({ request }) => {
+    for (const [de, en] of pages)
+      for (const [path, lang] of [
+        [de, 'de-AT'],
+        [en, 'en-GB'],
+      ]) {
+        const response = await request.get(path);
+        expect(response.status(), path).toBe(200);
+        const html = await response.text();
+        expect(html, path).toContain(`<html lang="${lang}"`);
+        expect(html, path).toMatch(/<h1[^>]*>[^<]+<\/h1>/);
+        // A stylesheet loaded after the first paint makes the text change its font.
+        expect(html, path).not.toContain('media="print"');
+        expect(html, path).toContain(
+          '<link rel="preload" as="font" type="font/woff2" href="/fonts/jost-latin-wght-normal.woff2" crossorigin="">',
+        );
+        expect(html, path).toContain(`<link rel="alternate" hreflang="de-AT" href="${de}">`);
+        expect(html, path).toContain(`<link rel="alternate" hreflang="en-GB" href="${en}">`);
+      }
+  },
+);
+
+test(
+  'the bare address redirects to the browser language, else to the first',
+  { tag: '@any-engine' },
+  async ({ request }) => {
+    const to = async (accept: string) =>
+      (
+        await request.get('/', { headers: { 'Accept-Language': accept }, maxRedirects: 0 })
+      ).headers()['location'];
+    expect(await to('en-GB,en;q=0.9,de;q=0.5')).toBe('/en');
+    expect(await to('fr-FR,fr;q=0.9')).toBe('/de');
+  },
+);
+
+test(
+  'an unknown address and an unknown apartment answer 404',
+  { tag: '@any-engine' },
+  async ({ request }) => {
+    for (const path of ['/de/nichts', '/en/apartments/nothing', '/xx']) {
+      expect((await request.get(path)).status(), path).toBe(404);
     }
-});
+  },
+);
 
-test('the bare address redirects to the browser language, else to the first', async ({
-  request,
-}) => {
-  const to = async (accept: string) =>
-    (await request.get('/', { headers: { 'Accept-Language': accept }, maxRedirects: 0 })).headers()[
-      'location'
-    ];
-  expect(await to('en-GB,en;q=0.9,de;q=0.5')).toBe('/en');
-  expect(await to('fr-FR,fr;q=0.9')).toBe('/de');
-});
-
-test('an unknown address and an unknown apartment answer 404', async ({ request }) => {
-  for (const path of ['/de/nichts', '/en/apartments/nothing', '/xx']) {
-    expect((await request.get(path)).status(), path).toBe(404);
-  }
-});
-
-test('an unknown language answers the not-found page in the browser language, else the first', async ({
-  browser,
-}) => {
-  for (const [locale, title, home, href] of [
-    ['en-GB', 'Page not found', 'To the home page', '/en'],
-    ['fr-FR', 'Seite nicht gefunden', 'Zur Startseite', '/de'],
-  ]) {
-    const context = await browser.newContext({ locale });
-    const page = await context.newPage();
-    expect((await page.goto('/fr/quelque-chose'))?.status()).toBe(404);
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText(title);
-    await expect(page.getByRole('link', { name: home })).toHaveAttribute('href', href);
-    await context.close();
-  }
-});
+test(
+  'an unknown language answers the not-found page in the browser language, else the first',
+  { tag: '@any-engine' },
+  async ({ browser }) => {
+    for (const [locale, title, home, href] of [
+      ['en-GB', 'Page not found', 'To the home page', '/en'],
+      ['fr-FR', 'Seite nicht gefunden', 'Zur Startseite', '/de'],
+    ]) {
+      const context = await browser.newContext({ locale });
+      const page = await context.newPage();
+      expect((await page.goto('/fr/quelque-chose'))?.status()).toBe(404);
+      await expect(page.getByRole('heading', { level: 1 })).toHaveText(title);
+      await expect(page.getByRole('link', { name: home })).toHaveAttribute('href', href);
+      await context.close();
+    }
+  },
+);
 
 test('the home page comes from the server with the apartments, the notice and the footer', async ({
   page,
@@ -313,12 +323,20 @@ test('a language change fades, and changes at once with reduced motion', async (
   }
 });
 
-test('a link to the home page from another page shows the apartments', async ({ page }) => {
-  await page.goto('/de/impressum');
-  await page.getByRole('link', { name: 'Firn & Farn', exact: true }).click();
-  await expect(page).toHaveURL('/de');
-  await expect(page.locator('section:has(#wohnungen) li')).toHaveText(['Zirbe', 'Lärche', 'Ahorn']);
-});
+test(
+  'a link to the home page from another page shows the apartments',
+  { tag: '@any-engine' },
+  async ({ page }) => {
+    await page.goto('/de/impressum');
+    await page.getByRole('link', { name: 'Firn & Farn', exact: true }).click();
+    await expect(page).toHaveURL('/de');
+    await expect(page.locator('section:has(#wohnungen) li')).toHaveText([
+      'Zirbe',
+      'Lärche',
+      'Ahorn',
+    ]);
+  },
+);
 
 test('the heading follows from one apartment to the next', async ({ page }) => {
   await page.goto('/de/wohnungen/zirbe');
@@ -650,50 +668,60 @@ test('a second content folder changes languages, name, wording and theme', async
   expect(await axe(page)).toEqual([]);
 });
 
-test('a refused token answers 503 without apartments', async ({ request }) => {
-  const response = await request.get('http://localhost:4001/de');
-  expect(response.status()).toBe(503);
-  expect(await response.text()).not.toContain('<li>Zirbe</li>');
-});
+test(
+  'a refused token answers 503 without apartments',
+  { tag: '@any-engine' },
+  async ({ request }) => {
+    const response = await request.get('http://localhost:4001/de');
+    expect(response.status()).toBe(503);
+    expect(await response.text()).not.toContain('<li>Zirbe</li>');
+  },
+);
 
-test('a site with a password answers only with it, under any user name', async ({ request }) => {
-  const as = (credentials?: string) =>
-    credentials ? { authorization: `Basic ${btoa(credentials)}` } : {};
-  for (const path of ['/en', '/pictures/icon-winter.svg']) {
-    for (const credentials of [undefined, 'guest:wrong', 'under test']) {
-      const response = await request.get(`http://localhost:4004${path}`, {
-        headers: as(credentials),
-      });
-      expect(response.status()).toBe(401);
-      expect(response.headers()['www-authenticate']).toMatch(/^Basic /);
+test(
+  'a site with a password answers only with it, under any user name',
+  { tag: '@any-engine' },
+  async ({ request }) => {
+    const as = (credentials?: string) =>
+      credentials ? { authorization: `Basic ${btoa(credentials)}` } : {};
+    for (const path of ['/en', '/pictures/icon-winter.svg']) {
+      for (const credentials of [undefined, 'guest:wrong', 'under test']) {
+        const response = await request.get(`http://localhost:4004${path}`, {
+          headers: as(credentials),
+        });
+        expect(response.status()).toBe(401);
+        expect(response.headers()['www-authenticate']).toMatch(/^Basic /);
+      }
+      for (const credentials of ['guest:under test', ':under test']) {
+        const response = await request.get(`http://localhost:4004${path}`, {
+          headers: as(credentials),
+        });
+        expect(response.status()).toBe(200);
+        expect(response.headers()['cache-control']).toBe('private, no-store');
+      }
     }
-    for (const credentials of ['guest:under test', ':under test']) {
-      const response = await request.get(`http://localhost:4004${path}`, {
-        headers: as(credentials),
-      });
-      expect(response.status()).toBe(200);
-      expect(response.headers()['cache-control']).toBe('private, no-store');
-    }
-  }
-  const page = await request.get('http://localhost:4004/en', {
-    headers: as('guest:under test'),
-  });
-  expect(await page.text()).toContain('Zirbe');
-});
+    const page = await request.get('http://localhost:4004/en', {
+      headers: as('guest:under test'),
+    });
+    expect(await page.text()).toContain('Zirbe');
+  },
+);
 
-test("an apartment picture is served converted, with a year's cache, and its source is not", async ({
-  request,
-}) => {
-  const pictures = readdirSync('dist/beds24-direct-booking/browser/pictures/apartments');
-  const name = pictures.find((file) => /^zirbe-1-480\.[0-9a-f]{8}\.webp$/.test(file));
-  const response = await request.get(`/pictures/apartments/${name}`);
-  expect(response.status()).toBe(200);
-  expect(response.headers()['content-type']).toBe('image/webp');
-  expect(response.headers()['cache-control']).toBe('public, max-age=31536000');
-  expect((await request.get('/pictures/zirbe-1.webp')).status()).toBe(404);
-});
+test(
+  "an apartment picture is served converted, with a year's cache, and its source is not",
+  { tag: '@any-engine' },
+  async ({ request }) => {
+    const pictures = readdirSync('dist/beds24-direct-booking/browser/pictures/apartments');
+    const name = pictures.find((file) => /^zirbe-1-480\.[0-9a-f]{8}\.webp$/.test(file));
+    const response = await request.get(`/pictures/apartments/${name}`);
+    expect(response.status()).toBe(200);
+    expect(response.headers()['content-type']).toBe('image/webp');
+    expect(response.headers()['cache-control']).toBe('public, max-age=31536000');
+    expect((await request.get('/pictures/zirbe-1.webp')).status()).toBe(404);
+  },
+);
 
-test('the browser bundle does not know the token', () => {
+test('the browser bundle does not know the token', { tag: '@any-engine' }, () => {
   const browser = 'dist/beds24-direct-booking/browser';
   const scripts = readdirSync(browser).filter((file) => file.endsWith('.js'));
   expect(scripts.length).toBeGreaterThan(0);

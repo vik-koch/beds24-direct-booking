@@ -44,30 +44,38 @@ test('each apartment shows its facts, pictures, description, rooms, amenities an
   }
 });
 
-test('the description keeps its structure and none of the editor’s styling', async ({ page }) => {
-  await page.goto('/de/wohnungen/ahorn');
-  const prose = page.locator('.prose');
-  await expect(prose.locator('h2')).toHaveText('Zwei Etagen');
-  await expect(prose.locator('p')).toHaveText([
-    'Unten – Wohnküche, Bad, Sauna',
-    'Oben – Drei Schlafzimmer, Duschbad',
-  ]);
-  expect(await prose.locator('[style], [class], table, font, span').count()).toBe(0);
-  await page.goto('/de/wohnungen/zirbe');
-  await expect(prose.getByRole('link')).toHaveAttribute('href', /^http/);
-  await expect(prose.getByRole('link')).not.toHaveAttribute('target');
-});
+test(
+  'the description keeps its structure and none of the editor’s styling',
+  { tag: '@any-engine' },
+  async ({ page }) => {
+    await page.goto('/de/wohnungen/ahorn');
+    const prose = page.locator('.prose');
+    await expect(prose.locator('h2')).toHaveText('Zwei Etagen');
+    await expect(prose.locator('p')).toHaveText([
+      'Unten – Wohnküche, Bad, Sauna',
+      'Oben – Drei Schlafzimmer, Duschbad',
+    ]);
+    expect(await prose.locator('[style], [class], table, font, span').count()).toBe(0);
+    await page.goto('/de/wohnungen/zirbe');
+    await expect(prose.getByRole('link')).toHaveAttribute('href', /^http/);
+    await expect(prose.getByRole('link')).not.toHaveAttribute('target');
+  },
+);
 
-test('a room and a bed are named in Beds24’s order, a sofa bed included', async ({ page }) => {
-  await page.goto('/de/wohnungen/ahorn');
-  await expect(page.locator('.rooms li')).toHaveText([
-    /Schlafzimmer 1\s*Doppelbett/,
-    /Schlafzimmer 2\s*Doppelbett/,
-    /Schlafzimmer 3\s*Stockbett/,
-    /Bad 1\s*Badewanne, WC/,
-    /Bad 2\s*Dusche, WC/,
-  ]);
-});
+test(
+  'a room and a bed are named in Beds24’s order, a sofa bed included',
+  { tag: '@any-engine' },
+  async ({ page }) => {
+    await page.goto('/de/wohnungen/ahorn');
+    await expect(page.locator('.rooms li')).toHaveText([
+      /Schlafzimmer 1\s*Doppelbett/,
+      /Schlafzimmer 2\s*Doppelbett/,
+      /Schlafzimmer 3\s*Stockbett/,
+      /Bad 1\s*Badewanne, WC/,
+      /Bad 2\s*Dusche, WC/,
+    ]);
+  },
+);
 
 test('on a phone the amenities show their first rows until the button opens them all', async ({
   page,
@@ -348,33 +356,37 @@ test('a link in the description’s last line shows its whole focus ring', async
   }
 });
 
-test('a language Beds24 has no texts in leaves the description and the house rules out', async ({
-  page,
-}) => {
-  await page.goto('http://localhost:4002/it/appartamenti/castagno');
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Sotto i Castagni Due');
-  await expect(page.locator('.facts')).toContainText('Fino a 4 ospiti');
-  await expect(page.locator('.prose')).toHaveCount(0);
-  await expect(page.locator('.rooms h3')).toHaveText(['Camera 1', 'Camera 2', 'Bagno']);
-  await expect(page.locator('.amenities')).toContainText('Wi-Fi');
-  await expect(page.locator('hlm-accordion-trigger')).toHaveText(['Arrivo e partenza']);
-  // A picture not marked as generated carries no label.
-  await expect(page.locator('.ai-label')).toHaveCount(0);
-});
+test(
+  'a language Beds24 has no texts in leaves the description and the house rules out',
+  { tag: '@any-engine' },
+  async ({ page }) => {
+    await page.goto('http://localhost:4002/it/appartamenti/castagno');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Sotto i Castagni Due');
+    await expect(page.locator('.facts')).toContainText('Fino a 4 ospiti');
+    await expect(page.locator('.prose')).toHaveCount(0);
+    await expect(page.locator('.rooms h3')).toHaveText(['Camera 1', 'Camera 2', 'Bagno']);
+    await expect(page.locator('.amenities')).toContainText('Wi-Fi');
+    await expect(page.locator('hlm-accordion-trigger')).toHaveText(['Arrivo e partenza']);
+    // A picture not marked as generated carries no label.
+    await expect(page.locator('.ai-label')).toHaveCount(0);
+  },
+);
 
-test('without Beds24 the page answers 503 with the name, the picture and a sentence', async ({
-  page,
-}) => {
-  const response = await page.goto('http://localhost:4001/en/apartments/zirbe');
-  expect(response!.status()).toBe(503);
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Zirbe');
-  await expect(page.locator('.tile img').first()).toBeVisible();
-  await expect(page.getByText('cannot be loaded just now')).toBeVisible();
-  await expect(page.locator('.facts, .prose, .rooms, .amenities, .spartan-accordion')).toHaveCount(
-    0,
-  );
-  await expect(page.locator('.panel')).toContainText('The free weeks cannot be shown just now.');
-});
+test(
+  'without Beds24 the page answers 503 with the name, the picture and a sentence',
+  { tag: '@any-engine' },
+  async ({ page }) => {
+    const response = await page.goto('http://localhost:4001/en/apartments/zirbe');
+    expect(response!.status()).toBe(503);
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Zirbe');
+    await expect(page.locator('.tile img').first()).toBeVisible();
+    await expect(page.getByText('cannot be loaded just now')).toBeVisible();
+    await expect(
+      page.locator('.facts, .prose, .rooms, .amenities, .spartan-accordion'),
+    ).toHaveCount(0);
+    await expect(page.locator('.panel')).toContainText('The free weeks cannot be shown just now.');
+  },
+);
 
 test('at 320 px nothing scrolls sideways, in both seasons and languages', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 700 });
@@ -489,20 +501,22 @@ test('every tab stop on an apartment page shows a focus ring', async ({ page, br
 // One test per language and width: more scans in one come too close to the test's time limit.
 for (const path of ['/de/wohnungen/zirbe', '/en/apartments/zirbe'])
   for (const width of [320, 1280])
-    test(`${path} passes axe at ${width} px in both seasons, with everything open`, async ({
-      page,
-    }) => {
-      for (const season of ['winter', 'summer']) {
-        await page.setViewportSize({ width, height: 800 });
-        await page.goto(`${path}?season=${season}`);
-        const place = `in ${season}`;
-        const { violations } = await new AxeBuilder({ page }).include('main').analyze();
-        expect(violations, place).toEqual([]);
-        // Every fold's button the width shows, in the page's language.
-        for (const button of await page.locator('.apartment .text-button:visible').all())
-          await button.click();
-        await page.locator('hlm-accordion-trigger button').last().click();
-        const open = await new AxeBuilder({ page }).include('main').analyze();
-        expect(open.violations, place).toEqual([]);
-      }
-    });
+    test(
+      `${path} passes axe at ${width} px in both seasons, with everything open`,
+      { tag: '@any-engine' },
+      async ({ page }) => {
+        for (const season of ['winter', 'summer']) {
+          await page.setViewportSize({ width, height: 800 });
+          await page.goto(`${path}?season=${season}`);
+          const place = `in ${season}`;
+          const { violations } = await new AxeBuilder({ page }).include('main').analyze();
+          expect(violations, place).toEqual([]);
+          // Every fold's button the width shows, in the page's language.
+          for (const button of await page.locator('.apartment .text-button:visible').all())
+            await button.click();
+          await page.locator('hlm-accordion-trigger button').last().click();
+          const open = await new AxeBuilder({ page }).include('main').analyze();
+          expect(open.violations, place).toEqual([]);
+        }
+      },
+    );

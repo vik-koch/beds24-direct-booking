@@ -56,7 +56,7 @@ export default defineConfig({
   ],
   projects: [
     { name: 'chromium', use: devices['Desktop Chrome'] },
-    { name: 'webkit-phone', use: devices['iPhone 15'] },
+    { name: 'webkit-phone', use: devices['iPhone 15'], grepInvert: /@any-engine/ },
     { name: 'firefox', use: devices['Desktop Firefox'] },
   ],
 });

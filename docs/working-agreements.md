@@ -93,6 +93,11 @@ nothing is built or tested for it.
 - **Every e2e test runs on three engines:** Chromium desktop, WebKit with an iPhone device and
   Firefox desktop. The suite is small, the visitors are tourists on phones, and most
   browser-specific breakage is Safari's.
+- **A test whose result no engine could change is tagged `@any-engine`** and skips WebKit, whose
+  headless frames make every test slow. That is a test of the server's answers, the address, what is
+  stored, wording and numbers, or an axe scan at a width the test sets itself. A test stays in
+  WebKit when it relies on the phone's own width or its menu sheet, on touch, focus, scrolling,
+  motion, layout, date formats or decoding a picture. When in doubt, it stays.
 - **The e2e suite runs against the simulator,** never against Beds24.
 - **WebKit runs locally before a push,** not only in CI. Where the machine's own WebKit cannot
   start, `npm run e2e:webkit` runs it in the Playwright image CI uses.

@@ -23,17 +23,21 @@ async function switchTo(page: Page, name: 'winter' | 'summer') {
   }).toPass();
 }
 
-test('the season follows the date, on server-rendered and prerendered pages', async ({ page }) => {
-  await page.clock.setFixedTime(july);
-  for (const path of ['/de', '/de/bildnachweis']) {
-    await page.goto(path);
-    expect(await season(page)).toBe('summer');
-  }
-  await page.clock.setFixedTime(november);
-  await page.goto('/en');
-  expect(await season(page)).toBe('winter');
-  await expect(page.getByRole('radio', { name: 'Winter' })).toBeChecked();
-});
+test(
+  'the season follows the date, on server-rendered and prerendered pages',
+  { tag: '@any-engine' },
+  async ({ page }) => {
+    await page.clock.setFixedTime(july);
+    for (const path of ['/de', '/de/bildnachweis']) {
+      await page.goto(path);
+      expect(await season(page)).toBe('summer');
+    }
+    await page.clock.setFixedTime(november);
+    await page.goto('/en');
+    expect(await season(page)).toBe('winter');
+    await expect(page.getByRole('radio', { name: 'Winter' })).toBeChecked();
+  },
+);
 
 test('the season is chosen before the application starts', async ({ page }) => {
   await page.clock.setFixedTime(july);
@@ -96,21 +100,25 @@ test('without JavaScript the header keeps its ground over the hero', async ({ br
   await context.close();
 });
 
-test('a switch changes the page, is remembered, and wins over the date', async ({ page }) => {
-  await page.clock.setFixedTime(november);
-  await page.goto('/de');
-  await expect(page.getByRole('img', { name: /Glemmtal/ })).toBeVisible();
-  await switchTo(page, 'summer');
-  await expect(page.getByRole('img', { name: /Almwiese/ })).toBeVisible();
-  await expect(page.getByRole('img', { name: /Glemmtal/ })).toBeHidden();
-  await expect(page.getByRole('radio', { name: 'Sommer' })).toBeChecked();
-  expect(JSON.parse((await stored(page))!)).toEqual({ season: 'summer-2027', on: '2026-11-16' });
+test(
+  'a switch changes the page, is remembered, and wins over the date',
+  { tag: '@any-engine' },
+  async ({ page }) => {
+    await page.clock.setFixedTime(november);
+    await page.goto('/de');
+    await expect(page.getByRole('img', { name: /Glemmtal/ })).toBeVisible();
+    await switchTo(page, 'summer');
+    await expect(page.getByRole('img', { name: /Almwiese/ })).toBeVisible();
+    await expect(page.getByRole('img', { name: /Glemmtal/ })).toBeHidden();
+    await expect(page.getByRole('radio', { name: 'Sommer' })).toBeChecked();
+    expect(JSON.parse((await stored(page))!)).toEqual({ season: 'summer-2027', on: '2026-11-16' });
 
-  // Another page, and the other language, open in the chosen season.
-  await page.goto('/en/picture-credits');
-  expect(await season(page)).toBe('summer');
-  await expect(page.getByRole('radio', { name: 'Summer' })).toBeChecked();
-});
+    // Another page, and the other language, open in the chosen season.
+    await page.goto('/en/picture-credits');
+    expect(await season(page)).toBe('summer');
+    await expect(page.getByRole('radio', { name: 'Summer' })).toBeChecked();
+  },
+);
 
 test('the switch works by keyboard', async ({ page }) => {
   await page.clock.setFixedTime(november);
@@ -173,59 +181,66 @@ test('a switch on a scrolled page keeps its place, and focus in the page lands b
   }
 });
 
-test('a link that names a season wins and lasts for the visit', async ({ page }) => {
-  await page.clock.setFixedTime(november);
-  await store(page, JSON.stringify({ season: 'winter-2026', on: '2026-11-15' }));
-  await page.goto('/de?season=summer');
-  expect(await season(page)).toBe('summer');
-  await expect.poll(() => stored(page)).toContain('summer-2027');
+test(
+  'a link that names a season wins and lasts for the visit',
+  { tag: '@any-engine' },
+  async ({ page }) => {
+    await page.clock.setFixedTime(november);
+    await store(page, JSON.stringify({ season: 'winter-2026', on: '2026-11-15' }));
+    await page.goto('/de?season=summer');
+    expect(await season(page)).toBe('summer');
+    await expect.poll(() => stored(page)).toContain('summer-2027');
 
-  // A switch takes the link's season out of the address, or a reload would bring it back.
-  await switchTo(page, 'winter');
-  await expect(page).toHaveURL('/de');
-  await page.reload();
-  expect(await season(page)).toBe('winter');
-});
+    // A switch takes the link's season out of the address, or a reload would bring it back.
+    await switchTo(page, 'winter');
+    await expect(page).toHaveURL('/de');
+    await page.reload();
+    expect(await season(page)).toBe('winter');
+  },
+);
 
-test('the tab shows the season’s icon, from the server on and after a switch', async ({
-  page,
-  request,
-}) => {
-  const served = await (await request.get('/en')).text();
-  const name = served.match(/data-season="(\w+)"/)![1] as 'winter' | 'summer';
-  const other = name === 'winter' ? 'summer' : 'winter';
-  expect(served).toMatch(new RegExp(`<link rel="icon"[^>]* href="/pictures/icon-${name}.svg"`));
-  const file = await request.get(`/pictures/icon-${name}.svg`);
-  expect(file.headers()['content-type']).toContain('image/svg+xml');
+test(
+  'the tab shows the season’s icon, from the server on and after a switch',
+  { tag: '@any-engine' },
+  async ({ page, request }) => {
+    const served = await (await request.get('/en')).text();
+    const name = served.match(/data-season="(\w+)"/)![1] as 'winter' | 'summer';
+    const other = name === 'winter' ? 'summer' : 'winter';
+    expect(served).toMatch(new RegExp(`<link rel="icon"[^>]* href="/pictures/icon-${name}.svg"`));
+    const file = await request.get(`/pictures/icon-${name}.svg`);
+    expect(file.headers()['content-type']).toContain('image/svg+xml');
 
-  // The head script takes the other season's icon before the application starts.
-  const icon = page.locator('link[rel=icon]');
-  await page.route(/\/(main|chunk)-[\w-]+\.js$/, () => undefined);
-  await page.goto(`/en?season=${other}`, { waitUntil: 'commit' });
-  await expect(icon).toHaveAttribute('href', `/pictures/icon-${other}.svg`);
-  await page.unrouteAll({ behavior: 'ignoreErrors' });
+    // The head script takes the other season's icon before the application starts.
+    const icon = page.locator('link[rel=icon]');
+    await page.route(/\/(main|chunk)-[\w-]+\.js$/, () => undefined);
+    await page.goto(`/en?season=${other}`, { waitUntil: 'commit' });
+    await expect(icon).toHaveAttribute('href', `/pictures/icon-${other}.svg`);
+    await page.unrouteAll({ behavior: 'ignoreErrors' });
 
-  await page.goto(`/en?season=${other}`);
-  await switchTo(page, name);
-  await expect(icon).toHaveAttribute('href', `/pictures/icon-${name}.svg`);
-  await expect(icon).toHaveCount(1);
-});
+    await page.goto(`/en?season=${other}`);
+    await switchTo(page, name);
+    await expect(icon).toHaveAttribute('href', `/pictures/icon-${name}.svg`);
+    await expect(icon).toHaveCount(1);
+  },
+);
 
-test('a stored choice ends after 30 days, or when its season is no longer shown', async ({
-  page,
-}) => {
-  await page.clock.setFixedTime(november);
-  await store(page, JSON.stringify({ season: 'summer-2027', on: '2026-10-17' }));
-  await page.goto('/de');
-  expect(await season(page)).toBe('summer');
+test(
+  'a stored choice ends after 30 days, or when its season is no longer shown',
+  { tag: '@any-engine' },
+  async ({ page }) => {
+    await page.clock.setFixedTime(november);
+    await store(page, JSON.stringify({ season: 'summer-2027', on: '2026-10-17' }));
+    await page.goto('/de');
+    expect(await season(page)).toBe('summer');
 
-  await page.clock.setFixedTime(new Date(2026, 10, 17, 12));
-  await page.reload();
-  expect(await season(page)).toBe('winter');
-  await expect.poll(() => stored(page)).toBeNull();
-});
+    await page.clock.setFixedTime(new Date(2026, 10, 17, 12));
+    await page.reload();
+    expect(await season(page)).toBe('winter');
+    await expect.poll(() => stored(page)).toBeNull();
+  },
+);
 
-test('a summer chosen in August is over in September', async ({ page }) => {
+test('a summer chosen in August is over in September', { tag: '@any-engine' }, async ({ page }) => {
   await page.clock.setFixedTime(november);
   await store(page, JSON.stringify({ season: 'summer-2026', on: '2026-08-20' }));
   await page.goto('/de');
@@ -322,20 +337,24 @@ test('the picture credits name each photo’s author, source and licence', async
   expect(await axe(page)).toEqual([]);
 });
 
-test('a site with a single season has no switch and no credits', async ({ page }) => {
-  const other = 'http://localhost:4002';
-  await page.clock.setFixedTime(november);
-  await store(page, JSON.stringify({ season: 'winter-2026', on: '2026-11-15' }));
-  await page.goto(`${other}/it?season=winter`);
-  expect(await season(page)).toBe('summer');
-  await expect(page.getByRole('radiogroup')).toHaveCount(0);
-  await expect(page.getByRole('img', { name: /sfumatura/ })).toBeVisible();
-  await expect(page.locator('link[rel=icon]')).toHaveAttribute('href', '/pictures/icon.svg');
-  await expect.poll(() => stored(page)).toBeNull();
+test(
+  'a site with a single season has no switch and no credits',
+  { tag: '@any-engine' },
+  async ({ page }) => {
+    const other = 'http://localhost:4002';
+    await page.clock.setFixedTime(november);
+    await store(page, JSON.stringify({ season: 'winter-2026', on: '2026-11-15' }));
+    await page.goto(`${other}/it?season=winter`);
+    expect(await season(page)).toBe('summer');
+    await expect(page.getByRole('radiogroup')).toHaveCount(0);
+    await expect(page.getByRole('img', { name: /sfumatura/ })).toBeVisible();
+    await expect(page.locator('link[rel=icon]')).toHaveAttribute('href', '/pictures/icon.svg');
+    await expect.poll(() => stored(page)).toBeNull();
 
-  await page.goto(`${other}/it/crediti`);
-  await expect(page.getByText('Questo sito non mostra foto di altri.')).toBeVisible();
-});
+    await page.goto(`${other}/it/crediti`);
+    await expect(page.getByText('Questo sito non mostra foto di altri.')).toBeVisible();
+  },
+);
 
 test('the hero fills the first screen, and the jump to the weeks ends it at the header', async ({
   page,
