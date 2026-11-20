@@ -76,14 +76,12 @@ test('a week and the guests make the total, and the button takes them on to book
   await expect(page).toHaveURL(
     /arrival=\d{4}-\d\d-\d\d&departure=\d{4}-\d\d-\d\d&season=\w+&adults=3&children=1/,
   );
-  // So does the other language's link, but for the season, which travels in storage.
+  // So does the other language's link.
   const english = new URL(
     (await page.locator('link[rel=alternate][hreflang=en-GB]').getAttribute('href'))!,
     'http://localhost',
   );
-  const here = new URL(page.url()).searchParams;
-  here.delete('season');
-  expect(english.searchParams.toString()).toBe(here.toString());
+  expect(english.search).toBe(new URL(page.url()).search);
   await page.reload();
   await expect(page.locator('#adults')).toHaveText('3');
   await expect(page.locator('#children')).toHaveText('1');
@@ -372,12 +370,24 @@ test('a shared link opens at its week’s season, whatever season the page would
   const shown = await page.locator('html').getAttribute('data-season');
   await (await firstFree(page)).click();
   await expect(page).toHaveURL(new RegExp(`season=${shown}`));
-  const fresh = await browser.newPage();
-  await open(fresh, page.url());
-  await expect(fresh.locator('html')).toHaveAttribute('data-season', shown!);
-  await expect(chosen(fresh)).toHaveCount(1);
-  await expect(panel(fresh).getByRole('link', { name: 'Weiter zur Buchung' })).toBeVisible();
-  await fresh.close();
+  // Away from the week's season and back: the address names it again.
+  await panel(page).locator('.other-season').click();
+  await expect(page).not.toHaveURL(/season=/);
+  await panel(page).locator('.other-season').click();
+  await expect(page).toHaveURL(new RegExp(`season=${shown}`));
+  // Opened afresh, in this language and in the other.
+  const english = await page.locator('link[rel=alternate][hreflang=en-GB]').getAttribute('href');
+  for (const [link, book] of [
+    [page.url(), 'Weiter zur Buchung'],
+    [english!, 'Continue to booking'],
+  ]) {
+    const fresh = await browser.newPage();
+    await open(fresh, link);
+    await expect(fresh.locator('html')).toHaveAttribute('data-season', shown!);
+    await expect(chosen(fresh)).toHaveCount(1);
+    await expect(panel(fresh).getByRole('link', { name: book })).toBeVisible();
+    await fresh.close();
+  }
 });
 
 test('a full season, one not open yet and an unreachable Beds24 each say so', async ({ page }) => {
@@ -387,8 +397,12 @@ test('a full season, one not open yet and an unreachable Beds24 each say so', as
     /Im Winter \d{4}\/\d\d ist keine Woche mehr frei\./,
   );
   await expect(panel(page).locator('.outcome:visible')).toHaveCount(0);
-  await open(page, 'http://localhost:4003/en/apartments/laerche?season=summer');
-  await expect(panel(page).locator('.panel-empty:visible')).toContainText('are not open yet');
+  // Where Beds24 has prices only up to today, the season shown by date is full and the next one
+  // not open yet.
+  await open(page, 'http://localhost:4003/en/apartments/laerche');
+  await expect(panel(page).locator('.panel-empty:visible')).toContainText('is free any more');
+  await panel(page).locator('.other-season').click();
+  await expect(season(page).locator('.panel-empty')).toContainText('are not open yet');
   const response = await open(page, 'http://localhost:4001/en/apartments/laerche');
   expect(response!.status()).toBe(503);
   await expect(panel(page)).toContainText('The free weeks cannot be shown just now.');

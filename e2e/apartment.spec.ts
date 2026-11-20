@@ -473,7 +473,7 @@ test('every tab stop on an apartment page shows a focus ring', async ({ page, br
   // Between the pictures and the terms: the season, the view, the month, its weeks and the guests.
   expect(panel).toEqual(
     expect.arrayContaining([
-      expect.stringMatching(/^button Sommer/),
+      expect.stringMatching(/^button (Sommer|Winter)/),
       'input Liste',
       'button Nächster Monat',
       expect.stringMatching(/^span (€|belegt)/),

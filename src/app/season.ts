@@ -159,14 +159,15 @@ export class Season {
     const icon = this.document.head.querySelector('link[rel=icon]');
     icon?.setAttribute('href', icon.getAttribute(`data-${name}`)!);
     this.remember(name);
-    after.forEach((then) => then());
-    // The link's ?season= would win over the switch on the next reload.
+    // The link's ?season= would win over the switch on the next reload. Before the watchers'
+    // second part, which may write the address again.
     const [path, query = ''] = this.location.path().split('?');
     const params = new URLSearchParams(query.split('#')[0]);
     if (params.has('season')) {
       params.delete('season');
       this.location.replaceState(path, params.toString(), this.location.getState());
     }
+    after.forEach((then) => then());
   }
 
   // Fetches the other season's hero photo before it is needed, on hover or focus.

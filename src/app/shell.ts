@@ -122,9 +122,9 @@ export class Shell {
     const text = heading(this.texts, route);
     this.title.setTitle(page === 'home' ? `${site.name}: ${text}` : `${text} · ${site.name}`);
 
-    // The season travels in storage, so the other language does not need the link's.
+    // The address's season too: with a chosen week it names the week's season, for whoever the
+    // link is sent to.
     const params = new URLSearchParams(this.location.path().split('#')[0].split('?')[1] ?? '');
-    params.delete('season');
     const query = params.size ? `?${params}` : '';
     this.alternates = Object.fromEntries(
       site.languages.map((l) => [l.code, address(l, page, slugOf(route)) + query]),

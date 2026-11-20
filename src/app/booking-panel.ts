@@ -1318,6 +1318,8 @@ export class BookingPanel {
     return () => {
       const next = box?.querySelector<HTMLElement>(`[data-for=${to}]`);
       if (box && old && next) this.swapSeason(box, old, next, direction, height!);
+      // Back in the chosen week's season, the address names it again.
+      if (this.chosen()?.season === to) this.keep();
     };
   }
 }
