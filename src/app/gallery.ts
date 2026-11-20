@@ -11,11 +11,9 @@ import {
 } from '@angular/core';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideChevronLeft, lucideChevronRight, lucideSparkles, lucideX } from '@ng-icons/lucide';
+import { srcset } from '../content/names';
 import type { Picture } from '../content/schema';
 import { fill, LANGUAGE, TEXTS } from './texts';
-
-const srcset = (picture: Picture) =>
-  picture.sources.map(({ url, width }) => `${url} ${width}w`).join(', ');
 
 @Component({
   encapsulation: ViewEncapsulation.None,
@@ -615,27 +613,6 @@ const srcset = (picture: Picture) =>
 
         .viewer-thumbs {
           display: none;
-        }
-      }
-
-      /* Each generated picture says so on itself, where no viewer can miss it. */
-      .ai-label {
-        position: absolute;
-        top: 0.75rem;
-        left: 0.75rem;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.3125rem;
-        padding: 0.1875rem 0.625rem 0.1875rem 0.5rem;
-        border-radius: var(--radius-control);
-        background: color-mix(in srgb, var(--color-surface) 92%, transparent);
-        color: var(--color-ink);
-        font-size: 0.8125rem;
-        font-weight: 500;
-        line-height: 1.5;
-
-        ng-icon {
-          --ng-icon__size: 0.875rem;
         }
       }
     }

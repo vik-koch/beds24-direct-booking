@@ -82,7 +82,7 @@ type Fold = ReturnType<typeof fold>;
                   )
                 }}
               </li>
-              @if (bedrooms) {
+              @if (listing.bedrooms; as bedrooms) {
                 <li>
                   <ng-icon name="lucideBedDouble" aria-hidden="true" />{{
                     fill(
@@ -267,21 +267,8 @@ type Fold = ReturnType<typeof fold>;
         }
       }
 
-      .facts {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem 1.5rem;
+      .apartment .facts {
         font-weight: 500;
-
-        li {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-        }
-
-        ng-icon {
-          color: var(--color-ink-soft);
-        }
       }
 
       /* One column on a phone, which nothing may widen: the panel's rows do not break. */
@@ -544,7 +531,6 @@ export class Apartment {
 
   private readonly labels = this.texts.amenities;
   private readonly groups = this.listing?.features ?? [];
-  protected readonly bedrooms = this.groups.filter(([code]) => code === 'BEDROOM').length;
   // Groups that open with a listed room's code, numbered where a room comes more than once.
   protected readonly rooms: Entry[] = this.groups.flatMap(([code, ...items], index, all) => {
     const room = site.rooms.find((one) => one.code === code);

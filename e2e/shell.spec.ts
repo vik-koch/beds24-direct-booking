@@ -106,7 +106,7 @@ test('the home page comes from the server with the apartments, the notice and th
   request,
 }) => {
   const html = await (await request.get('/de')).text();
-  for (const name of ['Zirbe', 'Lärche', 'Ahorn']) expect(html).toContain(`<li>${name}</li>`);
+  for (const name of ['Zirbe', 'Lärche', 'Ahorn']) expect(html).toContain(`>${name}</a></h3>`);
 
   await page.goto('/de');
   await expect(page.getByText('Demo: Firn & Farn ist erfunden.')).toBeVisible();
@@ -332,7 +332,7 @@ test(
     await page.goto('/de/impressum');
     await page.getByRole('link', { name: 'Firn & Farn', exact: true }).click();
     await expect(page).toHaveURL('/de');
-    await expect(page.locator('section:has(#wohnungen) li')).toHaveText([
+    await expect(page.locator('section:has(#wohnungen) h3')).toHaveText([
       'Zirbe',
       'Lärche',
       'Ahorn',
@@ -361,16 +361,19 @@ test('the apartments menu opens by keyboard and leads to an apartment', async ({
   await page.goto('/de');
   test.skip(await folded(page), 'the wide header only');
   const menu = await open(page, 'Wohnungen');
+  const zirbe = page.getByRole('navigation', { name: 'Wohnungen' }).getByRole('link', {
+    name: 'Zirbe',
+  });
   expect(await menu.evaluate((e) => getComputedStyle(e).outlineStyle)).toBe('solid');
-  await expect(page.getByRole('link', { name: 'Zirbe' })).toBeVisible();
+  await expect(zirbe).toBeVisible();
   await page.keyboard.press('Tab');
   await expect(page.getByRole('link', { name: 'Alle im Überblick' })).toBeFocused();
   await page.keyboard.press('Escape');
-  await expect(page.getByRole('link', { name: 'Zirbe' })).toBeHidden();
+  await expect(zirbe).toBeHidden();
   await expect(menu).toBeFocused();
 
   await menu.hover();
-  await page.getByRole('link', { name: 'Zirbe' }).click();
+  await zirbe.click();
   await expect(page).toHaveURL('/de/wohnungen/zirbe');
 });
 
@@ -671,12 +674,14 @@ test('a second content folder changes languages, name, wording and theme', async
 });
 
 test(
-  'a refused token answers 503 without apartments',
+  'a refused token answers 503 with the apartments of the content and nothing of Beds24',
   { tag: '@any-engine' },
   async ({ request }) => {
     const response = await request.get('http://localhost:4001/de');
     expect(response.status()).toBe(503);
-    expect(await response.text()).not.toContain('<li>Zirbe</li>');
+    const html = await response.text();
+    expect(html).toContain('>Zirbe</a></h3>');
+    expect(html).not.toContain('Bis 2 Gäste');
   },
 );
 
@@ -731,7 +736,8 @@ test('the browser bundle does not know the token', { tag: '@any-engine' }, () =>
     expect(readFileSync(`${browser}/${file}`, 'utf8')).not.toContain('BEDS24_TOKEN');
 });
 
-// Every tab stop shows the ring: on the element, or on what it draws for a hidden input.
+// Every tab stop shows the ring: on the element, on what it draws for a hidden input, or on the
+// card it stands for.
 test('every tab stop on the home page shows a focus ring', async ({ page, browserName }) => {
   test.skip(browserName === 'webkit', 'Safari tabs only to fields unless told otherwise');
   await page.goto('/en');
@@ -744,7 +750,7 @@ test('every tab stop on the home page shows a focus ring', async ({ page, browse
       const parts = [
         element,
         element.nextElementSibling,
-        element.closest('.season-switch'),
+        element.closest('.season-switch, .teaser'),
         ...element.children,
       ].filter(Boolean) as Element[];
       const ring = parts.some((part) => {

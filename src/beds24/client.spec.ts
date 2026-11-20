@@ -119,6 +119,7 @@ describe('loadInventory', () => {
         maxAdults: 4,
         maxChildren: 3,
         size: 61,
+        bedrooms: 1,
         currency: 'EUR',
         leadDays: 7,
         multiplier: 0.9,
@@ -127,6 +128,7 @@ describe('loadInventory', () => {
         checkIn: { from: '16:00', until: '20:00' },
         checkOut: '10:00',
         features: [['WIFI'], ['PARKING_PAID'], ['BEDROOM', 'BED_DOUBLE'], ['BOOT_DRYER']],
+        headlines: { de: 'Für vier', en: '' },
         texts: {
           de: {
             description: '<p><strong>61 m²</strong> mit Balkon.</p>',
@@ -142,6 +144,7 @@ describe('loadInventory', () => {
         maxAdults: 2,
         maxChildren: 0,
         size: 34,
+        bedrooms: 0,
         currency: 'EUR',
         leadDays: 0,
         multiplier: 1,
@@ -150,6 +153,7 @@ describe('loadInventory', () => {
         checkIn: { from: null, until: '18:00' },
         checkOut: null,
         features: [],
+        headlines: { de: '' },
         texts: { de: { description: '', houseRules: '' } },
       },
     ]);
@@ -210,6 +214,7 @@ describe('listingOf', () => {
     maxAdults: 4,
     maxChildren: 2,
     size: 61,
+    bedrooms: 1,
     currency: 'EUR',
     leadDays: 0,
     multiplier: 1,
@@ -218,6 +223,7 @@ describe('listingOf', () => {
     checkIn: { from: '16:00', until: null },
     checkOut: '10:00',
     features: [['WIFI']],
+    headlines: { de: 'Für vier' },
     texts: Object.fromEntries(
       ['de', 'en', 'it'].map((code) => [code, { description: code, houseRules: '' }]),
     ),
@@ -230,6 +236,7 @@ describe('listingOf', () => {
       maxAdults: 4,
       maxChildren: 2,
       size: 61,
+      bedrooms: 1,
       address: 'Musterweg 1, Saalbach',
       checkIn: { from: '16:00', until: null },
       checkOut: '10:00',

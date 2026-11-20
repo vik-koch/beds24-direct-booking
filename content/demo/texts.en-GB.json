@@ -85,6 +85,7 @@
     "next": "Next season: {season}",
     "current": "Current season: {season}",
     "notOpen": "The weeks of {season} are not open yet. They appear here as soon as their prices are set.",
+    "notOpenShort": "The weeks of {season} are not open yet.",
     "full": "No week of {season} is free any more.",
     "unavailable": "The free weeks cannot be shown just now. Please try again in a few minutes.",
     "note": "Price per week including the final cleaning.",

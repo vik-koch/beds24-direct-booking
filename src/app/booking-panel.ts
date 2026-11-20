@@ -30,7 +30,7 @@ import type { SeasonName } from '../content/names';
 import { BookingBar, type BarLine } from './booking-bar';
 import { Season } from './season';
 import { swapper } from './swap';
-import { address, fill, LANGUAGE, TEXTS } from './texts';
+import { address, fill, formatMoney, LANGUAGE, TEXTS } from './texts';
 
 type SeasonWeeks = FreeWeeks['seasons'][number];
 interface Stay {
@@ -1136,13 +1136,7 @@ export class BookingPanel {
   }
 
   protected money(amount: number) {
-    const digits = Number.isInteger(amount) ? 0 : 2;
-    return new Intl.NumberFormat(this.language.tag, {
-      style: 'currency',
-      currency: this.weeks!.currency,
-      minimumFractionDigits: digits,
-      maximumFractionDigits: digits,
-    }).format(amount);
+    return formatMoney(this.language.tag, this.weeks!.currency, amount);
   }
 
   protected lowest(season: SeasonWeeks) {

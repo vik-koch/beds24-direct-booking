@@ -253,6 +253,8 @@ export const textsSchema = z.strictObject({
     next: text,
     current: text,
     notOpen: text,
+    // Its first sentence alone, for the home page's cards.
+    notOpenShort: text,
     full: text,
     unavailable: text,
     note: text,

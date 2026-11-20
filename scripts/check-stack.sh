@@ -22,7 +22,7 @@ done
 # The bare address redirects to a language; the headers of both answers are checked.
 answer=$(curl -ksfiL "$url")
 expect() { grep -qiF "$1" <<<"$answer" || { echo "MISSING: $1" >&2; exit 1; }; }
-expect '<li>Zirbe</li>'
+expect '>Zirbe</a></h3>'
 expect 'strict-transport-security: max-age=31536000'
 expect 'x-content-type-options: nosniff'
 expect "content-security-policy: frame-ancestors 'none'"
