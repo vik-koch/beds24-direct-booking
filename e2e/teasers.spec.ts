@@ -43,7 +43,10 @@ test(
       '34 m²',
     ]);
     await expect(cards(page).locator('.ai-label').first()).toHaveText('KI-Bild');
-    await expect(cards(page).locator('img').first()).toHaveAttribute('alt', '');
+    await expect(cards(page).locator('img').first()).toHaveAttribute(
+      'alt',
+      /^Zirbenstube mit Doppelbett/,
+    );
 
     const line = /^\s*(ab €\s[\d.,]+ pro Woche|Im (Winter|Sommer) ist keine Woche mehr frei\.)\s*$/;
     for (let i = 0; i < 2; i++) {
@@ -80,50 +83,70 @@ test('a card is one link and one tab stop, ringed as a whole', async ({ page }) 
 });
 
 test(
-  'one to four cards stand stacked, as rows, in columns or two by two',
+  "each card's price is the cheapest free week of its apartment in the shown season",
   { tag: '@any-engine' },
   async ({ page }) => {
-    // Picture beside the name, or above it.
-    const beside = (box: Awaited<ReturnType<typeof boxes>>[number]) =>
-      box.picture.right <= box.name.left;
-    const columns = async () => new Set((await boxes(page)).map((box) => box.picture.left)).size;
-
-    await page.setViewportSize({ width: 320, height: 800 });
-    await page.goto('/de');
-    expect(await columns()).toBe(1);
-    expect((await boxes(page)).some(beside)).toBe(false);
-
-    await page.setViewportSize({ width: 768, height: 800 });
-    expect(await columns()).toBe(1);
-    expect((await boxes(page)).every(beside)).toBe(true);
-
-    await page.setViewportSize({ width: 1280, height: 800 });
-    expect(await columns()).toBe(3);
-    expect((await boxes(page)).some(beside)).toBe(false);
-
-    // The layout follows the count alone, so fewer cards are the demo's with some taken out.
-    const keep = (count: number) =>
-      page.evaluate((count) => {
-        const list = document.querySelector<HTMLElement>('.teasers')!;
-        [...list.children].slice(count).forEach((card) => card.remove());
-        list.dataset['count'] = String(count);
-      }, count);
-    await keep(2);
-    expect(await columns()).toBe(2);
-    await page.setViewportSize({ width: 768, height: 800 });
-    expect(await columns()).toBe(2);
-    await keep(1);
-    expect((await boxes(page)).every(beside)).toBe(true);
-
-    await page.goto('http://localhost:4002/it');
-    for (const width of [768, 1280]) {
-      await page.setViewportSize({ width, height: 800 });
-      expect(await columns()).toBe(2);
-      expect(new Set((await boxes(page)).map((box) => box.picture.top)).size).toBe(2);
+    await page.goto('/en');
+    const amount = (text: string) => Number(text.replace(/[^\d.]/g, ''));
+    for (let i = 0; i < 2; i++) {
+      for (const [index, card] of (await cards(page).all()).entries()) {
+        const list = await page
+          .locator(`.weeks-body:visible [data-pick^='${index}-'] .price`)
+          .allTextContents();
+        const price = card.locator('.teaser-price > :visible strong');
+        if (!list.length) await expect(price).toHaveCount(0);
+        else expect(amount(await price.innerText())).toBe(Math.min(...list.map(amount)));
+      }
+      if (i === 0) await toOtherSeason(page);
     }
-    await expect(prices(page)).toHaveCount(4);
   },
 );
+
+test('one to four cards stand stacked, as rows, in columns or two by two', async ({ page }) => {
+  // Picture beside the name, or above it.
+  const beside = (box: Awaited<ReturnType<typeof boxes>>[number]) =>
+    box.picture.right <= box.name.left;
+  const columns = async () => new Set((await boxes(page)).map((box) => box.picture.left)).size;
+
+  await page.setViewportSize({ width: 320, height: 800 });
+  await page.goto('/de');
+  expect(await columns()).toBe(1);
+  expect((await boxes(page)).some(beside)).toBe(false);
+
+  await page.setViewportSize({ width: 768, height: 800 });
+  expect(await columns()).toBe(1);
+  expect((await boxes(page)).every(beside)).toBe(true);
+
+  await page.setViewportSize({ width: 1280, height: 800 });
+  expect(await columns()).toBe(3);
+  expect((await boxes(page)).some(beside)).toBe(false);
+
+  // The layout follows the count alone, so fewer cards are the demo's with some taken out.
+  await expect(page.locator('.teasers')).toHaveAttribute('data-count', '3');
+  const keep = (count: number) =>
+    page.evaluate((count) => {
+      const list = document.querySelector<HTMLElement>('.teasers')!;
+      [...list.children].slice(count).forEach((card) => card.remove());
+      list.dataset['count'] = String(count);
+    }, count);
+  await keep(2);
+  expect(await columns()).toBe(2);
+  await page.setViewportSize({ width: 768, height: 800 });
+  expect(await columns()).toBe(2);
+  await keep(1);
+  expect((await boxes(page)).every(beside)).toBe(true);
+
+  await page.goto('http://localhost:4002/it');
+  await expect(page.locator('.teasers')).toHaveAttribute('data-count', '4');
+  // Its rooms have no headline, which leaves no empty line.
+  await expect(page.locator('.teaser-headline')).toHaveCount(0);
+  for (const width of [768, 1280]) {
+    await page.setViewportSize({ width, height: 800 });
+    expect(await columns()).toBe(2);
+    expect(new Set((await boxes(page)).map((box) => box.picture.top)).size).toBe(2);
+  }
+  await expect(prices(page)).toHaveCount(4);
+});
 
 test(
   'without Beds24 the cards keep their picture and name',

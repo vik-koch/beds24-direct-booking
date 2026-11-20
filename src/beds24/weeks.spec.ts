@@ -127,6 +127,7 @@ describe('freeWeeks', () => {
       name: 'winter',
       years: '2026/27',
       state: 'open',
+      states: ['open', 'open'],
       weeks: [
         { arrival: '2027-01-02', departure: '2027-01-09', prices: [null, 700] },
         { arrival: '2027-01-09', departure: '2027-01-16', prices: [700, 700] },
@@ -164,6 +165,14 @@ describe('freeWeeks', () => {
       state: 'full',
       weeks: [],
     });
+  });
+
+  it("tells each apartment's state apart from the season's", () => {
+    const unpriced = inventory(calendar(() => ({ price: null })));
+    const ahead = freeWeeks(unpriced, apartments, [summer], '2026-12-01', ['de']).seasons[0];
+    expect(ahead).toMatchObject({ state: 'open', states: ['open', 'notOpen'] });
+    const begun = freeWeeks(unpriced, apartments, [summer], '2027-01-20', ['de']).seasons[0];
+    expect(begun).toMatchObject({ state: 'open', states: ['open', 'full'] });
   });
 
   it('shows the tax only when every apartment has the same', () => {

@@ -27,7 +27,7 @@ type Season = FreeWeeks['seasons'][number];
               [src]="picture.sources[0].url"
               [width]="picture.width"
               [height]="picture.height"
-              alt=""
+              [alt]="picture.alt[language.code]"
               loading="lazy"
             />
             @if (picture.generated) {
@@ -75,9 +75,14 @@ type Season = FreeWeeks['seasons'][number];
                       >{{ from[1] }}
                     } @else {
                       {{
-                        fill(texts.weeks[season.state === 'notOpen' ? 'notOpenShort' : 'full'], {
-                          season: texts.seasons[season.name]!,
-                        })
+                        fill(
+                          texts.weeks[
+                            season.states[card.index] === 'notOpen' ? 'notOpenShort' : 'full'
+                          ],
+                          {
+                            season: texts.seasons[season.name]!,
+                          }
+                        )
                       }}
                     }
                   </span>

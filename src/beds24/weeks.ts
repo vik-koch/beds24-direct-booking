@@ -16,6 +16,9 @@ export interface Period {
   end: string;
 }
 
+// notOpen: no week has prices yet; full: no week is free.
+type State = 'open' | 'notOpen' | 'full';
+
 // What the free-weeks list shows: per season one row per week, one price per apartment.
 export interface FreeWeeks {
   apartments: {
@@ -33,8 +36,9 @@ export interface FreeWeeks {
   seasons: {
     name: SeasonName;
     years: string | null;
-    // notOpen: no week has prices yet; full: no week is free.
-    state: 'open' | 'notOpen' | 'full';
+    state: State;
+    // Per apartment, from its own weeks, as its page's panel counts it.
+    states: State[];
     weeks: { arrival: string; departure: string; prices: (number | null)[] }[];
   }[];
 }
@@ -101,12 +105,24 @@ export function freeWeeks(
         };
       });
       // Unpriced weeks are not open yet; a season that has begun is full instead.
-      const state = rows.some((row) => row.prices.some((price) => price !== null))
-        ? 'open'
-        : rows.length || start <= today
-          ? 'full'
-          : 'notOpen';
-      return { name, years, state, weeks: state === 'open' ? rows : [] };
+      const stateOf = (prices: (number | null)[], offered: number): State =>
+        prices.some((price) => price !== null)
+          ? 'open'
+          : offered || start <= today
+            ? 'full'
+            : 'notOpen';
+      const state = stateOf(
+        rows.flatMap((row) => row.prices),
+        rows.length,
+      );
+      const states = weeks.map((list) => {
+        const own = list.filter((week) => week.arrival >= start && week.arrival <= end);
+        return stateOf(
+          own.map((week) => week.price),
+          own.length,
+        );
+      });
+      return { name, years, state, states, weeks: state === 'open' ? rows : [] };
     }),
   };
 }
