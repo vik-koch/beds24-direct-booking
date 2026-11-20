@@ -49,5 +49,5 @@ public repository, and up to 20 jobs run at once.
 - **A change of `package.json` or the lock file pays `npm ci` once per job** and fills the cache for
   the next run.
 - **A pull request that changes only documentation** (Markdown and `docs/`) runs the static checks
-  alone: the e2e shards and the stack check are skipped, and `check` counts them as passed. A push
-  to `main` always runs everything.
+  alone. The e2e shards are skipped and `check` accepts that; the stack check is skipped as well,
+  which nothing before the images waits for. A push to `main` always runs everything.

@@ -27,12 +27,17 @@ jobs:
       - id: diff
         env:
           BASE: ${{ github.event.pull_request.base.sha }}
+        # By git's exit code, not its list of names, which quotes some paths and names a renamed
+        # file only where it went: 0 is documentation alone, 1 anything else, more a failure.
         run: |
-          if [ -z "$BASE" ] || git diff --name-only "$BASE...HEAD" | grep -qvE '^docs/|\.md$'; then
-            echo code=true >> "$GITHUB_OUTPUT"
-          else
-            echo code=false >> "$GITHUB_OUTPUT"
+          code=true
+          if [ -n "$BASE" ]; then
+            status=0
+            git diff --quiet --no-renames "$BASE...HEAD" -- . ':!docs/' ':!*.md' || status=$?
+            [ "$status" -le 1 ] || exit "$status"
+            [ "$status" -eq 1 ] || code=false
           fi
+          echo "code=$code" >> "$GITHUB_OUTPUT"
 
   static:
     runs-on: ubuntu-latest
