@@ -320,6 +320,8 @@ test('after a swipe the keys go on from the picture swiped to', async ({ page })
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto('/de/wohnungen/ahorn');
   await page.locator('.tile').first().click();
+  // Before the viewer has measured its frame, it would scroll back to the picture it opened with.
+  await settled(page);
   const count = viewer(page).locator('.viewer-count');
   const track = viewer(page).locator('.viewer-track');
   // A frame a fraction of a pixel wide, which clientWidth would round.
