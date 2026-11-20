@@ -498,9 +498,13 @@ for (const width of [320, 1280])
     await page.setViewportSize({ width, height: 800 });
     await openNext(page, '/en/apartments/laerche');
     await (await firstFree(page)).click();
-    const scan = async (place: string) => {
-      // Once the new view has faded in.
-      await page.waitForFunction(() => !document.getAnimations().length);
+    const scan = async (place: 'list' | 'calendar') => {
+      // The fade starts after the view's render, so a check before it would find none.
+      await page.waitForFunction(
+        (view) =>
+          document.querySelector(`.views[data-view="${view}"]`) && !document.getAnimations().length,
+        place,
+      );
       const { violations } = await new AxeBuilder({ page }).include('.booking').analyze();
       expect(violations, place).toEqual([]);
     };
