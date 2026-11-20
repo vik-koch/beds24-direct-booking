@@ -7,6 +7,7 @@ import {
   input,
   signal,
   viewChild,
+  ViewEncapsulation,
 } from '@angular/core';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideChevronLeft, lucideChevronRight, lucideSparkles, lucideX } from '@ng-icons/lucide';
@@ -17,6 +18,7 @@ const srcset = (picture: Picture) =>
   picture.sources.map(({ url, width }) => `${url} ${width}w`).join(', ');
 
 @Component({
+  encapsulation: ViewEncapsulation.None,
   selector: 'app-gallery',
   host: { '(document:keydown)': 'key($event)' },
   imports: [NgIcon],
@@ -156,6 +158,487 @@ const srcset = (picture: Picture) =>
         </div>
       }
     </dialog>
+  `,
+  styles: `
+    @layer components {
+      /* The pictures: a strip that snaps on a phone; from 48rem a mosaic, the first picture at 4:3
+         and square cells beside and below it, all cropping their pictures. */
+      .gallery {
+        position: relative;
+        container-type: inline-size;
+      }
+
+      .tiles {
+        display: flex;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        scrollbar-width: none;
+        border-radius: var(--radius-card);
+      }
+
+      .tile {
+        position: relative;
+        flex: 0 0 100%;
+        aspect-ratio: 4 / 3;
+        overflow: hidden;
+        border-radius: var(--radius-card);
+        scroll-snap-align: start;
+        isolation: isolate;
+        background: var(--color-line);
+        cursor: zoom-in;
+
+        /* Out of the flow: a picture's own height must not size the mosaic's rows. Beneath its
+           cell, which would otherwise paint its ring under it. */
+        img {
+          position: absolute;
+          z-index: -1;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        /* Inside the cell on a phone: the strip would cut a ring outside it. */
+        &:focus-visible {
+          outline-width: 3px;
+          outline-offset: -3px;
+        }
+      }
+
+      /* Low in its cell, so that the picture behind it stays recognisable. */
+      .more {
+        position: absolute;
+        bottom: 0.75rem;
+        left: 50%;
+        translate: -50%;
+        padding: 0.25rem 0.875rem;
+        border-radius: var(--radius-control);
+        background: var(--color-surface);
+        font-size: 0.9375rem;
+        font-weight: 500;
+        white-space: nowrap;
+        box-shadow: var(--shadow-card);
+      }
+
+      /* Taps and swipes go through it to the strip. */
+      .strip-count {
+        position: absolute;
+        pointer-events: none;
+        right: 0.75rem;
+        bottom: 0.75rem;
+        padding: 0.1875rem 0.625rem;
+        border-radius: var(--radius-control);
+        background: color-mix(in srgb, var(--color-surface) 92%, transparent);
+        color: var(--color-ink);
+        font-size: 0.8125rem;
+        font-weight: 500;
+      }
+
+      @media (width < 48rem) {
+        .more {
+          display: none;
+        }
+      }
+
+      /* Beside a 4:3 picture, columns of two squares. The picture's width is solved from the
+         gallery's, so that a square plus a gap is half its height. Square cells, so that a ring
+         around one fits it; the gaps leave it room. */
+      @media (width >= 48rem) {
+        .tiles {
+          --gap: 0.5rem;
+          --lead: calc(
+            (100cqw - var(--columns, 1) * var(--gap) / 2) * 8 / (8 + 3 * var(--columns, 1))
+          );
+          display: grid;
+          grid-template-columns: var(--lead) repeat(var(--columns, 1), 1fr);
+          gap: var(--gap);
+          overflow: visible;
+        }
+
+        .tile {
+          aspect-ratio: auto;
+          border-radius: 0;
+
+          &:focus-visible {
+            outline-width: 2px;
+            outline-offset: 3px;
+          }
+
+          &:first-child {
+            grid-row: span 2;
+            aspect-ratio: 4 / 3;
+          }
+
+          &[data-beyond] {
+            display: none;
+          }
+        }
+
+        .gallery[data-shown='1'] .tiles {
+          grid-template-columns: 1fr;
+        }
+
+        .gallery[data-shown='5'] .tiles {
+          --columns: 2;
+        }
+
+        /* Eight: as three, with five squares below. The picture's edge falls inside the fourth of
+           them, which therefore spans two tracks. */
+        .gallery[data-shown='8'] .tiles {
+          --cell: calc((100cqw - 4 * var(--gap)) / 5);
+          grid-template-columns:
+            repeat(3, var(--cell)) calc(var(--lead) - 3 * (var(--cell) + var(--gap)))
+            1fr var(--cell);
+
+          .tile:first-child {
+            grid-column: span 4;
+          }
+
+          .tile:is(:nth-child(2), :nth-child(3)) {
+            grid-column: 5 / span 2;
+          }
+
+          .tile:nth-child(7) {
+            grid-column: span 2;
+          }
+
+          .tile:nth-child(n + 4) {
+            aspect-ratio: 1;
+          }
+        }
+
+        .strip-count {
+          display: none;
+        }
+      }
+
+      @media (width >= 48rem) and (prefers-reduced-motion: no-preference) {
+        /* Its own layer for good: dropped when the zoom ends, it would be painted anew and jump. */
+        .tile img {
+          transition: scale 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+          will-change: scale;
+        }
+
+        .tile:hover img {
+          scale: 1.025;
+        }
+      }
+
+      /* The viewer: the picture in a 4:3 frame on the page's own ground, its buttons beside it, its
+         text and the thumbnails below. */
+      .viewer {
+        width: 100%;
+        max-width: none;
+        height: 100%;
+        max-height: none;
+        padding: 0.75rem 1rem 1rem;
+        background: var(--color-ground);
+        color: var(--color-ink);
+
+        &:focus {
+          outline: none;
+        }
+
+        &[open] {
+          display: grid;
+          grid-template: minmax(0, 1fr) auto auto / 1fr;
+          gap: 0.75rem;
+          animation: viewer-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        &::backdrop {
+          background: var(--color-ground);
+        }
+
+        &[open]::backdrop {
+          animation: fade-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .icon-button {
+          background: var(--color-surface);
+          transition: color 0.2s;
+
+          &:hover {
+            color: var(--color-accent);
+          }
+        }
+      }
+
+      /* The page behind holds still: Firefox would scroll it under the viewer. On the root, Firefox
+         would take the page back to its top. */
+      body:has(.viewer[open]) {
+        overflow: hidden;
+      }
+
+      /* The scrollbar's room is kept while it is gone, so the page seen through the fades stays
+         put. */
+      html:has(.viewer[open]) {
+        scrollbar-gutter: stable;
+      }
+
+      @keyframes viewer-in {
+        from {
+          opacity: 0;
+          scale: 0.98;
+        }
+      }
+
+      /* The count and the close button stand over the picture and its buttons, not in the screen's
+         far corners; all of them are centred together. */
+      .viewer-stage {
+        display: grid;
+        grid-template-columns: repeat(3, auto);
+        place-content: center;
+        align-items: center;
+        row-gap: 0.75rem;
+        container-type: size;
+      }
+
+      .viewer-count {
+        grid-area: 1 / 1 / 2 / -1;
+        font-size: 0.9375rem;
+      }
+
+      .viewer-close {
+        grid-area: 1 / 1 / 2 / -1;
+        justify-self: end;
+      }
+
+      .viewer-previous {
+        margin-inline-end: 1rem;
+      }
+
+      .viewer-next {
+        margin-inline-start: 1rem;
+      }
+
+      /* The buttons' room is kept only where there are buttons; the row above takes its own. */
+      .viewer-track {
+        display: flex;
+        width: min(100cqw - var(--beside, 0px), (100cqh - var(--size-control) - 0.75rem) * 4 / 3);
+        aspect-ratio: 4 / 3;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        scrollbar-width: none;
+
+        .viewer-previous + & {
+          --beside: 2 * (var(--size-control) + 1rem);
+        }
+
+        &:focus-visible {
+          outline: none;
+        }
+      }
+
+      /* Each picture whole and at its own ratio, so that the ring fits it; the padding keeps the
+         ring inside the track, which would cut it. */
+      .viewer-slide {
+        display: flex;
+        flex: 0 0 100%;
+        align-items: center;
+        justify-content: center;
+        padding: 5px;
+        scroll-snap-align: start;
+
+        img {
+          max-width: 100%;
+          max-height: 100%;
+          width: auto;
+          height: auto;
+
+          .viewer-track:focus-visible & {
+            outline: 2px solid var(--color-accent);
+            outline-offset: 3px;
+          }
+        }
+      }
+
+      @media (prefers-reduced-motion: no-preference) {
+        .viewer-track {
+          scroll-behavior: smooth;
+        }
+      }
+
+      /* The old text and the new one in the same place; two lines kept free so that a longer text
+         does not move the frame. */
+      .viewer-caption {
+        grid-column: 1 / -1;
+        display: grid;
+        justify-self: center;
+        max-width: 44rem;
+        min-height: 3lh;
+        text-align: center;
+        text-wrap: pretty;
+
+        > * {
+          grid-area: 1 / 1;
+        }
+      }
+
+      /* The new text starts as the old one is nearly gone: the two are never read together. */
+      .caption-in {
+        animation: fade-in 0.25s 0.12s ease-out backwards;
+      }
+
+      .caption-out {
+        opacity: 0;
+        animation: caption-out 0.15s ease-in;
+      }
+
+      @keyframes fade-in {
+        from {
+          opacity: 0;
+        }
+      }
+
+      @keyframes caption-out {
+        from {
+          opacity: 1;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .viewer[open],
+        .viewer[open]::backdrop,
+        .caption-in,
+        .caption-out {
+          animation: none;
+        }
+      }
+
+      .ai-note {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3125rem;
+        margin-left: 0.25rem;
+        white-space: nowrap;
+
+        /* Only the icon is soft: as text the soft colour falls short of 4.5:1 on the ground. */
+        ng-icon {
+          color: var(--color-ink-soft);
+        }
+      }
+
+      /* In rows, two at most in view and the rest scrolled to; the padding keeps a ring inside. */
+      .viewer-thumbs {
+        grid-column: 1 / -1;
+        position: relative;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        justify-content: center;
+        max-height: calc(2 * 3rem + 0.5rem + 2 * 0.5rem);
+        padding: 0.5rem;
+        overflow-y: auto;
+        scrollbar-width: thin;
+
+        button {
+          flex: none;
+          width: 4.5rem;
+          height: 3rem;
+          cursor: pointer;
+
+          &:focus-visible {
+            outline-offset: 6px;
+          }
+
+          &:hover img {
+            opacity: 0.75;
+          }
+
+          &[aria-current] img {
+            opacity: 1;
+          }
+        }
+
+        /* The current one only by its full colour: a line around it would look like the ring. On
+           the picture, not the button, so that the ring keeps its own. */
+        img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          opacity: 0.4;
+
+          @media (prefers-reduced-motion: no-preference) {
+            transition: opacity 0.2s;
+          }
+        }
+      }
+
+      /* On a short screen the thumbnails would leave the picture no room. */
+      @media (width >= 48rem) and (height < 30rem) {
+        .viewer-thumbs {
+          display: none;
+        }
+      }
+
+      /* On a phone the frame takes the width, the buttons go under it beside the count, and there
+         are no thumbnails. */
+      @media (width < 48rem) {
+        .viewer[open] {
+          grid-template: auto 1fr auto auto auto 1fr / auto 1fr auto;
+        }
+
+        .viewer-stage {
+          display: contents;
+        }
+
+        .viewer-close {
+          grid-area: 1 / 3;
+        }
+
+        /* Stretched by hand: a grid item with a ratio would otherwise take its content's width. */
+        .viewer-track {
+          grid-area: 3 / 1 / 4 / -1;
+          justify-self: stretch;
+          width: auto;
+          margin-inline: -1rem;
+        }
+
+        .viewer-previous {
+          grid-area: 4 / 1;
+        }
+
+        .viewer-count {
+          grid-area: 4 / 2;
+          text-align: center;
+        }
+
+        .viewer-next {
+          grid-area: 4 / 3;
+        }
+
+        .viewer-caption {
+          grid-area: 5 / 1 / 6 / -1;
+          min-height: 5lh;
+        }
+
+        .viewer-thumbs {
+          display: none;
+        }
+      }
+
+      /* Each generated picture says so on itself, where no viewer can miss it. */
+      .ai-label {
+        position: absolute;
+        top: 0.75rem;
+        left: 0.75rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3125rem;
+        padding: 0.1875rem 0.625rem 0.1875rem 0.5rem;
+        border-radius: var(--radius-control);
+        background: color-mix(in srgb, var(--color-surface) 92%, transparent);
+        color: var(--color-ink);
+        font-size: 0.8125rem;
+        font-weight: 500;
+        line-height: 1.5;
+
+        ng-icon {
+          --ng-icon__size: 0.875rem;
+        }
+      }
+    }
   `,
 })
 export class Gallery {

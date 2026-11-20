@@ -5,6 +5,7 @@ import {
   inject,
   signal,
   viewChild,
+  ViewEncapsulation,
   type Signal,
 } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
@@ -40,6 +41,7 @@ const fold = () => ({ open: signal(false), long: signal(false), full: signal(0) 
 type Fold = ReturnType<typeof fold>;
 
 @Component({
+  encapsulation: ViewEncapsulation.None,
   selector: 'app-apartment',
   imports: [NgIcon, HlmAccordionImports, Gallery],
   providers: [
@@ -218,6 +220,263 @@ type Fold = ReturnType<typeof fold>;
         }
       </div>
     </div>
+  `,
+  styles: `
+    @layer components {
+      /* The apartment page: from 64rem the pictures and the content on the left, the right column
+         free for the booking panel. */
+      .apartment {
+        padding-top: 1rem;
+
+        h1 {
+          margin-top: 0.5rem;
+        }
+
+        h2 {
+          margin-bottom: 1rem;
+          font-size: clamp(1.375rem, 1.2rem + 0.8vw, 1.75rem);
+          font-weight: 500;
+          letter-spacing: -0.01em;
+        }
+      }
+
+      .back {
+        --air: 0.875rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        min-height: var(--size-control);
+        margin-inline: calc(-1 * var(--air));
+        padding-inline: var(--air);
+        border-radius: var(--radius-control);
+        color: var(--color-accent);
+        font-weight: 500;
+        text-decoration: underline transparent;
+        text-underline-offset: 0.3em;
+        transition: text-decoration-color 0.2s;
+
+        &:hover {
+          text-decoration-color: currentColor;
+        }
+      }
+
+      .facts {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem 1.5rem;
+        margin-top: 0.75rem;
+        font-weight: 500;
+
+        li {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
+
+        ng-icon {
+          color: var(--color-ink-soft);
+        }
+      }
+
+      .apartment-columns {
+        display: grid;
+        gap: 2rem;
+        margin-top: 1.5rem;
+
+        @media (min-width: 64rem) {
+          grid-template-columns: minmax(0, 1fr) 24rem;
+          column-gap: 3.5rem;
+
+          > * {
+            grid-column: 1;
+          }
+        }
+      }
+
+      .prose {
+        max-width: 40rem;
+
+        h3 {
+          margin: 1.25rem 0 0.375rem;
+          font-size: 1.1875rem;
+          font-weight: 500;
+
+          &:first-child {
+            margin-top: 0;
+          }
+        }
+
+        p,
+        ul,
+        ol,
+        blockquote {
+          margin-bottom: 0.625rem;
+        }
+
+        ul,
+        ol {
+          padding-left: 1.25rem;
+        }
+
+        ul {
+          list-style: disc;
+        }
+
+        ol {
+          list-style: decimal;
+        }
+
+        blockquote {
+          padding-left: 1rem;
+          border-left: 2px solid var(--color-line);
+        }
+
+        hr {
+          margin: 1rem 0;
+          border-color: var(--color-line);
+        }
+
+        strong {
+          font-weight: 600;
+        }
+
+        a {
+          color: var(--color-accent);
+          font-weight: 500;
+        }
+      }
+
+      /* A text with an arrow that opens more; its focus ring is a pill with air at its sides. */
+      .text-button {
+        --air: 0.875rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        min-height: var(--size-control);
+        margin-inline: calc(-1 * var(--air));
+        padding-inline: var(--air);
+        border-radius: var(--radius-control);
+        color: var(--color-accent);
+        font-weight: 500;
+        text-decoration: underline transparent;
+        text-underline-offset: 0.3em;
+        transition: text-decoration-color 0.2s;
+        cursor: pointer;
+
+        &:hover {
+          text-decoration-color: currentColor;
+        }
+
+        ng-icon {
+          @media (prefers-reduced-motion: no-preference) {
+            transition: rotate 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+          }
+        }
+
+        &[aria-expanded='true'] ng-icon {
+          rotate: 180deg;
+        }
+
+        &[hidden] {
+          display: none;
+        }
+      }
+
+      /* A block cut to a height with a fade until its button opens it; the height moves to the
+         content's measured one (--full). Without scripts there is no button, so nothing is cut. */
+      .fold {
+        /* Not hidden: a focused link below the cut would scroll the fold itself, not the page. */
+        overflow: clip;
+        transition: max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+
+        @media (scripting: enabled) {
+          &:not([data-open]) {
+            max-height: var(--cut, none);
+          }
+        }
+
+        /* Only while it cuts: a fold that fits needs no limit, and one widened past its cut drops
+           the old height at once instead of moving to the new one. */
+        &[data-long][data-open] {
+          max-height: var(--full);
+        }
+
+        &[data-long]:not([data-open]) {
+          mask-image: linear-gradient(to bottom, #000 calc(100% - 3rem), transparent);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          transition: none;
+        }
+      }
+
+      /* About six lines of the description, on a phone only. */
+      .prose-fold {
+        @media (width < 48rem) {
+          --cut: 10.5rem;
+        }
+      }
+
+      /* On a phone only, for now: on a desktop the columns keep the list short. */
+      .amenities-fold {
+        @media (width < 48rem) {
+          --cut: 13.5rem;
+        }
+      }
+
+      /* A room or an area: its icon and name, and below them what it holds in the softer text. */
+      .entries {
+        h3 {
+          display: flex;
+          align-items: center;
+          gap: 0.625rem;
+          font-weight: 500;
+        }
+
+        ng-icon {
+          --ng-icon__size: 1.25rem;
+          flex: none;
+          color: var(--color-ink-soft);
+        }
+
+        p,
+        ul {
+          padding-left: 1.875rem;
+          color: var(--color-ink-soft);
+          font-size: 0.9375rem;
+          line-height: 1.6;
+        }
+      }
+
+      .rooms {
+        display: grid;
+        /* Two columns from 22rem: at 320 px a name such as "Schlafzimmer 1" would break. */
+        grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+        gap: 1rem;
+      }
+
+      /* Areas run in as many columns as there is room for, each kept whole. */
+      .amenities {
+        columns: 13rem;
+        column-gap: 2rem;
+
+        > li {
+          break-inside: avoid;
+          padding-bottom: 1rem;
+        }
+
+        /* On a phone an area's entries are one line, so the list stays short. */
+        @media (width < 48rem) {
+          li li {
+            display: inline;
+          }
+
+          li li + li::before {
+            content: ', ';
+          }
+        }
+      }
+    }
   `,
 })
 export class Apartment {

@@ -227,6 +227,64 @@ test('on a phone a long description opens with its button, a short one has none'
   await expect(more).toHaveAttribute('aria-expanded', 'true');
 });
 
+test('the apartment page is styled from its first frame, on a full load and in the app', async ({
+  page,
+}) => {
+  // Before every frame, for the page and the gallery each, whether its own rules apply.
+  await page.addInitScript(() => {
+    const rules = (element: Element) =>
+      element.matches('.apartment')
+        ? getComputedStyle(element).paddingTop === '16px'
+        : getComputedStyle(element).containerType === 'inline-size';
+    const frames: Record<string, boolean[]> = { '.apartment': [], '.gallery': [] };
+    Object.assign(window, { frames_: frames, rules_: rules });
+    const sample = () => {
+      for (const [selector, seen] of Object.entries(frames)) {
+        const element = document.querySelector(selector);
+        if (element) seen.push(rules(element));
+      }
+      requestAnimationFrame(sample);
+    };
+    requestAnimationFrame(sample);
+  });
+  interface Probe {
+    frames_: Record<string, boolean[]>;
+    rules_: (element: Element) => boolean;
+  }
+  const styled = () =>
+    expect(async () => {
+      const frames = await page.evaluate(() => (window as unknown as Probe).frames_);
+      for (const seen of Object.values(frames)) {
+        expect(seen.length).toBeGreaterThan(2);
+        expect(seen).not.toContain(false);
+      }
+    }).toPass();
+  await page.goto('/en/apartments/zirbe');
+  await styled();
+  await page.getByRole('link', { name: 'Frequently asked questions' }).click();
+  await expect(page).toHaveURL('/en/faq');
+  // Off the page its rules are gone, so the way back adds them again.
+  expect(
+    await page.evaluate(() =>
+      ['apartment', 'gallery'].map((name) => {
+        const element = document.body.appendChild(document.createElement('div'));
+        element.className = name;
+        const applied = (window as unknown as Probe).rules_(element);
+        element.remove();
+        return applied;
+      }),
+    ),
+  ).toEqual([false, false]);
+  await page.evaluate(() => {
+    for (const seen of Object.values((window as unknown as Probe).frames_)) seen.length = 0;
+    Object.assign(window, { kept: true });
+  });
+  await page.goBack();
+  await styled();
+  // Still the same document, so the app drew the page.
+  expect(await page.evaluate(() => 'kept' in window)).toBe(true);
+});
+
 test('a language Beds24 has no texts in leaves the description and the house rules out', async ({
   page,
 }) => {
