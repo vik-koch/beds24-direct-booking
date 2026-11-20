@@ -1,5 +1,6 @@
 import { inject, InjectionToken, makeStateKey, RESPONSE_INIT, TransferState } from '@angular/core';
 import type { ResolveFn } from '@angular/router';
+import { reported } from '../beds24/cache';
 import type { Listing } from '../beds24/client';
 import site from '../content/generated/site';
 
@@ -16,7 +17,7 @@ export const listing: ResolveFn<Listing | null> = async (route) => {
   if (!load) return state.get(key, null);
   const { roomId } = site.apartments.find((apartment) => apartment.slug === slug)!;
   const value = await load(roomId).catch((error: unknown) => {
-    console.error(error);
+    if (!reported(error)) console.error(error);
     return null;
   });
   if (!value && response) response.status = 503;

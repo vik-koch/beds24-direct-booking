@@ -1,5 +1,6 @@
 import { inject, InjectionToken, makeStateKey, RESPONSE_INIT, TransferState } from '@angular/core';
 import type { ResolveFn } from '@angular/router';
+import { reported } from '../beds24/cache';
 import type { FreeWeeks } from '../beds24/weeks';
 
 // Provided on the server only, so the Beds24 client stays out of the browser bundle. With a
@@ -14,7 +15,7 @@ export const weeks: ResolveFn<FreeWeeks | null> = async (route) => {
   const response = inject(RESPONSE_INIT, { optional: true });
   if (!load) return state.get(key, null);
   const list = await load(slug).catch((error: unknown) => {
-    console.error(error);
+    if (!reported(error)) console.error(error);
     return null;
   });
   if (!list && response) response.status = 503;
