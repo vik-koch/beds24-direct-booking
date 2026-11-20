@@ -744,9 +744,9 @@ const addDays = (date: string, days: number) =>
         border-top: 1px solid var(--color-line);
       }
 
-      /* The months' last line has air below it already. */
+      /* The months' last line has some air below it already. */
       .panel-seasons + .guests {
-        margin-top: 0;
+        margin-top: 0.5rem;
       }
 
       .guests h3 {
