@@ -32,29 +32,9 @@
         "ELEVATOR"
       ],
       "texts": {
-        "headline": {
-          "de": "Zwei Wohnungen neben dem Schattberg X-press",
-          "en": "Two apartments beside the Schattberg X-press"
-        },
-        "propertyDescription": {
-          "de": "Haus Firn steht mitten in Saalbach. Skiraum mit Schuhtrockner im Winter, Radkeller mit Waschplatz im Sommer.\nFirn & Farn ist ein erfundener Betrieb: Diese Seite ist eine Demo, hier kann nichts gebucht werden.",
-          "en": "Haus Firn stands in the middle of Saalbach. A ski room with a boot dryer in winter, a bike cellar with a wash station in summer.\nFirn & Farn is an invented business: this site is a demo and nothing can be booked here."
-        },
-        "locationDescription": {
-          "de": "Zwei Gehminuten zur Talstation des Schattberg X-press, Bäcker und Supermarkt um die Ecke.",
-          "en": "Two minutes on foot to the Schattberg X-press valley station, a bakery and a supermarket around the corner."
-        },
-        "directions": {
-          "de": "Die Tiefgarage ist über die Zufahrt hinter dem Haus erreichbar.",
-          "en": "The underground car park is reached by the drive behind the house."
-        },
         "houseRules": {
           "de": "Nichtraucherhaus. Haustiere sind nicht erlaubt.\nNachtruhe von 22 bis 7 Uhr.",
           "en": "No smoking in the house. Pets are not allowed.\nQuiet hours from 10 pm to 7 am."
-        },
-        "propertyDescription1": {
-          "de": "<p style=\"text-align: left;\"><span style=\"font-size: 14px;\">Zirbenholz, Lodenstoffe und ein Blick auf den <strong>Schattberg</strong>.</span></p>",
-          "en": "<p style=\"text-align: left;\"><span style=\"font-size: 14px;\">Stone pine, loden fabrics and a view of the <strong>Schattberg</strong>.</span></p>"
         }
       },
       "rooms": [
@@ -76,21 +56,9 @@
           },
           "bookedOutInWinter": true,
           "texts": {
-            "displayName": {
-              "de": "Apartment Zirbe",
-              "en": "Apartment Zirbe"
-            },
-            "accommodationType": {
-              "de": "Ferienwohnung",
-              "en": "Holiday apartment"
-            },
             "contentHeadline": {
               "de": "Für zwei, mit Regendusche",
               "en": "For two, with a rain shower"
-            },
-            "contentDescription": {
-              "de": "Ein Raum mit Doppelbett, Küchenzeile und Sitzecke am Fenster. Kein Balkon.",
-              "en": "One room with a double bed, a kitchenette and a window seat. No balcony."
             },
             "roomDescription": {
               "de": "<p><h3 class=\"\">Die Wohnung</h3><p class=\"\"><span style=\"font-weight: bolder;\">﻿34 m²</span> im ersten Stock: ein Doppelbett aus Zirbe, eine Küchenzeile und eine Sitzecke am Fenster mit Blick auf den Schattberg.</p><p><br></p><ul><li>Regendusche</li><li>Bettwäsche und Handtücher</li></ul><p style=\"line-height: 1.5;\"><font color=\"#104a5a\" face=\"sans-serif\">Der Skiraum ist im Keller.</font></p><p>Anreise: <a href=\"http://firn-und-farn.example/anreise\" target=\"_blank\" style=\"cursor: pointer;\">firn-und-farn.example/anreise</a></p><p><img src=\"https://media.xmlcal.com/pic/p0090/0101/01.png\" style=\"width: 1099.98px;\"></p></p><p><a href=\"http://firn-und-farn.example/\" target=\"_blank\" style=\"cursor: pointer;\"><br></a></p>",
@@ -116,21 +84,9 @@
             "peak": 345
           },
           "texts": {
-            "displayName": {
-              "de": "Apartment Lärche",
-              "en": "Apartment Lärche"
-            },
-            "accommodationType": {
-              "de": "Ferienwohnung",
-              "en": "Holiday apartment"
-            },
             "contentHeadline": {
               "de": "Für vier, mit Südbalkon und Badewanne",
               "en": "For four, with a south-facing balcony and a bath tub"
-            },
-            "contentDescription": {
-              "de": "Zwei Schlafzimmer, eine Wohnküche und ein Balkon zur Sonnenseite.",
-              "en": "Two bedrooms, a kitchen-living room and a balcony on the sunny side."
             },
             "roomDescription": {
               "de": "<p><span style=\"font-family: sans-serif;\">﻿<b>61 m²</b> im zweiten Stock, mit <i>Südbalkon</i>.</span></p><p><span style=\"font-family: sans-serif;\">Ein Schlafzimmer mit Doppelbett, eines mit Stockbett für Kinder.</span><br></p>",
@@ -164,29 +120,9 @@
         "WASHER"
       ],
       "texts": {
-        "headline": {
-          "de": "Zwei Wohnungen bei der Kohlmaisbahn",
-          "en": "Two apartments near the Kohlmaisbahn"
-        },
-        "propertyDescription": {
-          "de": "Haus Farn hat eine Wohnung über zwei Etagen, mit Terrasse und eigener Sauna, und eine kleine unterm Dach.\nFirn & Farn ist ein erfundener Betrieb: Diese Seite ist eine Demo, hier kann nichts gebucht werden.",
-          "en": "Haus Farn holds an apartment on two floors, with a terrace and a sauna of its own, and a small one under the roof.\nFirn & Farn is an invented business: this site is a demo and nothing can be booked here."
-        },
-        "locationDescription": {
-          "de": "Wenige Gehminuten zur Kohlmaisbahn und in die Fußgängerzone.",
-          "en": "A few minutes on foot to the Kohlmaisbahn and to the pedestrian zone."
-        },
-        "directions": {
-          "de": "Zwei Stellplätze liegen direkt vor dem Haus.",
-          "en": "Two parking spaces are right in front of the house."
-        },
         "houseRules": {
           "de": "Nichtraucherhaus. Haustiere sind nicht erlaubt.\nNachtruhe von 22 bis 7 Uhr.",
           "en": "No smoking in the house. Pets are not allowed.\nQuiet hours from 10 pm to 7 am."
-        },
-        "propertyDescription1": {
-          "de": "",
-          "en": ""
         }
       },
       "rooms": [
@@ -211,21 +147,9 @@
             "peak": 560
           },
           "texts": {
-            "displayName": {
-              "de": "Apartment Ahorn",
-              "en": "Apartment Ahorn"
-            },
-            "accommodationType": {
-              "de": "Ferienwohnung",
-              "en": "Holiday apartment"
-            },
             "contentHeadline": {
               "de": "Für sechs, mit Terrasse und Sauna",
               "en": "For six, with a terrace and a sauna"
-            },
-            "contentDescription": {
-              "de": "Drei Schlafzimmer, zwei Bäder und ein großer Tisch für alle.",
-              "en": "Three bedrooms, two bathrooms and one large table for everyone."
             },
             "roomDescription": {
               "de": "<p><h4 class=\"\">Zwei Etagen</h4><table class=\"table table-bordered\" style=\"width: 100%; border-collapse: collapse; border: 1px solid #dee2e6;\"><tbody><tr><td style=\"border: 1px solid #dee2e6; padding: 8px;\">Unten</td><td style=\"border: 1px solid #dee2e6; padding: 8px;\">Wohnküche, Bad, Sauna</td></tr><tr><td style=\"border: 1px solid #dee2e6; padding: 8px;\">Oben</td><td style=\"border: 1px solid #dee2e6; padding: 8px;\">Drei Schlafzimmer, Duschbad</td></tr></tbody></table></p><p><br></p><p><br></p>",
@@ -250,21 +174,9 @@
             "peak": 205
           },
           "texts": {
-            "displayName": {
-              "de": "Apartment Fichte",
-              "en": "Apartment Fichte"
-            },
-            "accommodationType": {
-              "de": "Ferienwohnung",
-              "en": "Holiday apartment"
-            },
             "contentHeadline": {
               "de": "Für zwei, unterm Dach",
               "en": "For two, under the roof"
-            },
-            "contentDescription": {
-              "de": "Ein Zimmer mit Kochnische und Dachfenster zum Hang.",
-              "en": "One room with a kitchenette and a roof window facing the slope."
             },
             "roomDescription": {
               "de": "<p><br></p>",

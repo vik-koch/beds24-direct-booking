@@ -13,14 +13,8 @@ export interface Room {
   featureCodes: string[][];
   prices: Record<'summer' | 'winter' | 'peak', number>;
   bookedOutInWinter?: boolean;
-  texts: Record<
-    | 'displayName'
-    | 'accommodationType'
-    | 'contentHeadline'
-    | 'contentDescription'
-    | 'roomDescription',
-    Text
-  >;
+  // Only the texts the site reads; the others are sent empty.
+  texts: Record<'contentHeadline' | 'roomDescription', Text>;
 }
 
 export interface Property {
@@ -30,15 +24,7 @@ export interface Property {
   latitude: number;
   longitude: number;
   featureCodes: string[];
-  texts: Record<
-    | 'headline'
-    | 'propertyDescription'
-    | 'locationDescription'
-    | 'directions'
-    | 'houseRules'
-    | 'propertyDescription1',
-    Text
-  >;
+  texts: Record<'houseRules', Text>;
   rooms: Room[];
 }
 

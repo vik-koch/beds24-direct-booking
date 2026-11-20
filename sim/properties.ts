@@ -21,6 +21,15 @@ const perLanguage = (texts: Record<string, Text>, empty: string[]) =>
     ),
   }));
 
+// Beds24 sends every text of a room; the site reads only those the data holds.
+const emptyRoomTexts = [
+  'displayName',
+  'accommodationType',
+  'contentDescription',
+  'auxiliary',
+  'marketing',
+];
+
 const roomType = (property: Property, room: Room, has: (name: string) => boolean) => ({
   id: room.id,
   propertyId: property.id,
@@ -39,11 +48,11 @@ const roomType = (property: Property, room: Room, has: (name: string) => boolean
   // A language switched off in the account keeps its entry, empty but for the default type.
   ...(has('includeTexts') && {
     texts: [
-      ...perLanguage(room.texts, ['auxiliary', 'marketing']),
+      ...perLanguage(room.texts, emptyRoomTexts),
       {
         language: 'it',
         ...Object.fromEntries(
-          [...Object.keys(room.texts), 'auxiliary', 'marketing'].map((key) => [key, '']),
+          [...Object.keys(room.texts), ...emptyRoomTexts].map((key) => [key, '']),
         ),
         accommodationType: 'Camera',
       },
@@ -91,6 +100,11 @@ export const propertyList = (query: URLSearchParams) => {
       featureCodes: property.featureCodes.map((code) => [code]),
       ...(has('includeTexts') && {
         texts: perLanguage({ ...property.texts, upsellItemName1: tax.name }, [
+          'headline',
+          'propertyDescription',
+          'locationDescription',
+          'directions',
+          'propertyDescription1',
           'propertyDescription2',
           'propertyDescriptionBookingPage1',
           'propertyDescriptionBookingPage2',
