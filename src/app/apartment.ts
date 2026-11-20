@@ -292,7 +292,7 @@ type Fold = ReturnType<typeof fold>;
 
         @media (min-width: 64rem) {
           grid-template-columns: minmax(0, 1fr) 24rem;
-          column-gap: 3.5rem;
+          column-gap: 3rem;
 
           > * {
             grid-column: 1;

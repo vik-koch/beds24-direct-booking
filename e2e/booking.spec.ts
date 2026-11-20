@@ -12,7 +12,8 @@ async function open(page: Page, path: string) {
 const season = (page: Page) => page.locator('.panel-season:visible:not([data-leaving])');
 const month = (page: Page) => season(page).locator('.month[data-current]:not([data-leaving])');
 const chosen = (page: Page) => month(page).locator('[aria-selected=true]');
-const monthName = (page: Page) => season(page).locator('.month-head h3');
+const monthName = (page: Page) => month(page).locator('.month-name');
+
 const next = (page: Page) => season(page).getByRole('button', { name: /Nächster|Next/ });
 // German money, as the page writes it: "€ 1.669,50", "€ 49".
 const amount = (text: string) => Number(text.replace(/[^\d,]/g, '').replace(',', '.'));
@@ -73,14 +74,16 @@ test('a week and the guests make the total, and the button takes them on to book
   await expect(total.locator('.sum dd')).toHaveText(euro(price + 73.5));
   // The address keeps the choice, so a reload shows it again.
   await expect(page).toHaveURL(
-    /arrival=\d{4}-\d\d-\d\d&departure=\d{4}-\d\d-\d\d&adults=3&children=1/,
+    /arrival=\d{4}-\d\d-\d\d&departure=\d{4}-\d\d-\d\d&season=\w+&adults=3&children=1/,
   );
-  // So does the other language's link.
+  // So does the other language's link, but for the season, which travels in storage.
   const english = new URL(
     (await page.locator('link[rel=alternate][hreflang=en-GB]').getAttribute('href'))!,
     'http://localhost',
   );
-  expect(english.search).toBe(new URL(page.url()).search);
+  const here = new URL(page.url()).searchParams;
+  here.delete('season');
+  expect(english.searchParams.toString()).toBe(here.toString());
   await page.reload();
   await expect(page.locator('#adults')).toHaveText('3');
   await expect(page.locator('#children')).toHaveText('1');
@@ -266,7 +269,12 @@ test('the week, the view and the guests can be chosen by keyboard alone', async 
   for (let i = 0; i < 4 && !(await focused.count()); i++) await page.keyboard.press('Tab');
   await expect(focused).toHaveCount(1);
   const passed = () => page.evaluate(() => document.activeElement!.closest('.full, .outside'));
-  while (await passed()) await page.keyboard.press('ArrowDown');
+  // The grid moves the focus a frame after the key, so each step waits for it.
+  for (let i = 0; i < 6 && (await passed()); i++) {
+    const from = await focused.getAttribute('data-date');
+    await page.keyboard.press('ArrowDown');
+    await expect(focused).not.toHaveAttribute('data-date', from!);
+  }
   await page.keyboard.press('Space');
   await expect(focused).toHaveAttribute('aria-selected', 'true');
   await page.keyboard.press('Enter');
@@ -275,6 +283,13 @@ test('the week, the view and the guests can be chosen by keyboard alone', async 
   await page.keyboard.press('Enter');
   await expect(focused).toHaveAttribute('aria-selected', 'true');
   await expect(panel(page).getByRole('link', { name: 'Weiter zur Buchung' })).toBeVisible();
+  // Booked weeks can be reached, but Tab enters the month again at the chosen week.
+  const pick = await focused.getAttribute('data-date');
+  await page.keyboard.press('ArrowUp');
+  await expect(focused).not.toHaveAttribute('data-date', pick!);
+  await page.keyboard.press('Shift+Tab');
+  await page.keyboard.press('Tab');
+  await expect(focused).toHaveAttribute('data-date', pick!);
   // Page Down shows the next month, at the same place.
   const first = await monthName(page).innerText();
   await page.keyboard.press('PageDown');
@@ -322,9 +337,12 @@ test('a week or a day of the month before or after chooses its week and shows it
   await expect(page).not.toHaveURL(/arrival=/);
 });
 
-test('a change of language keeps the view and the month', async ({ page }) => {
+test('a change of language or a reload keeps the view and the month', async ({ page }) => {
   await open(page, '/de/wohnungen/laerche');
+  // A week chosen, then the calendar and another month shown.
+  await (await firstFree(page)).click();
   await page.getByRole('radio', { name: 'Kalender' }).check({ force: true });
+  await expect(page).toHaveURL(/view=calendar/);
   await next(page).click();
   const shown = await month(page).getAttribute('data-month');
   // From the header's menu on a phone, else from its language control.
@@ -336,13 +354,37 @@ test('a change of language keeps the view and the month', async ({ page }) => {
   await expect(page).toHaveURL(/\/en\/apartments\/laerche/);
   await expect(page.getByRole('radio', { name: 'Calendar' })).toBeChecked();
   await expect(month(page)).toHaveAttribute('data-month', shown!);
+  await expect(panel(page).locator('[aria-selected=true]')).not.toHaveCount(0);
+  // A reload shows the calendar from the server on, at the chosen week's month.
+  const response = await page.reload();
+  expect(await response!.text()).toContain('class="calendar"');
+  await expect(page.getByRole('radio', { name: 'Calendar' })).toBeChecked();
+});
+
+test('a shared link opens at its week’s season, whatever season the page would show', async ({
+  page,
+  browser,
+}) => {
+  await open(page, '/de/wohnungen/laerche');
+  const other = await page.locator('html').getAttribute('data-season');
+  await panel(page).locator('.other-season').click();
+  await expect(page.locator('html')).not.toHaveAttribute('data-season', other!);
+  const shown = await page.locator('html').getAttribute('data-season');
+  await (await firstFree(page)).click();
+  await expect(page).toHaveURL(new RegExp(`season=${shown}`));
+  const fresh = await browser.newPage();
+  await open(fresh, page.url());
+  await expect(fresh.locator('html')).toHaveAttribute('data-season', shown!);
+  await expect(chosen(fresh)).toHaveCount(1);
+  await expect(panel(fresh).getByRole('link', { name: 'Weiter zur Buchung' })).toBeVisible();
+  await fresh.close();
 });
 
 test('a full season, one not open yet and an unreachable Beds24 each say so', async ({ page }) => {
   // Zirbe is booked all winter.
   await open(page, '/de/wohnungen/zirbe?season=winter');
   await expect(panel(page).locator('.panel-empty:visible')).toHaveText(
-    /Im Winter 2026\/27 ist keine Woche mehr frei\./,
+    /Im Winter \d{4}\/\d\d ist keine Woche mehr frei\./,
   );
   await expect(panel(page).locator('.outcome:visible')).toHaveCount(0);
   await open(page, 'http://localhost:4003/en/apartments/laerche?season=summer');
@@ -359,6 +401,8 @@ test('the panel’s season button slides the other season in and keeps the guest
   await open(page, '/de/wohnungen/laerche');
   await pickCount(page, 'adults', 3);
   const button = panel(page).locator('.other-season');
+  const before = await page.locator('html').getAttribute('data-season');
+  const label = (await button.locator('span:visible').innerText()).trim();
   const moves = () =>
     page.evaluate(() =>
       document
@@ -369,9 +413,8 @@ test('the panel’s season button slides the other season in and keeps the guest
   await button.focus();
   await page.keyboard.press('Enter');
   await expect.poll(moves).toContainEqual(expect.stringMatching(/^[1-9][\d.]*px/));
-  await expect(page.locator('html')).toHaveAttribute('data-season', 'summer');
-  await expect(panel(page).locator('h2')).toContainText('Sommer 2027');
-  await expect(monthName(page)).toHaveText(/ 2027$/);
+  await expect(page.locator('html')).not.toHaveAttribute('data-season', before!);
+  await expect(panel(page).locator('h2')).toContainText(label);
   await expect(page.locator('#adults')).toHaveText('3');
   await expect(button).toBeFocused();
 });
@@ -407,6 +450,11 @@ test('on a phone a bar leads to the panel while it is out of view, then on to bo
     /^\/de\/wohnungen\/laerche\/buchen\?arrival=/,
   );
   await page.setViewportSize({ width: 1280, height: 800 });
+  await expect(bar).toBeHidden();
+  // A season with no week to choose has no bar.
+  await page.setViewportSize({ width: 375, height: 700 });
+  await open(page, '/de/wohnungen/zirbe?season=winter');
+  await page.evaluate(() => scrollTo({ top: 0, behavior: 'instant' }));
   await expect(bar).toBeHidden();
 });
 

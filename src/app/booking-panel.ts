@@ -55,14 +55,11 @@ interface Month {
 }
 type View = 'list' | 'calendar';
 
-// In the root injector, so the view and each season's month, by its key, outlive a change of
+// Each season's shown month, by its key. In the root injector, so that it outlives a change of
 // language, which replaces the page's components.
-const shownState = new InjectionToken('booking panel view', {
+const shownMonths = new InjectionToken('booking panel months', {
   providedIn: 'root',
-  factory: () => ({
-    view: signal<View>('list'),
-    months: signal<Partial<Record<SeasonName, string>>>({}),
-  }),
+  factory: () => signal<Partial<Record<SeasonName, string>>>({}),
 });
 
 const day = 864e5;
@@ -144,6 +141,7 @@ const addDays = (date: string, days: number) =>
               @if (season.state === 'open') {
                 @let shown = month(season);
                 @let months = monthsOf(season);
+                <!-- The buttons stay over the months, whose names move with them. -->
                 <div class="month-head">
                   <button
                     type="button"
@@ -154,7 +152,6 @@ const addDays = (date: string, days: number) =>
                   >
                     <ng-icon name="lucideChevronLeft" aria-hidden="true" />
                   </button>
-                  <h3 [id]="'month-' + season.name">{{ months[shown].name }}</h3>
                   <button
                     type="button"
                     class="icon-button"
@@ -165,8 +162,6 @@ const addDays = (date: string, days: number) =>
                     <ng-icon name="lucideChevronRight" aria-hidden="true" />
                   </button>
                 </div>
-                <!-- The grids give their cells the tab stop, which the rule does not see. -->
-                <!-- eslint-disable @angular-eslint/template/interactive-supports-focus -->
                 <div class="months">
                   @for (month of months; track month.key) {
                     <div
@@ -174,9 +169,12 @@ const addDays = (date: string, days: number) =>
                       [attr.data-month]="$index"
                       [attr.data-current]="$index === shown ? '' : null"
                     >
+                      @let name = 'month-' + season.name + '-' + $index;
+                      <h3 class="month-name" [id]="name">{{ month.name }}</h3>
                       <!-- As on the home page: a grid whose cells choose a week, and choose it no
                            more when it is chosen. A row or a day of the month before or after
                            leads to that month. -->
+                      @let stop = stopIn(season.name, month);
                       @if (view() === 'list') {
                         <div
                           class="month-weeks"
@@ -185,7 +183,7 @@ const addDays = (date: string, days: number) =>
                           selectionMode="explicit"
                           rowWrap="nowrap"
                           colWrap="nowrap"
-                          [attr.aria-labelledby]="'month-' + season.name"
+                          [attr.aria-labelledby]="name"
                         >
                           @for (stay of month.stays; track stay.arrival) {
                             <div
@@ -209,6 +207,7 @@ const addDays = (date: string, days: number) =>
                                 [selectable]="stay.price !== null"
                                 [selected]="isChosen(season.name, stay)"
                                 (selectedChange)="select($event, season, stay)"
+                                [tabindex]="stop ? (stop === stay.arrival ? 0 : -1) : undefined"
                                 [attr.data-date]="stay.arrival"
                                 (click)="guard($event, stay.price !== null)"
                                 (keydown)="keys($event, season, stay.price !== null)"
@@ -227,7 +226,7 @@ const addDays = (date: string, days: number) =>
                           selectionMode="explicit"
                           rowWrap="nowrap"
                           colWrap="nowrap"
-                          [attr.aria-labelledby]="'month-' + season.name"
+                          [attr.aria-labelledby]="name"
                         >
                           <div class="calendar-row" role="row" aria-rowindex="1">
                             @for (name of weekdays; track $index) {
@@ -256,6 +255,7 @@ const addDays = (date: string, days: number) =>
                                     cell.start && select($event, season, cell.start)
                                   "
                                   [attr.aria-label]="cell.label"
+                                  [tabindex]="stop ? (stop === cell.date ? 0 : -1) : undefined"
                                   [attr.data-date]="cell.date"
                                   (click)="guard($event, !!cell.start)"
                                   (keydown)="keys($event, season, !!cell.start)"
@@ -271,7 +271,6 @@ const addDays = (date: string, days: number) =>
                     </div>
                   }
                 </div>
-                <!-- eslint-enable @angular-eslint/template/interactive-supports-focus -->
               } @else {
                 <p class="panel-empty">
                   {{ fill(texts.weeks[season.state], { season: dated(season) }) }}
@@ -391,11 +390,10 @@ const addDays = (date: string, days: number) =>
           padding-block: 2rem;
         }
 
-        /* A step below the page's headings: the panel's parts stand under it. */
+        /* Sized as the page's other headings. */
         .panel-title {
           margin: 0;
-          font-size: 1.1875rem;
-          line-height: 1.3;
+          line-height: 1.2;
         }
 
         /* The view's radios are the labels round them, which draw their rings. */
@@ -506,18 +504,23 @@ const addDays = (date: string, days: number) =>
 
       /* The room above is the season's, so the ring of a month's button fits in its clip. */
       .panel-season {
+        position: relative;
         grid-area: 1 / 1;
         align-self: start;
-        padding-top: 0.75rem;
+        padding-top: 0.5rem;
       }
 
+      /* Over the months' first line, which holds their names. */
       .month-head {
+        position: absolute;
+        inset: 0.5rem 0 auto;
+        z-index: 1;
         display: flex;
-        align-items: center;
         justify-content: space-between;
-        margin-inline: -0.5rem;
+        pointer-events: none;
 
         .icon-button {
+          pointer-events: auto;
           font-size: 1.25rem;
           transition: background-color 0.2s;
 
@@ -532,14 +535,15 @@ const addDays = (date: string, days: number) =>
         }
       }
 
-      /* Six lines in both views, the list's below as much room as the calendar's weekdays: as
-         tall as each other in every month, so nothing below moves. */
+      /* The name, then six lines in both views, the list's below as much room as the calendar's
+         weekdays: as tall as each other in every month, so nothing below moves. */
       .months {
         --day: var(--size-control-small);
         --gap: 0.25rem;
         --head: 1.5rem;
-        height: calc(var(--head) + 7 * var(--gap) + 6 * var(--day) + 0.75rem);
-        margin-top: 0.25rem;
+        height: calc(
+          var(--size-control) + var(--head) + 6 * var(--gap) + 6 * var(--day) + 0.375rem
+        );
 
         > * {
           grid-area: 1 / 1;
@@ -556,7 +560,12 @@ const addDays = (date: string, days: number) =>
       }
 
       .month {
-        padding-block: 0.375rem;
+        padding-bottom: 0.375rem;
+      }
+
+      .month-name {
+        line-height: var(--size-control);
+        text-align: center;
       }
 
       .month-weeks,
@@ -715,6 +724,10 @@ const addDays = (date: string, days: number) =>
       .panel-empty {
         margin-top: 0.75rem;
         color: var(--color-ink-soft);
+
+        .panel-season > & {
+          margin-bottom: 1rem;
+        }
       }
 
       .guests,
@@ -722,6 +735,11 @@ const addDays = (date: string, days: number) =>
         margin-top: 1rem;
         padding-top: 1rem;
         border-top: 1px solid var(--color-line);
+      }
+
+      /* The months' last line has air below it already. */
+      .panel-seasons + .guests {
+        margin-top: 0;
       }
 
       .guests h3 {
@@ -934,8 +952,8 @@ export class BookingPanel {
     return { short: name('short').replace('.', ''), long: name('long') };
   });
 
-  private readonly state = inject(shownState);
-  protected readonly view = this.state.view;
+  private readonly months = inject(shownMonths);
+  protected readonly view = signal<View>('list');
   protected readonly chosen = signal<{ season: SeasonName; arrival: string } | null>(null);
   protected readonly adults = signal(1);
   protected readonly children = signal(0);
@@ -1025,10 +1043,13 @@ export class BookingPanel {
     const season = this.weeks?.seasons.find((one) =>
       one.weeks.some((week) => week.arrival === arrival && week.prices[0] !== null),
     );
+    // A month browsed to before a change of language stays shown.
     if (season && arrival) {
       this.chosen.set({ season: season.name, arrival });
-      this.state.months.update((months) => ({ ...months, [season.name]: arrival.slice(0, 7) }));
+      if (!this.months()[season.name])
+        this.months.update((months) => ({ ...months, [season.name]: arrival.slice(0, 7) }));
     }
+    if (query.get('view') === 'calendar') this.view.set('calendar');
     const count = (name: string, fallback: number) =>
       Math.floor(Number(query.get(name) ?? fallback)) || 0;
     this.adults.set(Math.min(Math.max(count('adults', 2), 1), this.limits?.maxAdults ?? 1));
@@ -1083,7 +1104,7 @@ export class BookingPanel {
   }
 
   protected month(season: SeasonWeeks) {
-    const key = this.state.months()[season.name];
+    const key = this.months()[season.name];
     return Math.max(
       this.monthsOf(season).findIndex((month) => month.key === key),
       0,
@@ -1119,6 +1140,17 @@ export class BookingPanel {
 
   protected lowest(season: SeasonWeeks) {
     return Math.min(...season.weeks.flatMap(({ prices }) => prices[0] ?? []));
+  }
+
+  // Tab enters a month at its chosen week, wherever the focus last left the month.
+  protected stopIn(season: SeasonName, month: Month) {
+    const pick = this.chosen();
+    if (pick?.season !== season) return null;
+    const here =
+      this.view() === 'list'
+        ? month.stays.some(({ arrival }) => arrival === pick.arrival)
+        : month.rows.some((row) => row.some(({ date }) => date === pick.arrival));
+    return here ? pick.arrival : null;
   }
 
   protected isChosen(season: SeasonName, stay: Stay) {
@@ -1196,7 +1228,8 @@ export class BookingPanel {
     this.keep();
   }
 
-  // The address keeps the choice; the season's own parameter is the season service's.
+  // The address keeps the choice, and with a week of the shown season that season, which a
+  // shared link then shows first, whatever season the page would show by itself.
   private keep() {
     const [path, query = ''] = this.location.path().split('?');
     const params = new URLSearchParams(query.split('#')[0]);
@@ -1205,10 +1238,10 @@ export class BookingPanel {
     if (stay) {
       params.set('arrival', stay.arrival);
       params.set('departure', stay.departure);
-    } else {
-      params.delete('arrival');
-      params.delete('departure');
-    }
+      if (pick.season === this.season.current()) params.set('season', pick.season);
+    } else ['arrival', 'departure', 'season'].forEach((name) => params.delete(name));
+    if (this.view() === 'calendar') params.set('view', 'calendar');
+    else params.delete('view');
     params.set('adults', String(this.adults()));
     if (this.limits?.maxChildren) params.set('children', String(this.children()));
     this.location.replaceState(path, params.toString(), this.location.getState());
@@ -1217,6 +1250,7 @@ export class BookingPanel {
   // A change of view fades the new one in; the month and the chosen week stay.
   protected show(name: View) {
     this.view.set(name);
+    this.keep();
     afterNextRender(
       {
         write: () => {
@@ -1243,7 +1277,7 @@ export class BookingPanel {
     const place = cells(old).indexOf(document.activeElement as HTMLElement);
     const height = box.offsetHeight;
     const month = this.monthsOf(season)[from + by];
-    this.state.months.update((months) => ({ ...months, [season.name]: month.key }));
+    this.months.update((months) => ({ ...months, [season.name]: month.key }));
     this.announced.set(month.name);
     afterNextRender(
       {
