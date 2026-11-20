@@ -37,12 +37,20 @@ async function openNext(page: Page, path: string) {
     await open(page, `${path}${path.includes('?') ? '&' : '?'}season=${later}`);
 }
 
+// The next month, once shown: until then a count or a click still finds the month before, whose
+// cells a click would wait on after they have gone.
+async function toNext(page: Page) {
+  const shown = await monthName(page).innerText();
+  await next(page).click();
+  await expect(monthName(page)).not.toHaveText(shown);
+}
+
 // The first month of the shown season with a free week of its own, and that week's cell.
 async function firstFree(page: Page) {
   for (let i = 0; i < 12; i++) {
     const free = month(page).locator('.week:not(.full, .outside) [role=gridcell]');
     if (await free.count()) return free.first();
-    await next(page).click();
+    await toNext(page);
   }
   throw new Error('no free week in the season');
 }
@@ -163,7 +171,7 @@ test(
 
     // A week in a later month, as the free-weeks list links it.
     await openNext(page, '/de/wohnungen/laerche');
-    await next(page).click();
+    await toNext(page);
     const week = await firstFree(page);
     const name = await monthName(page).innerText();
     await week.click();
@@ -341,7 +349,7 @@ test('a week or a day of the month before or after chooses its week and shows it
   await openNext(page, '/en/apartments/laerche');
   // In the list, the week that ends in the month, from the month before.
   const row = month(page).locator('.week.outside:not(.full)');
-  for (let i = 0; i < 12 && !(await row.count()); i++) await next(page).click();
+  for (let i = 0; i < 12 && !(await row.count()); i++) await toNext(page);
   const arrival = await row.locator('[role=gridcell]').getAttribute('data-date');
   const shown = await monthName(page).innerText();
   await row.locator('[role=gridcell]').click();
@@ -351,7 +359,7 @@ test('a week or a day of the month before or after chooses its week and shows it
   // In the calendar, a free week's first day in the month after.
   await page.locator('.views').getByTitle('Calendar').click();
   const day = month(page).locator('.day.outside:has(.start)');
-  for (let i = 0; i < 12 && !(await day.count()); i++) await next(page).click();
+  for (let i = 0; i < 12 && !(await day.count()); i++) await toNext(page);
   const start = await day.last().getAttribute('data-date');
   await day.last().click();
   await expect(chosen(page)).toHaveAttribute('data-date', start!);
