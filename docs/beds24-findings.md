@@ -132,8 +132,9 @@ Checked on 20 November 2026 on a real account with a read-only token.
   treats children as adults, and the booking page asks only for guests; a number allows up to that
   many children.
 - **`maxChildren: 0`** is the control panel's "None". Whether it refuses children or only stops
-  asking for them is not checked; the site treats it like "Don't Ask", which is safe either way,
-  since every guest is then handed over as an adult.
+  asking for them is not checked, so whether a family may stay in such a room is open. The site
+  treats it like "Don't Ask", by the maintainer's decision: one count of guests, each handed over as
+  an adult.
 - **`offers` enforces the limits** (`numAdults`, `numChildren`): a stay over `maxPeople` in total,
   or over `maxChildren`, gets no offer. The price does not change with the mix
   (`priceFor: maxCapacity`).
