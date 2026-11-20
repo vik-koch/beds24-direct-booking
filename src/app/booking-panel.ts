@@ -317,27 +317,6 @@ const addDays = (date: string, days: number) =>
   `,
   styles: `
     @layer components {
-      /* As in the free-weeks list: the page's season shows its own parts, a leaving one stays
-         while it moves, and the two versions of a name or a label share one cell. */
-      html:not([data-season='winter']) .booking [data-for='winter']:not([data-leaving]),
-      html:not([data-season='summer']) .booking [data-for='summer']:not([data-leaving]) {
-        display: none;
-      }
-
-      .booking .stack {
-        display: inline-grid;
-
-        > * {
-          grid-area: 1 / 1;
-        }
-      }
-
-      html:not([data-season='winter']) .booking .stack > [data-for='winter'],
-      html:not([data-season='summer']) .booking .stack > [data-for='summer'] {
-        display: flex;
-        visibility: hidden;
-      }
-
       .booking {
         display: block;
 
