@@ -267,7 +267,12 @@ test('the months page by their buttons, slide in from their side and keep the fo
   await expect(back).toBeEnabled();
   // By keyboard to the season's last month: there the focus moves to the other button.
   await next(page).focus();
-  for (let i = 0; i < 12 && (await next(page).isEnabled()); i++) await page.keyboard.press('Enter');
+  // Each press waits for its month: until then the button still shows the month before.
+  for (let i = 0; i < 12 && (await next(page).isEnabled()); i++) {
+    const shown = await monthName(page).innerText();
+    await page.keyboard.press('Enter');
+    await expect(monthName(page)).not.toHaveText(shown);
+  }
   await expect(next(page)).toBeDisabled();
   await expect(back).toBeFocused();
 });
