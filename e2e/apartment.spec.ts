@@ -230,36 +230,57 @@ test('on a phone a long description opens with its button, a short one has none'
 test('the apartment page is styled from its first frame, on a full load and in the app', async ({
   page,
 }) => {
-  // Before every frame, whether the page's and the gallery's own rules apply to what is there.
+  // Before every frame, for the page and the gallery each, whether its own rules apply.
   await page.addInitScript(() => {
-    const frames: boolean[] = [];
-    Object.assign(window, { frames_: frames });
+    const rules = (element: Element) =>
+      element.matches('.apartment')
+        ? getComputedStyle(element).paddingTop === '16px'
+        : getComputedStyle(element).containerType === 'inline-size';
+    const frames: Record<string, boolean[]> = { '.apartment': [], '.gallery': [] };
+    Object.assign(window, { frames_: frames, rules_: rules });
     const sample = () => {
-      const [apartment, gallery] = ['.apartment', '.gallery'].map((s) => document.querySelector(s));
-      if (apartment && gallery)
-        frames.push(
-          getComputedStyle(apartment).paddingTop === '16px' &&
-            getComputedStyle(gallery).containerType === 'inline-size',
-        );
+      for (const [selector, seen] of Object.entries(frames)) {
+        const element = document.querySelector(selector);
+        if (element) seen.push(rules(element));
+      }
       requestAnimationFrame(sample);
     };
     requestAnimationFrame(sample);
   });
-  const frames = () => page.evaluate(() => (window as unknown as { frames_: boolean[] }).frames_);
+  interface Probe {
+    frames_: Record<string, boolean[]>;
+    rules_: (element: Element) => boolean;
+  }
+  const styled = () =>
+    expect(async () => {
+      const frames = await page.evaluate(() => (window as unknown as Probe).frames_);
+      for (const seen of Object.values(frames)) {
+        expect(seen.length).toBeGreaterThan(2);
+        expect(seen).not.toContain(false);
+      }
+    }).toPass();
   await page.goto('/en/apartments/zirbe');
-  await expect.poll(async () => (await frames()).length).toBeGreaterThan(2);
-  expect(await frames()).not.toContain(false);
+  await styled();
   await page.getByRole('link', { name: 'Frequently asked questions' }).click();
   await expect(page).toHaveURL('/en/faq');
   // Off the page its rules are gone, so the way back adds them again.
-  expect(await page.evaluate(() => document.head.innerHTML.includes('.gallery{'))).toBe(false);
+  expect(
+    await page.evaluate(() =>
+      ['apartment', 'gallery'].map((name) => {
+        const element = document.body.appendChild(document.createElement('div'));
+        element.className = name;
+        const applied = (window as unknown as Probe).rules_(element);
+        element.remove();
+        return applied;
+      }),
+    ),
+  ).toEqual([false, false]);
   await page.evaluate(() => {
-    (window as unknown as { frames_: boolean[] }).frames_.length = 0;
+    for (const seen of Object.values((window as unknown as Probe).frames_)) seen.length = 0;
     Object.assign(window, { kept: true });
   });
   await page.goBack();
-  await expect.poll(async () => (await frames()).length).toBeGreaterThan(2);
-  expect(await frames()).not.toContain(false);
+  await styled();
   // Still the same document, so the app drew the page.
   expect(await page.evaluate(() => 'kept' in window)).toBe(true);
 });
