@@ -18,8 +18,9 @@ public repository, and up to 20 jobs run at once.
 1. **The e2e suite runs in three shards,** a matrix of jobs with `--shard=n/3`, each in the
    Playwright image (ADR 9) with two workers.
 2. **The suite is `fullyParallel`,** so the shards split by test, not by file, and no worker runs a
-   long file alone at the end. Tests found standing alone in Chromium and Firefox: each shard passed
-   on its own, and the whole suite passed in a shuffled order (`--shuffle 7`).
+   long file alone at the end. The tests were found to stand alone: in Chromium and Firefox each
+   shard passed on its own, and in all three projects the whole suite passed in a shuffled order
+   (`--shuffle 7`; WebKit in the Playwright image).
 3. **Format, lint and unit tests run in a job of their own** on the plain runner, beside the shards.
 4. **`node_modules` is restored from a cache keyed by `package.json` and the lock file,** and
    `npm ci` runs only when one of them changes. The cache is saved straight after `npm ci`, so the
