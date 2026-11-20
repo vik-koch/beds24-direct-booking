@@ -5,13 +5,12 @@ import { FREE_WEEKS, weeks } from './free-weeks';
 
 describe('weeks', () => {
   const response: ResponseInit = {};
-  const resolve = (providers: Provider[]) => {
+  const home = { params: {} } as ActivatedRouteSnapshot;
+  const resolve = (providers: Provider[], route = home) => {
     TestBed.configureTestingModule({ providers });
-    return TestBed.runInInjectionContext(() =>
-      weeks({} as ActivatedRouteSnapshot, {} as RouterStateSnapshot),
-    );
+    return TestBed.runInInjectionContext(() => weeks(route, {} as RouterStateSnapshot));
   };
-  const onServer = (load: () => Promise<unknown>) => [
+  const onServer = (load: (slug?: string) => Promise<unknown>) => [
     { provide: FREE_WEEKS, useValue: load },
     { provide: RESPONSE_INIT, useValue: response },
   ];
@@ -29,9 +28,19 @@ describe('weeks', () => {
     expect(response.status).toBeUndefined();
   });
 
+  it("loads an apartment page's weeks by its slug, kept apart from the home page's", async () => {
+    const load = vi.fn(() => Promise.resolve(list));
+    const page = { params: { slug: 'zirbe' } } as unknown as ActivatedRouteSnapshot;
+    await resolve(onServer(load), page);
+    expect(load).toHaveBeenCalledWith('zirbe');
+    const state = TestBed.inject(TransferState);
+    expect(state.get(makeStateKey<unknown>('free weeks zirbe'), null)).toEqual(list);
+    expect(state.hasKey(makeStateKey<unknown>('free weeks '))).toBe(false);
+  });
+
   it('reads in the browser what the server resolved', async () => {
-    TestBed.inject(TransferState).set(makeStateKey<unknown>('free weeks'), list);
-    const browser = () => weeks({} as ActivatedRouteSnapshot, {} as RouterStateSnapshot);
+    TestBed.inject(TransferState).set(makeStateKey<unknown>('free weeks '), list);
+    const browser = () => weeks(home, {} as RouterStateSnapshot);
     expect(await TestBed.runInInjectionContext(browser)).toEqual(list);
   });
 });
