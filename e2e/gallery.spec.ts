@@ -100,13 +100,25 @@ test('a picture opens full screen, and the buttons, the keys and the thumbnails 
   await page.keyboard.press('Alt+ArrowRight');
   await expect(count).toHaveText('Bild 1 von 9');
   // It fades out as it faded in, then gives the focus back. A second request while it fades
-  // starts no second fade, which could close the viewer once opened again.
+  // starts no second fade; Chromium may close at once, as it lets one Escape wait, not two.
   await settled(page);
   await page.keyboard.press('Escape');
-  await page.keyboard.press('Escape');
   expect(await viewer(page).evaluate((dialog) => dialog.getAnimations().length)).toBe(1);
+  await page.keyboard.press('Escape');
+  expect(
+    await viewer(page).evaluate((dialog) => dialog.getAnimations().length),
+  ).toBeLessThanOrEqual(1);
   await expect(viewer(page)).toBeHidden();
   await expect(cell).toBeFocused();
+  // A fade the browser cuts short, as when it will not let Escape wait, does not close the viewer
+  // opened again.
+  await cell.click();
+  await settled(page);
+  await viewer(page).locator('.viewer-close').click();
+  await viewer(page).evaluate((dialog: HTMLDialogElement) => dialog.close());
+  await cell.click();
+  await page.waitForTimeout(400);
+  await expect(viewer(page)).toBeVisible();
 });
 
 test('a picture slides in, over the ends too, and its text fades; at once with reduced motion', async ({

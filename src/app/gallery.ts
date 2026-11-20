@@ -67,7 +67,7 @@ const srcset = (picture: Picture) =>
       tabindex="-1"
       [attr.aria-label]="texts.gallery.name"
       (cancel)="close($event)"
-      (close)="refocus()"
+      (close)="closed()"
     >
       <div class="viewer-stage">
         <p class="viewer-count" aria-live="polite">{{ position(index()) }}</p>
@@ -181,7 +181,7 @@ export class Gallery {
   // The viewer's pictures load only once it has opened.
   private readonly opened = signal(false);
   private opener: HTMLElement | null = null;
-  private closing = false;
+  private fades: Animation[] = [];
   // Where the track is headed, so that a step pressed while it slides goes on from there, and
   // where it set off: lined up anywhere else, it has arrived or been swiped.
   private target = 0;
@@ -295,20 +295,21 @@ export class Gallery {
     const dialog = this.dialog().nativeElement;
     if (event && !event.cancelable) return;
     event?.preventDefault();
-    if (this.closing) return;
+    if (this.fades.length) return;
     if (matchMedia('(prefers-reduced-motion: reduce)').matches) return dialog.close();
-    this.closing = true;
-    const fade = { duration: 500, easing: 'cubic-bezier(0.33, 1, 0.68, 1)' };
-    dialog.animate({ opacity: [1, 0], scale: [1, 0.98] }, fade);
-    dialog
-      .animate({ opacity: [1, 0] }, { ...fade, pseudoElement: '::backdrop' })
-      .finished.then(() => dialog.close());
+    const fade = { duration: 200, easing: 'cubic-bezier(0.33, 1, 0.68, 1)' };
+    this.fades = [
+      dialog.animate({ opacity: [1, 0], scale: [1, 0.98] }, fade),
+      dialog.animate({ opacity: [1, 0] }, { ...fade, pseudoElement: '::backdrop' }),
+    ];
+    this.fades[1].onfinish = () => dialog.close();
   }
 
-  // A picture the strip opened may be one the mosaic, widened meanwhile, leaves out: its +N
-  // cell stands for it.
-  protected refocus() {
-    this.closing = false;
+  // A fade the browser cut short must not close the viewer once opened again. A picture the
+  // strip opened may be one the mosaic, widened meanwhile, leaves out: its +N cell stands for it.
+  protected closed() {
+    for (const fade of this.fades) fade.cancel();
+    this.fades = [];
     const opener = this.opener!;
     const more = opener.parentElement!.children[this.shown() - 1] as HTMLElement;
     (opener.checkVisibility() ? opener : more).focus();
