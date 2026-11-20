@@ -72,8 +72,11 @@ export interface BarLine {
           }
         }
 
+        /* Also when the page's season has no line, as one with no week to choose. */
         &[hidden],
-        html:not([data-script]) & {
+        html:not([data-script]) &,
+        html[data-season='winter'] &:not(:has([data-for='winter'])),
+        html[data-season='summer'] &:not(:has([data-for='summer'])) {
           display: none;
         }
 
