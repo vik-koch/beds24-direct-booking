@@ -15,7 +15,32 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  check:
+  static:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      # Restored whole while the lock file is unchanged; the build's picture cache stays out
+      # (ADR 10), or a changed picture behind the same address would be served old.
+      - id: modules
+        uses: actions/cache@v5
+        with:
+          path: |
+            node_modules
+            !node_modules/.cache
+          key: modules-static-node24-${{ hashFiles('package-lock.json') }}
+      - if: steps.modules.outputs.cache-hit != 'true'
+        run: npm ci
+      - run: npm run format:check
+      - run: npm run lint
+      - run: npm test
+
+  # The suite in three parts on runners of their own, as one runner takes no more than two
+  # workers (ADR 12).
+  e2e:
     runs-on: ubuntu-latest
     # The browsers and their system packages come with the image (ADR 9). Firefox refuses to run
     # as root in another user's home, so the job runs as the runner's user.
@@ -23,13 +48,24 @@ jobs:
       image: mcr.microsoft.com/playwright:v1.65.0-resolute
       options: --user 1001
     timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
           node-version: 24
-          cache: npm
-      - run: npm ci
+      - id: modules
+        uses: actions/cache@v5
+        with:
+          path: |
+            node_modules
+            !node_modules/.cache
+          key: modules-playwright-node24-${{ hashFiles('package-lock.json') }}
+      - if: steps.modules.outputs.cache-hit != 'true'
+        run: npm ci
       - name: Check that the image's browsers belong to the installed Playwright
         run: |
           image=$(grep -oP 'playwright:v\K[0-9.]+' .github/workflows/ci.yml)
@@ -38,15 +74,20 @@ jobs:
             echo "::error::the Playwright image is $image, @playwright/test is $package; change the image's tag in ci.yml"
             exit 1
           fi
-      - run: npm run format:check
-      - run: npm run lint
-      - run: npm test
-      - run: npm run e2e
+      - run: npm run e2e -- --shard=${{ matrix.shard }}/3
       - uses: actions/upload-artifact@v7
         if: failure()
         with:
-          name: playwright-report
+          name: playwright-report-${{ matrix.shard }}
           path: playwright-report
+
+  # One result for the jobs before the images, whatever their layout.
+  check:
+    needs: [static, e2e]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - run: test "${{ needs.static.result }}" = success && test "${{ needs.e2e.result }}" = success
 
   stack:
     # On ARM, the architecture the pushed images are not built for, so both stay buildable.
