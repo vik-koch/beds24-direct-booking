@@ -15,6 +15,30 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  # Whether anything but documentation changed. A push to main always counts, as it deploys.
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.diff.outputs.code }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - id: diff
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+        # By git's exit code, not its list of names, which quotes some paths and names a renamed
+        # file only where it went: 0 is documentation alone, 1 anything else, more a failure.
+        run: |
+          code=true
+          if [ -n "$BASE" ]; then
+            status=0
+            git diff --quiet --no-renames "$BASE...HEAD" -- . ':!docs/' ':!*.md' || status=$?
+            [ "$status" -le 1 ] || exit "$status"
+            [ "$status" -eq 1 ] || code=false
+          fi
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+
   static:
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -44,8 +68,10 @@ jobs:
       - run: npm test
 
   # The suite in three parts on runners of their own, as one runner takes no more than two
-  # workers (ADR 12).
+  # workers (ADR 12). Not for documentation alone, which format, lint and unit tests check.
   e2e:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     # The browsers and their system packages come with the image (ADR 9). Firefox refuses to run
     # as root in another user's home, so the job runs as the runner's user.
@@ -92,14 +118,20 @@ jobs:
 
   # One result for the jobs before the images, whatever their layout.
   check:
-    needs: [static, e2e]
+    needs: [changes, static, e2e]
     if: always()
     runs-on: ubuntu-latest
     steps:
-      - run: test "${{ needs.static.result }}" = success && test "${{ needs.e2e.result }}" = success
+      - run: |
+          test "${{ needs.static.result }}" = success
+          test "${{ needs.e2e.result }}" = success || {
+            test "${{ needs.changes.result }}" = success && test "${{ needs.e2e.result }}" = skipped
+          }
 
   stack:
     # On ARM, the architecture the pushed images are not built for, so both stay buildable.
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@v7
