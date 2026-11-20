@@ -7,6 +7,8 @@ export interface Room {
   id: number;
   name: string;
   maxPeople: number;
+  maxAdult: number | null;
+  maxChildren: number | null;
   roomSize: number;
   featureCodes: string[][];
   prices: Record<'summer' | 'winter' | 'peak', number>;

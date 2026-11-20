@@ -123,14 +123,40 @@ read-only token, for the free-weeks list:
   `taxPercentage` stay 0. The guest form adds it as its own line: 2.50 × 2 adults × 7 nights =
   35.00, for three adults 52.50. Grand total in the example: 983.15.
 
+## Guests
+
+Checked on 20 November 2026 on a real account with a read-only token.
+
+- **A room carries three limits:** `maxPeople`, `maxAdult` and `maxChildren`. `maxAdult: null` (the
+  control panel's "Use Guests") allows up to `maxPeople` adults. `maxChildren: null` ("Don't Ask")
+  treats children as adults, and the booking page asks only for guests; a number allows up to that
+  many children.
+- **`maxChildren: 0`** is the control panel's "None". Whether it refuses children or only stops
+  asking for them is not checked; the site treats it like "Don't Ask", which is safe either way,
+  since every guest is then handed over as an adult.
+- **`offers` enforces the limits** (`numAdults`, `numChildren`): a stay over `maxPeople` in total,
+  or over `maxChildren`, gets no offer. The price does not change with the mix
+  (`priceFor: maxCapacity`).
+- **`offers` accepts a stay without adults** (0 adults and 1 child was offered), so the site
+  requires one adult itself.
+- **Beds24 has no age for a child or a baby** anywhere in `properties`. Where a child ends depends
+  on the place, usually on its tourist tax exemption, so the age limit is a deployment's content.
+- **The tourist tax item is per adult,** so the guest form does not charge children. That holds only
+  where the room asks for children: with "Don't Ask" they count as adults.
+- **A booking question,** such as a cot as a tick box, is configured on the property as
+  `bookingQuestions.customQuestion1`, its text per language in `customQuestion1`. Whether the guest
+  form's link can pre-tick it is not checked.
+- **Not checked:** whether the guest form shows the right tax line for `numchild`; the test
+  account's booking page was closed at the time.
+
 ## Listing data
 
 - **A room is the listing; a property groups rooms.** Every inventory call is keyed by `roomId` and
   returns `propertyId` beside it.
 - **Facts:** on the property the address, city, country, coordinates, check-in and check-out times
   (`checkInStart`, `checkInEnd`, `checkOutEnd` as `HH:MM`; midnight is `"24:00"`), `permit` and
-  `featureCodes`; on the room `roomSize`, `maxPeople`, `minStay`, `maxStay` and its own
-  `featureCodes`.
+  `featureCodes`; on the room `roomSize`, `maxPeople`, `maxAdult`, `maxChildren`, `minStay`,
+  `maxStay` and its own `featureCodes`.
 - **Feature codes** come as two lists, the property's and the room's. The control panel shows the
   property's codes as applied to each of its rooms; the API does not merge them. Each entry is a
   group: a property code is a group of one (`["WIFI"]`), and a room's groups carry the sleeping

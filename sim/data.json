@@ -62,6 +62,8 @@
           "id": 9001011,
           "name": "Zirbe",
           "maxPeople": 2,
+          "maxAdult": null,
+          "maxChildren": 0,
           "roomSize": 34,
           "featureCodes": [
             ["BEDROOM", "BED_DOUBLE"],
@@ -100,6 +102,8 @@
           "id": 9001012,
           "name": "Lärche",
           "maxPeople": 4,
+          "maxAdult": null,
+          "maxChildren": 3,
           "roomSize": 61,
           "featureCodes": [
             ["BEDROOM", "BED_DOUBLE"],
@@ -190,6 +194,8 @@
           "id": 9001021,
           "name": "Ahorn",
           "maxPeople": 6,
+          "maxAdult": 4,
+          "maxChildren": 4,
           "roomSize": 96,
           "featureCodes": [
             ["BEDROOM", "BED_DOUBLE"],
@@ -231,6 +237,8 @@
           "id": 9001022,
           "name": "Fichte",
           "maxPeople": 2,
+          "maxAdult": null,
+          "maxChildren": null,
           "roomSize": 28,
           "featureCodes": [
             ["BEDROOM", "BED_DOUBLE"],

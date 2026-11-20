@@ -16,6 +16,10 @@ export interface Room extends Listing {
 // What a room's page shows of it.
 export interface Listing {
   maxPeople: number;
+  // Of them, at most this many adults and this many children. Where Beds24 does not ask for
+  // children ("Don't Ask" or "None"), children is 0 and every guest counts as an adult.
+  maxAdults: number;
+  maxChildren: number;
   size: number;
   address: string;
   // HH:MM, midnight as 24:00; null where the property sets none.
@@ -67,6 +71,9 @@ interface Properties {
     roomTypes: {
       id: number;
       maxPeople: number;
+      // null is "Use Guests" (as many as maxPeople); children null is "Don't Ask", 0 "None".
+      maxAdult: number | null;
+      maxChildren: number | null;
       roomSize: number;
       featureCodes: string[][];
       texts: Texts<'roomDescription'>;
@@ -133,6 +140,8 @@ export const loadInventory = async (first: string, last: string): Promise<Invent
         id: room.id,
         propertyId: property.id,
         maxPeople: room.maxPeople,
+        maxAdults: Math.min(room.maxAdult ?? room.maxPeople, room.maxPeople),
+        maxChildren: room.maxChildren ?? 0,
         size: room.roomSize,
         currency: property.currency,
         leadDays: leads.length ? Math.min(...leads) : 0,
@@ -187,9 +196,12 @@ export const loadInventory = async (first: string, last: string): Promise<Invent
 export function listingOf(rooms: Room[], id: number, languages: string[]): Listing {
   const room = rooms.find((one) => one.id === id);
   if (!room) throw new Error(`Beds24 has no room ${id}`);
-  const { maxPeople, size, address, checkIn, checkOut, features, texts } = room;
+  const { maxPeople, maxAdults, maxChildren, size, address, checkIn, checkOut, features, texts } =
+    room;
   return {
     maxPeople,
+    maxAdults,
+    maxChildren,
     size,
     address,
     checkIn,

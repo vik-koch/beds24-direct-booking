@@ -27,6 +27,8 @@ describe('loadInventory', () => {
           {
             id: 11,
             maxPeople: 4,
+            maxAdult: null,
+            maxChildren: 3,
             roomSize: 61,
             featureCodes: [['BEDROOM', 'BED_DOUBLE'], ['BOOT_DRYER']],
             texts: [
@@ -60,7 +62,10 @@ describe('loadInventory', () => {
         roomTypes: [
           {
             id: 21,
+            // More adults than guests is kept at the guests; no children are asked for.
             maxPeople: 2,
+            maxAdult: 3,
+            maxChildren: null,
             roomSize: 34,
             featureCodes: [],
             texts: [
@@ -111,6 +116,8 @@ describe('loadInventory', () => {
         id: 11,
         propertyId: 1,
         maxPeople: 4,
+        maxAdults: 4,
+        maxChildren: 3,
         size: 61,
         currency: 'EUR',
         leadDays: 7,
@@ -132,6 +139,8 @@ describe('loadInventory', () => {
         id: 21,
         propertyId: 2,
         maxPeople: 2,
+        maxAdults: 2,
+        maxChildren: 0,
         size: 34,
         currency: 'EUR',
         leadDays: 0,
@@ -198,6 +207,8 @@ describe('listingOf', () => {
     id: 11,
     propertyId: 1,
     maxPeople: 4,
+    maxAdults: 4,
+    maxChildren: 2,
     size: 61,
     currency: 'EUR',
     leadDays: 0,
@@ -216,6 +227,8 @@ describe('listingOf', () => {
     const listing = listingOf([room], 11, ['de', 'en', 'fr']);
     expect(listing).toEqual({
       maxPeople: 4,
+      maxAdults: 4,
+      maxChildren: 2,
       size: 61,
       address: 'Musterweg 1, Saalbach',
       checkIn: { from: '16:00', until: null },

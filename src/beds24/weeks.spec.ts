@@ -5,6 +5,8 @@ const room = (overrides: Partial<Room> = {}): Room => ({
   id: 11,
   propertyId: 1,
   maxPeople: 4,
+  maxAdults: 4,
+  maxChildren: 0,
   size: 61,
   currency: 'EUR',
   leadDays: 0,
