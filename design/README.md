@@ -31,7 +31,13 @@ width; the address in the facts line leads to it.
 - **Apartment:** `?apartment=zirbe`, `laerche` (the default) or `ahorn`.
 - **Season:** the switch in the header or the panel's text button; `?season=summer` opens in summer.
 - **A chosen week:** pick one in the list or the calendar; `?week=3` opens with the fourth week of
-  the season chosen, `&view=calendar` in the calendar.
+  the season chosen, `&view=calendar` in the calendar. Both views show one month at a time with the
+  same month controls, and switching between them keeps the month.
+- **Guests:** a select for the adults (at least one) and one for the children, which lists only the
+  room the adults leave; more adults lower the children. The counts live in the address:
+  `?adults=3&children=1`, and counts over the limits open at them. Zirbe takes no children, so it
+  asks only for adults; `?state=guests-only` is Beds24's "Don't Ask", one count of guests, all
+  taxed. `?note=popover` puts the babies' note behind an info button instead of under the counts.
 - **Pictures:** `?pictures=1`, `3`, `5` or `20` shows that many: the first picture is always 4:3,
   with two beside it from 3, four from 5, and two beside it and five below from 8, the last of them
   counting the rest. `?viewer=1` opens the viewer at the second picture. Each generated picture
