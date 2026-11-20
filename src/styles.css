@@ -1231,8 +1231,8 @@
     }
   }
 
-  /* Beside a 4:3 picture of 8 parts, two rows of squares take 3 parts each; the gaps leave room
-     for a ring around a cell. */
+  /* Beside a 4:3 picture of 8 parts, two rows of squares take 3 parts each. Square cells, so that
+     a ring around one fits it; the gaps leave it room. */
   @media (width >= 48rem) {
     .tiles {
       display: grid;
@@ -1243,7 +1243,7 @@
 
     .tile {
       aspect-ratio: auto;
-      border-radius: var(--radius-menu);
+      border-radius: 0;
 
       &:focus-visible {
         outline-width: 2px;
