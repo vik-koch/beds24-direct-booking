@@ -116,6 +116,39 @@
     "unavailable": "The details of this apartment cannot be loaded just now. Please try again in a few minutes.",
     "generated": "AI image"
   },
+  "panel": {
+    "title": "Choose a week",
+    "views": {
+      "label": "View",
+      "list": "List",
+      "calendar": "Calendar"
+    },
+    "previous": "Previous month",
+    "next": "Next month",
+    "guests": "Guests",
+    "adults": {
+      "label": "Adults",
+      "one": "{count} adult",
+      "other": "{count} adults"
+    },
+    "children": "Children",
+    "childAge": "up to {age}",
+    "babies": "Babies up to 2 are not counted. We are happy to provide a cot.",
+    "from": "from {price} a week",
+    "week": "Week {stay}",
+    "tax": {
+      "night": "Local tax: {guests} × {nights} nights × {amount}",
+      "stay": "Local tax: {guests} × {amount}"
+    },
+    "total": "Total",
+    "book": "Continue to booking",
+    "choose": "Choose a week first",
+    "note": "You book and pay in the next step.",
+    "bar": {
+      "choose": "Choose a week",
+      "book": "Continue"
+    }
+  },
   "gallery": {
     "name": "Pictures",
     "position": "Picture {index} of {count}",

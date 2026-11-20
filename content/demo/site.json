@@ -73,6 +73,7 @@
       "codes": ["BALCONY", "MOUNTAIN_VIEW", "DOWNTOWN", "SKI_STORAGE", "BOOT_DRYER", "PARKING_PAID"]
     }
   ],
+  "childAge": 14,
   "contact": {
     "name": "Firn & Farn Appartements",
     "address": ["Musterweg 0", "5753 Saalbach", "Österreich"],

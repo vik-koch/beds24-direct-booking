@@ -107,6 +107,39 @@
     "unavailable": "De gegevens van dit appartement kunnen nu niet worden geladen.",
     "generated": "AI-beeld"
   },
+  "panel": {
+    "title": "Kies een week",
+    "views": {
+      "label": "Weergave",
+      "list": "Lijst",
+      "calendar": "Kalender"
+    },
+    "previous": "Vorige maand",
+    "next": "Volgende maand",
+    "guests": "Gasten",
+    "adults": {
+      "label": "Volwassenen",
+      "one": "{count} volwassene",
+      "other": "{count} volwassenen"
+    },
+    "children": "Kinderen",
+    "childAge": "tot {age} jaar",
+    "babies": "Baby's tot 2 jaar tellen niet mee. We zetten graag een babybedje klaar.",
+    "from": "vanaf {price} per week",
+    "week": "Week {stay}",
+    "tax": {
+      "night": "Toeristenbelasting: {guests} × {nights} nachten × {amount}",
+      "stay": "Toeristenbelasting: {guests} × {amount}"
+    },
+    "total": "Totaal",
+    "book": "Verder naar boeken",
+    "choose": "Kies eerst een week",
+    "note": "Je boekt en betaalt in de volgende stap.",
+    "bar": {
+      "choose": "Kies een week",
+      "book": "Verder"
+    }
+  },
   "gallery": {
     "name": "Foto's",
     "position": "Foto {index} van {count}",
