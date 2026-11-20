@@ -294,6 +294,8 @@ type Fold = ReturnType<typeof fold>;
       }
 
       .prose {
+        /* Keeps its children's outer margins, so its height is all a fold has to open to. */
+        display: flow-root;
         max-width: 40rem;
 
         h3 {
@@ -387,6 +389,12 @@ type Fold = ReturnType<typeof fold>;
       .fold {
         /* Not hidden: a focused link below the cut would scroll the fold itself, not the page. */
         overflow: clip;
+        /* Room for a focus ring inside the clip, with the content where it was: Safari has no
+           overflow-clip-margin. Content-box keeps --cut and --full the content's heights. */
+        --ring: 5px;
+        box-sizing: content-box;
+        margin: calc(-1 * var(--ring));
+        padding: var(--ring);
         transition: max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 
         @media (scripting: enabled) {
@@ -402,7 +410,11 @@ type Fold = ReturnType<typeof fold>;
         }
 
         &[data-long]:not([data-open]) {
-          mask-image: linear-gradient(to bottom, #000 calc(100% - 3rem), transparent);
+          mask-image: linear-gradient(
+            to bottom,
+            #000 calc(100% - var(--ring) - 3rem),
+            transparent calc(100% - var(--ring))
+          );
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -552,8 +564,9 @@ export class Apartment {
   }
 
   // The fold's content is its only child. Long is measured against the cut (in rem, unset where
-  // nothing is cut), also while open: a window widened past the cut drops the button. The page's
-  // root is observed too, since crossing a breakpoint may change neither box.
+  // nothing is cut), also while open: a window widened past the cut drops the button. A bottom
+  // margin with no text after it is opened with the rest but needs no button. The page's root is
+  // observed too, since crossing a breakpoint may change neither box.
   private measure(fold: Fold, content: Signal<ElementRef<HTMLElement> | undefined>) {
     afterRenderEffect((onCleanup) => {
       const element = content()?.nativeElement;
@@ -562,8 +575,12 @@ export class Apartment {
       const observer = new ResizeObserver(() => {
         const cut = parseFloat(getComputedStyle(element.parentElement!).getPropertyValue('--cut'));
         const rem = parseFloat(getComputedStyle(root).fontSize);
+        const nodes = [...element.childNodes].reverse();
+        const last = nodes.find((node) => node instanceof Element || node.textContent!.trim());
+        const margin =
+          last instanceof Element ? parseFloat(getComputedStyle(last).marginBottom) : 0;
         fold.full.set(element.offsetHeight);
-        fold.long.set(element.offsetHeight > cut * rem + 1);
+        fold.long.set(element.offsetHeight - margin > cut * rem + 1);
       });
       observer.observe(element);
       observer.observe(root);

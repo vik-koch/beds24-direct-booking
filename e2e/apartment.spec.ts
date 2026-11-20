@@ -76,7 +76,7 @@ test('on a phone the amenities show their first rows until the button opens them
   await page.goto('/de/wohnungen/ahorn');
   const amenities = section(page, 'Ausstattung');
   const fold = amenities.locator('.amenities-fold');
-  const height = () => fold.evaluate((element) => element.clientHeight);
+  const height = () => fold.evaluate((element) => parseFloat(getComputedStyle(element).height));
   const full = await amenities.locator('.amenities').evaluate((element) => element.offsetHeight);
   const cut = await height();
   expect(cut).toBeLessThan(full);
@@ -283,6 +283,69 @@ test('the apartment page is styled from its first frame, on a full load and in t
   await styled();
   // Still the same document, so the app drew the page.
   expect(await page.evaluate(() => 'kept' in window)).toBe(true);
+});
+
+test('on a phone a description that fits above the cut but for its last margin is not cut', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 700 });
+  await page.goto('/en/apartments/zirbe');
+  const more = page.getByRole('button', { name: 'Read more' });
+  await expect(more).toBeVisible();
+  // A paragraph 4 px shorter than the cut; its 10 px bottom margin passes it.
+  await page.locator('.prose').evaluate((prose) => {
+    const cut = parseFloat(getComputedStyle(prose.parentElement!).getPropertyValue('--cut'));
+    prose.innerHTML = `<p style="height: calc(${cut}rem - 4px)">Short.</p>`;
+  });
+  await expect(more).toBeHidden();
+  await expect(page.locator('.prose-fold')).not.toHaveAttribute('data-long');
+  // Text after a rule is cut by less than the rule's margin: the button stays.
+  await page.locator('.prose').evaluate((prose) => {
+    const cut = parseFloat(getComputedStyle(prose.parentElement!).getPropertyValue('--cut'));
+    prose.innerHTML = '<p>Short.</p><hr>Last words.';
+    const first = prose.firstElementChild as HTMLElement;
+    first.style.height = `calc(${cut}rem + 8px - ${prose.offsetHeight - first.offsetHeight}px)`;
+  });
+  await expect(more).toBeVisible();
+});
+
+test('a link in the description’s last line shows its whole focus ring', async ({ page }) => {
+  // Also below a leading rule, whose top margin would fall outside the measured height.
+  for (const [width, rule] of [
+    [320, false],
+    [320, true],
+    [1280, false],
+  ] as const) {
+    await page.setViewportSize({ width, height: 800 });
+    await page.goto('/en/apartments/zirbe');
+    if (rule)
+      await page.locator('.prose').evaluate((prose) => prose.prepend(document.createElement('hr')));
+    await page.evaluate(() => scrollTo({ top: 0, behavior: 'instant' }));
+    await page.locator('.back').focus();
+    const link = page.locator('.prose').getByRole('link');
+    for (let i = 0; i < 10 && !(await link.evaluate((a) => a === document.activeElement)); i++)
+      await page.keyboard.press('Tab');
+    await expect(link).toHaveCSS('outline-style', 'solid');
+    // Each line of the link, grown by its ring, against the fold's clip: its padding box.
+    const outside = () =>
+      link.evaluate((a) => {
+        const fold = a.closest('.fold')!.getBoundingClientRect();
+        const ring =
+          parseFloat(getComputedStyle(a).outlineWidth) +
+          parseFloat(getComputedStyle(a).outlineOffset);
+        return Math.max(
+          ...[...a.getClientRects()].flatMap((line) => [
+            fold.top - (line.top - ring),
+            line.bottom + ring - fold.bottom,
+            fold.left - (line.left - ring),
+            line.right + ring - fold.right,
+          ]),
+        );
+      });
+    await expect
+      .poll(outside, `at ${width} px${rule ? ' below a rule' : ''}`)
+      .toBeLessThanOrEqual(0);
+  }
 });
 
 test('a language Beds24 has no texts in leaves the description and the house rules out', async ({
