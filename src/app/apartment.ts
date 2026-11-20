@@ -256,6 +256,7 @@ type Fold = ReturnType<typeof fold>;
         padding-inline: var(--air);
         border-radius: var(--radius-control);
         color: var(--color-accent);
+        font-size: 0.9375rem;
         font-weight: 500;
         text-decoration: underline transparent;
         text-underline-offset: 0.3em;
