@@ -75,6 +75,12 @@ test('a week and the guests make the total, and the button takes them on to book
   await expect(page).toHaveURL(
     /arrival=\d{4}-\d\d-\d\d&departure=\d{4}-\d\d-\d\d&adults=3&children=1/,
   );
+  // So does the other language's link.
+  const english = new URL(
+    (await page.locator('link[rel=alternate][hreflang=en-GB]').getAttribute('href'))!,
+    'http://localhost',
+  );
+  expect(english.search).toBe(new URL(page.url()).search);
   await page.reload();
   await expect(page.locator('#adults')).toHaveText('3');
   await expect(page.locator('#children')).toHaveText('1');

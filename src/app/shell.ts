@@ -1,5 +1,5 @@
-import { DOCUMENT, ViewportScroller } from '@angular/common';
-import { afterNextRender, Component, inject } from '@angular/core';
+import { DOCUMENT, Location, ViewportScroller } from '@angular/common';
+import { afterNextRender, Component, DestroyRef, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Title } from '@angular/platform-browser';
 import {
@@ -58,6 +58,7 @@ export class Shell {
   private readonly document = inject(DOCUMENT);
   private readonly title = inject(Title);
   private readonly router = inject(Router);
+  private readonly location = inject(Location);
   protected alternates: Record<string, string> = {};
   protected home = false;
   protected notFound = false;
@@ -85,6 +86,9 @@ export class Shell {
         takeUntilDestroyed(),
       )
       .subscribe(() => this.describe());
+    // A page may keep a choice in its address without a navigation, as the booking panel does;
+    // the other language's link carries it too.
+    inject(DestroyRef).onDestroy(this.location.onUrlChange(() => this.describe()));
   }
 
   // The fragment would be resolved against the base address, not the page's.
@@ -119,7 +123,7 @@ export class Shell {
     this.title.setTitle(page === 'home' ? `${site.name}: ${text}` : `${text} · ${site.name}`);
 
     // The season travels in storage, so the other language does not need the link's.
-    const params = new URLSearchParams(this.router.url.split('#')[0].split('?')[1] ?? '');
+    const params = new URLSearchParams(this.location.path().split('#')[0].split('?')[1] ?? '');
     params.delete('season');
     const query = params.size ? `?${params}` : '';
     this.alternates = Object.fromEntries(
