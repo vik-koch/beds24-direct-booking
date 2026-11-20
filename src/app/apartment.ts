@@ -294,6 +294,8 @@ type Fold = ReturnType<typeof fold>;
       }
 
       .prose {
+        /* Keeps its children's outer margins, so its height is all a fold has to open to. */
+        display: flow-root;
         max-width: 40rem;
 
         h3 {

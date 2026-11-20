@@ -286,9 +286,17 @@ test('the apartment page is styled from its first frame, on a full load and in t
 });
 
 test('a link in the description’s last line shows its whole focus ring', async ({ page }) => {
-  for (const width of [320, 1280]) {
+  // Also below a leading rule, whose top margin would fall outside the measured height.
+  for (const [width, rule] of [
+    [320, false],
+    [320, true],
+    [1280, false],
+  ] as const) {
     await page.setViewportSize({ width, height: 800 });
     await page.goto('/en/apartments/zirbe');
+    if (rule)
+      await page.locator('.prose').evaluate((prose) => prose.prepend(document.createElement('hr')));
+    await page.evaluate(() => scrollTo({ top: 0, behavior: 'instant' }));
     await page.locator('.back').focus();
     const link = page.locator('.prose').getByRole('link');
     for (let i = 0; i < 10 && !(await link.evaluate((a) => a === document.activeElement)); i++)
@@ -310,7 +318,9 @@ test('a link in the description’s last line shows its whole focus ring', async
           ]),
         );
       });
-    await expect.poll(outside, `at ${width} px`).toBeLessThanOrEqual(0);
+    await expect
+      .poll(outside, `at ${width} px${rule ? ' below a rule' : ''}`)
+      .toBeLessThanOrEqual(0);
   }
 });
 
