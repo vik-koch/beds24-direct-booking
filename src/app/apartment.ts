@@ -232,6 +232,7 @@ type Fold = ReturnType<typeof fold>;
       /* The apartment page: from 64rem the pictures and the content on the left, the right column
          free for the booking panel. */
       .apartment {
+        --size-heading: clamp(1.375rem, 1.2rem + 0.8vw, 1.75rem);
         padding-top: 1rem;
 
         h1 {
@@ -240,7 +241,7 @@ type Fold = ReturnType<typeof fold>;
 
         h2 {
           margin-bottom: 1rem;
-          font-size: clamp(1.375rem, 1.2rem + 0.8vw, 1.75rem);
+          font-size: var(--size-heading);
           font-weight: 500;
           letter-spacing: -0.01em;
         }

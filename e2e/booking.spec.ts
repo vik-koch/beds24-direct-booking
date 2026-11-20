@@ -183,7 +183,7 @@ test('the calendar shows the list’s month and week, at the same height', async
     .evaluate((box) => box.offsetHeight);
   await week.click();
   const arrival = new URL(page.url()).searchParams.get('arrival')!;
-  await page.getByRole('radio', { name: 'Kalender' }).check({ force: true });
+  await page.locator('.views').getByTitle('Kalender').click();
   await expect(monthName(page)).toHaveText(name);
   expect(
     await month(page)
@@ -206,7 +206,7 @@ test('the calendar shows the list’s month and week, at the same height', async
   );
   // Six weeks in both views, the days of the months around half seen.
   await expect(month(page).locator('[role=row]')).toHaveCount(7);
-  await page.getByRole('radio', { name: 'Liste' }).check({ force: true });
+  await page.locator('.views').getByTitle('Liste').click();
   await expect(month(page).locator('.week [aria-selected=true]')).toHaveCount(1);
 });
 
@@ -251,7 +251,7 @@ test('the months page by their buttons, slide in from their side and keep the fo
   await expect.poll(moves).toEqual(['0px', `${width}px`]);
   expect(await moved).toHaveLength(1);
   await expect(monthName(page)).not.toHaveText(first);
-  await page.getByRole('radio', { name: 'Calendar' }).check({ force: true });
+  await page.locator('.views').getByTitle('Calendar').click();
   const paged = below();
   await back.click();
   expect(await paged).toHaveLength(1);
@@ -336,7 +336,7 @@ test('a week or a day of the month before or after chooses its week and shows it
   await expect(chosen(page)).toHaveAttribute('data-date', arrival!);
   await expect(page).toHaveURL(new RegExp(`arrival=${arrival}`));
   // In the calendar, a free week's first day in the month after.
-  await page.getByRole('radio', { name: 'Calendar' }).check({ force: true });
+  await page.locator('.views').getByTitle('Calendar').click();
   const day = month(page).locator('.day.outside:has(.start)');
   for (let i = 0; i < 12 && !(await day.count()); i++) await next(page).click();
   const start = await day.last().getAttribute('data-date');
@@ -357,9 +357,11 @@ test('a change of language or a reload keeps the view and the month', async ({ p
   await openNext(page, '/de/wohnungen/laerche');
   // A week chosen, then the calendar and another month shown.
   await (await firstFree(page)).click();
-  await page.getByRole('radio', { name: 'Kalender' }).check({ force: true });
+  await page.locator('.views').getByTitle('Kalender').click();
   await expect(page).toHaveURL(/view=calendar/);
+  const before = await month(page).getAttribute('data-month');
   await next(page).click();
+  await expect(month(page)).not.toHaveAttribute('data-month', before!);
   const shown = await month(page).getAttribute('data-month');
   // From the header's menu on a phone, else from its language control.
   const menu = page.locator('.header-narrow .icon-button');
@@ -383,15 +385,15 @@ test('a shared link opens at its week’s season, whatever season the page would
 }) => {
   await open(page, '/de/wohnungen/laerche');
   const other = await page.locator('html').getAttribute('data-season');
-  await panel(page).locator('.other-season').click();
+  await panel(page).locator('.season-arrow').click();
   await expect(page.locator('html')).not.toHaveAttribute('data-season', other!);
   const shown = await page.locator('html').getAttribute('data-season');
   await (await firstFree(page)).click();
   await expect(page).toHaveURL(new RegExp(`season=${shown}`));
   // Away from the week's season and back: the address names it again.
-  await panel(page).locator('.other-season').click();
+  await panel(page).locator('.season-arrow').click();
   await expect(page).not.toHaveURL(/season=/);
-  await panel(page).locator('.other-season').click();
+  await panel(page).locator('.season-arrow').click();
   await expect(page).toHaveURL(new RegExp(`season=${shown}`));
   // Opened afresh, in this language and in the other.
   const english = await page.locator('link[rel=alternate][hreflang=en-GB]').getAttribute('href');
@@ -419,7 +421,7 @@ test('a full season, one not open yet and an unreachable Beds24 each say so', as
   // not open yet.
   await open(page, 'http://localhost:4003/en/apartments/laerche');
   await expect(panel(page).locator('.panel-empty:visible')).toContainText('is free any more');
-  await panel(page).locator('.other-season').click();
+  await panel(page).locator('.season-arrow').click();
   await expect(season(page).locator('.panel-empty')).toContainText('are not open yet');
   const response = await open(page, 'http://localhost:4001/en/apartments/laerche');
   expect(response!.status()).toBe(503);
@@ -432,9 +434,12 @@ test('the panel’s season button slides the other season in and keeps the guest
 }) => {
   await open(page, '/de/wohnungen/laerche');
   await pickCount(page, 'adults', 3);
-  const button = panel(page).locator('.other-season');
+  const button = panel(page).locator('.season-arrow');
   const before = await page.locator('html').getAttribute('data-season');
-  const label = (await button.locator('span:visible').innerText()).trim();
+  // An arrow named with the season it leads to, which is then named beside it.
+  const label = (await button.getAttribute('aria-label'))!;
+  expect(label).toMatch(/^(Nächste|Aktuelle) Saison: /);
+  await expect(button).toHaveAttribute('title', label);
   const moves = () =>
     page.evaluate(() =>
       document
@@ -446,7 +451,11 @@ test('the panel’s season button slides the other season in and keeps the guest
   await page.keyboard.press('Enter');
   await expect.poll(moves).toContainEqual(expect.stringMatching(/^[1-9][\d.]*px/));
   await expect(page.locator('html')).not.toHaveAttribute('data-season', before!);
-  await expect(panel(page).locator('h2')).toContainText(label);
+  const after = await page.locator('html').getAttribute('data-season');
+  await expect(panel(page).locator(`#booking-season > [data-for=${after}]`)).toHaveText(
+    label.split(': ')[1],
+  );
+  await expect(button).not.toHaveAttribute('aria-label', label);
   await expect(page.locator('#adults')).toHaveText('3');
   await expect(button).toBeFocused();
 });
@@ -490,10 +499,11 @@ test('on a phone a bar leads to the panel while it is out of view, then on to bo
   await expect(bar).toBeHidden();
 });
 
-test('the panel passes axe with a week chosen, in both views and with a list open', async ({
-  page,
-}) => {
-  for (const width of [320, 1280]) {
+// One test per width: six scans in one come too close to the test's time limit.
+for (const width of [320, 1280])
+  test(`the panel passes axe at ${width} px, in both views and with a list open`, async ({
+    page,
+  }) => {
     await page.setViewportSize({ width, height: 800 });
     await openNext(page, '/en/apartments/laerche');
     await (await firstFree(page)).click();
@@ -501,22 +511,21 @@ test('the panel passes axe with a week chosen, in both views and with a list ope
       // Once the new view has faded in.
       await page.waitForFunction(() => !document.getAnimations().length);
       const { violations } = await new AxeBuilder({ page }).include('.booking').analyze();
-      expect(violations, `${place} at ${width}`).toEqual([]);
+      expect(violations, place).toEqual([]);
     };
     await scan('list');
     expect(
       await month(page)
         .locator('.week')
         .evaluateAll((rows) => rows.every((row) => row.scrollWidth <= row.clientWidth)),
-      `rows fit at ${width}`,
+      'rows fit',
     ).toBe(true);
-    await page.getByRole('radio', { name: 'Calendar' }).check({ force: true });
+    await page.locator('.views').getByTitle('Calendar').click();
     await scan('calendar');
     await page.locator('#adults').click();
     const { violations } = await new AxeBuilder({ page })
       .include('.booking')
       .include('.spartan-select-content')
       .analyze();
-    expect(violations, `open list at ${width}`).toEqual([]);
-  }
-});
+    expect(violations, 'open list').toEqual([]);
+  });

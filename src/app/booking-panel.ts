@@ -85,34 +85,11 @@ const addDays = (date: string, days: number) =>
     }),
   ],
   template: `
-    <section id="booking" class="panel" aria-labelledby="booking-title">
-      <h2 id="booking-title" class="panel-title" tabindex="-1">
-        {{ texts.panel.title }}
-        @if (weeks?.seasons?.[0]?.years) {
-          <span class="weeks-season stack">
-            @for (season of weeks!.seasons; track season.name) {
-              <span [attr.data-for]="season.name">{{ dated(season) }}</span>
-            }
-          </span>
-        }
-      </h2>
-      @if (weeks && limits) {
-        <div class="panel-bar">
-          @if (weeks.seasons.length === 2) {
-            <button type="button" class="other-season stack" (click)="slide()">
-              @for (season of weeks.seasons; track season.name) {
-                <span [attr.data-for]="season.name">
-                  @if ($first) {
-                    {{ dated(other(season.name)) }}
-                    <ng-icon name="lucideArrowRight" aria-hidden="true" />
-                  } @else {
-                    <ng-icon name="lucideArrowLeft" aria-hidden="true" />
-                    {{ dated(other(season.name)) }}
-                  }
-                </span>
-              }
-            </button>
-          }
+    <!-- The section's name is the title's and the season's. -->
+    <section id="booking" class="panel" aria-labelledby="booking-title booking-season">
+      <div class="panel-line">
+        <h2 id="booking-title" class="panel-title" tabindex="-1">{{ texts.panel.title }}</h2>
+        @if (weeks && limits) {
           <div
             class="views"
             role="radiogroup"
@@ -133,7 +110,36 @@ const addDays = (date: string, days: number) =>
               </label>
             }
           </div>
+        }
+      </div>
+      @if (weeks?.seasons?.[0]?.years) {
+        <div class="panel-line">
+          <span id="booking-season" class="weeks-season stack">
+            @for (season of weeks!.seasons; track season.name) {
+              <span [attr.data-for]="season.name">{{ dated(season) }}</span>
+            }
+          </span>
+          @if (limits && weeks!.seasons.length === 2) {
+            <!-- One button, which keeps the focus; its arrow and its name follow the season. -->
+            <button
+              type="button"
+              class="icon-button season-arrow stack"
+              [attr.aria-label]="otherSeason()"
+              [title]="otherSeason()"
+              (click)="slide()"
+            >
+              @for (season of weeks!.seasons; track season.name) {
+                <ng-icon
+                  [attr.data-for]="season.name"
+                  [name]="$first ? 'lucideArrowRight' : 'lucideArrowLeft'"
+                  aria-hidden="true"
+                />
+              }
+            </button>
+          }
         </div>
+      }
+      @if (weeks && limits) {
         <p class="sr-only" aria-live="polite">{{ announced() }}</p>
         <div class="panel-seasons">
           @for (season of weeks.seasons; track season.name) {
@@ -408,31 +414,41 @@ const addDays = (date: string, days: number) =>
           outline-offset: 2px;
         }
 
-        .weeks-season {
-          display: grid;
-        }
-
         h3 {
           font-size: 1.0625rem;
           font-weight: 500;
         }
       }
 
-      /* The way to the other season and the view's switch share a line. */
-      .panel-bar {
+      /* Two lines nearly as close as a heading's: the title with the view's switch, which
+         reaches a little past its line, and the season with the way to the other one. */
+      .panel-line {
         display: flex;
-        flex-wrap: wrap;
         align-items: center;
         justify-content: space-between;
-        gap: 0.5rem 1rem;
-        margin-top: 0.25rem;
+        column-gap: 1rem;
 
-        .other-season {
-          font-size: 0.9375rem;
+        + .panel-line {
+          margin-top: 0.375rem;
+        }
 
-          @media (min-width: 48rem) {
-            justify-items: start;
-          }
+        .weeks-season {
+          font-size: var(--size-heading);
+          letter-spacing: -0.01em;
+          line-height: 1.2;
+        }
+      }
+
+      /* As small as a line of the season's name; grey on hover, as the months' buttons. */
+      .season-arrow {
+        width: var(--size-control-small);
+        height: var(--size-control-small);
+        color: var(--color-accent);
+        font-size: 1.125rem;
+        transition: background-color 0.2s;
+
+        &:hover {
+          background: var(--color-ground);
         }
       }
 
@@ -444,6 +460,7 @@ const addDays = (date: string, days: number) =>
         display: grid;
         grid-template-columns: repeat(2, var(--narrow));
         height: var(--size-control);
+        margin-block: -0.3125rem;
         margin-left: auto;
         padding: var(--pad);
         border-radius: var(--radius-control);
@@ -966,6 +983,14 @@ export class BookingPanel {
   private direction = 0;
   private readonly swapSeason = swapper();
   private readonly swapMonth = swapper();
+
+  // The season button's name: the way on to the next season, or back to the current one.
+  protected readonly otherSeason = computed(() => {
+    const [first, second] = this.weeks!.seasons;
+    return this.season.current() === first.name
+      ? fill(this.texts.weeks.next, { season: this.dated(second) })
+      : fill(this.texts.weeks.current, { season: this.dated(first) });
+  });
 
   protected readonly taxLine = computed(() => {
     const tax = this.weeks?.tax;
