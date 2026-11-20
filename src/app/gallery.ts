@@ -175,14 +175,10 @@ import { fill, LANGUAGE, TEXTS } from './texts';
       }
 
       .tile {
-        position: relative;
         flex: 0 0 100%;
         aspect-ratio: 4 / 3;
-        overflow: hidden;
-        border-radius: var(--radius-card);
         scroll-snap-align: start;
         isolation: isolate;
-        background: var(--color-line);
         cursor: zoom-in;
 
         /* Out of the flow: a picture's own height must not size the mosaic's rows. Beneath its
@@ -191,9 +187,6 @@ import { fill, LANGUAGE, TEXTS } from './texts';
           position: absolute;
           z-index: -1;
           inset: 0;
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
         }
 
         /* Inside the cell on a phone: the strip would cut a ring outside it. */
@@ -220,16 +213,9 @@ import { fill, LANGUAGE, TEXTS } from './texts';
 
       /* Taps and swipes go through it to the strip. */
       .strip-count {
-        position: absolute;
         pointer-events: none;
         right: 0.75rem;
         bottom: 0.75rem;
-        padding: 0.1875rem 0.625rem;
-        border-radius: var(--radius-control);
-        background: color-mix(in srgb, var(--color-surface) 92%, transparent);
-        color: var(--color-ink);
-        font-size: 0.8125rem;
-        font-weight: 500;
       }
 
       @media (width < 48rem) {
@@ -307,18 +293,6 @@ import { fill, LANGUAGE, TEXTS } from './texts';
 
         .strip-count {
           display: none;
-        }
-      }
-
-      @media (width >= 48rem) and (prefers-reduced-motion: no-preference) {
-        /* Its own layer for good: dropped when the zoom ends, it would be painted anew and jump. */
-        .tile img {
-          transition: scale 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-          will-change: scale;
-        }
-
-        .tile:hover img {
-          scale: 1.025;
         }
       }
 
@@ -445,7 +419,7 @@ import { fill, LANGUAGE, TEXTS } from './texts';
           height: auto;
 
           .viewer-track:focus-visible & {
-            outline: 2px solid var(--color-accent);
+            outline: var(--focus-ring);
             outline-offset: 3px;
           }
         }

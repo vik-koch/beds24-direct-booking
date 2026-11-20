@@ -247,24 +247,7 @@ type Fold = ReturnType<typeof fold>;
       }
 
       .back {
-        --air: 0.875rem;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.375rem;
-        min-height: var(--size-control);
-        margin-inline: calc(-1 * var(--air));
-        padding-inline: var(--air);
-        border-radius: var(--radius-control);
-        color: var(--color-accent);
         font-size: 0.9375rem;
-        font-weight: 500;
-        text-decoration: underline transparent;
-        text-underline-offset: 0.3em;
-        transition: text-decoration-color 0.2s;
-
-        &:hover {
-          text-decoration-color: currentColor;
-        }
       }
 
       .apartment .facts {
@@ -363,8 +346,9 @@ type Fold = ReturnType<typeof fold>;
         }
       }
 
-      /* A text with an arrow that opens more; its focus ring is a pill with air at its sides. */
-      .text-button {
+      /* The back link, and a text with an arrow that opens more; the focus ring is a pill with air
+         at its sides. */
+      :is(.back, .text-button) {
         --air: 0.875rem;
         display: inline-flex;
         align-items: center;
