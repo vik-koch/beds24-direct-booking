@@ -7,11 +7,12 @@ import site from '../content/generated/site';
 import { lucideName } from '../content/names';
 import { FreeWeeksList } from './free-weeks-list';
 import { Season } from './season';
+import { Teasers } from './teasers';
 import { address, LANGUAGE, TEXTS } from './texts';
 
 @Component({
   selector: 'app-home',
-  imports: [NgIcon, FreeWeeksList],
+  imports: [NgIcon, FreeWeeksList, Teasers],
   providers: [provideIcons(icons)],
   template: `
     <!-- Every season's photo is in the page; only the shown one is displayed and fetched. -->
@@ -51,12 +52,8 @@ import { address, LANGUAGE, TEXTS } from './texts';
       <!-- The anchor is the heading: a jump places it below the header. -->
       <section class="column pt-(--space-section)">
         <h2 class="headline" [id]="anchors[section]">{{ texts.nav[section] }}</h2>
-        @if (section === 'apartments' && weeks?.apartments?.length) {
-          <ul class="mt-6">
-            @for (apartment of weeks!.apartments; track apartment.slug) {
-              <li>{{ apartment.name }}</li>
-            }
-          </ul>
+        @if (section === 'apartments') {
+          <app-teasers [weeks]="weeks" />
         } @else {
           <p class="text-ink-soft mt-6">{{ texts.placeholder }}</p>
         }
