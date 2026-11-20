@@ -18,6 +18,8 @@ describe('listing', () => {
   ];
   const value = {
     maxPeople: 2,
+    maxAdults: 2,
+    maxChildren: 0,
     size: 34,
     address: '',
     checkIn: { from: null, until: null },

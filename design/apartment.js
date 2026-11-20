@@ -20,12 +20,15 @@ const prices = {
 const tax = 3.5;
 
 // What the sanitiser leaves of each room description (sim/data.json): one heading level, plain
-// lists and links; a table becomes one paragraph per row.
+// lists and links; a table becomes one paragraph per row. Beds24's limits: `guests` is maxPeople,
+// maxAdult is null (as many as guests), and `children` is maxChildren: 0 takes none, null ("Don't
+// Ask") counts every guest as an adult.
 const apartments = {
   zirbe: {
     name: 'Zirbe',
     short: 'Ein Raum mit Doppelbett, Küchenzeile und Sitzecke am Fenster. Kein Balkon.',
     guests: 2,
+    children: 0,
     size: 34,
     house: 'firn',
     prose: `<h3>Die Wohnung</h3>
@@ -48,6 +51,7 @@ const apartments = {
     name: 'Lärche',
     short: 'Zwei Schlafzimmer, eine Wohnküche und ein Balkon zur Sonnenseite.',
     guests: 4,
+    children: 3,
     size: 61,
     house: 'firn',
     prose: `<p><strong>61 m²</strong> im zweiten Stock, mit <em>Südbalkon</em>.</p>
@@ -69,6 +73,7 @@ const apartments = {
     name: 'Ahorn',
     short: 'Drei Schlafzimmer, zwei Bäder und ein großer Tisch für alle.',
     guests: 6,
+    children: 4,
     size: 96,
     house: 'farn',
     prose: `<h3>Zwei Etagen</h3>
@@ -198,6 +203,7 @@ if (state === 'sofa' && slug === 'ahorn') {
   apartment.guests = 8;
   apartment.rooms.splice(3, 0, ['BEDROOM_OTHER_SLEEPING_AREA', 'BED_SOFA']);
 }
+if (state === 'guests-only') apartment.children = null;
 if (state === 'no-text') {
   apartment.prose = '';
 }
@@ -317,36 +323,48 @@ function goodToKnow() {
   </div>`;
 }
 
+// The list and the calendar show one month at a time: the months in which a week starts.
+const monthKey = (date) => `${date.getFullYear()}-${date.getMonth()}`;
+const monthsOf = (weeks) => [...new Set(weeks.map((w) => monthKey(w.start)))];
+function inMonth(weeks) {
+  const months = monthsOf(weeks);
+  choice.month = Math.min(Math.max(choice.month, 0), months.length - 1);
+  return months[choice.month].split('-').map(Number);
+}
+
+function monthHead(weeks) {
+  const last = monthsOf(weeks).length - 1;
+  const [year, month] = inMonth(weeks);
+  return `<div class="calendar-head">
+      <button class="icon-button" type="button" data-month="-1" aria-label="Voriger Monat" ${choice.month ? '' : 'disabled'}>${icon('chevron-left')}</button>
+      <h3 id="month-title">${monthName.format(new Date(year, month, 1))}</h3>
+      <button class="icon-button" type="button" data-month="1" aria-label="Nächster Monat" ${choice.month < last ? '' : 'disabled'}>${icon('chevron-right')}</button>
+    </div>`;
+}
+
 function stayList(weeks) {
-  let month = '';
-  return `<div class="stays" role="radiogroup" aria-label="Woche">${weeks
+  const [year, month] = inMonth(weeks);
+  const shown = weeks.filter((w) => monthKey(w.start) === `${year}-${month}`);
+  return `${monthHead(weeks)}<div class="stays" role="radiogroup" aria-labelledby="month-title">${shown
     .map((w) => {
-      const m = monthName.format(w.start);
-      const head = m !== month ? `<p class="month">${(month = m)}</p>` : '';
       const picked = choice.week?.season === w.season && choice.week.i === w.i;
-      return (
-        head +
-        (w.price
-          ? `<label class="stay-row"><input type="radio" name="week" value="${w.i}" ${picked ? 'checked' : ''} />
-              <span>${stayLabel(w)}</span><span class="amount">${euro(w.price)}</span></label>`
-          : `<p class="stay-row booked"><span>${stayLabel(w)}</span><span>belegt</span></p>`)
-      );
+      return w.price
+        ? `<label class="stay-row"><input type="radio" name="week" value="${w.i}" ${picked ? 'checked' : ''} />
+            <span>${stayLabel(w)}</span><span class="amount">${euro(w.price)}</span></label>`
+        : `<p class="stay-row booked"><span>${stayLabel(w)}</span><span>belegt</span></p>`;
     })
     .join('')}</div>`;
 }
 
-// The calendar opens at the chosen week's month, or at the season's first.
+// Both views open at the chosen week's month, or at the season's first.
 function monthOf(week) {
   if (!week || week.season !== choice.season) return 0;
-  const months = [...new Set(weeksOf(choice.season).map((w) => w.start.getMonth()))];
-  return months.indexOf(week.start.getMonth());
+  return monthsOf(weeksOf(choice.season)).indexOf(monthKey(week.start));
 }
 
 // One month as a grid of days; a free week's first day is marked and starts the week.
 function calendar(weeks) {
-  const months = [...new Set(weeks.map((w) => `${w.start.getFullYear()}-${w.start.getMonth()}`))];
-  choice.month = Math.min(Math.max(choice.month, 0), months.length - 1);
-  const [year, month] = months[choice.month].split('-').map(Number);
+  const [year, month] = inMonth(weeks);
   const first = new Date(year, month, 1);
   const lead = (first.getDay() + 6) % 7;
   const days = new Date(year, month + 1, 0).getDate();
@@ -372,32 +390,56 @@ function calendar(weeks) {
     );
   }
   return `<div class="calendar">
-    <div class="calendar-head">
-      <button class="icon-button" type="button" data-month="-1" aria-label="Voriger Monat" ${choice.month ? '' : 'disabled'}>${icon('chevron-left')}</button>
-      <h3>${monthName.format(first)}</h3>
-      <button class="icon-button" type="button" data-month="1" aria-label="Nächster Monat" ${choice.month < months.length - 1 ? '' : 'disabled'}>${icon('chevron-right')}</button>
-    </div>
+    ${monthHead(weeks)}
     <div class="days" aria-hidden="true">${['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'].map((n) => `<span>${n}</span>`).join('')}</div>
     <div class="days">${cells.join('')}</div>
     <p class="calendar-note"><span class="start-mark"></span> Anreise möglich</p>
   </div>`;
 }
 
-function stepper(name, label, note, value, min, max) {
-  return `<div class="stepper">
-    <span><span class="stepper-label">${label}</span>${note ? `<small>${note}</small>` : ''}</span>
-    <button class="icon-button" type="button" data-step-${name}="-1" aria-label="${label}: einer weniger" ${value <= min ? 'disabled' : ''}>${icon('minus')}</button>
-    <output aria-live="polite">${value}</output>
-    <button class="icon-button" type="button" data-step-${name}="1" aria-label="${label}: einer mehr" ${value >= max ? 'disabled' : ''}>${icon('plus')}</button>
-  </div>`;
+// A select per count lists only what Beds24 takes: up to maxAdult adults, and up to maxChildren
+// children in the room the adults leave.
+const limits = () => ({
+  adults: apartment.guests,
+  children: Math.min(apartment.children ?? 0, apartment.guests - choice.adults),
+});
+const babies = 'Babys bis 2 Jahre zählen nicht mit. Ein Babybett stellen wir gern dazu.';
+
+// Where Beds24 asks for guests only, the heading names the one select.
+function guestSelect(name, label, note, min) {
+  const options = [];
+  for (let n = min; n <= limits()[name]; n++)
+    options.push(`<option ${n === choice[name] ? 'selected' : ''}>${n}</option>`);
+  const select = `<span class="select"><select name="${name}" ${label ? '' : 'aria-labelledby="guests-title"'}>${options.join('')}</select>${icon('chevron-down')}</span>`;
+  return label
+    ? `<label class="count"><span>${label}${note ? `<small>${note}</small>` : ''}</span>${select}</label>`
+    : `<div class="count">${select}</div>`;
 }
+
+function guests() {
+  const popover = params.get('note') === 'popover';
+  return `<div class="guests">
+      <h3><span id="guests-title">Gäste</span> ${popover ? `<button class="info" type="button" popovertarget="babies" aria-label="Und Babys?">${icon('info')}</button>` : ''}</h3>
+      ${popover ? `<p class="babies-pop" id="babies" popover>${babies}</p>` : ''}
+      <div class="counts">
+        ${guestSelect('adults', apartment.children === null ? '' : 'Erwachsene', '', 1)}
+        ${apartment.children ? guestSelect('children', 'Kinder', 'bis 14 Jahre', 0) : ''}
+      </div>
+      ${popover ? '' : `<p class="babies">${babies}</p>`}
+    </div>`;
+}
+
+const guestWord = (n) =>
+  apartment.children === null
+    ? `${n} ${n === 1 ? 'Gast' : 'Gäste'}`
+    : `${n} ${n === 1 ? 'Erwachsener' : 'Erwachsene'}`;
 
 function total(week) {
   const nights = 7;
   const taxes = choice.adults * nights * tax;
   return `<dl class="total">
     <div><dt>Woche ${stayLabel(week)}</dt><dd>${euro(week.price)}</dd></div>
-    <div><dt>Ortstaxe: ${choice.adults} ${choice.adults === 1 ? 'Erwachsener' : 'Erwachsene'} × ${nights} Nächte × ${euro(tax)}</dt><dd>${euro(taxes)}</dd></div>
+    <div><dt>Ortstaxe: ${guestWord(choice.adults)} × ${nights} Nächte × ${euro(tax)}</dt><dd>${euro(taxes)}</dd></div>
     <div class="sum"><dt>Gesamt</dt><dd>${euro(week.price + taxes)}</dd></div>
   </dl>`;
 }
@@ -433,13 +475,9 @@ function panel() {
     ${body}
     ${
       open
-        ? `<div class="guests">
-            <h3>Gäste</h3>
-            ${stepper('adults', 'Erwachsene', '', choice.adults, 1, apartment.guests - choice.children)}
-            ${stepper('children', 'Kinder', 'bis 14 Jahre, ohne Ortstaxe', choice.children, 0, apartment.guests - choice.adults)}
-          </div>
+        ? `${guests()}
           ${pick && pick.season === season ? total(pick) : `<p class="from">ab <strong>${euro(lowest(season))}</strong> pro Woche, mit Endreinigung</p>`}
-          <a class="button wide" href="${pick && pick.season === season ? '?step=book&apartment=' + slug : '#wochen'}" ${pick && pick.season === season ? '' : 'aria-disabled="true"'} data-book>${pick && pick.season === season ? 'Weiter zur Buchung' + icon('arrow-right') : 'Erst eine Woche wählen'}</a>
+          <a class="button wide" href="${pick && pick.season === season ? bookingLink() : '#wochen'}" ${pick && pick.season === season ? '' : 'aria-disabled="true"'} data-book>${pick && pick.season === season ? 'Weiter zur Buchung' + icon('arrow-right') : 'Erst eine Woche wählen'}</a>
           <p class="panel-note">Gebucht und bezahlt wird im nächsten Schritt.</p>`
         : ''
     }
@@ -479,13 +517,13 @@ function bookingPage() {
       <div>
         <p class="summary-name">${apartment.name}</p>
         <p>${stayLabel(pick)}</p>
-        <p>${choice.adults} Erwachsene${choice.children ? `, ${choice.children} ${choice.children === 1 ? 'Kind' : 'Kinder'}` : ''}</p>
+        <p>${guestWord(choice.adults)}${choice.children ? `, ${choice.children} ${choice.children === 1 ? 'Kind' : 'Kinder'}` : ''}</p>
       </div>
     </div>
     ${total(pick)}
-    <a class="change" href="?apartment=${slug}#wochen">${icon('pencil')} Woche oder Gäste ändern</a>`;
+    <a class="change" href="${panelLink(pick)}#wochen">${icon('pencil')} Woche oder Gäste ändern</a>`;
   return `<div class="apartment booking">
-    <a class="back" href="?apartment=${slug}">${icon('arrow-left')} Zurück zu ${apartment.name}</a>
+    <a class="back" href="${panelLink(pick)}">${icon('arrow-left')} Zurück zu ${apartment.name}</a>
     <h1>${apartment.name} buchen</h1>
     <div class="columns">
       <div class="frame" role="region" aria-label="Buchungsformular">
@@ -512,7 +550,6 @@ function render() {
     bar.hidden = true;
     return;
   }
-  const scroll = page.querySelector('.stays')?.scrollTop;
   page.innerHTML = apartmentPage();
   const features = page.querySelector('[data-features]');
   if (features) features.dataset.label = features.firstChild.textContent;
@@ -523,15 +560,11 @@ function render() {
     prose.toggleAttribute('data-long', long);
     page.querySelector('[data-prose]').hidden = !long;
   }
-  if (scroll) page.querySelector('.stays').scrollTop = scroll;
   updateBar();
 }
 
 function rerenderPanel() {
-  const old = page.querySelector('.panel');
-  const scroll = old.querySelector('.stays')?.scrollTop;
-  old.outerHTML = panel();
-  if (scroll) page.querySelector('.stays').scrollTop = scroll;
+  page.querySelector('.panel').outerHTML = panel();
   updateBar();
 }
 
@@ -547,7 +580,7 @@ function updateBar() {
       : 'Keine Woche frei';
   const link = bar.querySelector('a');
   link.textContent = here ? 'Weiter' : from ? 'Woche wählen' : 'Wochen ansehen';
-  link.href = here ? `?step=book&apartment=${slug}` : '#wochen';
+  link.href = here ? bookingLink() : '#wochen';
 }
 const observer = new IntersectionObserver(([entry]) => (bar.hidden = entry?.isIntersecting));
 new MutationObserver(() => {
@@ -596,30 +629,23 @@ document.addEventListener('click', (event) => {
   const view = t.closest('[data-view]');
   if (view) {
     choice.view = view.dataset.view;
-    choice.month = monthOf(chosen());
     rerenderPanel();
+    page.querySelector(`[data-view="${choice.view}"]`).focus();
   }
   const month = t.closest('[data-month]');
   if (month) {
     choice.month += Number(month.dataset.month);
     rerenderPanel();
+    // At the season's first or last month the button turns off, and focus moves to the other one.
+    (
+      page.querySelector(`[data-month="${month.dataset.month}"]:enabled`) ??
+      page.querySelector('[data-month]:enabled')
+    ).focus();
   }
   const week = t.closest('[data-week]');
   if (week) {
     choice.week = { season: choice.season, i: Number(week.dataset.week) };
     rerenderPanel();
-  }
-  for (const name of ['adults', 'children']) {
-    const step = t.closest(`[data-step-${name}]`);
-    if (step) {
-      choice[name] += Number(step.dataset[`step${name[0].toUpperCase()}${name.slice(1)}`]);
-      rerenderPanel();
-      page
-        .querySelector(
-          `[data-step-${name}="${step.dataset[`step${name[0].toUpperCase()}${name.slice(1)}`]}"]`,
-        )
-        ?.focus();
-    }
   }
   if (t.closest('[aria-disabled="true"][data-book]')) event.preventDefault();
   const toggle = t.closest('[data-features], [data-prose]');
@@ -648,7 +674,35 @@ document.addEventListener('change', (event) => {
     rerenderPanel();
     page.querySelector('input[name="week"]:checked')?.focus();
   }
+  // More adults than leave room for the children lower the children's count.
+  if (event.target.name === 'adults' || event.target.name === 'children') {
+    choice[event.target.name] = Number(event.target.value);
+    choice.children = Math.min(choice.children, limits().children);
+    keepGuests();
+    rerenderPanel();
+    page.querySelector(`select[name="${event.target.name}"]`).focus();
+  }
 });
+
+// The guests live in the address, so a reload or a shared link keeps them.
+function keepGuests() {
+  params.set('adults', choice.adults);
+  if (apartment.children) params.set('children', choice.children);
+  else params.delete('children');
+  history.replaceState(null, '', `?${params}`);
+}
+function panelLink(week, step) {
+  const link = new URLSearchParams({
+    apartment: slug,
+    season: week.season,
+    week: week.i,
+    adults: choice.adults,
+  });
+  if (apartment.children) link.set('children', choice.children);
+  if (step) link.set('step', step);
+  return `?${link}`;
+}
+const bookingLink = () => panelLink(chosen(), 'book');
 
 viewer.addEventListener('keydown', (event) => {
   if (event.key === 'ArrowLeft') showPicture(Number(viewer.dataset.index) - 1);
@@ -668,9 +722,11 @@ document.addEventListener(
 
 choice.season = params.get('season') === 'summer' ? 'summer' : 'winter';
 if (params.has('week')) choice.week = { season: choice.season, i: Number(params.get('week')) };
-if (params.has('view')) {
-  choice.view = params.get('view');
-  choice.month = monthOf(chosen());
-}
+// An address over the limits opens the panel at them.
+const asked = (name, fallback) => Math.floor(Number(params.get(name) ?? fallback)) || 0;
+choice.adults = Math.min(Math.max(asked('adults', 2), 1), apartment.guests);
+choice.children = Math.min(Math.max(asked('children', 0), 0), limits().children);
+if (params.has('view')) choice.view = params.get('view');
+choice.month = monthOf(chosen());
 render();
 if (params.has('viewer')) openViewer(Number(params.get('viewer')));

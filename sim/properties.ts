@@ -30,6 +30,8 @@ const roomType = (property: Property, room: Room, has: (name: string) => boolean
   minStay: 7,
   maxStay: 7,
   maxPeople: room.maxPeople,
+  maxAdult: room.maxAdult,
+  maxChildren: room.maxChildren,
   taxPercentage: 0,
   taxPerson: 0,
   cleaningFee: 0,

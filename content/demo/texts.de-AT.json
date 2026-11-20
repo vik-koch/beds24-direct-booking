@@ -116,6 +116,39 @@
     "unavailable": "Die Einzelheiten zu dieser Wohnung können gerade nicht geladen werden. Bitte versuchen Sie es in ein paar Minuten noch einmal.",
     "generated": "KI-Bild"
   },
+  "panel": {
+    "title": "Woche wählen",
+    "views": {
+      "label": "Ansicht",
+      "list": "Liste",
+      "calendar": "Kalender"
+    },
+    "previous": "Voriger Monat",
+    "next": "Nächster Monat",
+    "guests": "Gäste",
+    "adults": {
+      "label": "Erwachsene",
+      "one": "{count} Erwachsener",
+      "other": "{count} Erwachsene"
+    },
+    "children": "Kinder",
+    "childAge": "bis {age} Jahre",
+    "babies": "Babys bis 2 Jahre zählen nicht mit. Ein Babybett stellen wir gern dazu.",
+    "from": "ab {price} pro Woche",
+    "week": "Woche {stay}",
+    "tax": {
+      "night": "Ortstaxe: {guests} × {nights} Nächte × {amount}",
+      "stay": "Ortstaxe: {guests} × {amount}"
+    },
+    "total": "Gesamt",
+    "book": "Weiter zur Buchung",
+    "choose": "Erst eine Woche wählen",
+    "note": "Gebucht und bezahlt wird im nächsten Schritt.",
+    "bar": {
+      "choose": "Woche wählen",
+      "book": "Weiter"
+    }
+  },
   "gallery": {
     "name": "Bilder",
     "position": "Bild {index} von {count}",

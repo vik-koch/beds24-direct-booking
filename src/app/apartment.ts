@@ -25,6 +25,7 @@ import type { Listing } from '../beds24/client';
 import { icons } from '../content/generated/icons';
 import site from '../content/generated/site';
 import { lucideName } from '../content/names';
+import { BookingPanel } from './booking-panel';
 import { Gallery } from './gallery';
 import { address, fill, LANGUAGE, TEXTS } from './texts';
 
@@ -43,7 +44,7 @@ type Fold = ReturnType<typeof fold>;
 @Component({
   encapsulation: ViewEncapsulation.None,
   selector: 'app-apartment',
-  imports: [NgIcon, HlmAccordionImports, Gallery],
+  imports: [NgIcon, HlmAccordionImports, BookingPanel, Gallery],
   providers: [
     provideIcons({
       ...icons,
@@ -63,123 +64,128 @@ type Fold = ReturnType<typeof fold>;
         ><ng-icon name="lucideArrowLeft" aria-hidden="true" />{{ texts.apartment.back }}</a
       >
       <h1 class="headline">{{ apartment.name }}</h1>
-      @if (listing; as listing) {
-        <ul class="facts">
-          <li>
-            <ng-icon name="lucideUsers" aria-hidden="true" />{{
-              fill(
-                texts.apartment.guests[
-                  plural.select(listing.maxPeople) === 'one' ? 'one' : 'other'
-                ],
-                {
-                  count: listing.maxPeople,
-                }
-              )
-            }}
-          </li>
-          @if (bedrooms) {
-            <li>
-              <ng-icon name="lucideBedDouble" aria-hidden="true" />{{
-                fill(
-                  texts.apartment.bedrooms[plural.select(bedrooms) === 'one' ? 'one' : 'other'],
-                  {
-                    count: bedrooms,
-                  }
-                )
-              }}
-            </li>
-          }
-          <li>
-            <ng-icon name="lucideRuler" aria-hidden="true" />{{
-              fill(texts.weeks.size.shown, { size: listing.size })
-            }}
-          </li>
-          @if (listing.address) {
-            <li><ng-icon name="lucideMapPin" aria-hidden="true" />{{ listing.address }}</li>
-          }
-        </ul>
-      }
+      <!-- The panel stands beside the main part from 64rem; below, it follows the amenities, and
+           the main part's blocks are the grid's own. -->
       <div class="apartment-columns">
-        <app-gallery [pictures]="apartment.pictures" />
-        @if (!listing) {
-          <p class="text-ink-soft">{{ texts.apartment.unavailable }}</p>
-        }
-        @if (text.description) {
-          <section>
-            <h2>{{ texts.apartment.description }}</h2>
-            <div
-              class="fold prose-fold"
-              (focusin)="description.open.set(true)"
-              [attr.data-open]="description.open() ? '' : null"
-              [attr.data-long]="description.long() ? '' : null"
-              [style.--full.px]="description.full()"
-            >
-              <div #prose id="description" class="prose" [innerHTML]="text.description"></div>
-            </div>
-            <button
-              class="text-button"
-              type="button"
-              aria-controls="description"
-              [attr.aria-expanded]="description.open()"
-              [hidden]="!description.long()"
-              (click)="description.open.set(!description.open())"
-            >
-              {{ texts.apartment.more }}<ng-icon name="lucideChevronDown" aria-hidden="true" />
-            </button>
-          </section>
-        }
-        @if (rooms.length) {
-          <section>
-            <h2>{{ texts.apartment.rooms }}</h2>
-            <ul class="entries rooms">
-              @for (room of rooms; track $index) {
+        <div class="apartment-main">
+          @if (listing; as listing) {
+            <ul class="facts">
+              <li>
+                <ng-icon name="lucideUsers" aria-hidden="true" />{{
+                  fill(
+                    texts.apartment.guests[
+                      plural.select(listing.maxPeople) === 'one' ? 'one' : 'other'
+                    ],
+                    {
+                      count: listing.maxPeople,
+                    }
+                  )
+                }}
+              </li>
+              @if (bedrooms) {
                 <li>
-                  <h3><ng-icon [name]="room.icon" aria-hidden="true" />{{ room.name }}</h3>
-                  @if (room.items.length) {
-                    <p>{{ room.items.join(', ') }}</p>
-                  }
+                  <ng-icon name="lucideBedDouble" aria-hidden="true" />{{
+                    fill(
+                      texts.apartment.bedrooms[plural.select(bedrooms) === 'one' ? 'one' : 'other'],
+                      {
+                        count: bedrooms,
+                      }
+                    )
+                  }}
                 </li>
               }
+              <li>
+                <ng-icon name="lucideRuler" aria-hidden="true" />{{
+                  fill(texts.weeks.size.shown, { size: listing.size })
+                }}
+              </li>
+              @if (listing.address) {
+                <li><ng-icon name="lucideMapPin" aria-hidden="true" />{{ listing.address }}</li>
+              }
             </ul>
-          </section>
-        }
-        @if (amenities.entries.length) {
-          <section>
-            <h2>{{ texts.apartment.features }}</h2>
-            <div
-              class="fold amenities-fold"
-              [attr.data-open]="amenities.fold.open() ? '' : null"
-              [attr.data-long]="amenities.fold.long() ? '' : null"
-              [style.--full.px]="amenities.fold.full()"
-            >
-              <ul #amenityList id="amenities" class="entries amenities">
-                @for (entry of amenities.entries; track entry.icon + entry.name) {
+          }
+          <app-gallery [pictures]="apartment.pictures" />
+          @if (!listing) {
+            <p class="text-ink-soft">{{ texts.apartment.unavailable }}</p>
+          }
+          @if (text.description) {
+            <section>
+              <h2>{{ texts.apartment.description }}</h2>
+              <div
+                class="fold prose-fold"
+                (focusin)="description.open.set(true)"
+                [attr.data-open]="description.open() ? '' : null"
+                [attr.data-long]="description.long() ? '' : null"
+                [style.--full.px]="description.full()"
+              >
+                <div #prose id="description" class="prose" [innerHTML]="text.description"></div>
+              </div>
+              <button
+                class="text-button"
+                type="button"
+                aria-controls="description"
+                [attr.aria-expanded]="description.open()"
+                [hidden]="!description.long()"
+                (click)="description.open.set(!description.open())"
+              >
+                {{ texts.apartment.more }}<ng-icon name="lucideChevronDown" aria-hidden="true" />
+              </button>
+            </section>
+          }
+          @if (rooms.length) {
+            <section>
+              <h2>{{ texts.apartment.rooms }}</h2>
+              <ul class="entries rooms">
+                @for (room of rooms; track $index) {
                   <li>
-                    <h3><ng-icon [name]="entry.icon" aria-hidden="true" />{{ entry.name }}</h3>
-                    @if (entry.items.length) {
-                      <ul>
-                        @for (item of entry.items; track item) {
-                          <li>{{ item }}</li>
-                        }
-                      </ul>
+                    <h3><ng-icon [name]="room.icon" aria-hidden="true" />{{ room.name }}</h3>
+                    @if (room.items.length) {
+                      <p>{{ room.items.join(', ') }}</p>
                     }
                   </li>
                 }
               </ul>
-            </div>
-            <button
-              class="text-button"
-              type="button"
-              aria-controls="amenities"
-              [attr.aria-expanded]="amenities.fold.open()"
-              [hidden]="!amenities.fold.long()"
-              (click)="amenities.fold.open.set(!amenities.fold.open())"
-            >
-              {{ fill(texts.apartment.allFeatures, { count: amenities.total }) }}
-              <ng-icon name="lucideChevronDown" aria-hidden="true" />
-            </button>
-          </section>
-        }
+            </section>
+          }
+          @if (amenities.entries.length) {
+            <section>
+              <h2>{{ texts.apartment.features }}</h2>
+              <div
+                class="fold amenities-fold"
+                [attr.data-open]="amenities.fold.open() ? '' : null"
+                [attr.data-long]="amenities.fold.long() ? '' : null"
+                [style.--full.px]="amenities.fold.full()"
+              >
+                <ul #amenityList id="amenities" class="entries amenities">
+                  @for (entry of amenities.entries; track entry.icon + entry.name) {
+                    <li>
+                      <h3><ng-icon [name]="entry.icon" aria-hidden="true" />{{ entry.name }}</h3>
+                      @if (entry.items.length) {
+                        <ul>
+                          @for (item of entry.items; track item) {
+                            <li>{{ item }}</li>
+                          }
+                        </ul>
+                      }
+                    </li>
+                  }
+                </ul>
+              </div>
+              <button
+                class="text-button"
+                type="button"
+                aria-controls="amenities"
+                [attr.aria-expanded]="amenities.fold.open()"
+                [hidden]="!amenities.fold.long()"
+                (click)="amenities.fold.open.set(!amenities.fold.open())"
+              >
+                {{ fill(texts.apartment.allFeatures, { count: amenities.total }) }}
+                <ng-icon name="lucideChevronDown" aria-hidden="true" />
+              </button>
+            </section>
+          }
+        </div>
+        <app-booking-panel />
         @if (checkIn || listing?.checkOut || text.houseRules) {
           <section>
             <h2>{{ texts.apartment.goodToKnow }}</h2>
@@ -226,6 +232,7 @@ type Fold = ReturnType<typeof fold>;
       /* The apartment page: from 64rem the pictures and the content on the left, the right column
          free for the booking panel. */
       .apartment {
+        --size-heading: clamp(1.375rem, 1.2rem + 0.8vw, 1.75rem);
         padding-top: 1rem;
 
         h1 {
@@ -234,7 +241,7 @@ type Fold = ReturnType<typeof fold>;
 
         h2 {
           margin-bottom: 1rem;
-          font-size: clamp(1.375rem, 1.2rem + 0.8vw, 1.75rem);
+          font-size: var(--size-heading);
           font-weight: 500;
           letter-spacing: -0.01em;
         }
@@ -264,7 +271,6 @@ type Fold = ReturnType<typeof fold>;
         display: flex;
         flex-wrap: wrap;
         gap: 0.5rem 1.5rem;
-        margin-top: 0.75rem;
         font-weight: 500;
 
         li {
@@ -278,19 +284,40 @@ type Fold = ReturnType<typeof fold>;
         }
       }
 
+      /* One column on a phone, which nothing may widen: the panel's rows do not break. */
       .apartment-columns {
         display: grid;
+        grid-template-columns: minmax(0, 1fr);
         gap: 2rem;
-        margin-top: 1.5rem;
+        margin-top: 0.75rem;
 
         @media (min-width: 64rem) {
           grid-template-columns: minmax(0, 1fr) 24rem;
-          column-gap: 3.5rem;
+          column-gap: 3rem;
 
           > * {
             grid-column: 1;
           }
+
+          > .booking {
+            grid-column: 2;
+            grid-row: 1 / span 2;
+          }
         }
+      }
+
+      .apartment-main {
+        display: contents;
+
+        @media (min-width: 64rem) {
+          display: grid;
+          gap: 2rem;
+        }
+      }
+
+      /* The facts stand close under the name, the gallery 1.5rem below them. */
+      .facts + * {
+        margin-top: -0.5rem;
       }
 
       .prose {

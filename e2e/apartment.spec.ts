@@ -373,6 +373,7 @@ test('without Beds24 the page answers 503 with the name, the picture and a sente
   await expect(page.locator('.facts, .prose, .rooms, .amenities, .spartan-accordion')).toHaveCount(
     0,
   );
+  await expect(page.locator('.panel')).toContainText('The free weeks cannot be shown just now.');
 });
 
 test('at 320 px nothing scrolls sideways, in both seasons and languages', async ({ page }) => {
@@ -399,7 +400,7 @@ test('at 320 px nothing scrolls sideways, in both seasons and languages', async 
     }
 });
 
-test('from 64rem the content keeps the left column and leaves the right one free', async ({
+test('from 64rem the panel stands beside the content from the facts down, below it after the amenities', async ({
   page,
 }) => {
   for (const [width, columns] of [
@@ -412,28 +413,51 @@ test('from 64rem the content keeps the left column and leaves the right one free
       .locator('.apartment-columns')
       .evaluate((grid) => getComputedStyle(grid).gridTemplateColumns.split(' ').length);
     expect(tracks, `at ${width}`).toBe(columns);
+    const top = async (selector: string) => (await page.locator(selector).boundingBox())!.y;
+    if (columns === 2) expect(await top('.panel')).toBeLessThan((await top('.facts')) + 1);
+    else {
+      expect(await top('.panel')).toBeGreaterThan(await top('.amenities'));
+      expect(await top('.panel')).toBeLessThan(await top('.spartan-accordion'));
+    }
   }
 });
 
 test('every tab stop on an apartment page shows a focus ring', async ({ page, browserName }) => {
   test.skip(browserName === 'webkit', 'Safari tabs only to fields unless told otherwise');
+  // In the next season, which always has free weeks; the one shown by date may have none left.
   await page.goto('/de/wohnungen/ahorn');
+  const later = await page.locator('.panel-season').last().getAttribute('data-for');
+  await page.goto(`/de/wohnungen/ahorn?season=${later}`);
   await page.locator('.back').focus();
   const seen: string[] = [];
-  for (let i = 0; i < 20; i++) {
+  const panel: string[] = [];
+  for (let i = 0; i < 30; i++) {
     const stop = await page.evaluate(() => {
       const element = document.activeElement as HTMLElement;
-      const style = getComputedStyle(element);
+      // A radio's ring is its label's, a week's its row's, the season button's its shown label's.
+      const ringed = [
+        element,
+        element.closest('label, .week'),
+        ...element.querySelectorAll(':scope > *'),
+      ];
+      const ring = ringed.some((one) => {
+        const style = one && getComputedStyle(one);
+        return style && style.outlineStyle !== 'none' && parseFloat(style.outlineWidth) >= 2;
+      });
       // A picture's cell by its picture: each says "KI-Bild".
-      const text = element.querySelector('img')?.alt ?? element.textContent?.trim();
+      const text =
+        element.querySelector('img')?.alt ??
+        element.getAttribute('aria-label') ??
+        element.textContent?.trim();
       return {
         name: `${element.tagName.toLowerCase()} ${text?.slice(0, 30)}`,
-        ring: style.outlineStyle !== 'none' && parseFloat(style.outlineWidth) >= 2,
+        ring,
         inside: !!element.closest('main'),
+        panel: !!element.closest('.panel'),
       };
     });
     if (!stop.inside || seen.includes(stop.name)) break;
-    seen.push(stop.name);
+    (stop.panel ? panel : seen).push(stop.name);
     expect(stop.ring, stop.name).toBe(true);
     await page.keyboard.press('Tab');
   }
@@ -449,16 +473,29 @@ test('every tab stop on an apartment page shows a focus ring', async ({ page, br
     'button Anreise und Abreise',
     'button Hausordnung',
   ]);
+  // Between the pictures and the terms: the season, the view, the month, its weeks and the guests.
+  expect(panel).toEqual(
+    expect.arrayContaining([
+      expect.stringMatching(/^button (Sommer|Winter)/),
+      'input Liste',
+      'button Nächster Monat',
+      expect.stringMatching(/^span (€|belegt)/),
+      'button 2',
+      'button 0',
+    ]),
+  );
 });
 
-// One test per language: sixteen scans in one would outlast the test's time limit.
+// One test per language and width: more scans in one come too close to the test's time limit.
 for (const path of ['/de/wohnungen/zirbe', '/en/apartments/zirbe'])
-  test(`${path} passes axe in both seasons and widths, with everything open`, async ({ page }) => {
-    for (const width of [320, 1280])
+  for (const width of [320, 1280])
+    test(`${path} passes axe at ${width} px in both seasons, with everything open`, async ({
+      page,
+    }) => {
       for (const season of ['winter', 'summer']) {
         await page.setViewportSize({ width, height: 800 });
         await page.goto(`${path}?season=${season}`);
-        const place = `at ${width} in ${season}`;
+        const place = `in ${season}`;
         const { violations } = await new AxeBuilder({ page }).include('main').analyze();
         expect(violations, place).toEqual([]);
         // Every fold's button the width shows, in the page's language.
@@ -468,4 +505,4 @@ for (const path of ['/de/wohnungen/zirbe', '/en/apartments/zirbe'])
         const open = await new AxeBuilder({ page }).include('main').analyze();
         expect(open.violations, place).toEqual([]);
       }
-  });
+    });

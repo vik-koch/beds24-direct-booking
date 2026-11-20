@@ -9,7 +9,7 @@ content. The application has no wording, no colour and no typeface of its own. T
 <!-- prettier-ignore -->
 | File | What it holds |
 |---|---|
-| `site.json` | The site's name, its languages in order as language tags, the apartments' slugs in their order, the seasons, the hero's features, the apartment page's rooms and amenities, and the contact. |
+| `site.json` | The site's name, its languages in order as language tags, the apartments' slugs in their order, the seasons, the hero's features, the apartment page's rooms and amenities, the age up to which a guest is a child, and the contact. |
 | `apartments/<slug>.json` | One apartment: its Beds24 room ID, its name and its pictures. One file for each slug `site.json` lists, and no other. |
 | `texts.<tag>.json` | Everything one language says: the wording, the address parts and the anchors. One file per language listed in `site.json`, such as `texts.en-GB.json`. |
 | `theme.css` | The palette and the typeface as custom properties on `:root`, and the typeface's `@font-face`. |
@@ -84,6 +84,13 @@ content. The application has no wording, no colour and no typeface of its own. T
   listed room under `amenities.rooms` and labels its beds and fittings, such as `BED_DOUBLE`, under
   `amenities.codes`; a bed without a label is left out. A group whose code is not listed is no room:
   its codes count as amenities.
+- **The booking panel** (`panel` in a texts file) is the wording of the apartment page's panel: the
+  week, the guests, the total and the way on to booking. `childAge` in `site.json` is the oldest age
+  that counts as a child, named beside the children's count through `panel.childAge` (`{age}`):
+  Beds24 knows no age, and where a child ends depends on the place, usually on its tourist tax.
+  `babies` says how babies are counted. Where Beds24 does not ask for children, the panel asks only
+  for guests. The tax line takes `{guests}`, `{nights}` and `{amount}`; `adults` has a `one` and an
+  `other` form for it.
 - **The notice** (`notice` in a texts file) is an optional line above the header, with an optional
   link. Left out, no line is shown.
 - **The seasons** (`seasons` in `site.json`) are `winter`, `summer` or both, each with its hero

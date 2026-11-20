@@ -545,25 +545,10 @@
   box-shadow: 0 0.125rem 0.375rem rgb(39 50 58 / 0.12);
 }
 
-/* The weeks as a list of radio rows; it scrolls inside the panel. */
+/* A month's weeks as radio rows, five rows high so that paging the months keeps the panel still. */
 .stays {
-  max-height: 19rem;
-  margin-inline: -1.25rem;
-  padding: 0 1.25rem;
-  overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: var(--color-edge) transparent;
-  mask-image: linear-gradient(to bottom, #000 calc(100% - 1.5rem), transparent);
-}
-
-.month {
-  margin: 0.75rem 0 0.25rem;
-  color: var(--color-ink-soft);
-  font-size: 0.875rem;
-}
-
-.month:first-child {
-  margin-top: 0;
+  min-height: calc(5 * 2.75rem);
+  margin-top: 0.5rem;
 }
 
 .stay-row {
@@ -723,39 +708,111 @@
 }
 
 .guests h3 {
-  margin: 0 0 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin: 0 0 0.75rem;
   font-size: 1.0625rem;
   font-weight: 500;
 }
 
-.stepper {
+.counts {
   display: grid;
-  grid-template-columns: 1fr auto 2rem auto;
-  align-items: center;
-  gap: 0.5rem;
-  min-height: 3.25rem;
+  grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
+  gap: 0.75rem 1rem;
 }
 
-.stepper small {
+.count {
+  display: grid;
+  grid-template-rows: 1fr auto;
+  gap: 0.375rem;
+}
+
+.count small {
   display: block;
   color: var(--color-ink-soft);
   font-size: 0.8125rem;
 }
 
-.stepper output {
-  text-align: center;
-  font-size: 1.1875rem;
+.select {
+  position: relative;
+  display: block;
+}
+
+.select select {
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0 2.5rem 0 1rem;
+  border: 1px solid var(--color-edge);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font: inherit;
   font-weight: 500;
+  appearance: none;
+  cursor: pointer;
 }
 
-.stepper .icon-button {
-  width: 2.25rem;
-  height: 2.25rem;
+.select select:hover {
+  border-color: var(--color-accent);
 }
 
-.stepper .icon {
+.select .icon {
+  position: absolute;
+  top: 50%;
+  right: 0.875rem;
   width: 1.125rem;
   height: 1.125rem;
+  translate: 0 -50%;
+  pointer-events: none;
+}
+
+.babies {
+  margin: 0.75rem 0 0;
+  color: var(--color-ink-soft);
+  font-size: 0.875rem;
+}
+
+.info {
+  display: inline-grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  margin-block: -0.75rem;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: none;
+  color: var(--color-ink-soft);
+  cursor: pointer;
+  anchor-name: --babies;
+}
+
+.info:hover {
+  color: var(--color-accent);
+}
+
+.info .icon {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+.babies-pop {
+  position-anchor: --babies;
+  inset: auto;
+  top: anchor(bottom);
+  left: anchor(left);
+  position-try-fallbacks: flip-inline;
+  max-width: min(18rem, calc(100vw - 2rem));
+  margin: 0.25rem 0 0;
+  padding: 0.75rem 1rem;
+  border: 0;
+  border-radius: 1rem;
+  background: var(--color-surface);
+  color: var(--color-ink);
+  box-shadow: var(--shadow-card);
+  font-size: 0.9375rem;
+  font-weight: 400;
 }
 
 .total {
@@ -997,11 +1054,6 @@
   .panel {
     padding: 2rem;
   }
-
-  .stays {
-    margin-inline: -2rem;
-    padding-inline: 2rem;
-  }
 }
 
 @media (width >= 64rem) {
@@ -1024,10 +1076,6 @@
 
   .bottom-bar {
     display: none;
-  }
-
-  .stays {
-    max-height: min(22rem, calc(100svh - 30rem));
   }
 
   .booking .columns {

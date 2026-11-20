@@ -50,11 +50,26 @@ describe('properties', () => {
     expect(data.map((property: { roomTypes: unknown[] }) => property.roomTypes.length)).toEqual([
       2, 2,
     ]);
+    interface Limits {
+      maxPeople: number;
+      maxAdult: number | null;
+      maxChildren: number | null;
+    }
+    // Zirbe asks for no children ("None"), Ahorn takes at most four adults, Fichte does not ask.
     expect(
-      data.flatMap((property: { roomTypes: { maxPeople: number }[] }) =>
-        property.roomTypes.map((room) => room.maxPeople),
+      data.flatMap((property: { roomTypes: Limits[] }) =>
+        property.roomTypes.map(({ maxPeople, maxAdult, maxChildren }) => [
+          maxPeople,
+          maxAdult,
+          maxChildren,
+        ]),
       ),
-    ).toEqual([2, 4, 6, 2]);
+    ).toEqual([
+      [2, null, 0],
+      [4, null, 3],
+      [6, 4, 4],
+      [2, null, null],
+    ]);
   });
 
   it('keeps the oddities of the wire', async () => {

@@ -542,10 +542,10 @@
     }
   }
 
-  /* The free-weeks list: both seasons are in the page and the page's season shows one. Rows
-     that are leaving stay in view until their move has ended. */
-  html:not([data-season='winter']) .weeks [data-for='winter']:not([data-leaving]),
-  html:not([data-season='summer']) .weeks [data-for='summer']:not([data-leaving]) {
+  /* The free-weeks list and the booking panel: both seasons are in the page and the page's
+     season shows one. Parts that are leaving stay in view until their move has ended. */
+  html:not([data-season='winter']) :is(.weeks, .booking) [data-for='winter']:not([data-leaving]),
+  html:not([data-season='summer']) :is(.weeks, .booking) [data-for='summer']:not([data-leaving]) {
     display: none;
   }
 
@@ -581,7 +581,7 @@
   }
 
   /* Both seasons' versions lie in one cell; the other one keeps its place, unseen. */
-  .weeks .stack {
+  :is(.weeks, .booking) .stack {
     display: inline-grid;
 
     > * {
@@ -589,15 +589,15 @@
     }
   }
 
-  html:not([data-season='winter']) .weeks .stack > [data-for='winter'],
-  html:not([data-season='summer']) .weeks .stack > [data-for='summer'] {
+  html:not([data-season='winter']) :is(.weeks, .booking) .stack > [data-for='winter'],
+  html:not([data-season='summer']) :is(.weeks, .booking) .stack > [data-for='summer'] {
     display: flex;
     visibility: hidden;
     opacity: 0;
   }
 
   /* After a switch the names and labels cross-fade, briefly. */
-  html[data-switched] .weeks .stack > * {
+  html[data-switched] :is(.weeks, .booking) .stack > * {
     transition:
       opacity 0.2s ease,
       visibility 0.2s;
@@ -857,7 +857,7 @@
 
   /* Every week starts on the same weekday, so the narrowest screens leave it out of the rows;
      the row header's label still names it. */
-  [role='rowheader'] {
+  :where(.weeks-grid) [role='rowheader'] {
     padding-block: 0.75rem;
     white-space: nowrap;
 
@@ -868,7 +868,7 @@
     }
   }
 
-  [role='gridcell'] {
+  :where(.weeks-grid) [role='gridcell'] {
     padding-left: 1rem;
     text-align: right;
     white-space: nowrap;

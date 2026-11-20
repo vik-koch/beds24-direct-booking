@@ -107,6 +107,39 @@
     "unavailable": "I dettagli di questo appartamento non si possono caricare ora.",
     "generated": "Immagine IA"
   },
+  "panel": {
+    "title": "Scegli una settimana",
+    "views": {
+      "label": "Vista",
+      "list": "Elenco",
+      "calendar": "Calendario"
+    },
+    "previous": "Mese precedente",
+    "next": "Mese successivo",
+    "guests": "Ospiti",
+    "adults": {
+      "label": "Adulti",
+      "one": "{count} adulto",
+      "other": "{count} adulti"
+    },
+    "children": "Bambini",
+    "childAge": "fino a {age} anni",
+    "babies": "I neonati fino a 2 anni non contano. Mettiamo volentieri a disposizione un lettino.",
+    "from": "da {price} a settimana",
+    "week": "Settimana {stay}",
+    "tax": {
+      "night": "Tassa di soggiorno: {guests} × {nights} notti × {amount}",
+      "stay": "Tassa di soggiorno: {guests} × {amount}"
+    },
+    "total": "Totale",
+    "book": "Continua con la prenotazione",
+    "choose": "Scegli prima una settimana",
+    "note": "Si prenota e si paga nel passo successivo.",
+    "bar": {
+      "choose": "Scegli una settimana",
+      "book": "Continua"
+    }
+  },
   "gallery": {
     "name": "Immagini",
     "position": "Immagine {index} di {count}",

@@ -33,7 +33,7 @@ const pages = ({ paths }: Language): Routes => [
         path: '',
         // Its own bundle: the other pages do not load the apartment's code.
         loadComponent: () => import('./apartment').then((m) => m.Apartment),
-        resolve: { listing },
+        resolve: { listing, weeks },
         data: { page: 'apartment' },
       },
       { path: paths.book, component: Placeholder, data: { page: 'book' } },
