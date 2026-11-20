@@ -99,7 +99,6 @@
     "back": "All apartments",
     "guests": { "one": "Up to {count} guest", "other": "Up to {count} guests" },
     "bedrooms": { "one": "1 bedroom", "other": "{count} bedrooms" },
-    "description": "The apartment",
     "more": "Read more",
     "rooms": "Rooms and beds",
     "features": "Amenities",

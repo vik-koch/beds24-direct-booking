@@ -24,7 +24,7 @@ describe('richText', () => {
 
   it('makes every heading one level, and repairs a heading inside a paragraph', () => {
     expect(richText('<p><h1 class="">A</h1><p class="">b</p></p><h4>C</h4>')).toBe(
-      '<h3>A</h3><p>b</p><h3>C</h3>',
+      '<h2>A</h2><p>b</p><h2>C</h2>',
     );
   });
 

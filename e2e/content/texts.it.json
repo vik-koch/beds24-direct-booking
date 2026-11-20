@@ -90,7 +90,6 @@
     "back": "Tutti gli appartamenti",
     "guests": { "one": "Fino a {count} ospite", "other": "Fino a {count} ospiti" },
     "bedrooms": { "one": "1 camera", "other": "{count} camere" },
-    "description": "L'appartamento",
     "more": "Leggi di più",
     "rooms": "Stanze e letti",
     "features": "Servizi",

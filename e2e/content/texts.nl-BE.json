@@ -90,7 +90,6 @@
     "back": "Alle appartementen",
     "guests": { "one": "Tot {count} gast", "other": "Tot {count} gasten" },
     "bedrooms": { "one": "1 slaapkamer", "other": "{count} slaapkamers" },
-    "description": "Het appartement",
     "more": "Lees meer",
     "rooms": "Kamers en bedden",
     "features": "Voorzieningen",
