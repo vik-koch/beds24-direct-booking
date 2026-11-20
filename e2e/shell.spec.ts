@@ -674,12 +674,14 @@ test('a second content folder changes languages, name, wording and theme', async
 });
 
 test(
-  'a refused token answers 503 without apartments',
+  'a refused token answers 503 with the apartments of the content and nothing of Beds24',
   { tag: '@any-engine' },
   async ({ request }) => {
     const response = await request.get('http://localhost:4001/de');
     expect(response.status()).toBe(503);
-    expect(await response.text()).not.toContain('<li>Zirbe</li>');
+    const html = await response.text();
+    expect(html).toContain('>Zirbe</a></h3>');
+    expect(html).not.toContain('Bis 2 Gäste');
   },
 );
 
