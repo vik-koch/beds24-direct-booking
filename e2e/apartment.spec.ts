@@ -285,6 +285,22 @@ test('the apartment page is styled from its first frame, on a full load and in t
   expect(await page.evaluate(() => 'kept' in window)).toBe(true);
 });
 
+test('on a phone a description that fits above the cut but for its last margin is not cut', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 700 });
+  await page.goto('/en/apartments/zirbe');
+  const more = page.getByRole('button', { name: 'Read more' });
+  await expect(more).toBeVisible();
+  // A paragraph 4 px shorter than the cut; its 10 px bottom margin passes it.
+  await page.locator('.prose').evaluate((prose) => {
+    const cut = parseFloat(getComputedStyle(prose.parentElement!).getPropertyValue('--cut'));
+    prose.innerHTML = `<p style="height: calc(${cut}rem - 4px)">Short.</p>`;
+  });
+  await expect(more).toBeHidden();
+  await expect(page.locator('.prose-fold')).not.toHaveAttribute('data-long');
+});
+
 test('a link in the description’s last line shows its whole focus ring', async ({ page }) => {
   // Also below a leading rule, whose top margin would fall outside the measured height.
   for (const [width, rule] of [
