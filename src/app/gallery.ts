@@ -181,6 +181,7 @@ export class Gallery {
   // The viewer's pictures load only once it has opened.
   private readonly opened = signal(false);
   private opener: HTMLElement | null = null;
+  private closing = false;
   // Where the track is headed, so that a step pressed while it slides goes on from there, and
   // where it set off: lined up anywhere else, it has arrived or been swiped.
   private target = 0;
@@ -196,21 +197,28 @@ export class Gallery {
   constructor() {
     afterRenderEffect((onCleanup) => {
       const track = this.track().nativeElement;
+      // A step taken before this measured the frame was ignored by slid(): it catches up here.
       const observer = new ResizeObserver(() => {
         this.width = this.measure(track);
         track.scrollTo({ left: this.target * this.width, behavior: 'instant' });
+        this.slid();
       });
       observer.observe(track);
       onCleanup(() => observer.disconnect());
     });
     // The current thumbnail stays in view, by the rows' own scroll: the page behind holds still.
-    afterRenderEffect(() => {
+    // Also on a resize, as rows hidden on a phone cannot scroll.
+    afterRenderEffect((onCleanup) => {
       const thumbs = this.thumbs()?.nativeElement;
       const thumb = thumbs?.children[this.index()] as HTMLElement | undefined;
       if (!thumbs || !thumb) return;
-      const room = parseFloat(getComputedStyle(thumbs).paddingTop);
-      const below = thumb.offsetTop + thumb.offsetHeight + room - thumbs.clientHeight;
-      thumbs.scrollTop = Math.min(Math.max(thumbs.scrollTop, below), thumb.offsetTop - room);
+      const observer = new ResizeObserver(() => {
+        const room = parseFloat(getComputedStyle(thumbs).paddingTop);
+        const below = thumb.offsetTop + thumb.offsetHeight + room - thumbs.clientHeight;
+        thumbs.scrollTop = Math.min(Math.max(thumbs.scrollTop, below), thumb.offsetTop - room);
+      });
+      observer.observe(thumbs);
+      onCleanup(() => observer.disconnect());
     });
   }
 
@@ -281,14 +289,16 @@ export class Gallery {
       this.start = this.target = index;
   }
 
-  // It fades out as it came in, along the opening's curve run backwards. Escape waits for that
-  // too, unless the browser will not let it.
+  // It fades out as it came in, starting at once. Escape waits for that too, unless the browser
+  // will not let it; a second request while it fades is ignored.
   protected close(event?: Event) {
     const dialog = this.dialog().nativeElement;
     if (event && !event.cancelable) return;
     event?.preventDefault();
+    if (this.closing) return;
     if (matchMedia('(prefers-reduced-motion: reduce)').matches) return dialog.close();
-    const fade = { duration: 500, easing: 'cubic-bezier(0.7, 0, 0.84, 0)' };
+    this.closing = true;
+    const fade = { duration: 500, easing: 'cubic-bezier(0.33, 1, 0.68, 1)' };
     dialog.animate({ opacity: [1, 0], scale: [1, 0.98] }, fade);
     dialog
       .animate({ opacity: [1, 0] }, { ...fade, pseudoElement: '::backdrop' })
@@ -298,6 +308,7 @@ export class Gallery {
   // A picture the strip opened may be one the mosaic, widened meanwhile, leaves out: its +N
   // cell stands for it.
   protected refocus() {
+    this.closing = false;
     const opener = this.opener!;
     const more = opener.parentElement!.children[this.shown() - 1] as HTMLElement;
     (opener.checkVisibility() ? opener : more).focus();

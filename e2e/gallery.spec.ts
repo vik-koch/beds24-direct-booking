@@ -99,9 +99,12 @@ test('a picture opens full screen, and the buttons, the keys and the thumbnails 
   // With a modifier an arrow is the browser's, such as Alt+Left for back.
   await page.keyboard.press('Alt+ArrowRight');
   await expect(count).toHaveText('Bild 1 von 9');
-  // It fades out as it faded in, then gives the focus back.
+  // It fades out as it faded in, then gives the focus back. A second request while it fades
+  // starts no second fade, which could close the viewer once opened again.
+  await settled(page);
   await page.keyboard.press('Escape');
-  expect(await viewer(page).evaluate((dialog) => dialog.getAnimations().length)).toBeGreaterThan(0);
+  await page.keyboard.press('Escape');
+  expect(await viewer(page).evaluate((dialog) => dialog.getAnimations().length)).toBe(1);
   await expect(viewer(page)).toBeHidden();
   await expect(cell).toBeFocused();
 });
@@ -137,6 +140,10 @@ test('a picture slides in, over the ends too, and its text fades; at once with r
   );
   await expect(viewer(page).locator('.caption-out')).toHaveCSS('opacity', '0');
   await expect(viewer(page).locator('.caption-in')).toHaveCSS('animation-name', 'none');
+  await expect(viewer(page).locator('.viewer-thumbs img').first()).toHaveCSS(
+    'transition-duration',
+    '0s',
+  );
   await page.keyboard.press('Escape');
   expect(await viewer(page).evaluate((dialog) => dialog.open)).toBe(false);
   // Nor does a cell zoom under the pointer.
@@ -193,6 +200,12 @@ test('twenty pictures: two rows of thumbnails in view, and the current one and i
     ratio: 1,
   });
   expect(await page.evaluate(() => scrollY)).toBe(before);
+  // Chosen on a phone, where there are no thumbnails, it is in view once they appear.
+  await page.setViewportSize({ width: 320, height: 640 });
+  await page.keyboard.press('ArrowLeft');
+  await expect(viewer(page).locator('.viewer-count')).toHaveText('Immagine 20 di 20');
+  await page.setViewportSize({ width: 768, height: 900 });
+  await expect(last).toBeInViewport({ ratio: 1 });
   // On a short screen, a landscape phone or a zoomed window, they would leave the picture no room.
   await page.setViewportSize({ width: 768, height: 360 });
   await expect(thumbs).toBeHidden();

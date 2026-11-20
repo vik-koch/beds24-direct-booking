@@ -1542,7 +1542,10 @@
       height: 100%;
       object-fit: cover;
       opacity: 0.4;
-      transition: opacity 0.2s;
+
+      @media (prefers-reduced-motion: no-preference) {
+        transition: opacity 0.2s;
+      }
     }
   }
 
