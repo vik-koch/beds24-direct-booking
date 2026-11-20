@@ -46,7 +46,7 @@ type Season = FreeWeeks['seasons'][number];
               @if (facts.headline[language.code]; as headline) {
                 <p class="teaser-headline">{{ headline }}</p>
               }
-              <ul class="teaser-facts">
+              <ul class="facts teaser-facts">
                 <li>
                   <ng-icon name="lucideUsers" aria-hidden="true" />{{
                     count('guests', facts.guests)
@@ -73,8 +73,12 @@ type Season = FreeWeeks['seasons'][number];
                     @if (lowest !== null) {
                       {{ from[0] }}<strong>{{ money(lowest) }}</strong
                       >{{ from[1] }}
-                    } @else if (season.state !== 'notOpen') {
-                      {{ fill(texts.weeks.full, { season: texts.seasons[season.name]! }) }}
+                    } @else {
+                      {{
+                        fill(texts.weeks[season.state === 'notOpen' ? 'notOpenShort' : 'full'], {
+                          season: texts.seasons[season.name]!,
+                        })
+                      }}
                     }
                   </span>
                 }
@@ -101,7 +105,6 @@ type Season = FreeWeeks['seasons'][number];
 
           &:is([data-count='1'], [data-count='3']) .teaser {
             grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-            align-items: center;
             column-gap: 2rem;
           }
         }
@@ -128,10 +131,6 @@ type Season = FreeWeeks['seasons'][number];
           outline: 2px solid var(--color-accent);
           outline-offset: 0.5rem;
           border-radius: var(--radius-card);
-        }
-
-        &:hover img {
-          transform: scale(1.025);
         }
 
         h3 a {
@@ -161,11 +160,18 @@ type Season = FreeWeeks['seasons'][number];
           width: 100%;
           height: 100%;
           object-fit: cover;
-          transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+      }
 
-          @media (prefers-reduced-motion: reduce) {
-            transition: none;
-          }
+      @media (prefers-reduced-motion: no-preference) {
+        /* Its own layer for good: dropped when the zoom ends, it would be painted anew and jump. */
+        .teaser-picture img {
+          transition: scale 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+          will-change: scale;
+        }
+
+        .teaser:hover img {
+          scale: 1.025;
         }
       }
 
@@ -181,20 +187,8 @@ type Season = FreeWeeks['seasons'][number];
       }
 
       .teaser-facts {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.25rem 1.25rem;
+        row-gap: 0.25rem;
         margin-top: 0.625rem;
-
-        li {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-        }
-
-        ng-icon {
-          color: var(--color-ink-soft);
-        }
       }
 
       .teaser-price {

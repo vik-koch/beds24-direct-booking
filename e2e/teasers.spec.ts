@@ -140,7 +140,7 @@ test(
   },
 );
 
-test('a season not open yet has no price line', async ({ page }) => {
+test('a season not open yet says so on each card', async ({ page }) => {
   // Its prices end today: the current season is full, the next one not open.
   await page.goto('http://localhost:4003/en');
   await expect(prices(page).first()).toHaveText(
@@ -148,7 +148,9 @@ test('a season not open yet has no price line', async ({ page }) => {
   );
   await toOtherSeason(page);
   const season = await page.locator('html').getAttribute('data-season');
-  await expect(page.locator(`.teaser-price > [data-for='${season}']`)).toHaveText(['', '', '']);
+  await expect(page.locator(`.teaser-price > [data-for='${season}']`)).toHaveText(
+    Array(3).fill(/^\s*The weeks of (Winter|Summer) are not open yet\.\s*$/),
+  );
 });
 
 test('the cards pass axe in both seasons', async ({ page }) => {

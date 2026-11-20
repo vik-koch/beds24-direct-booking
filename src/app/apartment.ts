@@ -267,21 +267,8 @@ type Fold = ReturnType<typeof fold>;
         }
       }
 
-      .facts {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem 1.5rem;
+      .apartment .facts {
         font-weight: 500;
-
-        li {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-        }
-
-        ng-icon {
-          color: var(--color-ink-soft);
-        }
       }
 
       /* One column on a phone, which nothing may widen: the panel's rows do not break. */

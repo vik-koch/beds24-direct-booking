@@ -76,6 +76,7 @@
     "next": "Volgend seizoen: {season}",
     "current": "Huidig seizoen: {season}",
     "notOpen": "De weken van {season} zijn nog niet open. Ze verschijnen hier zodra de prijzen vaststaan.",
+    "notOpenShort": "De weken van {season} zijn nog niet open.",
     "full": "Geen enkele week van {season} is nog vrij.",
     "unavailable": "De vrije weken kunnen nu niet getoond worden. Probeer het over een paar minuten opnieuw.",
     "note": "Prijs per week, eindschoonmaak inbegrepen.",
