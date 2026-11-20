@@ -591,17 +591,27 @@ test('a season without prices is not open yet, and a season that has begun is fu
   expect(await line(panel(page).getByRole('rowheader').first())).toBeCloseTo(sentence, 0);
 });
 
-test('without Beds24 the list says it cannot be shown', async ({ page }) => {
-  await page.goto('http://localhost:4001/en');
-  await expect(page.getByText('The free weeks cannot be shown just now.')).toBeVisible();
-});
+test(
+  'without Beds24 the list says it cannot be shown',
+  { tag: '@any-engine' },
+  async ({ page }) => {
+    await page.goto('http://localhost:4001/en');
+    await expect(page.getByText('The free weeks cannot be shown just now.')).toBeVisible();
+  },
+);
 
-test('a site with one season lists a year of weeks without a season button', async ({ page }) => {
-  await page.goto('http://localhost:4002/it');
-  await expect(page.getByRole('heading', { name: 'Settimane libere', exact: true })).toBeVisible();
-  await expect(button(page)).toHaveCount(0);
-  await expect(panel(page).locator('.stay[aria-selected]').first()).toBeAttached();
-});
+test(
+  'a site with one season lists a year of weeks without a season button',
+  { tag: '@any-engine' },
+  async ({ page }) => {
+    await page.goto('http://localhost:4002/it');
+    await expect(
+      page.getByRole('heading', { name: 'Settimane libere', exact: true }),
+    ).toBeVisible();
+    await expect(button(page)).toHaveCount(0);
+    await expect(panel(page).locator('.stay[aria-selected]').first()).toBeAttached();
+  },
+);
 
 test('the list passes axe in both seasons', async ({ page }) => {
   await page.goto('/en');

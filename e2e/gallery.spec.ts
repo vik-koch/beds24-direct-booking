@@ -371,17 +371,21 @@ test('a resized window keeps the picture the viewer shows', async ({ page }) => 
 });
 
 for (const path of ['/de/wohnungen/ahorn', '/en/apartments/ahorn'])
-  test(`${path} passes axe with the viewer open, in both seasons and widths`, async ({ page }) => {
-    for (const width of [320, 1280])
-      for (const season of ['winter', 'summer']) {
-        await page.setViewportSize({ width, height: 800 });
-        await page.goto(`${path}?season=${season}`);
-        await page.locator('.tile:visible').first().click();
-        await settled(page);
-        const { violations } = await new AxeBuilder({ page }).include('dialog').analyze();
-        expect(violations, `at ${width} in ${season}`).toEqual([]);
-      }
-  });
+  test(
+    `${path} passes axe with the viewer open, in both seasons and widths`,
+    { tag: '@any-engine' },
+    async ({ page }) => {
+      for (const width of [320, 1280])
+        for (const season of ['winter', 'summer']) {
+          await page.setViewportSize({ width, height: 800 });
+          await page.goto(`${path}?season=${season}`);
+          await page.locator('.tile:visible').first().click();
+          await settled(page);
+          const { violations } = await new AxeBuilder({ page }).include('dialog').analyze();
+          expect(violations, `at ${width} in ${season}`).toEqual([]);
+        }
+    },
+  );
 
 test('every tab stop in the viewer shows a focus ring', async ({ page, browserName }) => {
   test.skip(browserName === 'webkit', 'Safari tabs only to fields unless told otherwise');

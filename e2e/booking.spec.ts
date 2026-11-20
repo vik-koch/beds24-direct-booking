@@ -61,117 +61,125 @@ const options = async (page: Page, id: 'adults' | 'children') => {
   return names.map((name) => Number(name.trim()));
 };
 
-test('a week and the guests make the total, and the button takes them on to booking', async ({
-  page,
-}) => {
-  await page.setViewportSize({ width: 1280, height: 900 });
-  await openNext(page, '/de/wohnungen/laerche');
-  await expect(panel(page).getByRole('button', { name: 'Erst eine Woche wählen' })).toBeDisabled();
-  await expect(panel(page).locator('.from:visible')).toHaveText(/ab €\s[\d.,]+ pro Woche/);
-  const week = await firstFree(page);
-  const price = amount(await week.innerText());
-  await week.click();
-  await expect(week).toHaveAttribute('aria-selected', 'true');
-  const total = panel(page).locator('.outcome:visible .total');
-  await expect(total.locator('div').nth(1)).toHaveText(
-    /Ortstaxe: 2 Erwachsene × 7 Nächte × €\s3,50\s*€\s49/,
-  );
-  await expect(total.locator('.sum dd')).toHaveText(euro(price + 49));
+test(
+  'a week and the guests make the total, and the button takes them on to booking',
+  { tag: '@any-engine' },
+  async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await openNext(page, '/de/wohnungen/laerche');
+    await expect(
+      panel(page).getByRole('button', { name: 'Erst eine Woche wählen' }),
+    ).toBeDisabled();
+    await expect(panel(page).locator('.from:visible')).toHaveText(/ab €\s[\d.,]+ pro Woche/);
+    const week = await firstFree(page);
+    const price = amount(await week.innerText());
+    await week.click();
+    await expect(week).toHaveAttribute('aria-selected', 'true');
+    const total = panel(page).locator('.outcome:visible .total');
+    await expect(total.locator('div').nth(1)).toHaveText(
+      /Ortstaxe: 2 Erwachsene × 7 Nächte × €\s3,50\s*€\s49/,
+    );
+    await expect(total.locator('.sum dd')).toHaveText(euro(price + 49));
 
-  await pickCount(page, 'adults', 3);
-  await pickCount(page, 'children', 1);
-  await expect(total.locator('div').nth(1)).toContainText('3 Erwachsene × 7 Nächte');
-  await expect(total.locator('.sum dd')).toHaveText(euro(price + 73.5));
-  // The address keeps the choice, so a reload shows it again.
-  await expect(page).toHaveURL(/adults=3&children=1/);
-  const kept = new URL(page.url()).searchParams;
-  expect(kept.get('arrival')).toMatch(/^\d{4}-\d\d-\d\d$/);
-  expect(kept.get('departure')).toMatch(/^\d{4}-\d\d-\d\d$/);
-  expect(kept.get('season')).toBe(await page.locator('html').getAttribute('data-season'));
-  // So does the other language's link.
-  const english = new URL(
-    (await page.locator('link[rel=alternate][hreflang=en-GB]').getAttribute('href'))!,
-    'http://localhost',
-  );
-  expect(english.search).toBe(new URL(page.url()).search);
-  await page.reload();
-  await expect(page.locator('#adults')).toHaveText('3');
-  await expect(page.locator('#children')).toHaveText('1');
-  await expect(chosen(page)).toHaveCount(1);
+    await pickCount(page, 'adults', 3);
+    await pickCount(page, 'children', 1);
+    await expect(total.locator('div').nth(1)).toContainText('3 Erwachsene × 7 Nächte');
+    await expect(total.locator('.sum dd')).toHaveText(euro(price + 73.5));
+    // The address keeps the choice, so a reload shows it again.
+    await expect(page).toHaveURL(/adults=3&children=1/);
+    const kept = new URL(page.url()).searchParams;
+    expect(kept.get('arrival')).toMatch(/^\d{4}-\d\d-\d\d$/);
+    expect(kept.get('departure')).toMatch(/^\d{4}-\d\d-\d\d$/);
+    expect(kept.get('season')).toBe(await page.locator('html').getAttribute('data-season'));
+    // So does the other language's link.
+    const english = new URL(
+      (await page.locator('link[rel=alternate][hreflang=en-GB]').getAttribute('href'))!,
+      'http://localhost',
+    );
+    expect(english.search).toBe(new URL(page.url()).search);
+    await page.reload();
+    await expect(page.locator('#adults')).toHaveText('3');
+    await expect(page.locator('#children')).toHaveText('1');
+    await expect(chosen(page)).toHaveCount(1);
 
-  const link = panel(page).getByRole('link', { name: 'Weiter zur Buchung' });
-  const href = new URL((await link.getAttribute('href'))!, 'http://localhost');
-  expect(href.pathname).toBe('/de/wohnungen/laerche/buchen');
-  expect([...href.searchParams.keys()]).toEqual(['arrival', 'departure', 'adults', 'children']);
-  expect(href.searchParams.get('adults')).toBe('3');
-  expect(href.searchParams.get('children')).toBe('1');
-  const days =
-    (Date.parse(href.searchParams.get('departure')!) -
-      Date.parse(href.searchParams.get('arrival')!)) /
-    864e5;
-  expect(days).toBe(7);
-});
+    const link = panel(page).getByRole('link', { name: 'Weiter zur Buchung' });
+    const href = new URL((await link.getAttribute('href'))!, 'http://localhost');
+    expect(href.pathname).toBe('/de/wohnungen/laerche/buchen');
+    expect([...href.searchParams.keys()]).toEqual(['arrival', 'departure', 'adults', 'children']);
+    expect(href.searchParams.get('adults')).toBe('3');
+    expect(href.searchParams.get('children')).toBe('1');
+    const days =
+      (Date.parse(href.searchParams.get('departure')!) -
+        Date.parse(href.searchParams.get('arrival')!)) /
+      864e5;
+    expect(days).toBe(7);
+  },
+);
 
-test('the counts offer what Beds24 allows, and more adults make room by fewer children', async ({
-  page,
-}) => {
-  // Lärche: four guests, any of them adults, up to three children.
-  await openNext(page, '/de/wohnungen/laerche');
-  expect(await options(page, 'adults')).toEqual([1, 2, 3, 4]);
-  expect(await options(page, 'children')).toEqual([0, 1, 2]);
-  await pickCount(page, 'adults', 1);
-  expect(await options(page, 'children')).toEqual([0, 1, 2, 3]);
-  await pickCount(page, 'children', 3);
-  await pickCount(page, 'adults', 4);
-  await expect(page.locator('#children')).toHaveText('0');
-  expect(await options(page, 'children')).toEqual([0]);
+test(
+  'the counts offer what Beds24 allows, and more adults make room by fewer children',
+  { tag: '@any-engine' },
+  async ({ page }) => {
+    // Lärche: four guests, any of them adults, up to three children.
+    await openNext(page, '/de/wohnungen/laerche');
+    expect(await options(page, 'adults')).toEqual([1, 2, 3, 4]);
+    expect(await options(page, 'children')).toEqual([0, 1, 2]);
+    await pickCount(page, 'adults', 1);
+    expect(await options(page, 'children')).toEqual([0, 1, 2, 3]);
+    await pickCount(page, 'children', 3);
+    await pickCount(page, 'adults', 4);
+    await expect(page.locator('#children')).toHaveText('0');
+    expect(await options(page, 'children')).toEqual([0]);
 
-  // Ahorn: six guests, at most four of them adults.
-  await open(page, '/en/apartments/ahorn');
-  await expect(page.locator('label[for=children]')).toHaveText(/Children\s+up to 14/);
-  expect(await options(page, 'adults')).toEqual([1, 2, 3, 4]);
-  expect(await options(page, 'children')).toEqual([0, 1, 2, 3, 4]);
+    // Ahorn: six guests, at most four of them adults.
+    await open(page, '/en/apartments/ahorn');
+    await expect(page.locator('label[for=children]')).toHaveText(/Children\s+up to 14/);
+    expect(await options(page, 'adults')).toEqual([1, 2, 3, 4]);
+    expect(await options(page, 'children')).toEqual([0, 1, 2, 3, 4]);
 
-  // Zirbe's room asks Beds24 for no children: one count of guests, each taxed as an adult. The
-  // second site's Vista is that room, in a season of a whole year that always has free weeks.
-  await open(page, 'http://localhost:4002/it/appartamenti/vista');
-  await expect(page.locator('#children')).toHaveCount(0);
-  await expect(page.getByRole('combobox', { name: 'Ospiti' })).toHaveText('2');
-  expect(await options(page, 'adults')).toEqual([1, 2]);
-  await (await firstFree(page)).click();
-  await expect(panel(page).locator('.outcome:visible .total')).toContainText(
-    'Tassa di soggiorno: 2 ospiti × 7 notti',
-  );
-});
+    // Zirbe's room asks Beds24 for no children: one count of guests, each taxed as an adult. The
+    // second site's Vista is that room, in a season of a whole year that always has free weeks.
+    await open(page, 'http://localhost:4002/it/appartamenti/vista');
+    await expect(page.locator('#children')).toHaveCount(0);
+    await expect(page.getByRole('combobox', { name: 'Ospiti' })).toHaveText('2');
+    expect(await options(page, 'adults')).toEqual([1, 2]);
+    await (await firstFree(page)).click();
+    await expect(panel(page).locator('.outcome:visible .total')).toContainText(
+      'Tassa di soggiorno: 2 ospiti × 7 notti',
+    );
+  },
+);
 
-test('an address over the limits opens at them, and an arrival from the list is chosen', async ({
-  page,
-}) => {
-  await open(page, '/de/wohnungen/laerche?adults=9&children=9');
-  await expect(page.locator('#adults')).toHaveText('4');
-  await expect(page.locator('#children')).toHaveText('0');
-  await open(page, '/de/wohnungen/laerche?adults=0&children=9');
-  await expect(page.locator('#adults')).toHaveText('1');
-  await expect(page.locator('#children')).toHaveText('3');
+test(
+  'an address over the limits opens at them, and an arrival from the list is chosen',
+  { tag: '@any-engine' },
+  async ({ page }) => {
+    await open(page, '/de/wohnungen/laerche?adults=9&children=9');
+    await expect(page.locator('#adults')).toHaveText('4');
+    await expect(page.locator('#children')).toHaveText('0');
+    await open(page, '/de/wohnungen/laerche?adults=0&children=9');
+    await expect(page.locator('#adults')).toHaveText('1');
+    await expect(page.locator('#children')).toHaveText('3');
 
-  // A week in a later month, as the free-weeks list links it.
-  await openNext(page, '/de/wohnungen/laerche');
-  await next(page).click();
-  const week = await firstFree(page);
-  const name = await monthName(page).innerText();
-  await week.click();
-  const url = new URL(page.url());
-  const stay = ['arrival', 'departure', 'season'].map(
-    (name) => `${name}=${url.searchParams.get(name)}`,
-  );
-  await open(page, `/de/wohnungen/laerche?${stay.join('&')}`);
-  await expect(monthName(page)).toHaveText(name);
-  await expect(chosen(page)).toHaveCount(1);
-  await expect(panel(page).getByRole('link', { name: 'Weiter zur Buchung' })).toBeVisible();
-  // A week that is not free is not chosen.
-  await open(page, '/de/wohnungen/laerche?arrival=2020-01-04&departure=2020-01-11');
-  await expect(panel(page).locator('[aria-selected=true]')).toHaveCount(0);
-});
+    // A week in a later month, as the free-weeks list links it.
+    await openNext(page, '/de/wohnungen/laerche');
+    await next(page).click();
+    const week = await firstFree(page);
+    const name = await monthName(page).innerText();
+    await week.click();
+    const url = new URL(page.url());
+    const stay = ['arrival', 'departure', 'season'].map(
+      (name) => `${name}=${url.searchParams.get(name)}`,
+    );
+    await open(page, `/de/wohnungen/laerche?${stay.join('&')}`);
+    await expect(monthName(page)).toHaveText(name);
+    await expect(chosen(page)).toHaveCount(1);
+    await expect(panel(page).getByRole('link', { name: 'Weiter zur Buchung' })).toBeVisible();
+    // A week that is not free is not chosen.
+    await open(page, '/de/wohnungen/laerche?arrival=2020-01-04&departure=2020-01-11');
+    await expect(panel(page).locator('[aria-selected=true]')).toHaveCount(0);
+  },
+);
 
 test('the calendar shows the list’s month and week, at the same height', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
@@ -379,52 +387,57 @@ test('a change of language or a reload keeps the view and the month', async ({ p
   await expect(page.getByRole('radio', { name: 'Calendar' })).toBeChecked();
 });
 
-test('a shared link opens at its week’s season, whatever season the page would show', async ({
-  page,
-  browser,
-}) => {
-  await open(page, '/de/wohnungen/laerche');
-  const other = await page.locator('html').getAttribute('data-season');
-  await panel(page).locator('.other-season').click();
-  await expect(page.locator('html')).not.toHaveAttribute('data-season', other!);
-  const shown = await page.locator('html').getAttribute('data-season');
-  await (await firstFree(page)).click();
-  await expect(page).toHaveURL(new RegExp(`season=${shown}`));
-  // Away from the week's season and back: the address names it again.
-  await panel(page).locator('.other-season').click();
-  await expect(page).not.toHaveURL(/season=/);
-  await panel(page).locator('.other-season').click();
-  await expect(page).toHaveURL(new RegExp(`season=${shown}`));
-  // Opened afresh, in this language and in the other.
-  const english = await page.locator('link[rel=alternate][hreflang=en-GB]').getAttribute('href');
-  for (const [link, book] of [
-    [page.url(), 'Weiter zur Buchung'],
-    [english!, 'Continue to booking'],
-  ]) {
-    const fresh = await browser.newPage();
-    await open(fresh, link);
-    await expect(fresh.locator('html')).toHaveAttribute('data-season', shown!);
-    await expect(chosen(fresh)).toHaveCount(1);
-    await expect(panel(fresh).getByRole('link', { name: book })).toBeVisible();
-    await fresh.close();
-  }
-});
+test(
+  'a shared link opens at its week’s season, whatever season the page would show',
+  { tag: '@any-engine' },
+  async ({ page, browser }) => {
+    await open(page, '/de/wohnungen/laerche');
+    const other = await page.locator('html').getAttribute('data-season');
+    await panel(page).locator('.other-season').click();
+    await expect(page.locator('html')).not.toHaveAttribute('data-season', other!);
+    const shown = await page.locator('html').getAttribute('data-season');
+    await (await firstFree(page)).click();
+    await expect(page).toHaveURL(new RegExp(`season=${shown}`));
+    // Away from the week's season and back: the address names it again.
+    await panel(page).locator('.other-season').click();
+    await expect(page).not.toHaveURL(/season=/);
+    await panel(page).locator('.other-season').click();
+    await expect(page).toHaveURL(new RegExp(`season=${shown}`));
+    // Opened afresh, in this language and in the other.
+    const english = await page.locator('link[rel=alternate][hreflang=en-GB]').getAttribute('href');
+    for (const [link, book] of [
+      [page.url(), 'Weiter zur Buchung'],
+      [english!, 'Continue to booking'],
+    ]) {
+      const fresh = await browser.newPage();
+      await open(fresh, link);
+      await expect(fresh.locator('html')).toHaveAttribute('data-season', shown!);
+      await expect(chosen(fresh)).toHaveCount(1);
+      await expect(panel(fresh).getByRole('link', { name: book })).toBeVisible();
+      await fresh.close();
+    }
+  },
+);
 
-test('a full season, one not open yet and an unreachable Beds24 each say so', async ({ page }) => {
-  // Where Beds24 has prices only up to today, the season shown by date is full and the next one
-  // not open yet; neither has a total.
-  await open(page, 'http://localhost:4003/en/apartments/laerche');
-  await expect(panel(page).locator('.panel-empty:visible')).toHaveText(
-    /No week of (Winter \d{4}\/\d\d|Summer \d{4}) is free any more\./,
-  );
-  await expect(panel(page).locator('.outcome:visible')).toHaveCount(0);
-  await panel(page).locator('.other-season').click();
-  await expect(season(page).locator('.panel-empty')).toContainText('are not open yet');
-  const response = await open(page, 'http://localhost:4001/en/apartments/laerche');
-  expect(response!.status()).toBe(503);
-  await expect(panel(page)).toContainText('The free weeks cannot be shown just now.');
-  await expect(panel(page).locator('button, a, input')).toHaveCount(0);
-});
+test(
+  'a full season, one not open yet and an unreachable Beds24 each say so',
+  { tag: '@any-engine' },
+  async ({ page }) => {
+    // Where Beds24 has prices only up to today, the season shown by date is full and the next one
+    // not open yet; neither has a total.
+    await open(page, 'http://localhost:4003/en/apartments/laerche');
+    await expect(panel(page).locator('.panel-empty:visible')).toHaveText(
+      /No week of (Winter \d{4}\/\d\d|Summer \d{4}) is free any more\./,
+    );
+    await expect(panel(page).locator('.outcome:visible')).toHaveCount(0);
+    await panel(page).locator('.other-season').click();
+    await expect(season(page).locator('.panel-empty')).toContainText('are not open yet');
+    const response = await open(page, 'http://localhost:4001/en/apartments/laerche');
+    expect(response!.status()).toBe(503);
+    await expect(panel(page)).toContainText('The free weeks cannot be shown just now.');
+    await expect(panel(page).locator('button, a, input')).toHaveCount(0);
+  },
+);
 
 test('the panel’s season button slides the other season in and keeps the guests', async ({
   page,
@@ -492,35 +505,38 @@ test('on a phone a bar leads to the panel while it is out of view, then on to bo
 
 // One test per width: six scans in one come too close to the test's time limit.
 for (const width of [320, 1280])
-  test(`the panel passes axe at ${width} px, in both views and with a list open`, async ({
-    page,
-  }) => {
-    await page.setViewportSize({ width, height: 800 });
-    await openNext(page, '/en/apartments/laerche');
-    await (await firstFree(page)).click();
-    const scan = async (place: 'list' | 'calendar') => {
-      // The fade starts after the view's render, so a check before it would find none.
-      await page.waitForFunction(
-        (view) =>
-          document.querySelector(`.views[data-view="${view}"]`) && !document.getAnimations().length,
-        place,
-      );
-      const { violations } = await new AxeBuilder({ page }).include('.booking').analyze();
-      expect(violations, place).toEqual([]);
-    };
-    await scan('list');
-    expect(
-      await month(page)
-        .locator('.week')
-        .evaluateAll((rows) => rows.every((row) => row.scrollWidth <= row.clientWidth)),
-      'rows fit',
-    ).toBe(true);
-    await page.locator('.views').getByTitle('Calendar').click();
-    await scan('calendar');
-    await page.locator('#adults').click();
-    const { violations } = await new AxeBuilder({ page })
-      .include('.booking')
-      .include('.spartan-select-content')
-      .analyze();
-    expect(violations, 'open list').toEqual([]);
-  });
+  test(
+    `the panel passes axe at ${width} px, in both views and with a list open`,
+    { tag: '@any-engine' },
+    async ({ page }) => {
+      await page.setViewportSize({ width, height: 800 });
+      await openNext(page, '/en/apartments/laerche');
+      await (await firstFree(page)).click();
+      const scan = async (place: 'list' | 'calendar') => {
+        // The fade starts after the view's render, so a check before it would find none.
+        await page.waitForFunction(
+          (view) =>
+            document.querySelector(`.views[data-view="${view}"]`) &&
+            !document.getAnimations().length,
+          place,
+        );
+        const { violations } = await new AxeBuilder({ page }).include('.booking').analyze();
+        expect(violations, place).toEqual([]);
+      };
+      await scan('list');
+      expect(
+        await month(page)
+          .locator('.week')
+          .evaluateAll((rows) => rows.every((row) => row.scrollWidth <= row.clientWidth)),
+        'rows fit',
+      ).toBe(true);
+      await page.locator('.views').getByTitle('Calendar').click();
+      await scan('calendar');
+      await page.locator('#adults').click();
+      const { violations } = await new AxeBuilder({ page })
+        .include('.booking')
+        .include('.spartan-select-content')
+        .analyze();
+      expect(violations, 'open list').toEqual([]);
+    },
+  );
