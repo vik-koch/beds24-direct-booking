@@ -1172,6 +1172,7 @@
     flex: 0 0 100%;
     aspect-ratio: 4 / 3;
     overflow: hidden;
+    border-radius: var(--radius-card);
     scroll-snap-align: start;
     isolation: isolate;
     background: var(--color-line);
@@ -1188,18 +1189,19 @@
       object-fit: cover;
     }
 
-    /* Inside the cell: the mosaic's rounded edge would cut a ring outside it. */
+    /* Inside the cell on a phone: the strip would cut a ring outside it. */
     &:focus-visible {
       outline-width: 3px;
       outline-offset: -3px;
     }
   }
 
+  /* Low in its cell, so that the picture behind it stays recognisable. */
   .more {
     position: absolute;
-    top: 50%;
+    bottom: 0.75rem;
     left: 50%;
-    translate: -50% -50%;
+    translate: -50%;
     padding: 0.25rem 0.875rem;
     border-radius: var(--radius-control);
     background: var(--color-surface);
@@ -1209,8 +1211,10 @@
     box-shadow: var(--shadow-card);
   }
 
+  /* Taps and swipes go through it to the strip. */
   .strip-count {
     position: absolute;
+    pointer-events: none;
     right: 0.75rem;
     bottom: 0.75rem;
     padding: 0.1875rem 0.625rem;
@@ -1227,17 +1231,24 @@
     }
   }
 
-  /* Beside a 4:3 picture of 8 parts, two rows of squares take 3 parts each. */
+  /* Beside a 4:3 picture of 8 parts, two rows of squares take 3 parts each; the gaps leave room
+     for a ring around a cell. */
   @media (width >= 48rem) {
     .tiles {
       display: grid;
       grid-template-columns: 8fr repeat(var(--columns, 1), 3fr);
-      gap: 0.375rem;
-      overflow: hidden;
+      gap: 0.75rem;
+      overflow: visible;
     }
 
     .tile {
       aspect-ratio: auto;
+      border-radius: var(--radius-menu);
+
+      &:focus-visible {
+        outline-width: 2px;
+        outline-offset: 3px;
+      }
 
       &:first-child {
         grid-row: span 2;
@@ -1281,8 +1292,10 @@
   }
 
   @media (width >= 48rem) and (prefers-reduced-motion: no-preference) {
+    /* Its own layer for good: dropped when the zoom ends, it would be painted anew and jump. */
     .tile img {
       transition: scale 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+      will-change: scale;
     }
 
     .tile:hover img {
@@ -1307,13 +1320,17 @@
 
     &[open] {
       display: grid;
-      grid-template: auto minmax(0, 1fr) auto auto / 1fr auto;
+      grid-template: minmax(0, 1fr) auto auto / 1fr;
       gap: 0.75rem;
       animation: viewer-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     &::backdrop {
       background: var(--color-ground);
+    }
+
+    &[open]::backdrop {
+      animation: fade-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .icon-button {
@@ -1339,24 +1356,39 @@
     }
   }
 
-  .viewer-count {
-    align-self: center;
-    font-size: 0.9375rem;
-  }
-
+  /* The count and the close button stand over the picture and its buttons, not in the screen's
+     far corners; all of them are centred together. */
   .viewer-stage {
-    grid-column: 1 / -1;
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(3, auto);
+    place-content: center;
     align-items: center;
-    justify-content: center;
-    gap: 1rem;
+    row-gap: 0.75rem;
     container-type: size;
   }
 
-  /* The buttons' room is kept only where there are buttons. */
+  .viewer-count {
+    grid-area: 1 / 1 / 2 / -1;
+    font-size: 0.9375rem;
+  }
+
+  .viewer-close {
+    grid-area: 1 / 1 / 2 / -1;
+    justify-self: end;
+  }
+
+  .viewer-previous {
+    margin-inline-end: 1rem;
+  }
+
+  .viewer-next {
+    margin-inline-start: 1rem;
+  }
+
+  /* The buttons' room is kept only where there are buttons; the row above takes its own. */
   .viewer-track {
     display: flex;
-    width: min(100cqw - var(--beside, 0px), 100cqh * 4 / 3);
+    width: min(100cqw - var(--beside, 0px), (100cqh - var(--size-control) - 0.75rem) * 4 / 3);
     aspect-ratio: 4 / 3;
     overflow-x: auto;
     scroll-snap-type: x mandatory;
@@ -1418,7 +1450,7 @@
 
   /* The new text starts as the old one is nearly gone: the two are never read together. */
   .caption-in {
-    animation: caption-in 0.25s 0.12s ease-out backwards;
+    animation: fade-in 0.25s 0.12s ease-out backwards;
   }
 
   .caption-out {
@@ -1426,7 +1458,7 @@
     animation: caption-out 0.15s ease-in;
   }
 
-  @keyframes caption-in {
+  @keyframes fade-in {
     from {
       opacity: 0;
     }
@@ -1440,6 +1472,7 @@
 
   @media (prefers-reduced-motion: reduce) {
     .viewer[open],
+    .viewer[open]::backdrop,
     .caption-in,
     .caption-out {
       animation: none;
@@ -1468,23 +1501,21 @@
     justify-content: center;
     padding-block: 0.25rem;
 
+    /* The current one only by its full colour: a line around it would look like the ring. */
     button {
       flex: none;
       width: 4.5rem;
       height: 3rem;
-      opacity: 0.55;
+      opacity: 0.4;
       cursor: pointer;
       transition: opacity 0.2s;
 
-      &:hover,
-      &[aria-current] {
-        opacity: 1;
+      &:hover {
+        opacity: 0.75;
       }
 
       &[aria-current] {
-        box-shadow:
-          0 0 0 2px var(--color-ground),
-          0 0 0 4px var(--color-accent);
+        opacity: 1;
       }
 
       &:focus-visible {
@@ -1496,6 +1527,13 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
+    }
+  }
+
+  /* On a short screen the thumbnails would leave the picture no room. */
+  @media (width >= 48rem) and (height < 30rem) {
+    .viewer-thumbs {
+      display: none;
     }
   }
 

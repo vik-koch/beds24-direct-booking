@@ -34,6 +34,16 @@ test('the mosaic shows the first picture at 4:3 and the others square, eight at 
     if (more) await expect(shown.last().locator('.more'), path).toHaveText(more);
     else await expect(page.locator('.more:visible'), path).toHaveCount(0);
   }
+  // The +N label stands low, so that its picture shows; a focused cell's ring stands outside it,
+  // in a gap wide enough not to touch the next.
+  await page.goto('/de/wohnungen/ahorn');
+  const last = page.locator('.tile').nth(7);
+  const label = await box(last.locator('.more'));
+  const cell = await box(last);
+  expect(label.y).toBeGreaterThan(cell.y + cell.height / 2);
+  await last.focus();
+  await expect(last).toHaveCSS('outline-offset', '3px');
+  await expect(page.locator('.tiles')).toHaveCSS('column-gap', '12px');
 });
 
 test('a picture opens full screen, and the buttons, the keys and the thumbnails move', async ({
@@ -61,6 +71,12 @@ test('a picture opens full screen, and the buttons, the keys and the thumbnails 
   const next = await box(viewer(page).locator('.viewer-next'));
   expect(frame.x - previous.x - previous.width).toBeCloseTo(16, -1);
   expect(next.x - frame.x - frame.width).toBeCloseTo(16, -1);
+  // The count and the close button stand right over them, not in the screen's corners.
+  const counter = await box(count);
+  const close = await box(viewer(page).locator('.viewer-close'));
+  expect(counter.x).toBeCloseTo(previous.x, 0);
+  expect(close.x + close.width).toBeCloseTo(next.x + next.width, 0);
+  expect(close.y + close.height).toBeCloseTo(frame.y - 12, 0);
 
   await viewer(page).getByRole('button', { name: 'Nächstes Bild' }).click();
   await expect(count).toHaveText('Bild 4 von 9');
@@ -70,13 +86,22 @@ test('a picture opens full screen, and the buttons, the keys and the thumbnails 
   await thumb.click();
   await expect(count).toHaveText('Bild 9 von 9');
   await expect(thumb).toHaveAttribute('aria-current', 'true');
+  // Shown by its full colour alone: a line around it would look like the focus ring.
+  await expect(thumb).toHaveCSS('opacity', '1');
+  await expect(thumb).toHaveCSS('box-shadow', 'none');
+  await expect(viewer(page).getByRole('button', { name: 'Bild 8 von 9' })).toHaveCSS(
+    'opacity',
+    '0.4',
+  );
   // Past the last picture the first follows.
   await page.keyboard.press('ArrowRight');
   await expect(count).toHaveText('Bild 1 von 9');
   // With a modifier an arrow is the browser's, such as Alt+Left for back.
   await page.keyboard.press('Alt+ArrowRight');
   await expect(count).toHaveText('Bild 1 von 9');
+  // It fades out as it faded in, then gives the focus back.
   await page.keyboard.press('Escape');
+  expect(await viewer(page).evaluate((dialog) => dialog.getAnimations().length)).toBeGreaterThan(0);
   await expect(viewer(page)).toBeHidden();
   await expect(cell).toBeFocused();
 });
@@ -101,7 +126,7 @@ test('a picture slides in, over the ends too, and its text fades; at once with r
   expect(await moving(4)).toBe(1);
   await expect(viewer(page).locator('.viewer-count')).toHaveText('Bild 5 von 5');
   await expect(viewer(page).locator('.caption-out')).toHaveCSS('animation-name', 'caption-out');
-  await expect(viewer(page).locator('.caption-in')).toHaveCSS('animation-name', 'caption-in');
+  await expect(viewer(page).locator('.caption-in')).toHaveCSS('animation-name', 'fade-in');
 
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.keyboard.press('ArrowRight');
@@ -113,6 +138,7 @@ test('a picture slides in, over the ends too, and its text fades; at once with r
   await expect(viewer(page).locator('.caption-out')).toHaveCSS('opacity', '0');
   await expect(viewer(page).locator('.caption-in')).toHaveCSS('animation-name', 'none');
   await page.keyboard.press('Escape');
+  expect(await viewer(page).evaluate((dialog) => dialog.open)).toBe(false);
   // Nor does a cell zoom under the pointer.
   await page.locator('.tile').nth(1).hover();
   await expect(page.locator('.tile').nth(1).locator('img')).toHaveCSS('scale', 'none');
@@ -156,6 +182,31 @@ test('twenty pictures: the thumbnails stand in rows, and the focus follows the k
   await page.keyboard.press('ArrowLeft');
   await expect(viewer(page).locator('.viewer-count')).toHaveText('Immagine 20 di 20');
   await expect(thumbs.getByRole('button', { name: 'Immagine 20 di 20' })).toBeFocused();
+  // On a short screen, a landscape phone or a zoomed window, they would leave the picture no room.
+  await page.setViewportSize({ width: 768, height: 360 });
+  await expect(thumbs).toBeHidden();
+  await settled(page);
+  expect((await box(viewer(page).locator('.viewer-track'))).height).toBeGreaterThan(150);
+});
+
+test('two pictures: past either end the other picture arrives from the side asked for', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('http://localhost:4002/it/appartamenti/vista');
+  await page.locator('.tile').first().click();
+  const arrival = (index: number) =>
+    viewer(page)
+      .locator('.viewer-slide img')
+      .nth(index)
+      .evaluate((image) => String(image.getAnimations()[0]?.effect?.getKeyframes()[0].transform));
+  await page.keyboard.press('ArrowRight');
+  expect(await arrival(1)).toBe('undefined');
+  await settled(page);
+  await page.keyboard.press('ArrowRight');
+  expect(await arrival(0)).toBe('translateX(8%)');
+  await page.keyboard.press('ArrowLeft');
+  expect(await arrival(1)).toBe('translateX(-8%)');
 });
 
 test('one picture: a single cell, and a viewer without buttons or thumbnails', async ({ page }) => {
@@ -183,7 +234,9 @@ test('on a phone the pictures are a strip, and the viewer’s buttons sit under 
   await expect(page.locator('.strip-count')).toHaveText('1 / 9');
   await page.locator('.tiles').evaluate((strip) => strip.scrollTo({ left: strip.clientWidth * 3 }));
   await expect(page.locator('.strip-count')).toHaveText('4 / 9');
-  await page.locator('.tile').nth(3).click();
+  // A tap on the count reaches the picture under it.
+  const counter = await box(page.locator('.strip-count'));
+  await page.mouse.click(counter.x + counter.width / 2, counter.y + counter.height / 2);
   await expect(viewer(page).locator('.viewer-count')).toHaveText('Bild 4 von 9');
   await settled(page);
   const frame = await box(viewer(page).locator('.viewer-track'));
@@ -209,7 +262,19 @@ test('the page behind the viewer holds still, and keeps its place when it closes
   await page.mouse.move(640, 400);
   await page.mouse.wheel(0, 600);
   await page.keyboard.press('Escape');
+  await expect(viewer(page)).toBeHidden();
   expect(await page.evaluate(() => scrollY)).toBe(300);
+});
+
+test('a picture the mosaic leaves out gives the focus back to its +N cell', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 640 });
+  await page.goto('/de/wohnungen/ahorn');
+  await page.locator('.tiles').evaluate((strip) => strip.scrollTo({ left: strip.clientWidth * 8 }));
+  await page.locator('.tile').nth(8).click();
+  await expect(viewer(page).locator('.viewer-count')).toHaveText('Bild 9 von 9');
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.keyboard.press('Escape');
+  await expect(page.locator('.tile').nth(7)).toBeFocused();
 });
 
 test('after a swipe the keys go on from the picture swiped to', async ({ page }) => {

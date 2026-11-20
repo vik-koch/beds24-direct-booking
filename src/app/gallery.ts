@@ -66,18 +66,19 @@ const srcset = (picture: Picture) =>
       class="viewer"
       tabindex="-1"
       [attr.aria-label]="texts.gallery.name"
-      (close)="opener?.focus()"
+      (cancel)="close($event)"
+      (close)="refocus()"
     >
-      <p class="viewer-count" aria-live="polite">{{ position(index()) }}</p>
-      <button
-        class="icon-button viewer-close"
-        type="button"
-        [attr.aria-label]="texts.nav.close"
-        (click)="dialog.close()"
-      >
-        <ng-icon name="lucideX" aria-hidden="true" />
-      </button>
       <div class="viewer-stage">
+        <p class="viewer-count" aria-live="polite">{{ position(index()) }}</p>
+        <button
+          class="icon-button viewer-close"
+          type="button"
+          [attr.aria-label]="texts.nav.close"
+          (click)="close()"
+        >
+          <ng-icon name="lucideX" aria-hidden="true" />
+        </button>
         @if (pictures().length > 1) {
           <button
             class="icon-button viewer-previous"
@@ -179,7 +180,7 @@ export class Gallery {
   protected readonly from = signal(0);
   // The viewer's pictures load only once it has opened.
   private readonly opened = signal(false);
-  protected opener: HTMLElement | null = null;
+  private opener: HTMLElement | null = null;
   // Where the track is headed, so that a step pressed while it slides goes on from there, and
   // where it set off: lined up anywhere else, it has arrived or been swiped.
   private target = 0;
@@ -239,7 +240,7 @@ export class Gallery {
     const width = this.measure(track);
     this.start = Math.round(track.scrollLeft / width);
     this.target = (index + count) % count;
-    const far = Math.abs(this.target - this.start) > 1;
+    const far = index !== this.target || Math.abs(this.target - this.start) > 1;
     track.scrollTo({
       left: this.target * width,
       behavior: far || !direction ? 'instant' : undefined,
@@ -269,6 +270,27 @@ export class Gallery {
     }
     if (Math.abs(track.scrollLeft - index * this.width) < 1 && index !== this.start)
       this.start = this.target = index;
+  }
+
+  // It fades out as it came in. Escape waits for that too, unless the browser will not let it.
+  protected close(event?: Event) {
+    const dialog = this.dialog().nativeElement;
+    if (event && !event.cancelable) return;
+    event?.preventDefault();
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return dialog.close();
+    const fade = { duration: 200, easing: 'cubic-bezier(0.7, 0, 0.84, 0)' };
+    dialog.animate({ opacity: [1, 0], scale: [1, 0.98] }, fade);
+    dialog
+      .animate({ opacity: [1, 0] }, { ...fade, pseudoElement: '::backdrop' })
+      .finished.then(() => dialog.close());
+  }
+
+  // A picture the strip opened may be one the mosaic, widened meanwhile, leaves out: its +N
+  // cell stands for it.
+  protected refocus() {
+    const opener = this.opener!;
+    const more = opener.parentElement!.children[this.shown() - 1] as HTMLElement;
+    (opener.checkVisibility() ? opener : more).focus();
   }
 
   // Plain arrows only: with a modifier they are the browser's, such as Alt+Left for back. From a
