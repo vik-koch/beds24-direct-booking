@@ -79,6 +79,7 @@ describe('properties', () => {
     expect(property.texts[1].upsellItemName1).toBe('Local tax');
     expect(property.texts[1].upsellItemName2).toBe('');
     expect(property.texts[1].houseRules).toContain('\r\n');
+    expect(property.texts[1].directions).toBe('');
     expect(property.upsellItems).toHaveLength(20);
     expect(property.upsellItems[0]).toMatchObject({
       type: 'obligatory',
@@ -131,6 +132,7 @@ describe('properties', () => {
         ].sort(),
       );
     expect(room.texts[2]).toMatchObject({ roomDescription: '', accommodationType: 'Camera' });
+    expect(room.texts[1]).toMatchObject({ contentDescription: '', displayName: '' });
     expect(room.texts[1].roomDescription).toMatch(/^<p><h3 class="">.*<\/p><\/p>/);
     expect(room.texts[1].roomDescription).toContain('\ufeff');
     expect(second.texts[0].roomDescription).toContain('<b>');

@@ -30,8 +30,9 @@ and never enforced.
 
 ## The data
 
-_Firn & Farn_ does not exist. Saalbach and the two lifts named in the texts are real; the houses,
-their addresses and positions, the prices and the tourist tax are invented.
+_Firn & Farn_ does not exist. Saalbach is real; the houses, their addresses and positions, the
+prices and the tourist tax are invented. Only the texts the site reads are written; Beds24's other
+texts are sent empty.
 
 The calendar is a function of the room and the date, so a week that is booked stays booked as the
 days pass:
