@@ -46,6 +46,58 @@ test('the mosaic shows the first picture at 4:3 and the others square, eight at 
   await expect(page.locator('.tiles')).toHaveCSS('column-gap', '8px');
 });
 
+// The first visible picture's text in a cell or on a card.
+const shownAlt = (place: Locator) =>
+  place.evaluate((element) =>
+    [...element.querySelectorAll('img')]
+      .filter((img) => img.checkVisibility())
+      .map((img) => img.alt),
+  );
+
+test('each season shows its own pictures, and a change fades to them in place', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/de/wohnungen/ahorn?season=summer');
+  await expect(page.locator('html')).toHaveAttribute('data-smooth', '');
+  const first = page.locator('.tile').first();
+  expect(await shownAlt(first)).toEqual([
+    expect.stringMatching(/^Wohn- und Essraum mit Ahorntisch/),
+  ]);
+  const boxes = () =>
+    page
+      .locator('.tile')
+      .evaluateAll((tiles) => tiles.map((tile) => tile.getBoundingClientRect().toJSON()));
+  const before = await boxes();
+  await page.locator('.season-switch label[data-for=winter]').click();
+  await expect(page.locator('html')).toHaveAttribute('data-season', 'winter');
+  // The winter picture fades in over the summer one, which fades out.
+  for (const season of ['winter', 'summer'])
+    await expect(first.locator(`img[data-for=${season}]`)).toHaveCSS(
+      'transition-property',
+      'opacity, display, scale',
+    );
+  await expect.poll(() => shownAlt(first)).toEqual([expect.stringMatching(/brennendem Ofen/)]);
+  expect(await boxes()).toEqual(before);
+  await expect(first.locator('.ai-label')).toHaveCount(1);
+  await page.locator('.tile').nth(2).click();
+  await expect(viewer(page).locator('.viewer-count')).toHaveText('Bild 3 von 9');
+  await expect(viewer(page).locator('.caption-in')).toContainText('sandfarbener Decke');
+  await page.keyboard.press('Escape');
+
+  // A bathroom without a view serves both seasons: its place has one picture.
+  await page.goto('/de/wohnungen/zirbe?season=winter');
+  await expect(page.locator('.tile').nth(2).locator('img')).toHaveCount(1);
+  expect(await shownAlt(page.locator('.tile').first())).toEqual([
+    expect.stringMatching(/^Zirbenstube im Winter/),
+  ]);
+  // And so does the card's first picture.
+  await page.goto('/de?season=winter');
+  expect(await shownAlt(page.locator('.teaser-picture').first())).toEqual([
+    expect.stringMatching(/^Zirbenstube im Winter/),
+  ]);
+});
+
 test('a picture opens full screen, and the buttons, the keys and the thumbnails move', async ({
   page,
 }) => {
@@ -89,9 +141,9 @@ test('a picture opens full screen, and the buttons, the keys and the thumbnails 
   // Shown by its full colour alone: a line around it would look like the focus ring. Only the
   // picture dims, so that a ring around another button keeps its contrast.
   const other = viewer(page).getByRole('button', { name: 'Bild 8 von 9' });
-  await expect(thumb.locator('img')).toHaveCSS('opacity', '1');
+  await expect(thumb.locator('img:visible')).toHaveCSS('opacity', '1');
   await expect(thumb).toHaveCSS('box-shadow', 'none');
-  await expect(other.locator('img')).toHaveCSS('opacity', '0.4');
+  await expect(other.locator('img:visible')).toHaveCSS('opacity', '0.4');
   await expect(other).toHaveCSS('opacity', '1');
   // Past the last picture the first follows.
   await page.keyboard.press('ArrowRight');
@@ -130,7 +182,11 @@ test('a picture slides in, over the ends too, and its text fades; at once with r
   const track = viewer(page).locator('.viewer-track');
   const moving = (index: number) =>
     track.evaluate(
-      (element, index) => element.querySelectorAll('img')[index].getAnimations().length,
+      (element, index) =>
+        [...element.querySelectorAll('img')]
+          .filter((img) => img.checkVisibility())
+          .at(index)!
+          .getAnimations().length,
       index,
     );
   expect(await track.evaluate((element) => getComputedStyle(element).scrollBehavior)).toBe(
@@ -160,7 +216,7 @@ test('a picture slides in, over the ends too, and its text fades; at once with r
   expect(await viewer(page).evaluate((dialog) => dialog.open)).toBe(false);
   // Nor does a cell zoom under the pointer.
   await page.locator('.tile').nth(1).hover();
-  await expect(page.locator('.tile').nth(1).locator('img')).toHaveCSS('scale', 'none');
+  await expect(page.locator('.tile').nth(1).locator('img:visible')).toHaveCSS('scale', 'none');
 });
 
 test('each picture is shown whole, at its own ratio, inside the 4:3 frame', async ({ page }) => {
@@ -170,7 +226,7 @@ test('each picture is shown whole, at its own ratio, inside the 4:3 frame', asyn
   for (const index of [0, 1]) {
     await page.locator('.tile').nth(index).click();
     await settled(page);
-    const picture = viewer(page).locator('.viewer-slide img').nth(index);
+    const picture = viewer(page).locator('.viewer-slide').nth(index).locator('img:visible');
     await expect(picture).toHaveJSProperty('complete', true);
     const natural = await picture.evaluate(
       (image: HTMLImageElement) => image.naturalWidth / image.naturalHeight,
@@ -267,6 +323,8 @@ test('on a phone the pictures are a strip, and the viewer’s buttons sit under 
 }) => {
   await page.setViewportSize({ width: 320, height: 640 });
   await page.goto('/de/wohnungen/ahorn');
+  // A swipe before the application has started is outside what the site supports.
+  await expect(page.locator('html')).toHaveAttribute('data-smooth', '');
   await expect(page.locator('.strip-count')).toHaveText('1 / 9');
   await page.locator('.tiles').evaluate((strip) => strip.scrollTo({ left: strip.clientWidth * 3 }));
   await expect(page.locator('.strip-count')).toHaveText('4 / 9');

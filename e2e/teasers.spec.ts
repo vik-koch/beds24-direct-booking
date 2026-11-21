@@ -43,9 +43,11 @@ test(
       '34 m²',
     ]);
     await expect(cards(page).locator('.ai-label').first()).toHaveText('KI-Bild');
-    await expect(cards(page).locator('img').first()).toHaveAttribute(
+    // The shown season's picture: Zirbe's first has a winter twin.
+    const shown = await page.locator('html').getAttribute('data-season');
+    await expect(cards(page).locator('img:visible').first()).toHaveAttribute(
       'alt',
-      /^Zirbenstube mit Doppelbett/,
+      shown === 'winter' ? /^Zirbenstube im Winter/ : /^Zirbenstube mit Doppelbett/,
     );
 
     const line = /^\s*(ab €\s[\d.,]+ pro Woche|Im (Winter|Sommer) ist keine Woche mehr frei\.)\s*$/;
@@ -158,7 +160,7 @@ test(
       'Lärche',
       'Ahorn',
     ]);
-    await expect(cards(page).locator('img')).toHaveCount(3);
+    await expect(cards(page).locator('img:visible')).toHaveCount(3);
     await expect(page.locator('.teaser-facts, .teaser-price')).toHaveCount(0);
   },
 );

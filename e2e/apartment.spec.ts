@@ -458,7 +458,7 @@ test('every tab stop on an apartment page shows a focus ring', async ({ page, br
       });
       // A picture's cell by its picture: each says "KI-Bild".
       const text =
-        element.querySelector('img')?.alt ??
+        [...element.querySelectorAll('img')].find((img) => img.checkVisibility())?.alt ??
         element.getAttribute('aria-label') ??
         element.textContent?.trim();
       return {
@@ -474,7 +474,7 @@ test('every tab stop on an apartment page shows a focus ring', async ({ page, br
     await page.keyboard.press('Tab');
   }
   const cells = await page
-    .locator('.tile:visible img')
+    .locator('.tile:visible img:visible')
     .evaluateAll((images: HTMLImageElement[]) =>
       images.map(({ alt }) => `button ${alt.slice(0, 30)}`),
     );

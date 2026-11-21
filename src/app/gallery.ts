@@ -11,8 +11,9 @@ import {
 } from '@angular/core';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideChevronLeft, lucideChevronRight, lucideSparkles, lucideX } from '@ng-icons/lucide';
-import { srcset } from '../content/names';
+import { placesOf, srcset } from '../content/names';
 import type { Picture } from '../content/schema';
+import { Season } from './season';
 import { fill, LANGUAGE, TEXTS } from './texts';
 
 @Component({
@@ -24,39 +25,43 @@ import { fill, LANGUAGE, TEXTS } from './texts';
   template: `
     <section class="gallery" [attr.aria-label]="texts.gallery.name" [attr.data-shown]="shown()">
       <div class="tiles" (scroll)="stripped($event)">
-        @for (picture of pictures(); track $index) {
+        @for (place of places(); track $index; let first = $first) {
           <button
             type="button"
             class="tile"
             [attr.data-beyond]="$index < shown() ? null : ''"
             (click)="open($index, $event.currentTarget)"
           >
-            <img
-              [attr.srcset]="srcset(picture)"
-              [sizes]="
-                $first ? '(min-width: 64rem) 33rem, 100vw' : '(min-width: 48rem) 13rem, 100vw'
-              "
-              [src]="picture.sources[0].url"
-              [width]="picture.width"
-              [height]="picture.height"
-              [alt]="picture.alt[language.code]"
-              [attr.loading]="$first ? null : 'lazy'"
-            />
-            @if (picture.generated) {
+            @for (picture of place; track $index) {
+              <img
+                class="season-picture"
+                [attr.data-for]="picture.season ?? null"
+                [attr.srcset]="srcset(picture)"
+                [sizes]="
+                  first ? '(min-width: 64rem) 33rem, 100vw' : '(min-width: 48rem) 13rem, 100vw'
+                "
+                [src]="picture.sources[0].url"
+                [width]="picture.width"
+                [height]="picture.height"
+                [alt]="picture.alt[language.code]"
+                [attr.loading]="first ? null : 'lazy'"
+              />
+            }
+            @if (place[0].generated) {
               <span class="ai-label"
                 ><ng-icon name="lucideSparkles" aria-hidden="true" />{{
                   texts.apartment.generated
                 }}</span
               >
             }
-            @if ($index === shown() - 1 && pictures().length > shown()) {
+            @if ($index === shown() - 1 && places().length > shown()) {
               <span class="more">{{ more() }}</span>
             }
           </button>
         }
       </div>
-      @if (pictures().length > 1) {
-        <p class="strip-count" aria-hidden="true">{{ strip() + 1 }} / {{ pictures().length }}</p>
+      @if (places().length > 1) {
+        <p class="strip-count" aria-hidden="true">{{ strip() + 1 }} / {{ places().length }}</p>
       }
     </section>
 
@@ -79,7 +84,7 @@ import { fill, LANGUAGE, TEXTS } from './texts';
         >
           <ng-icon name="lucideX" aria-hidden="true" />
         </button>
-        @if (pictures().length > 1) {
+        @if (places().length > 1) {
           <button
             class="icon-button viewer-previous"
             type="button"
@@ -97,21 +102,25 @@ import { fill, LANGUAGE, TEXTS } from './texts';
           [attr.aria-label]="texts.gallery.name"
           (scroll)="slid()"
         >
-          @for (picture of pictures(); track $index) {
+          @for (place of places(); track $index; let at = $index) {
             <div class="viewer-slide">
-              <img
-                [attr.srcset]="srcset(picture)"
-                sizes="100vw"
-                [src]="picture.sources[0].url"
-                [width]="picture.width"
-                [height]="picture.height"
-                alt=""
-                [attr.loading]="near($index) ? 'eager' : 'lazy'"
-              />
+              @for (picture of place; track $index) {
+                <img
+                  class="season-picture"
+                  [attr.data-for]="picture.season ?? null"
+                  [attr.srcset]="srcset(picture)"
+                  sizes="100vw"
+                  [src]="picture.sources[0].url"
+                  [width]="picture.width"
+                  [height]="picture.height"
+                  alt=""
+                  [attr.loading]="near(at) && shows(picture) ? 'eager' : 'lazy'"
+                />
+              }
             </div>
           }
         </div>
-        @if (pictures().length > 1) {
+        @if (places().length > 1) {
           <button
             class="icon-button viewer-next"
             type="button"
@@ -126,11 +135,12 @@ import { fill, LANGUAGE, TEXTS } from './texts';
         <!-- Made anew on each change, so that the old text fades out under the new one. -->
         @for (shown of [index()]; track shown) {
           @for (each of from() === shown ? [shown] : [from(), shown]; track $index) {
+            @let picture = seen(each);
             <span
               [class]="$last ? 'caption-in' : 'caption-out'"
               [attr.aria-hidden]="$last ? null : 'true'"
-              >{{ pictures()[each].alt[language.code] }}
-              @if (pictures()[each].generated) {
+              >{{ picture.alt[language.code] }}
+              @if (picture.generated) {
                 <span class="ai-note"
                   ><ng-icon name="lucideSparkles" aria-hidden="true" />{{
                     texts.apartment.generated
@@ -141,16 +151,24 @@ import { fill, LANGUAGE, TEXTS } from './texts';
           }
         }
       </p>
-      @if (pictures().length > 1) {
+      @if (places().length > 1) {
         <div #thumbs class="viewer-thumbs">
-          @for (picture of pictures(); track $index) {
+          @for (place of places(); track $index) {
             <button
               type="button"
               [attr.aria-label]="position($index)"
               [attr.aria-current]="$index === index() ? 'true' : null"
               (click)="go($index, $index - index())"
             >
-              <img [src]="picture.sources[0].url" alt="" loading="lazy" />
+              @for (picture of place; track $index) {
+                <img
+                  class="season-picture"
+                  [attr.data-for]="picture.season ?? null"
+                  [src]="picture.sources[0].url"
+                  alt=""
+                  loading="lazy"
+                />
+              }
             </button>
           }
         </div>
@@ -181,12 +199,10 @@ import { fill, LANGUAGE, TEXTS } from './texts';
         isolation: isolate;
         cursor: zoom-in;
 
-        /* Out of the flow: a picture's own height must not size the mosaic's rows. Beneath its
-           cell, which would otherwise paint its ring under it. */
+        /* Out of the flow, as on the cards: a picture's own height must not size the mosaic's
+           rows. Beneath its cell, which would otherwise paint its ring under it. */
         img {
-          position: absolute;
           z-index: -1;
-          inset: 0;
         }
 
         /* Inside the cell on a phone: the strip would cut a ring outside it. */
@@ -403,16 +419,17 @@ import { fill, LANGUAGE, TEXTS } from './texts';
       }
 
       /* Each picture whole and at its own ratio, so that the ring fits it; the padding keeps the
-         ring inside the track, which would cut it. */
+         ring inside the track, which would cut it. A place's two seasons lie in one cell. */
       .viewer-slide {
-        display: flex;
+        display: grid;
         flex: 0 0 100%;
-        align-items: center;
-        justify-content: center;
+        grid-template: minmax(0, 1fr) / minmax(0, 1fr);
+        place-items: center;
         padding: 5px;
         scroll-snap-align: start;
 
         img {
+          grid-area: 1 / 1;
           max-width: 100%;
           max-height: 100%;
           width: auto;
@@ -505,10 +522,16 @@ import { fill, LANGUAGE, TEXTS } from './texts';
         scrollbar-width: thin;
 
         button {
+          display: grid;
           flex: none;
+          grid-template: minmax(0, 1fr) / minmax(0, 1fr);
           width: 4.5rem;
           height: 3rem;
           cursor: pointer;
+
+          img {
+            grid-area: 1 / 1;
+          }
 
           &:focus-visible {
             outline-offset: 6px;
@@ -594,17 +617,23 @@ import { fill, LANGUAGE, TEXTS } from './texts';
 })
 export class Gallery {
   readonly pictures = input.required<Picture[]>();
+  private readonly season = inject(Season);
+  // Each place's pictures, one for both seasons or one per season, which the page's season
+  // attribute shows; the caption takes the shown one's text.
+  protected readonly places = computed(() => placesOf(this.pictures(), this.season.names));
+  protected readonly shows = ({ season }: Picture) => !season || season === this.season.current();
+  protected readonly seen = (index: number) => this.places()[index].find(this.shows)!;
   protected readonly texts = inject(TEXTS);
   protected readonly language = inject(LANGUAGE);
   protected readonly srcset = srcset;
 
   // The mosaic's cells: 8, 5, 3 or the first alone; its last cell counts the pictures beyond.
   protected readonly shown = computed(() => {
-    const count = this.pictures().length;
+    const count = this.places().length;
     return [8, 5, 3].find((cells) => count >= cells) ?? 1;
   });
   protected readonly more = computed(() => {
-    const rest = this.pictures().length - this.shown();
+    const rest = this.places().length - this.shown();
     const plural = new Intl.PluralRules(this.language.tag).select(rest);
     return fill(this.texts.gallery.more[plural === 'one' ? 'one' : 'other'], { count: rest });
   });
@@ -657,12 +686,12 @@ export class Gallery {
   }
 
   protected position(index: number) {
-    return fill(this.texts.gallery.position, { index: index + 1, count: this.pictures().length });
+    return fill(this.texts.gallery.position, { index: index + 1, count: this.places().length });
   }
 
   // The current picture and its neighbours load at once, so a step never slides in a blank.
   protected near(index: number) {
-    const count = this.pictures().length;
+    const count = this.places().length;
     return this.opened() && [0, 1, count - 1].includes((index - this.index() + count) % count);
   }
 
@@ -685,7 +714,7 @@ export class Gallery {
   // A neighbour slides in. A jump, over the ends too, is instant, and the picture arrives from
   // the side it was asked for; on opening (no direction) it is simply there.
   protected go(index: number, direction: number) {
-    const count = this.pictures().length;
+    const count = this.places().length;
     const track = this.track().nativeElement;
     // Its own width, not clientWidth: a 4:3 frame is often a fraction of a pixel wider.
     const width = this.measure(track);
@@ -697,14 +726,15 @@ export class Gallery {
       behavior: far || !direction ? 'instant' : undefined,
     });
     if (far && direction && !matchMedia('(prefers-reduced-motion: reduce)').matches)
-      // The picture, not its slide: Firefox would snap the track along with a moving slide.
-      track.children[this.target].firstElementChild!.animate(
-        [
-          { opacity: 0, transform: `translateX(${Math.sign(direction) * 8}%)` },
-          { opacity: 1, transform: 'none' },
-        ],
-        { duration: 400, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' },
-      );
+      // The pictures, not their slide: Firefox would snap the track along with a moving slide.
+      for (const picture of track.children[this.target].children)
+        picture.animate(
+          [
+            { opacity: 0, transform: `translateX(${Math.sign(direction) * 8}%)` },
+            { opacity: 1, transform: 'none' },
+          ],
+          { duration: 400, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' },
+        );
   }
 
   protected step(by: number) {
@@ -754,7 +784,7 @@ export class Gallery {
   protected key(event: KeyboardEvent) {
     const by = { ArrowLeft: -1, ArrowRight: 1 }[event.key];
     const modified = event.altKey || event.ctrlKey || event.metaKey || event.shiftKey;
-    if (!by || modified || !this.dialog().nativeElement.open || this.pictures().length < 2) return;
+    if (!by || modified || !this.dialog().nativeElement.open || this.places().length < 2) return;
     event.preventDefault();
     this.step(by);
     const thumbs = this.thumbs()?.nativeElement;
