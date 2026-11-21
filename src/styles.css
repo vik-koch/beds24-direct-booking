@@ -985,9 +985,7 @@
 
   /* Every week starts on the same weekday, so the narrowest screens leave it out of the rows;
      the row header's label still names it. */
-  /* As far apart as the booking panel's rows, with their line between them. */
   :where(.weeks-grid) [role='rowheader'] {
-    padding-block: 0.3125rem;
     white-space: nowrap;
 
     @media (max-width: 22.4375rem) {
@@ -997,8 +995,9 @@
     }
   }
 
+  /* 2 px above and below a pill, and the line between rows: 5 px from pill to pill. */
   :where(.weeks-grid) [role='gridcell'] {
-    padding-left: 1rem;
+    padding: 2px 0 2px 1rem;
     text-align: right;
     white-space: nowrap;
   }
@@ -1008,7 +1007,7 @@
     grid-column: 1 / -1;
     contain: inline-size;
     /* Its line sits where the first week's dates would. */
-    padding: 2.375rem 0 1.5rem;
+    padding: 2.40625rem 0 1.5rem;
     text-align: left;
     white-space: normal;
     text-wrap: pretty;
