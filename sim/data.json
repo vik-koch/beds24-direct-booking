@@ -130,8 +130,8 @@
           "id": 9001021,
           "name": "Ahorn",
           "maxPeople": 6,
-          "maxAdult": 4,
-          "maxChildren": 4,
+          "maxAdult": null,
+          "maxChildren": 5,
           "roomSize": 96,
           "featureCodes": [
             ["BEDROOM", "BED_DOUBLE"],
