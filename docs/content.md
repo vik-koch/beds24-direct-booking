@@ -148,7 +148,7 @@ beyond a limit fails its build, with the limit named.
 | Apartment name | 20 characters | The list's column headers and the phone's tabs | The schema; the e2e test site's names |
 | Languages | Exactly 2 | The language menu and the address prefixes have not been tried with a third | The schema |
 | Seasons | 1 or 2 | Winter and summer, one each | The schema |
-| A room's guests in Beds24 | `maxAdult` empty or at least `maxPeople`; `maxChildren` empty, 0 or at least `maxPeople − 1` | The site takes a room by its total: any guest may be an adult, and with one adult required the children's limit never applies on its own | Not the build: the server logs a warning when it loads a room beyond this, and treats it by its total |
+| A room's guests in Beds24 | `maxAdult` empty or equal to `maxPeople`; `maxChildren` empty, 0 or at least `maxPeople − 1` | The site takes a room by its total: any guest may be an adult, and with one adult required the children's limit never applies on its own | Not the build: the server logs a warning when it loads a room beyond this, and treats it by its total |
 | Hero features | Up to 5 | The hero's card | The schema |
 | An apartment's picture | Square to 2:1, landscape, with 1% to spare | The gallery's frames; tested with 1:1, 4:3 and 3:2 | The content script; the demo has 3:2, the e2e test site 1:1 and 4:3 |
 

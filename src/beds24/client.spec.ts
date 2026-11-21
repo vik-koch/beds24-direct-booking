@@ -62,10 +62,9 @@ describe('loadInventory', () => {
         roomTypes: [
           {
             id: 21,
-            // An adult limit above the total lets any guest be an adult, which the site supports;
-            // no children are asked for.
+            // No children are asked for.
             maxPeople: 2,
-            maxAdult: 3,
+            maxAdult: null,
             maxChildren: null,
             roomSize: 34,
             featureCodes: [],
@@ -170,17 +169,22 @@ describe('loadInventory', () => {
     );
   });
 
-  it('warns of a room that limits adults or children below its total, and takes the total', async () => {
+  it('warns of a room that limits adults or children apart from its total, and takes the total', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     const strict = structuredClone(properties);
+    // Fewer adults and children than the total, and more adults than guests.
     Object.assign(strict.data[0].roomTypes[0], { maxAdult: 3, maxChildren: 2 });
+    Object.assign(strict.data[1].roomTypes[0], { maxAdult: 3 });
     answer(200, strict, calendars);
     const { rooms } = await loadInventory('2027-01-01', '2027-01-05');
-    // Room 21 allows more adults than guests, which is supported and not warned of.
-    expect(warn).toHaveBeenCalledExactlyOnceWith(
-      'Room 11 limits adults or children below its total: ignored',
-    );
-    expect(rooms[0]).toMatchObject({ maxPeople: 4, asksChildren: true });
+    expect(warn.mock.calls).toEqual([
+      ['Room 11 limits adults or children apart from its total: ignored'],
+      ['Room 21 limits adults or children apart from its total: ignored'],
+    ]);
+    expect(rooms.map(({ maxPeople, asksChildren }) => [maxPeople, asksChildren])).toEqual([
+      [4, true],
+      [2, false],
+    ]);
     warn.mockRestore();
   });
 

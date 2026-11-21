@@ -137,8 +137,8 @@ export const loadInventory = async (first: string, last: string): Promise<Invent
     );
     return property.roomTypes.map((room) => {
       const { maxPeople, maxAdult, maxChildren } = room;
-      if ((maxAdult ?? maxPeople) < maxPeople || (maxChildren && maxChildren < maxPeople - 1))
-        console.warn(`Room ${room.id} limits adults or children below its total: ignored`);
+      if ((maxAdult ?? maxPeople) !== maxPeople || (maxChildren && maxChildren < maxPeople - 1))
+        console.warn(`Room ${room.id} limits adults or children apart from its total: ignored`);
       // Unused rules come back as bare IDs; the rule that allows the soonest arrival counts.
       const leads = (room.priceRules ?? []).flatMap((rule) => rule.minDaysUntilCheckin ?? []);
       return {
