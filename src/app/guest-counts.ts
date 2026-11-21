@@ -18,13 +18,15 @@ import { TEXTS } from './texts';
       <div class="count">
         <label for="adults"
           >{{ guests.asksChildren() ? texts.panel.adults.label : texts.panel.guests
-          }}<span aria-hidden="true">{{ guests.asksChildren() ? '' : star }}</span></label
+          }}<span class="star" aria-hidden="true">{{
+            guests.asksChildren() ? '' : star
+          }}</span></label
         >
         <hlm-select
           [value]="guests.adults()"
           (valueChange)="guests.set($event!, guests.children())"
         >
-          <hlm-select-trigger buttonId="adults">
+          <hlm-select-trigger buttonId="adults" class="w-full justify-end">
             <hlm-select-value />
           </hlm-select-trigger>
           <hlm-select-content *hlmSelectPortal>
@@ -37,13 +39,14 @@ import { TEXTS } from './texts';
       @if (guests.asksChildren()) {
         <div class="count">
           <label for="children"
-            >{{ texts.panel.children }}<span aria-hidden="true">{{ star }}</span></label
+            >{{ texts.panel.children
+            }}<span class="star" aria-hidden="true">{{ star }}</span></label
           >
           <hlm-select
             [value]="guests.children()"
             (valueChange)="guests.set(guests.adults(), $event!)"
           >
-            <hlm-select-trigger buttonId="children">
+            <hlm-select-trigger buttonId="children" class="w-full justify-end">
               <hlm-select-value />
             </hlm-select-trigger>
             <hlm-select-content *hlmSelectPortal>
@@ -73,12 +76,13 @@ import { TEXTS } from './texts';
         gap: 0.5rem;
       }
 
-      /* The label and the select's count are one pill, which a click anywhere opens. */
+      /* The label and the select's count are one pill: the select's button fills it, under the
+         label, so a click anywhere opens it and its list is as wide as the pill. */
       .count {
+        position: relative;
         display: flex;
         flex: 1 1 auto;
         align-items: center;
-        justify-content: space-between;
         height: var(--size-control-small);
         padding-left: 1rem;
         border: 1px solid var(--color-edge);
@@ -96,10 +100,17 @@ import { TEXTS } from './texts';
         }
 
         label {
+          position: relative;
+          z-index: 1;
+          /* Room for the count and its chevron, which the button draws at the end. */
+          margin-right: 3.25rem;
           font-size: 0.9375rem;
-          font-weight: 500;
           white-space: nowrap;
-          cursor: pointer;
+          pointer-events: none;
+        }
+
+        .star {
+          color: var(--color-ink-soft);
         }
       }
 
@@ -136,26 +147,35 @@ import { TEXTS } from './texts';
           border-color: transparent;
         }
 
-        .spartan-select-trigger {
-          padding-right: 1rem;
-        }
-
         .guests-note {
           flex: 1 1 16rem;
-          max-width: 28rem;
           margin: 0;
         }
       }
 
-      /* The copied select without its own frame: the pill is it. Its list is a menu's card.
-         Here and not in ui.css, so that it loads only with the pages that use it. */
+      /* The copied select without its own frame: the pill is it, and the count stands at its end
+         (w-full and justify-end, which win over its own utilities). The list's counts stand under
+         it, their tick where the chevron is: the item's end padding is the pill's, less the
+         list's own. */
       .spartan-select-trigger {
+        position: absolute;
+        inset: 0;
         gap: 0.25rem;
-        height: 100%;
-        padding: 0 0.75rem 0 0.5rem;
+        padding-right: 0.875rem;
+        border-radius: inherit;
         font-size: 0.9375rem;
-        font-weight: 500;
+        font-weight: 600;
         cursor: pointer;
+      }
+
+      /* It takes the free space, which the chevron's own margin would. */
+      .spartan-select-trigger [data-slot='select-value'] {
+        flex: 1;
+        justify-content: flex-end;
+      }
+
+      :is(.spartan-select-trigger-icon, .spartan-select-item-indicator) {
+        --ng-icon__size: 1rem;
       }
 
       .spartan-select-trigger-icon {
@@ -177,10 +197,11 @@ import { TEXTS } from './texts';
       }
 
       .spartan-select-item {
-        justify-content: space-between;
+        justify-content: flex-end;
         min-height: var(--size-control-small);
-        padding: 0 0.75rem;
+        padding-right: calc(0.875rem - 0.375rem + 1.25rem);
         border-radius: 0.5rem;
+        font-size: 0.9375rem;
         font-weight: 500;
         cursor: pointer;
 
@@ -190,6 +211,8 @@ import { TEXTS } from './texts';
       }
 
       .spartan-select-item-indicator {
+        position: absolute;
+        right: calc(0.875rem - 0.375rem);
         color: var(--color-accent);
       }
     }
