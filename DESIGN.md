@@ -3,12 +3,12 @@ name: beds24-direct-booking
 description:
   A light, roomy look for a small business's holiday apartments, with one muted colour per season.
 colors:
-  ground: '#f1f1ef'
+  ground: '#f5f1ec'
   surface: '#ffffff'
   oak: '#eadfce'
   ink: '#27323a'
   ink-soft: '#5a666e'
-  line: '#e7e5e0'
+  line: '#e9e3db'
   edge: '#7c878f'
   winter: '#3b587c'
   winter-soft: '#e2e8f0'
@@ -132,13 +132,13 @@ A neutral, slightly warm light palette with a single accent that changes with th
 
 ### Neutral
 
-- **Wall Grey** (#f1f1ef): the page's ground.
+- **Milk** (#f5f1ec): the page's ground, a warm white. Soft Ink on it stays above 5:1.
 - **White** (#ffffff): cards, the list's sheet, switches and menus.
 - **Pale Oak** (#eadfce): the notice line above the header. Wood is a tint here, never a dark
   surface.
 - **Slate Ink** (#27323a): text and headings, and the chosen apartment tab.
 - **Soft Ink** (#5a666e): secondary text, column notes, a booked week.
-- **Hairline** (#e7e5e0): the line between two rows of a list.
+- **Hairline** (#e9e3db): the line between two rows of a list.
 - **Edge** (#7c878f): the outline of a control that has no fill, at 3:1 against the ground.
 - **Navy Tint** (#e2e8f0) and **Emerald Tint** (#deede8): the hover behind a price.
 
