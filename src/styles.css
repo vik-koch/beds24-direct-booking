@@ -46,6 +46,8 @@
   --shadow-card: 0 1.5rem 3rem -1.5rem rgb(39 50 58 / 0.25);
   /* The focus ring of every control; each sets its own offset. */
   --focus-ring: 2px solid var(--color-accent);
+  /* A text link is as tall as a control to be touched, but its ring as tall as a small one. */
+  --focus-offset-text: calc((var(--size-control-small) - var(--size-control)) / 2);
 }
 
 @layer base {
@@ -773,7 +775,7 @@
 
     &:focus-visible > span {
       outline: var(--focus-ring);
-      outline-offset: 3px;
+      outline-offset: var(--focus-offset-text);
     }
 
     &:hover > span {
