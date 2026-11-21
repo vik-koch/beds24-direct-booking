@@ -530,8 +530,13 @@ test('a week in the address is shown at the first paint, before the application 
   await openNext(page, '/de/wohnungen/laerche');
   await (await firstFree(page)).click();
   const stay = await chosen(page).locator('xpath=..').locator('[role=rowheader]').innerText();
-  for (const width of [375, 1280]) {
-    const fresh = await browser.newPage({ viewport: { width, height: 700 } });
+  // On a tall tablet the panel is in view already, and the bar would cover it.
+  for (const [width, height, barShown] of [
+    [375, 700, true],
+    [820, 1180, false],
+    [1280, 700, false],
+  ] as const) {
+    const fresh = await browser.newPage({ viewport: { width, height } });
     await fresh.route(/\/main-[\w-]+\.js$/, () => undefined);
     await fresh.goto(page.url(), { waitUntil: 'commit' });
     const row = fresh.locator('.panel-season:visible .month[data-current] .week.chosen');
@@ -539,8 +544,7 @@ test('a week in the address is shown at the first paint, before the application 
     await expect(row).not.toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
     await expect(fresh.locator('.outcome:visible .total')).toBeVisible();
     const bar = fresh.locator('.booking-bar').getByRole('link', { name: 'Weiter' });
-    if (width < 1024) await expect(bar).toBeVisible();
-    else await expect(bar).toBeHidden();
+    await expect(bar).toBeVisible({ visible: barShown });
     await expect(fresh.locator('html')).not.toHaveAttribute('data-started');
     await fresh.close();
   }

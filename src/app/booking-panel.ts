@@ -1,5 +1,5 @@
 import { Grid, GridCell, GridRow } from '@angular/aria/grid';
-import { Location } from '@angular/common';
+import { DOCUMENT, isPlatformServer, Location } from '@angular/common';
 import {
   afterNextRender,
   Component,
@@ -9,6 +9,7 @@ import {
   inject,
   InjectionToken,
   Injector,
+  PLATFORM_ID,
   signal,
   ViewEncapsulation,
 } from '@angular/core';
@@ -845,8 +846,11 @@ export class BookingPanel {
     });
   });
   protected readonly announced = signal('');
-  // From the first paint: on a phone the panel lies below the first screen.
-  protected readonly barShown = signal(true);
+  private readonly document = inject(DOCUMENT);
+  // As the server's script left it at the first paint.
+  protected readonly barShown = signal(
+    this.document.querySelector<HTMLElement>('.booking-bar')?.hidden !== true,
+  );
   // Set by the panel's button: the next season comes from the right, the current from the left.
   private direction = 0;
   private readonly swapSeason = swapper();
@@ -902,6 +906,14 @@ export class BookingPanel {
 
   constructor() {
     this.read();
+    // At the first paint the bar shows unless the panel is already in view, as on a tall tablet.
+    if (isPlatformServer(inject(PLATFORM_ID))) {
+      const script = this.document.createElement('script');
+      script.textContent =
+        '{let b=document.querySelector(".booking-bar");' +
+        'if(b&&document.getElementById("booking").getBoundingClientRect().top<innerHeight)b.hidden=true}';
+      this.document.body.appendChild(script);
+    }
     const destroyRef = inject(DestroyRef);
     destroyRef.onDestroy(this.season.watch((name) => this.move(name)));
     afterNextRender(() => {
