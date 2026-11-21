@@ -519,6 +519,29 @@ test('on a phone a bar leads to the panel while it is out of view, then on to bo
   await expect(bar).toBeHidden();
 });
 
+test('a week in the address is shown at the first paint, before the application starts', async ({
+  page,
+  browser,
+}) => {
+  await openNext(page, '/de/wohnungen/laerche');
+  await (await firstFree(page)).click();
+  const stay = await chosen(page).locator('xpath=..').locator('[role=rowheader]').innerText();
+  for (const width of [375, 1280]) {
+    const fresh = await browser.newPage({ viewport: { width, height: 700 } });
+    await fresh.route(/\/main-[\w-]+\.js$/, () => undefined);
+    await fresh.goto(page.url(), { waitUntil: 'commit' });
+    const row = fresh.locator('.panel-season:visible .month[data-current] .week.chosen');
+    await expect(row.locator('[role=rowheader]')).toHaveText(stay);
+    await expect(row).not.toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+    await expect(fresh.locator('.outcome:visible .total')).toBeVisible();
+    const bar = fresh.locator('.booking-bar').getByRole('link', { name: 'Weiter' });
+    if (width < 1024) await expect(bar).toBeVisible();
+    else await expect(bar).toBeHidden();
+    await expect(fresh.locator('html')).not.toHaveAttribute('data-started');
+    await fresh.close();
+  }
+});
+
 // One test per width: six scans in one come too close to the test's time limit.
 for (const width of [320, 1280])
   test(
