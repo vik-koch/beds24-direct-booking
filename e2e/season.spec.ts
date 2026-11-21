@@ -249,15 +249,15 @@ test('only the shown season’s photo is fetched, the other one on approach', as
   });
   await page.clock.setFixedTime(november);
   await page.goto('/de');
-  await page.waitForLoadState('networkidle');
+  // Not networkidle, which Firefox under load may not reach in time.
+  await expect(page.locator('html')).toHaveAttribute('data-started', '');
+  await expect(page.locator('.hero-photo[data-for=winter] img')).toHaveJSProperty('complete', true);
   expect(photos).toHaveLength(1);
   expect(photos[0]).toMatch(/^\/pictures\/hero\/hero-winter-/);
   // The other season's in the same form, the whole photo or its crop.
   const form = (path: string) => path.includes('-portrait-');
-  await expect(async () => {
-    await page.getByRole('radio', { name: 'Sommer' }).focus();
-    expect(photos[1]).toMatch(/^\/pictures\/hero\/hero-summer-/);
-  }).toPass();
+  await page.getByRole('radio', { name: 'Sommer' }).focus();
+  await expect.poll(() => photos[1]).toMatch(/^\/pictures\/hero\/hero-summer-/);
   expect(form(photos[1])).toBe(form(photos[0]));
 });
 
