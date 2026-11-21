@@ -586,6 +586,7 @@
     align-items: center;
     gap: 0.5rem;
     color: var(--color-ink-soft);
+    font-size: 0.875rem;
 
     /* The text's capitals sit low in its line; the icon goes up to their middle. */
     ng-icon {
@@ -1103,7 +1104,7 @@
   .weeks-note {
     margin: 1.25rem 0.25rem 0;
     color: var(--color-ink-soft);
-    font-size: 0.9375rem;
+    font-size: 0.875rem;
 
     @media (min-width: 48rem) {
       max-width: 80%;
