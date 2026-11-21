@@ -170,7 +170,7 @@ hierarchy; weight barely does.
 - **Body** (400, 1.125rem, 1.5): running text and list rows. Paragraphs stay under about 45rem.
 - **Label** (500, 0.9375rem): switches, small buttons, text links.
 - **Hint** (400, 0.875rem, ink-soft): every note and hint: the guests' note, the too-small hint with
-  its info icon, the list's price note, the panel's next-step line.
+  its info icon, the list's price note.
 
 ### Named Rules
 
