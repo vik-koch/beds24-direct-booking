@@ -82,8 +82,8 @@ export function readContent(dir) {
   const texts = Object.fromEntries(
     site.languages.map((tag) => [prefix(tag), read(`texts.${tag}.json`, textsSchema)]),
   );
-  // The texts name exactly the seasons site.json lists, in the switch and in the hero.
   const listed = seasonNames.filter((name) => site.seasons[name]);
+  // The texts name exactly the seasons site.json lists, in the switch and in the hero.
   for (const tag of site.languages)
     for (const part of ['seasons', 'hero'])
       for (const name of seasonNames) {
@@ -93,6 +93,22 @@ export function readContent(dir) {
             `${join(dir, `texts.${tag}.json`)}\n  ${part}.${name}: ${has ? 'a season site.json does not list' : 'missing'}`,
           );
       }
+  // A picture's season is one site.json lists, and each season's gallery has as many pictures,
+  // so that a change of season changes neither the mosaic nor the count.
+  for (const { slug, pictures } of apartments) {
+    const file = join(dir, 'apartments', `${slug}.json`);
+    pictures.forEach(({ season }, index) => {
+      if (season && !listed.includes(season))
+        throw new Error(`${file}\n  pictures.${index}.season: a season site.json does not list`);
+    });
+    const counts = listed.map(
+      (name) => pictures.filter(({ season }) => !season || season === name).length,
+    );
+    if (new Set(counts).size > 1)
+      throw new Error(
+        `${file}\n  pictures: ${listed.map((name, i) => `${counts[i]} in ${name}`).join(', ')}; each season needs as many`,
+      );
+  }
   site.features.forEach(({ icon }, index) => {
     if (!(lucideName(icon) in lucide))
       throw new Error(

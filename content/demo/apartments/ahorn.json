@@ -5,73 +5,163 @@
     {
       "file": "pictures/ahorn-1.webp",
       "generated": true,
+      "season": "summer",
       "alt": {
         "de-AT": "Wohn- und Essraum mit Ahorntisch für sechs, offener Küche, salbeigrünem Sofa und Terrassentüren.",
         "en-GB": "Living and dining room with a maple table for six, an open kitchen, sage sofa and terrace doors."
       }
     },
     {
+      "file": "pictures/ahorn-1-winter.webp",
+      "generated": true,
+      "season": "winter",
+      "alt": {
+        "de-AT": "Wohn- und Essraum aus Ahorn mit brennendem Ofen, blauen Sofakissen und verschneiter Terrasse hinter den Glastüren.",
+        "en-GB": "Maple living and dining room with a lit stove, blue sofa cushions and a snowy terrace beyond the glass doors."
+      }
+    },
+    {
       "file": "pictures/ahorn-7.webp",
       "generated": true,
+      "season": "summer",
       "alt": {
         "de-AT": "Küche aus Ahorn mit Steinarbeitsplatte, offenen Regalen, Backofen und frischem Brot am Fenster.",
         "en-GB": "Maple kitchen with a stone worktop, open shelves, an oven and fresh bread by the window."
       }
     },
     {
+      "file": "pictures/ahorn-7-winter.webp",
+      "generated": true,
+      "season": "winter",
+      "alt": {
+        "de-AT": "Küche aus Ahorn mit gläserner Teekanne, zwei Bechern und verschneiten Bäumen vor dem Fenster.",
+        "en-GB": "Maple kitchen with a glass teapot, two mugs and snowy trees beyond the window."
+      }
+    },
+    {
       "file": "pictures/ahorn-2.webp",
       "generated": true,
+      "season": "summer",
       "alt": {
         "de-AT": "Doppelzimmer im Obergeschoss mit schräger Holzdecke, Dachfenster und blauer Decke.",
         "en-GB": "Upstairs double bedroom with a sloping timber ceiling, skylight and blue blanket."
       }
     },
     {
+      "file": "pictures/ahorn-2-winter.webp",
+      "generated": true,
+      "season": "winter",
+      "alt": {
+        "de-AT": "Doppelzimmer im Obergeschoss mit sandfarbener Decke und Schnee am Dachfenster und vor dem Fenster.",
+        "en-GB": "Upstairs double bedroom with a sand-coloured blanket and snow on the skylight and outside the window."
+      }
+    },
+    {
       "file": "pictures/ahorn-3.webp",
       "generated": true,
+      "season": "summer",
       "alt": {
         "de-AT": "Zweites Doppelzimmer mit salbeigrün gepolstertem Kopfteil und Kommode aus Ahorn.",
         "en-GB": "Second double bedroom with a sage upholstered headboard and maple chest of drawers."
       }
     },
     {
+      "file": "pictures/ahorn-3-winter.webp",
+      "generated": true,
+      "season": "winter",
+      "alt": {
+        "de-AT": "Zweites Doppelzimmer mit salbeigrünem Kopfteil, dunkelblauer Decke, Lampe auf der Ahornkommode und Blick auf verschneite Bäume.",
+        "en-GB": "Second double bedroom with a sage headboard, dark blue blanket, a lamp on the maple chest and a view of snowy trees."
+      }
+    },
+    {
       "file": "pictures/ahorn-4.webp",
       "generated": true,
+      "season": "summer",
       "alt": {
         "de-AT": "Schlafzimmer mit Stockbett aus Ahorn, Leiter, salbeigrünem Sessel und Stehlampe.",
         "en-GB": "Bedroom with a maple bunk bed, a ladder, a sage armchair and a floor lamp."
       }
     },
     {
+      "file": "pictures/ahorn-4-winter.webp",
+      "generated": true,
+      "season": "winter",
+      "alt": {
+        "de-AT": "Schlafzimmer mit Stockbett aus Ahorn, salbeigrüner Bettwäsche, Wolldecke auf dem Sessel und verschneiten Bäumen vor dem Fenster.",
+        "en-GB": "Bedroom with a maple bunk bed, sage linen, a wool throw on the armchair and snowy trees outside the window."
+      }
+    },
+    {
       "file": "pictures/ahorn-5.webp",
       "generated": true,
+      "season": "summer",
       "alt": {
         "de-AT": "Bad mit zwei Waschbecken, bodenebener Dusche und eigener Sauna hinter Glas.",
         "en-GB": "Bathroom with two basins, a walk-in shower and a private sauna behind glass."
       }
     },
     {
+      "file": "pictures/ahorn-5-winter.webp",
+      "generated": true,
+      "season": "winter",
+      "alt": {
+        "de-AT": "Bad mit blauen Handtüchern, zwei Waschbecken, Dusche und beleuchteter Sauna hinter Glas, draußen Schnee.",
+        "en-GB": "Bathroom with blue towels, two basins, a shower and a lit private sauna behind glass, with snow outside."
+      }
+    },
+    {
       "file": "pictures/ahorn-9.webp",
       "generated": true,
+      "season": "summer",
       "alt": {
         "de-AT": "Duschbad im Obergeschoss unter schräger Holzdecke, mit Dachfenster, bodenebener Dusche und Waschtisch aus Ahorn.",
         "en-GB": "Upstairs shower room under a sloping timber ceiling, with a skylight, walk-in shower and maple vanity."
       }
     },
     {
+      "file": "pictures/ahorn-9-winter.webp",
+      "generated": true,
+      "season": "winter",
+      "alt": {
+        "de-AT": "Duschbad im Obergeschoss mit sandfarbenen Handtüchern, Waschtisch aus Ahorn und Schnee am Dachfenster.",
+        "en-GB": "Upstairs shower room with sand-coloured towels, a maple vanity and snow on the skylight."
+      }
+    },
+    {
       "file": "pictures/ahorn-6.webp",
       "generated": true,
+      "season": "summer",
       "alt": {
         "de-AT": "Holzterrasse mit Esstisch für sechs, gepolsterten Bänken und Blick auf bewaldete Berge.",
         "en-GB": "Wooden terrace with outdoor dining for six, cushioned benches and a forested mountain view."
       }
     },
     {
+      "file": "pictures/ahorn-6-winter.webp",
+      "generated": true,
+      "season": "winter",
+      "alt": {
+        "de-AT": "Geräumte Holzterrasse mit leerem Tisch und Bänken, Schnee auf Zaun, Wiese und bewaldeten Bergen.",
+        "en-GB": "Swept wooden terrace with a bare table and benches, and snow on the fence, meadow and forested mountains."
+      }
+    },
+    {
       "file": "pictures/ahorn-8.webp",
       "generated": true,
+      "season": "summer",
       "alt": {
         "de-AT": "Offene Treppe aus Ahorn hinauf zum Absatz mit hohem Fenster zum Wald.",
         "en-GB": "Open maple stairs up to a landing with a tall window onto the forest."
+      }
+    },
+    {
+      "file": "pictures/ahorn-8-winter.webp",
+      "generated": true,
+      "season": "winter",
+      "alt": {
+        "de-AT": "Treppe aus Ahorn von oben, mit dunkelblauem Läufer am Absatz und verschneiten Bäumen hinter dem hohen Fenster.",
+        "en-GB": "Maple stairs seen from above, with a dark blue runner on the landing and snowy trees through the tall window."
       }
     }
   ]

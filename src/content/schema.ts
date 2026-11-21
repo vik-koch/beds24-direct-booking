@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { letters, seasonNames } from './names.ts';
+import { letters, seasonNames, type SeasonName } from './names.ts';
 
 export { lucideName, seasonNames, type SeasonName } from './names.ts';
 
@@ -156,7 +156,8 @@ export const siteSchema = z.strictObject({
 
 // An apartment's pictures in their order: a file in the content folder's pictures/ or an https
 // address, such as a Beds24 picture's, and its alternative text in each of the site's languages
-// by tag; the content script checks the languages and converts the pictures.
+// by tag; the content script checks the languages and converts the pictures. A picture with a
+// season shows in that season only; each season's gallery is the list without the other's.
 export const apartmentSchema = z.strictObject({
   roomId: z.number().int(),
   name: text.refine((value) => letters(value) <= 20, 'at most 20 characters'),
@@ -172,6 +173,7 @@ export const apartmentSchema = z.strictObject({
         alt: z.record(z.string(), text),
         // Made by an image model: the page labels it so.
         generated: z.literal(true).optional(),
+        season: z.enum(seasonNames).optional(),
       }),
     )
     .min(1, 'at least one picture'),
@@ -353,6 +355,7 @@ export type Language = { tag: string; code: string; name: string } & Pick<
 export interface Picture {
   alt: Record<string, string>;
   generated?: true;
+  season?: SeasonName;
   width: number;
   height: number;
   sources: { width: number; url: string }[];

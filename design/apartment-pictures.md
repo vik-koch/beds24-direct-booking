@@ -43,8 +43,10 @@ fills the gallery's largest layout and has one more.
   converted files.
 - **Write down beside them** the prompts as they were sent, the reference image of each, a suggested
   alternative text per picture, and what the review found.
-- **Season:** the views show early autumn without snow, so that the pictures suit both seasons of
-  the site.
+- **Season:** the pictures above show the slope green, without snow: they are the summer pictures.
+  Each one with a view has a winter twin, made from it as described under
+  [Winter twins](#winter-twins). The two bathrooms with frosted windows, `zirbe-3` and `laerche-4`,
+  have no view and serve both seasons.
 
 ## Ending
 
@@ -254,3 +256,73 @@ dark blue. A house on two floors with a terrace and a sauna.
 > shower with a glass screen and white tiles, a single basin on a pale maple vanity, a round mirror,
 > a toilet, dark blue towels, a skylight. Smaller and simpler than the bathroom downstairs; no
 > sauna, no bath tub.
+
+## Winter twins
+
+Each summer picture with a view gets a twin of the same room in winter. The twin is a new photograph
+of the same room, not an edit of the summer one: the furniture, wood, fabrics and window stay; the
+camera, a few soft things and the view change. On the page the twin takes its summer picture's place
+in the winter gallery.
+
+**How to run them:**
+
+- **Give the summer picture as the input image** of its twin, and nothing else.
+- **A prompt is put together from four parts:**
+  1. the winter style paragraph below, in place of the shared one;
+  2. the summer shot's own paragraph, unchanged, from its heading above;
+  3. the twin paragraph below;
+  4. the shot's change from the table, then the winter ending.
+- **Name the file** after its summer picture with `-winter`: `zirbe-1-winter.webp`.
+- **Check each result** for what the summer pictures are checked for, and also:
+  - the room is recognisably the same, but not the same composition;
+  - snow lies outside only, and nothing in the room is wintry kitsch.
+
+### Winter style
+
+> Photorealistic interior photograph for a holiday rental listing in an Austrian alpine village.
+> Natural daylight from the windows, soft and even, no visible lamps switched on except where
+> stated. Shot at eye level with a 24 mm lens, verticals straight, calm and uncluttered, tidy as if
+> just cleaned. Modern alpine style: clean lines, natural wood, white plastered walls, wool and
+> linen textiles, a few plants. No people, no animals, no text, no logos, no brand names, no artwork
+> with writing. Through any window: the same forested mountain slope opposite in deep winter, fresh
+> snow on the ground and on the dark spruce, a clear blue sky or bright, soft winter light. The room
+> is warm and cosy.
+
+### Twin paragraph
+
+> This is the same room as in the input image, in winter. Keep its furniture, its wood, its fabrics,
+> its window and its layout exactly. Take the photograph from a different position: about one metre
+> to the side and turned slightly, so that the composition is clearly not the same as in the input
+> image. No Christmas decorations, no ski equipment or boots indoors, no snow indoors.
+
+### Winter ending
+
+> Landscape 3:2, 1536 × 1024. One photograph, no collage.
+>
+> For a square shot the first sentence is: Square 1:1, 1024 × 1024.
+>
+> Input image: the same room in summer; keep its furniture, wood, fabrics, window and architecture,
+> change the season outside, the camera position and the details named above. Generate a new
+> photograph, not an edit or a copy of the input image's composition.
+
+### The twins and their changes
+
+| Twin               | Summer picture     | The shot's change                                                                                                                                                        |
+| ------------------ | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `zirbe-1-winter`   | `zirbe-1`          | The moss green loden blanket lies spread over the bed instead of folded; a grey wool throw on the window seat. The camera stands nearer the window.                      |
+| `zirbe-2-winter`   | `zirbe-2`          | A teapot and two cups on the worktop instead of the kettle; the window seat's cushions in moss green. Seen more from the side of the window.                             |
+| `laerche-1-winter` | `laerche-1`        | The balcony beyond the glass door under snow; a charcoal wool throw on the sofa, the cushions rearranged. Seen from the kitchen side towards the sofa.                   |
+| `laerche-2-winter` | `laerche-2`        | A charcoal wool throw instead of the rust one; a pair of felt slippers by the bed. Seen from the foot of the bed towards the window.                                     |
+| `laerche-3-winter` | `laerche-3`        | Rust-coloured blankets on both bunks instead of charcoal; a wool cardigan on a hook. Seen from the window side towards the bunk bed.                                     |
+| `laerche-5-winter` | `laerche-5`        | Snow on the balcony's railing and roofs; the table bare, the chairs folded against the wall, no cushions. A slightly lower camera, more of the snowy slope in the frame. |
+| `ahorn-1-winter`   | `ahorn-1`          | The wood-burning stove lit, a small fire; the terrace beyond the glass door under snow; dark blue cushions on the sofa. Seen from the sofa side towards the kitchen.     |
+| `ahorn-2-winter`   | `ahorn-2`          | Snow on the skylight's frame; a sand-coloured wool blanket instead of the dark blue one. Seen from the window side towards the bed.                                      |
+| `ahorn-3-winter`   | `ahorn-3`          | A dark blue blanket at the foot of the bed instead of the sage one; a small lamp on the chest switched on. Seen from the door, the bed more from the side.               |
+| `ahorn-4-winter`   | `ahorn-4`          | Sage green linen on the bunks instead of dark blue; a wool throw over the armchair. Seen from the window side towards the bunk bed. Made from the bedroom without toys.  |
+| `ahorn-5-winter`   | `ahorn-5`          | Dark blue towels instead of sage; the sauna's light switched on behind the glass. Seen more from the sauna's side.                                                       |
+| `ahorn-6-winter`   | `ahorn-6`          | The deck swept, snow on the fence, the meadow and the slope; the table bare, the benches without cushions. Morning light. A slightly lower camera.                       |
+| `ahorn-7-winter`   | `ahorn-7` (square) | A pot of tea and two mugs instead of the bread; snow on the windowsill outside. The worktop seen a little more from the side.                                            |
+| `ahorn-8-winter`   | `ahorn-8`          | A dark blue runner on the landing instead of the sage one; the stairs seen from halfway up, looking to the landing window.                                               |
+| `ahorn-9-winter`   | `ahorn-9`          | Sand-coloured towels instead of dark blue; snow on the skylight's frame. Seen from the shower's side towards the basin.                                                  |
+
+Make `ahorn-4-winter` from the new `ahorn-4` without toys (#204), not from the old one.

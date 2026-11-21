@@ -31,8 +31,10 @@ test('each apartment shows its facts, pictures, description, rooms, amenities an
     expect(response!.status()).toBe(200);
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(name);
     for (const fact of facts) await expect(page.locator('.facts')).toContainText(fact);
-    const picture = page.locator('.tile img').first();
+    // The shown season's: a seasonal first picture loads lazily, once laid out.
+    const picture = page.locator('.tile img:visible').first();
     await expect(picture).toHaveAttribute('alt', /.{20}/);
+    await expect(picture).toHaveJSProperty('complete', true);
     expect(await picture.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
     await expect(page.locator('.tile .ai-label').first()).toHaveText(
       path.startsWith('/de') ? 'KI-Bild' : 'AI image',
@@ -458,7 +460,7 @@ test('every tab stop on an apartment page shows a focus ring', async ({ page, br
       });
       // A picture's cell by its picture: each says "KI-Bild".
       const text =
-        element.querySelector('img')?.alt ??
+        [...element.querySelectorAll('img')].find((img) => img.checkVisibility())?.alt ??
         element.getAttribute('aria-label') ??
         element.textContent?.trim();
       return {
@@ -474,7 +476,7 @@ test('every tab stop on an apartment page shows a focus ring', async ({ page, br
     await page.keyboard.press('Tab');
   }
   const cells = await page
-    .locator('.tile:visible img')
+    .locator('.tile:visible img:visible')
     .evaluateAll((images: HTMLImageElement[]) =>
       images.map(({ alt }) => `button ${alt.slice(0, 30)}`),
     );

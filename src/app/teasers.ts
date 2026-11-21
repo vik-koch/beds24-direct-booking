@@ -9,11 +9,12 @@ import {
 } from '@ng-icons/lucide';
 import type { FreeWeeks } from '../beds24/weeks';
 import site from '../content/generated/site';
-import { srcset } from '../content/names';
+import { placesOf, srcset } from '../content/names';
 import { fits, Guests } from './guests';
+import { Season } from './season';
 import { address, fill, formatMoney, LANGUAGE, TEXTS } from './texts';
 
-type Season = FreeWeeks['seasons'][number];
+type SeasonWeeks = FreeWeeks['seasons'][number];
 
 // One card per apartment of the content, each a single link to its page. Without Beds24's answer
 // a card keeps its picture and name.
@@ -27,24 +28,28 @@ type Season = FreeWeeks['seasons'][number];
   template: `
     <ul class="teasers" [attr.data-count]="cards().length">
       @for (card of cards(); track card.slug) {
-        @let picture = card.picture;
         <li class="teaser">
           <div class="teaser-picture">
-            <img
-              [attr.srcset]="srcset(picture)"
-              sizes="(min-width: 64rem) 32rem, (min-width: 40rem) 50vw, 100vw"
-              [src]="picture.sources[0].url"
-              [width]="picture.width"
-              [height]="picture.height"
-              [alt]="picture.alt[language.code]"
-              loading="lazy"
-            />
-            @if (picture.generated) {
-              <span class="ai-label"
-                ><ng-icon name="lucideSparkles" aria-hidden="true" />{{
-                  texts.apartment.generated
-                }}</span
-              >
+            @for (shown of card.place; track $index) {
+              @let picture = shown.picture;
+              <img
+                class="season-picture"
+                [attr.data-for]="shown.season"
+                [attr.srcset]="srcset(picture)"
+                sizes="(min-width: 64rem) 32rem, (min-width: 40rem) 50vw, 100vw"
+                [src]="picture.sources[0].url"
+                [width]="picture.width"
+                [height]="picture.height"
+                [alt]="picture.alt[language.code]"
+                loading="lazy"
+              />
+              @if (picture.generated) {
+                <span class="ai-label season-picture" [attr.data-for]="shown.season"
+                  ><ng-icon name="lucideSparkles" aria-hidden="true" />{{
+                    texts.apartment.generated
+                  }}</span
+                >
+              }
             }
           </div>
           <div class="teaser-text">
@@ -203,6 +208,7 @@ export class Teasers {
   protected readonly from = this.texts.panel.from.split('{price}');
   private readonly plural = new Intl.PluralRules(this.language.tag);
   private readonly guests = inject(Guests);
+  private readonly seasons = inject(Season).names;
 
   protected readonly srcset = srcset;
   protected readonly cards = computed(() => {
@@ -221,7 +227,8 @@ export class Teasers {
         slug,
         name,
         index,
-        picture: pictures[0],
+        // The first place's pictures, of one season each where the gallery has two.
+        place: placesOf(pictures, this.seasons)[0],
         link: this.guests.link(address(this.language, 'apartment', slug)),
         facts: listed[index] ?? null,
         small: capacity && !fits(capacity, adults(), children()) ? small : null,
@@ -234,7 +241,7 @@ export class Teasers {
     return fill(this.plural.select(count) === 'one' ? one : other, { count });
   }
 
-  protected lowestOf(season: Season, index: number) {
+  protected lowestOf(season: SeasonWeeks, index: number) {
     const prices = season.weeks.flatMap(({ prices }) => prices[index] ?? []);
     return prices.length ? Math.min(...prices) : null;
   }

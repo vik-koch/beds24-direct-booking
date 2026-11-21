@@ -5,17 +5,37 @@
     {
       "file": "pictures/zirbe-1.webp",
       "generated": true,
+      "season": "summer",
       "alt": {
         "de-AT": "Zirbenstube mit Doppelbett, moosgrüner Decke, rundem Tisch für zwei und grau gepolsterter Fensterbank mit Blick auf einen bewaldeten Hang.",
         "en-GB": "Stone pine studio with a double bed, moss green blanket, round table for two and a grey cushioned window seat overlooking a forested slope."
       }
     },
     {
+      "file": "pictures/zirbe-1-winter.webp",
+      "generated": true,
+      "season": "winter",
+      "alt": {
+        "de-AT": "Zirbenstube im Winter mit ausgebreiteter moosgrüner Decke, grauem Plaid auf der Fensterbank und Blick auf verschneiten Wald.",
+        "en-GB": "Stone pine studio in winter with a spread moss green blanket, a grey throw on the window seat and a view of snowy forest."
+      }
+    },
+    {
       "file": "pictures/zirbe-2.webp",
       "generated": true,
+      "season": "summer",
       "alt": {
         "de-AT": "Küchenzeile aus Zirbe mit zwei Kochplatten, Spüle, offenem Regal, elfenbeinfarbenem Wasserkocher und einem Teil der grauen Fensterbank.",
         "en-GB": "Stone pine kitchenette with a two-ring hob, sink, open shelf, plain ivory kettle and part of the grey window seat."
+      }
+    },
+    {
+      "file": "pictures/zirbe-2-winter.webp",
+      "generated": true,
+      "season": "winter",
+      "alt": {
+        "de-AT": "Küchenzeile aus Zirbe mit Teekanne und zwei Tassen, moosgrünen Polstern auf der Fensterbank und Blick auf den verschneiten Hang.",
+        "en-GB": "Stone pine kitchenette with a teapot and two cups, moss green window-seat cushions and a view of the snowy slope."
       }
     },
     {
