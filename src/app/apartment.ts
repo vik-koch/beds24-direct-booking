@@ -365,6 +365,10 @@ type Fold = ReturnType<typeof fold>;
           text-decoration-color: currentColor;
         }
 
+        &:focus-visible {
+          outline-offset: var(--focus-offset-text);
+        }
+
         ng-icon {
           @media (prefers-reduced-motion: no-preference) {
             transition: rotate 0.25s cubic-bezier(0.16, 1, 0.3, 1);
