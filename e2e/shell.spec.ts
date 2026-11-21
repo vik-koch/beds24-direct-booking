@@ -459,7 +459,9 @@ test('an address with an anchor opens at its section under a frosted header; smo
         y: scrollY,
         behavior: getComputedStyle(document.documentElement).scrollBehavior,
         over: header?.hasAttribute('data-over') ?? true,
-        fading: (header?.getAnimations().length ?? 0) > 0,
+        ground: header
+          ? `${getComputedStyle(header).backgroundColor} ${getComputedStyle(header).backdropFilter}`
+          : '',
         // Not a number when a visible frame lacks the section or the header.
         gap:
           (section?.getBoundingClientRect().top ?? NaN) -
@@ -476,13 +478,12 @@ test('an address with an anchor opens at its section under a frosted header; smo
     y: number;
     behavior: string;
     over: boolean;
-    fading: boolean;
+    ground: string;
     gap: number;
   };
   release();
   expect(first.y).toBeGreaterThan(0);
   expect(first.over).toBe(false);
-  expect(first.fading).toBe(false);
   expect(Math.abs(first.gap)).toBeLessThanOrEqual(1);
 
   // Smooth scrolling comes with the application, after that first jump, and not with reduced
@@ -493,6 +494,13 @@ test('an address with an anchor opens at its section under a frosted header; smo
   await expect.poll(behavior).toBe('smooth');
   await page.waitForTimeout(500);
   expect(await page.evaluate(() => scrollY)).toBe(first.y);
+  // The first frame already showed the header's settled ground, not the start of a fade.
+  expect(first.ground).toBe(
+    await page.locator('app-header').evaluate((header) => {
+      const style = getComputedStyle(header);
+      return `${style.backgroundColor} ${style.backdropFilter}`;
+    }),
+  );
 
   // A reload after scrolling away opens at the section again, and stays there.
   await page.evaluate(() => scrollTo({ top: 2000, behavior: 'instant' }));
