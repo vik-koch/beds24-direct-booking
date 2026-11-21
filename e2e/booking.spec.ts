@@ -336,7 +336,8 @@ test('the week, the view and the guests can be chosen by keyboard alone', async 
   // The counts: Enter opens, the arrows move, Enter chooses.
   await page.locator('#adults').focus();
   await page.keyboard.press('Enter');
-  await expect(page.getByRole('listbox')).toBeVisible();
+  // The list shows at once and marks its current option a render later.
+  await expect(page.locator('#adults')).toHaveAttribute('aria-activedescendant', /./);
   await page.keyboard.press('ArrowDown');
   await page.keyboard.press('Enter');
   await expect(page.locator('#adults')).toHaveText('3');
