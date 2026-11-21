@@ -895,6 +895,11 @@
   .weeks-grid {
     display: grid;
     grid-template-columns: repeat(var(--columns), minmax(min-content, 1fr));
+
+    /* As the booking panel's rows on the narrowest screens. */
+    @media (max-width: 22.4375rem) {
+      font-size: 1rem;
+    }
   }
 
   .weeks-row,
@@ -1018,8 +1023,7 @@
     .weeks-grid:has(.weeks-columns > :nth-child(5)) {
       font-size: 0.9375rem;
 
-      .weeks-columns > * + *,
-      .price {
+      .weeks-columns > * + * {
         font-size: 1rem;
       }
     }
