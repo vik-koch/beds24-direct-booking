@@ -65,18 +65,24 @@ export class Guests {
   });
 
   constructor() {
-    const query = this.query();
-    const count = (name: 'adults' | 'children') =>
-      Math.floor(Number(query.get(name) ?? usual[name])) || 0;
-    this.adults.set(Math.max(count('adults'), 1));
-    this.children.set(Math.max(count('children'), 0));
+    this.read();
+    // Back or Forward to an entry of this page, such as a section's fragment, restores its
+    // address and with it the choice it had.
+    this.location.subscribe(({ url }) => {
+      this.read(url);
+      if (this.rooms().length) this.set(this.adults(), this.children());
+    });
   }
 
-  // The address with the choice, before its fragment.
+  // An address of the site with the choice, beside its own query and before its fragment; any
+  // other address as it is.
   link(href: string) {
-    const [path, hash] = href.split('#');
-    const query = new URLSearchParams(this.params()).toString();
-    return `${path}${query ? `?${query}` : ''}${hash === undefined ? '' : `#${hash}`}`;
+    if (!href.startsWith('/') || href.startsWith('//')) return href;
+    const [rest, hash] = href.split('#');
+    const [path, search] = rest.split('?');
+    const params = new URLSearchParams(search);
+    for (const [name, value] of Object.entries(this.params())) params.set(name, value);
+    return `${path}${params.size ? `?${params}` : ''}${hash === undefined ? '' : `#${hash}`}`;
   }
 
   // Holds the choice to the rooms, and the address to the choice once the page is shown.
@@ -86,14 +92,24 @@ export class Guests {
     afterNextRender(() => this.keep(), { injector: this.injector });
   }
 
+  // Where no room asks for children, they are guests like the adults.
   set(adults: number, children: number) {
-    this.adults.set(Math.min(adults, this.maxAdults()));
-    this.children.set(Math.min(children, this.maxChildren()));
+    const moved = this.asksChildren() ? 0 : children;
+    this.adults.set(Math.min(adults + moved, this.maxAdults()));
+    this.children.set(Math.min(children - moved, this.maxChildren()));
     if (this.browser) this.keep();
   }
 
-  private query() {
-    return new URLSearchParams(this.location.path().split('#')[0].split('?')[1] ?? '');
+  private read(url = this.location.path()) {
+    const query = this.query(url);
+    const count = (name: 'adults' | 'children') =>
+      Math.floor(Number(query.get(name) ?? usual[name])) || 0;
+    this.adults.set(Math.max(count('adults'), 1));
+    this.children.set(Math.max(count('children'), 0));
+  }
+
+  private query(url = this.location.path()) {
+    return new URLSearchParams(url.split('#')[0].split('?')[1] ?? '');
   }
 
   private keep() {
