@@ -60,6 +60,13 @@
     scroll-padding-top: 5.5rem;
     --space-section: 2rem;
 
+    /* Short and long pages keep the header in one place, with or without a scrollbar. From
+       340 px only, where the 320 px layout still fits beside a classic one; in px, as that
+       layout is, whatever the browser's font size. */
+    @media (min-width: 340px) {
+      scrollbar-gutter: stable;
+    }
+
     @media (min-width: 48rem) {
       --space-section: 2.75rem;
     }

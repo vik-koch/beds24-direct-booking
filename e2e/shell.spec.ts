@@ -394,7 +394,10 @@ test('the wordmark keeps one line on a phone', async ({ page }) => {
           });
         expect(lines, place).toBe(1);
         expect(end, place).toBeLessThanOrEqual(next);
-        expect(await page.evaluate(() => document.documentElement.scrollWidth), place).toBe(width);
+        expect(
+          await page.locator('html').evaluate((html) => html.scrollWidth - html.offsetWidth),
+          place,
+        ).toBe(0);
       }
     }
   }
@@ -406,8 +409,8 @@ test('the wordmark, the hero card and the free weeks start on the 72rem columnâ€
   for (const width of [1280, 1440, 1920]) {
     await page.setViewportSize({ width, height: 900 });
     await page.goto('/de');
-    // A classic scrollbar takes its width from the page, which centres the column in the rest.
-    const inner = await page.evaluate(() => document.documentElement.clientWidth);
+    // The scrollbar's room is kept on every page, and the column is centred in the rest.
+    const inner = await page.evaluate(() => document.documentElement.offsetWidth);
     const edge = (inner - 72 * 16) / 2 + 32;
     for (const selector of ['.wordmark', '.hero-copy', '.weeks-head'])
       expect(
@@ -418,6 +421,48 @@ test('the wordmark, the hero card and the free weeks start on the 72rem columnâ€
         `${selector} at ${width}`,
       ).toBe(edge);
   }
+});
+
+// Headless Firefox and the phone draw scrollbars over the page; Playwright hides Chromium's
+// unless told otherwise.
+test('the header stays in place between a long page and a short one', async ({
+  playwright,
+  browserName,
+  baseURL,
+}) => {
+  test.skip(browserName !== 'chromium', 'only Chromium has a classic scrollbar here');
+  const browser = await playwright.chromium.launch({ ignoreDefaultArgs: ['--hide-scrollbars'] });
+  const page = await browser.newPage({ baseURL });
+  // A larger default font size leaves the 340 px limit where it is.
+  await (
+    await page.context().newCDPSession(page)
+  ).send('Page.setFontSizes', {
+    fontSizes: { standard: 20 },
+  });
+  const bar = () => page.evaluate(() => innerWidth - document.documentElement.clientWidth);
+  const scrolls = () => page.evaluate(() => document.documentElement.scrollHeight > innerHeight);
+  const left = (selector: string) =>
+    page.locator(selector).evaluate((e) => e.getBoundingClientRect().left);
+  // The wordmark where the 72rem column, at 20 px a rem, has room on both sides; in a narrow
+  // window, the menu button at the right.
+  for (const [width, selector] of [
+    [1600, '.wordmark'],
+    [350, '.header-narrow .icon-button'],
+  ] as const) {
+    await page.setViewportSize({ width, height: 2000 });
+    await page.goto('/en');
+    expect(await bar(), `${width}`).toBeGreaterThan(0);
+    const long = await left(selector);
+    await page.goto('/en/picture-credits');
+    expect(await scrolls(), `${width}`).toBe(false);
+    expect(await left(selector), `${width}`).toBe(long);
+  }
+  // At 320 px a short page keeps its whole width, so nothing scrolls sideways.
+  await page.setViewportSize({ width: 320, height: 2000 });
+  expect(await scrolls()).toBe(false);
+  expect(await bar()).toBe(0);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(320);
+  await browser.close();
 });
 
 test('narrower than 320 px the page keeps its 320 px layout and scrolls sideways', async ({
@@ -621,7 +666,7 @@ async function nameFits(page: Page) {
         return tops.size > 1;
       })
       .map((e) => e.textContent!.trim()),
-    scroll: document.documentElement.scrollWidth - innerWidth,
+    scroll: document.documentElement.scrollWidth - document.documentElement.offsetWidth,
   }));
   expect(link).toBeLessThanOrEqual(slot);
   expect(wrapped).toEqual([]);
