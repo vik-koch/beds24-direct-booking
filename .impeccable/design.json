@@ -71,7 +71,7 @@
       },
       "title": {
         "displayName": "Title",
-        "purpose": "A column's name, a price."
+        "purpose": "A column's name, the amount of a card's lowest price, the booking panel's total. A price in a week list is body text at weight 500."
       },
       "body": {
         "displayName": "Body",
@@ -139,7 +139,7 @@
       "refersTo": "price",
       "description": "A free week in the list: plain accent text, a soft tint on hover.",
       "html": "<span class=\"ds-price\" tabindex=\"0\">1.590 €</span>",
-      "css": ".ds-price { display: inline-grid; align-items: center; min-height: 2.75rem; padding: 0 0.75rem; border-radius: 999px; color: #3b587c; font-family: Jost, system-ui, sans-serif; font-size: 1.1875rem; font-weight: 500; font-variant-numeric: tabular-nums; cursor: pointer; transition: background-color 0.2s; } .ds-price:hover { background: #e2e8f0; } .ds-price:focus-visible { outline: 2px solid #3b587c; outline-offset: 3px; }"
+      "css": ".ds-price { display: inline-grid; align-items: center; min-height: 2.125rem; padding: 0 0.75rem; border-radius: 999px; color: #3b587c; font-family: Jost, system-ui, sans-serif; font-size: 1.125rem; font-weight: 500; font-variant-numeric: tabular-nums; cursor: pointer; transition: background-color 0.2s; } .ds-price:hover { background: #e2e8f0; } .ds-price:focus-visible { outline: 2px solid #3b587c; outline-offset: 3px; }"
     },
     {
       "name": "Chosen Price",
@@ -147,7 +147,7 @@
       "refersTo": "price-selected",
       "description": "The week the visitor chose.",
       "html": "<span class=\"ds-price-on\">1.490 €</span>",
-      "css": ".ds-price-on { display: inline-grid; align-items: center; min-height: 2.75rem; padding: 0 0.75rem; border-radius: 999px; background: #3b587c; color: #fff; font-family: Jost, system-ui, sans-serif; font-size: 1.1875rem; font-weight: 500; font-variant-numeric: tabular-nums; }"
+      "css": ".ds-price-on { display: inline-grid; align-items: center; min-height: 2.125rem; padding: 0 0.75rem; border-radius: 999px; background: #3b587c; color: #fff; font-family: Jost, system-ui, sans-serif; font-size: 1.125rem; font-weight: 500; font-variant-numeric: tabular-nums; }"
     },
     {
       "name": "Card",

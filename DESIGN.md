@@ -167,7 +167,8 @@ hierarchy; weight barely does.
 - **Lead** (400, clamp(1.1875rem, 1rem + 0.5vw, 1.375rem), 1.5, ink-soft): the line under the
   display headline on the hero card. The feature icons below it are 1.25rem on a phone and 1.5rem
   from 48rem up, their centre at 0.5 and 0.6 of the cap height above the baseline.
-- **Title** (500, 1.1875rem, 1.2): a column's name, a price.
+- **Title** (500, 1.1875rem, 1.2): a column's name, the amount of a card's lowest price, the booking
+  panel's total. A price in a week list is body text at weight 500.
 - **Body** (400, 1.125rem, 1.5): running text and list rows. Paragraphs stay under about 45rem.
 - **Label** (500, 0.9375rem): switches, small buttons, the back link and the booking panel's link to
   the other season. A text button within a page's content ("Mehr lesen", the list's link to the
@@ -324,9 +325,8 @@ text button.
   the same one; each price's label still names it. On a phone the card has 1.25rem at its sides,
   room for a chosen price's pill.
 - **Free week:** the price in the accent at body size and weight 500, as in the booking panel, as a
-  cell of a grid without a visible box. Both lists step down to 1rem below 22.5rem; with four
-  apartments the list's rows are 0.9375rem from 48rem to 56rem, where its columns are short of room.
-  Hover puts a soft tint behind it.
+  cell of a grid without a visible box. Both lists step down to 1rem where they lack room: below
+  22.5rem, and the list with four apartments from 48rem to 56rem. Hover puts a soft tint behind it.
 - **Chosen week:** an accent-filled pill with white figures.
 - **Booked week:** the word in soft ink, no decoration.
 - **Keyboard:** the list is one grid, after the WAI-ARIA Authoring Practices' grid pattern. Tab
