@@ -342,11 +342,18 @@ test('on a phone the pictures are a strip, and the viewer’s buttons sit under 
 }) => {
   await page.setViewportSize({ width: 320, height: 640 });
   await page.goto('/de/wohnungen/ahorn');
-  // A swipe before the application has started is outside what the site supports.
-  await expect(page.locator('html')).toHaveAttribute('data-smooth', '');
   await expect(page.locator('.strip-count')).toHaveText('1 / 9');
-  await page.locator('.tiles').evaluate((strip) => strip.scrollTo({ left: strip.clientWidth * 3 }));
-  await expect(page.locator('.strip-count')).toHaveText('4 / 9');
+  // A swipe before the application has started is outside what the site supports, and no
+  // attribute tells when it has (data-smooth comes from the head's script): the swipe is
+  // repeated until the count follows.
+  const strip = page.locator('.tiles');
+  await expect(async () => {
+    await strip.evaluate((element) => element.scrollTo({ left: 0, behavior: 'instant' }));
+    await strip.evaluate((element) =>
+      element.scrollTo({ left: element.clientWidth * 3, behavior: 'instant' }),
+    );
+    await expect(page.locator('.strip-count')).toHaveText('4 / 9', { timeout: 500 });
+  }).toPass();
   // A tap on the count reaches the picture under it.
   const counter = await box(page.locator('.strip-count'));
   await page.mouse.click(counter.x + counter.width / 2, counter.y + counter.height / 2);
