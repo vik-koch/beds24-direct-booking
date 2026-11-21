@@ -391,7 +391,6 @@ test(
 );
 
 test('at 320 px nothing scrolls sideways, in both seasons and languages', async ({ page }) => {
-  await page.setViewportSize({ width: 320, height: 700 });
   // The rooms stand one below the other, where two would break a name, and two by two from 360.
   for (const [width, columns] of [
     [320, 1],
@@ -399,6 +398,9 @@ test('at 320 px nothing scrolls sideways, in both seasons and languages', async 
   ]) {
     await page.setViewportSize({ width, height: 700 });
     await page.goto('/de/wohnungen/ahorn');
+    // The page itself that wide: Chromium here keeps a scrollbar's room, which a phone has not.
+    const gutter = await page.evaluate(() => innerWidth - document.documentElement.offsetWidth);
+    await page.setViewportSize({ width: width + gutter, height: 700 });
     expect(
       await page
         .locator('.rooms')

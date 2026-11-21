@@ -58,6 +58,8 @@
     /* For focus moved by the keyboard; a jump from a link is placed by the router. The header
        takes itself out of it (.site-header). */
     scroll-padding-top: 5.5rem;
+    /* Short and long pages keep the header in one place, with or without a scrollbar. */
+    scrollbar-gutter: stable;
     --space-section: 2rem;
 
     @media (min-width: 48rem) {

@@ -394,7 +394,10 @@ test('the wordmark keeps one line on a phone', async ({ page }) => {
           });
         expect(lines, place).toBe(1);
         expect(end, place).toBeLessThanOrEqual(next);
-        expect(await page.evaluate(() => document.documentElement.scrollWidth), place).toBe(width);
+        expect(
+          await page.locator('html').evaluate((html) => html.scrollWidth - html.offsetWidth),
+          place,
+        ).toBe(0);
       }
     }
   }
@@ -406,8 +409,8 @@ test('the wordmark, the hero card and the free weeks start on the 72rem columnâ€
   for (const width of [1280, 1440, 1920]) {
     await page.setViewportSize({ width, height: 900 });
     await page.goto('/de');
-    // A classic scrollbar takes its width from the page, which centres the column in the rest.
-    const inner = await page.evaluate(() => document.documentElement.clientWidth);
+    // The scrollbar's room is kept on every page, and the column is centred in the rest.
+    const inner = await page.evaluate(() => document.documentElement.offsetWidth);
     const edge = (inner - 72 * 16) / 2 + 32;
     for (const selector of ['.wordmark', '.hero-copy', '.weeks-head'])
       expect(
@@ -418,6 +421,28 @@ test('the wordmark, the hero card and the free weeks start on the 72rem columnâ€
         `${selector} at ${width}`,
       ).toBe(edge);
   }
+});
+
+// Headless Firefox and the phone draw scrollbars over the page; Playwright hides Chromium's
+// unless told otherwise.
+test('the header stays in place between a long page and a short one', async ({
+  playwright,
+  browserName,
+  baseURL,
+}) => {
+  test.skip(browserName !== 'chromium', 'only Chromium has a classic scrollbar here');
+  const browser = await playwright.chromium.launch({ ignoreDefaultArgs: ['--hide-scrollbars'] });
+  const page = await browser.newPage({ baseURL, viewport: { width: 1280, height: 900 } });
+  const place = async (path: string) => {
+    await page.goto(path);
+    return page.locator('.wordmark').evaluate((e) => e.getBoundingClientRect().left);
+  };
+  const scrolls = () => page.evaluate(() => document.documentElement.scrollHeight > innerHeight);
+  const long = await place('/en');
+  expect(await scrolls()).toBe(true);
+  expect(await place('/en/picture-credits')).toBe(long);
+  expect(await scrolls()).toBe(false);
+  await browser.close();
 });
 
 test('narrower than 320 px the page keeps its 320 px layout and scrolls sideways', async ({
@@ -621,7 +646,7 @@ async function nameFits(page: Page) {
         return tops.size > 1;
       })
       .map((e) => e.textContent!.trim()),
-    scroll: document.documentElement.scrollWidth - innerWidth,
+    scroll: document.documentElement.scrollWidth - document.documentElement.offsetWidth,
   }));
   expect(link).toBeLessThanOrEqual(slot);
   expect(wrapped).toEqual([]);

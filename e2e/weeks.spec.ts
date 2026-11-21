@@ -359,7 +359,10 @@ test('four apartments with long names stand two by two on a phone and fit the ca
       await page.setViewportSize({ width, height: 800 });
       const place = `${path} at ${width}`;
       expect(await tabRows(page), place).toEqual(fine([2, 2]));
-      expect(await page.evaluate(() => document.documentElement.scrollWidth), place).toBe(width);
+      expect(
+        await page.locator('html').evaluate((html) => html.scrollWidth - html.offsetWidth),
+        place,
+      ).toBe(0);
     }
     // Three of these names stand two and one, the third as wide as the others.
     await page.setViewportSize({ width: 375, height: 800 });
@@ -377,7 +380,10 @@ test('four apartments with long names stand two by two on a phone and fit the ca
     for (const width of [768, 895, 896, 1280]) {
       await page.setViewportSize({ width, height: 800 });
       const place = `${path} at ${width}`;
-      expect(await page.evaluate(() => document.documentElement.scrollWidth), place).toBe(width);
+      expect(
+        await page.locator('html').evaluate((html) => html.scrollWidth - html.offsetWidth),
+        place,
+      ).toBe(0);
       const sheet = page.locator('.sheet').first();
       expect(await sheet.evaluate((card) => card.scrollWidth - card.clientWidth), place).toBe(0);
       const names = await page.locator('.weeks-name').evaluateAll((spans) =>
