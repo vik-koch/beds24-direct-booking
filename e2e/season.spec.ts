@@ -140,10 +140,12 @@ test('a switch on a scrolled page keeps its place, and focus in the page lands b
   for (const width of [1280, 320]) {
     await page.setViewportSize({ width, height: 700 });
     await page.goto('/en');
+    // The first navigation restores the scroll position, so the page is scrolled after it.
+    await expect(page.locator('html')).toHaveAttribute('data-started', '');
     await scrollTo(832);
+    expect(await at()).toBe(832);
     // By the pointer at the label's place: a locator's click would first scroll it into view
     // itself, which WebKit does even for the sticky header.
-    await expect(page.locator('html')).toHaveAttribute('data-started', '');
     const box = (await page.locator('.season-switch label[data-for=summer]').boundingBox())!;
     await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
     await expect(page.locator('html')).toHaveAttribute('data-season', 'summer');
