@@ -138,6 +138,12 @@ const addDays = (date: string, days: number) =>
       }
       @if (weeks && limits) {
         <p class="sr-only" aria-live="polite">{{ announced() }}</p>
+        <!-- Above the weeks, so it is read before a week is chosen; the counts are below. -->
+        <p class="panel-small" role="status">
+          @if (!fitting()) {
+            {{ small() }}
+          }
+        </p>
         <div class="panel-seasons">
           @for (season of weeks.seasons; track season.name) {
             <div class="panel-season" [attr.data-for]="season.name">
@@ -287,9 +293,6 @@ const addDays = (date: string, days: number) =>
             <h3>{{ texts.panel.guests }}</h3>
           }
           <app-guest-counts />
-          @if (!fitting()) {
-            <p class="panel-small">{{ small() }}</p>
-          }
         </div>
         <!-- A season with no week to choose has no total and no button. -->
         @for (season of weeks.seasons; track season.name) {
@@ -716,15 +719,14 @@ const addDays = (date: string, days: number) =>
         margin-bottom: 0.5rem;
       }
 
-      .panel-small,
       .panel-note {
         margin-top: 0.75rem;
         color: var(--color-ink-soft);
         font-size: 0.875rem;
       }
 
-      .panel-small {
-        color: var(--color-ink);
+      .panel-small:not(:empty) {
+        margin-top: 1rem;
         font-weight: 500;
       }
 
