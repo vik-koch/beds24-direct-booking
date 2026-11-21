@@ -645,7 +645,7 @@ export class Gallery {
   protected readonly index = signal(0);
   // The picture shown before, whose text fades out.
   protected readonly from = signal(0);
-  // The viewer's pictures load only once it has opened.
+  // The viewer's pictures load only while it is open.
   private readonly opened = signal(false);
   private opener: HTMLElement | null = null;
   private fades: Animation[] = [];
@@ -776,6 +776,8 @@ export class Gallery {
   // A fade the browser cut short must not close the viewer once opened again. A picture the
   // strip opened may be one the mosaic, widened meanwhile, leaves out: its +N cell stands for it.
   protected closed() {
+    // Closed, its pictures wait again: a change of season would fetch the new ones at once.
+    this.opened.set(false);
     for (const fade of this.fades) fade.cancel();
     this.fades = [];
     const opener = this.opener!;
