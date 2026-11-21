@@ -373,12 +373,11 @@ test('the apartments menu opens by keyboard and leads to an apartment', async ({
 });
 
 test('the wordmark keeps one line on a phone', async ({ page }) => {
-  const paths = ['/de', '/de/bildnachweis', '/en', '/en/picture-credits'];
-  for (const width of [320, 340, 360, 375, 384, 390]) {
-    await page.setViewportSize({ width, height: 600 });
-    for (const path of paths) {
-      for (const season of ['winter', 'summer']) {
-        await page.goto(`${path}?season=${season}`);
+  for (const path of ['/de', '/de/bildnachweis', '/en', '/en/picture-credits']) {
+    for (const season of ['winter', 'summer']) {
+      await page.goto(`${path}?season=${season}`);
+      for (const width of [320, 340, 360, 375, 384, 390]) {
+        await page.setViewportSize({ width, height: 600 });
         const place = `${path} in ${season} at ${width}`;
         const { lines, end, next } = await page
           .locator('app-header a')

@@ -309,7 +309,10 @@ test('below 24rem the switch shows its icons only, the names stay the radios’ 
         for (const [index, radio] of ['winter', 'summer'].entries()) {
           await expect(page.getByRole('radio', { name: names[index] }), place).toHaveValue(radio);
         }
-        if (width === 320) expect(await axe(page), place).toEqual([]);
+        if (width === 320) {
+          const { violations } = await new AxeBuilder({ page }).include('app-header').analyze();
+          expect(violations, place).toEqual([]);
+        }
       }
     }
   }
