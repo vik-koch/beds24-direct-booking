@@ -30,10 +30,11 @@ type SeasonWeeks = FreeWeeks['seasons'][number];
       @for (card of cards(); track card.slug) {
         <li class="teaser">
           <div class="teaser-picture">
-            @for (picture of card.place; track $index) {
+            @for (shown of card.place; track $index) {
+              @let picture = shown.picture;
               <img
                 class="season-picture"
-                [attr.data-for]="picture.season ?? null"
+                [attr.data-for]="shown.season"
                 [attr.srcset]="srcset(picture)"
                 sizes="(min-width: 64rem) 32rem, (min-width: 40rem) 50vw, 100vw"
                 [src]="picture.sources[0].url"
@@ -42,13 +43,13 @@ type SeasonWeeks = FreeWeeks['seasons'][number];
                 [alt]="picture.alt[language.code]"
                 loading="lazy"
               />
-            }
-            @if (card.place[0].generated) {
-              <span class="ai-label"
-                ><ng-icon name="lucideSparkles" aria-hidden="true" />{{
-                  texts.apartment.generated
-                }}</span
-              >
+              @if (picture.generated) {
+                <span class="ai-label season-picture" [attr.data-for]="shown.season"
+                  ><ng-icon name="lucideSparkles" aria-hidden="true" />{{
+                    texts.apartment.generated
+                  }}</span
+                >
+              }
             }
           </div>
           <div class="teaser-text">

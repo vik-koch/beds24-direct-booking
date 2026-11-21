@@ -58,12 +58,31 @@ test('each season shows its own pictures, and a change fades to them in place', 
   page,
 }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
+  const fetched: string[] = [];
+  page.on('request', (request) => fetched.push(new URL(request.url()).pathname));
   await page.goto('/de/wohnungen/ahorn?season=summer');
   await expect(page.locator('html')).toHaveAttribute('data-smooth', '');
   const first = page.locator('.tile').first();
   expect(await shownAlt(first)).toEqual([
     expect.stringMatching(/^Wohn- und Essraum mit Ahorntisch/),
   ]);
+  // The winter pictures are not fetched in summer, the first cell's neither; the summer one is.
+  await expect(first.locator('img[data-for=summer]')).toHaveJSProperty('complete', true);
+  const files = (season: string) =>
+    page
+      .locator(`.tile img[data-for=${season}]`)
+      .evaluateAll((images: HTMLImageElement[]) =>
+        images.flatMap((image) => image.srcset.split(', ').map((part) => part.split(' ')[0])),
+      );
+  expect(fetched.filter((path) => path.includes('/pictures/apartments/'))).not.toEqual([]);
+  for (const file of await files('winter')) expect(fetched).not.toContain(file);
+  // Each cell's label is its shown picture's.
+  for (const tile of await page.locator('.tile:visible').all()) {
+    await expect(tile.locator('.ai-label:visible')).toHaveCount(1);
+    expect(await tile.locator('.ai-label:visible').getAttribute('data-for')).toBe(
+      await tile.locator('img:visible').getAttribute('data-for'),
+    );
+  }
   const boxes = () =>
     page
       .locator('.tile')
@@ -79,7 +98,7 @@ test('each season shows its own pictures, and a change fades to them in place', 
     );
   await expect.poll(() => shownAlt(first)).toEqual([expect.stringMatching(/brennendem Ofen/)]);
   expect(await boxes()).toEqual(before);
-  await expect(first.locator('.ai-label')).toHaveCount(1);
+  await expect(first.locator('.ai-label:visible')).toHaveAttribute('data-for', 'winter');
   await page.locator('.tile').nth(2).click();
   await expect(viewer(page).locator('.viewer-count')).toHaveText('Bild 3 von 9');
   await expect(viewer(page).locator('.caption-in')).toContainText('sandfarbener Decke');

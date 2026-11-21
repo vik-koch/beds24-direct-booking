@@ -11,7 +11,7 @@ import {
 } from '@angular/core';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideChevronLeft, lucideChevronRight, lucideSparkles, lucideX } from '@ng-icons/lucide';
-import { placesOf, srcset } from '../content/names';
+import { placesOf, srcset, type Shown } from '../content/names';
 import type { Picture } from '../content/schema';
 import { Season } from './season';
 import { fill, LANGUAGE, TEXTS } from './texts';
@@ -32,10 +32,13 @@ import { fill, LANGUAGE, TEXTS } from './texts';
             [attr.data-beyond]="$index < shown() ? null : ''"
             (click)="open($index, $event.currentTarget)"
           >
-            @for (picture of place; track $index) {
+            <!-- A season's picture, and its label, are fetched and shown in their season only:
+                 the first cell's too waits for its layout, when the hidden one has none. -->
+            @for (shown of place; track $index) {
+              @let picture = shown.picture;
               <img
                 class="season-picture"
-                [attr.data-for]="picture.season ?? null"
+                [attr.data-for]="shown.season"
                 [attr.srcset]="srcset(picture)"
                 [sizes]="
                   first ? '(min-width: 64rem) 33rem, 100vw' : '(min-width: 48rem) 13rem, 100vw'
@@ -44,15 +47,15 @@ import { fill, LANGUAGE, TEXTS } from './texts';
                 [width]="picture.width"
                 [height]="picture.height"
                 [alt]="picture.alt[language.code]"
-                [attr.loading]="first ? null : 'lazy'"
+                [attr.loading]="first && !shown.season ? null : 'lazy'"
               />
-            }
-            @if (place[0].generated) {
-              <span class="ai-label"
-                ><ng-icon name="lucideSparkles" aria-hidden="true" />{{
-                  texts.apartment.generated
-                }}</span
-              >
+              @if (picture.generated) {
+                <span class="ai-label season-picture" [attr.data-for]="shown.season"
+                  ><ng-icon name="lucideSparkles" aria-hidden="true" />{{
+                    texts.apartment.generated
+                  }}</span
+                >
+              }
             }
             @if ($index === shown() - 1 && places().length > shown()) {
               <span class="more">{{ more() }}</span>
@@ -104,17 +107,18 @@ import { fill, LANGUAGE, TEXTS } from './texts';
         >
           @for (place of places(); track $index; let at = $index) {
             <div class="viewer-slide">
-              @for (picture of place; track $index) {
+              @for (shown of place; track $index) {
+                @let picture = shown.picture;
                 <img
                   class="season-picture"
-                  [attr.data-for]="picture.season ?? null"
+                  [attr.data-for]="shown.season"
                   [attr.srcset]="srcset(picture)"
                   sizes="100vw"
                   [src]="picture.sources[0].url"
                   [width]="picture.width"
                   [height]="picture.height"
                   alt=""
-                  [attr.loading]="near(at) && shows(picture) ? 'eager' : 'lazy'"
+                  [attr.loading]="near(at) && shows(shown) ? 'eager' : 'lazy'"
                 />
               }
             </div>
@@ -160,11 +164,11 @@ import { fill, LANGUAGE, TEXTS } from './texts';
               [attr.aria-current]="$index === index() ? 'true' : null"
               (click)="go($index, $index - index())"
             >
-              @for (picture of place; track $index) {
+              @for (shown of place; track $index) {
                 <img
                   class="season-picture"
-                  [attr.data-for]="picture.season ?? null"
-                  [src]="picture.sources[0].url"
+                  [attr.data-for]="shown.season"
+                  [src]="shown.picture.sources[0].url"
                   alt=""
                   loading="lazy"
                 />
@@ -621,8 +625,8 @@ export class Gallery {
   // Each place's pictures, one for both seasons or one per season, which the page's season
   // attribute shows; the caption takes the shown one's text.
   protected readonly places = computed(() => placesOf(this.pictures(), this.season.names));
-  protected readonly shows = ({ season }: Picture) => !season || season === this.season.current();
-  protected readonly seen = (index: number) => this.places()[index].find(this.shows)!;
+  protected readonly shows = ({ season }: Shown) => !season || season === this.season.current();
+  protected readonly seen = (index: number) => this.places()[index].find(this.shows)!.picture;
   protected readonly texts = inject(TEXTS);
   protected readonly language = inject(LANGUAGE);
   protected readonly srcset = srcset;
