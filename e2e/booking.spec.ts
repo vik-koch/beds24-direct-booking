@@ -544,8 +544,9 @@ test('a week in the address is shown at the first paint, before the application 
     await expect(row.locator('[role=rowheader]')).toHaveText(stay);
     await expect(row).not.toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
     await expect(fresh.locator('.outcome:visible .total')).toBeVisible();
-    const bar = fresh.locator('.booking-bar').getByRole('link', { name: 'Weiter' });
+    const bar = fresh.locator('.booking-bar');
     await expect(bar).toBeVisible({ visible: barShown });
+    if (barShown) await expect(bar.getByRole('link', { name: 'Weiter' })).toBeVisible();
     await expect(fresh.locator('html')).not.toHaveAttribute('data-started');
     await fresh.close();
   }
