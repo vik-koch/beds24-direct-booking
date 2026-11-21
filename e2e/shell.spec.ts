@@ -432,23 +432,27 @@ test('the header stays in place between a long page and a short one', async ({
 }) => {
   test.skip(browserName !== 'chromium', 'only Chromium has a classic scrollbar here');
   const browser = await playwright.chromium.launch({ ignoreDefaultArgs: ['--hide-scrollbars'] });
-  const page = await browser.newPage({ baseURL, viewport: { width: 1280, height: 900 } });
-  const place = async (path: string) => {
-    await page.goto(path);
-    return page.locator('.wordmark').evaluate((e) => e.getBoundingClientRect().left);
-  };
+  const page = await browser.newPage({ baseURL });
   const bar = () => page.evaluate(() => innerWidth - document.documentElement.clientWidth);
-  const long = await place('/en');
-  expect(await bar()).toBeGreaterThan(0);
-  expect(await place('/en/picture-credits')).toBe(long);
-  expect(await page.evaluate(() => document.documentElement.scrollHeight > innerHeight)).toBe(
-    false,
-  );
+  const scrolls = () => page.evaluate(() => document.documentElement.scrollHeight > innerHeight);
+  const left = (selector: string) =>
+    page.locator(selector).evaluate((e) => e.getBoundingClientRect().left);
+  // The wordmark in a wide window; in a narrow one, the menu button at the right.
+  for (const [width, selector] of [
+    [1280, '.wordmark'],
+    [350, '.header-narrow .icon-button'],
+  ] as const) {
+    await page.setViewportSize({ width, height: 2000 });
+    await page.goto('/en');
+    expect(await bar(), `${width}`).toBeGreaterThan(0);
+    const long = await left(selector);
+    await page.goto('/en/picture-credits');
+    expect(await scrolls(), `${width}`).toBe(false);
+    expect(await left(selector), `${width}`).toBe(long);
+  }
   // At 320 px a short page keeps its whole width, so nothing scrolls sideways.
   await page.setViewportSize({ width: 320, height: 2000 });
-  expect(await page.evaluate(() => document.documentElement.scrollHeight > innerHeight)).toBe(
-    false,
-  );
+  expect(await scrolls()).toBe(false);
   expect(await bar()).toBe(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(320);
   await browser.close();

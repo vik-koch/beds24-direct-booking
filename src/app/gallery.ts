@@ -362,6 +362,12 @@ import { fill, LANGUAGE, TEXTS } from './texts';
         overflow: hidden;
       }
 
+      /* The scrollbar's room is kept while it is gone, so the page seen through the fades stays
+         put. */
+      html:has(.viewer[open]) {
+        scrollbar-gutter: stable;
+      }
+
       @keyframes viewer-in {
         from {
           opacity: 0;
