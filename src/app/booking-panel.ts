@@ -731,7 +731,9 @@ const addDays = (date: string, days: number) =>
         margin-top: 0.75rem;
       }
 
+      /* Its rows' padding would add to the space below the line above. */
       .total {
+        margin-top: -0.25rem;
         font-size: 0.9375rem;
 
         div {
