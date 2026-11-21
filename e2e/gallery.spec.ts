@@ -104,6 +104,13 @@ test('each season shows its own pictures, and a change fades to them in place', 
   await expect(viewer(page).locator('.caption-in')).toContainText('sandfarbener Decke');
   await page.keyboard.press('Escape');
 
+  // Closed, the viewer fetches nothing on a change of season: the slides near the current one
+  // (which the closed track resets to the first) wait for it to open again.
+  await expect(viewer(page)).not.toHaveAttribute('open');
+  await page.locator('.season-switch label[data-for=summer]').click();
+  await expect(page.locator('html')).toHaveAttribute('data-season', 'summer');
+  await expect(viewer(page).locator('img[loading=eager]')).toHaveCount(0);
+
   // A bathroom without a view serves both seasons: its place has one picture.
   await page.goto('/de/wohnungen/zirbe?season=winter');
   await expect(page.locator('.tile').nth(2).locator('img')).toHaveCount(1);
