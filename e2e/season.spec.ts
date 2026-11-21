@@ -256,9 +256,21 @@ test('only the shown season’s photo is fetched, the other one on approach', as
   expect(photos[0]).toMatch(/^\/pictures\/hero\/hero-winter-/);
   // The other season's in the same form, the whole photo or its crop.
   const form = (path: string) => path.includes('-portrait-');
-  await page.getByRole('radio', { name: 'Sommer' }).focus();
+  const summer = page.getByRole('radio', { name: 'Sommer' });
+  const loaded = page.waitForResponse(/\/pictures\/hero\/hero-summer-/);
+  await summer.focus();
+  await (await loaded).finished();
   await expect.poll(() => photos[1]).toMatch(/^\/pictures\/hero\/hero-summer-/);
   expect(form(photos[1])).toBe(form(photos[0]));
+  // Turned once the first has loaded, the next approach fetches the other form; the shown photo
+  // changes form as well.
+  const { width, height } = page.viewportSize()!;
+  await page.setViewportSize({ width: height, height: width });
+  await page.getByRole('radio', { name: 'Winter' }).focus();
+  await summer.focus();
+  const summers = () => photos.filter((path) => path.startsWith('/pictures/hero/hero-summer-'));
+  await expect.poll(() => summers().length).toBe(2);
+  expect(form(summers()[1])).toBe(!form(summers()[0]));
 });
 
 test('the hero shows its crop upright and the whole photo turned, each wide enough', async ({
@@ -289,6 +301,8 @@ test('the hero shows its crop upright and the whole photo turned, each wide enou
     [390, 844, /^hero-winter-portrait-/],
     [844, 390, /^hero-winter-\d+$/],
     [320, 568, /^hero-winter-portrait-/],
+    // A hero taller than the screen, under the card.
+    [568, 320, /^hero-winter-\d+$/],
   ] as const) {
     await page.setViewportSize({ width, height });
     if (width === 390) await page.goto('/en');
