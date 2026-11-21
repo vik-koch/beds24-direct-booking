@@ -42,8 +42,14 @@ const serverConfig: ApplicationConfig = {
       provide: FREE_WEEKS,
       useValue: async (slug?: string) => {
         const now = new Date();
-        const apartments = site.apartments.filter((one) => !slug || one.slug === slug);
-        return freeWeeks(await inventory(), apartments, periods(now), dayOf(now), languages);
+        return freeWeeks(
+          await inventory(),
+          site.apartments,
+          periods(now),
+          dayOf(now),
+          languages,
+          slug,
+        );
       },
     },
     {

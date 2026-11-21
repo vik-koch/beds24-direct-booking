@@ -137,6 +137,16 @@ describe('freeWeeks', () => {
     expect(list.tax).toEqual({ amount: 3.5, per: 'night' });
   });
 
+  it('keeps every apartment’s capacity where the weeks are of one apartment alone', () => {
+    const list = freeWeeks(inventory(), apartments, [january], '2026-12-01', ['de'], 'one');
+    expect(list.apartments.map(({ slug }) => slug)).toEqual(['one']);
+    expect(list.seasons[0].weeks.map(({ prices }) => prices)).toEqual([[700], [700]]);
+    expect(list.capacities).toEqual({
+      two: { maxPeople: 2, maxAdults: 4, maxChildren: 0 },
+      one: { maxPeople: 4, maxAdults: 4, maxChildren: 0 },
+    });
+  });
+
   it('counts the lead time from today', () => {
     const list = freeWeeks(inventory(), apartments, [january], '2027-01-01', ['de']);
     expect(list.seasons[0].weeks).toHaveLength(2);
