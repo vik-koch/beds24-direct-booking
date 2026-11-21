@@ -135,7 +135,7 @@ Checked on 20 November 2026 on a real account with a read-only token.
   asking for them is not checked, so whether a family may stay in such a room is open. The site
   treats it like "Don't Ask", by the maintainer's decision: one count of guests, each handed over as
   an adult.
-- **The site supports a room by its total alone:** `maxAdult` empty or equal to `maxPeople`, and
+- **The site supports a room by its total alone:** `maxAdult` empty or at least `maxPeople`, and
   `maxChildren` empty, 0 or at least `maxPeople − 1`, so that any guest may be an adult and, with
   one adult required, the children's limit never applies on its own. A room limited further is
   logged as a warning when the data is loaded and treated by its total, by the maintainer's

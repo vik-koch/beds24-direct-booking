@@ -62,7 +62,8 @@ describe('loadInventory', () => {
         roomTypes: [
           {
             id: 21,
-            // More adults than guests are any guests; no children are asked for.
+            // An adult limit above the total lets any guest be an adult, which the site supports;
+            // no children are asked for.
             maxPeople: 2,
             maxAdult: 3,
             maxChildren: null,
@@ -175,6 +176,7 @@ describe('loadInventory', () => {
     Object.assign(strict.data[0].roomTypes[0], { maxAdult: 3, maxChildren: 2 });
     answer(200, strict, calendars);
     const { rooms } = await loadInventory('2027-01-01', '2027-01-05');
+    // Room 21 allows more adults than guests, which is supported and not warned of.
     expect(warn).toHaveBeenCalledExactlyOnceWith(
       'Room 11 limits adults or children below its total: ignored',
     );
