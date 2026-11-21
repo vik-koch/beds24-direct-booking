@@ -13,30 +13,13 @@ import type { Capacity } from '../beds24/weeks';
 
 const usual = { adults: 2, children: 0 };
 
-// A room that does not ask for children counts them as adults.
+// A room takes any group up to its total.
 export const fits = (room: Capacity, adults: number, children: number) =>
-  room.maxChildren
-    ? adults <= room.maxAdults &&
-      children <= room.maxChildren &&
-      adults + children <= room.maxPeople
-    : adults + children <= room.maxAdults;
-
-// The most children one of the rooms still takes beside that many adults.
-const roomForChildren = (rooms: Capacity[], adults: number) =>
-  Math.max(
-    0,
-    ...rooms.map((room) =>
-      room.maxChildren
-        ? adults <= room.maxAdults
-          ? Math.min(room.maxChildren, room.maxPeople - adults)
-          : 0
-        : room.maxAdults - adults,
-    ),
-  );
+  adults + children <= room.maxPeople;
 
 // Those who pay the tourist tax: the adults, and the children where a room counts them as adults.
 export const taxed = (room: Capacity, adults: number, children: number) =>
-  room.maxChildren ? adults : adults + children;
+  room.asksChildren ? adults : adults + children;
 
 export const taxFor = (tax: Tax, count: number) =>
   Math.round(tax.amount * count * (tax.per === 'night' ? 7 : 1) * 100) / 100;
@@ -52,10 +35,11 @@ export class Guests {
   private readonly rooms = signal<Capacity[]>([]);
   readonly adults = signal(usual.adults);
   readonly children = signal(usual.children);
-  readonly maxAdults = computed(() => Math.max(1, ...this.rooms().map((room) => room.maxAdults)));
-  readonly asksChildren = computed(() => this.rooms().some((room) => room.maxChildren));
+  // The largest room's total: as many adults, or beside them as many more children.
+  readonly maxAdults = computed(() => Math.max(1, ...this.rooms().map((room) => room.maxPeople)));
+  readonly asksChildren = computed(() => this.rooms().some((room) => room.asksChildren));
   readonly maxChildren = computed(() =>
-    this.asksChildren() ? roomForChildren(this.rooms(), this.adults()) : 0,
+    this.asksChildren() ? this.maxAdults() - this.adults() : 0,
   );
   readonly params = computed(() => {
     const params: Record<string, string> = {};

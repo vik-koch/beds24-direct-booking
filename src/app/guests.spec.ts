@@ -8,8 +8,8 @@ const at = (url: string) => {
   (TestBed.inject(Location) as SpyLocation).go(url);
   return TestBed.inject(Guests);
 };
-const twin = { maxPeople: 2, maxAdults: 2, maxChildren: 0 };
-const family = { maxPeople: 6, maxAdults: 4, maxChildren: 4 };
+const twin = { maxPeople: 2, asksChildren: false };
+const family = { maxPeople: 6, asksChildren: true };
 
 describe('Guests', () => {
   it('puts the choice into an address of the site, beside its query, and no other', () => {

@@ -5,8 +5,7 @@ const room = (overrides: Partial<Room> = {}): Room => ({
   id: 11,
   propertyId: 1,
   maxPeople: 4,
-  maxAdults: 4,
-  maxChildren: 0,
+  asksChildren: false,
   size: 61,
   bedrooms: 2,
   currency: 'EUR',
@@ -144,8 +143,8 @@ describe('freeWeeks', () => {
     expect(list.apartments.map(({ slug }) => slug)).toEqual(['one']);
     expect(list.seasons[0].weeks.map(({ prices }) => prices)).toEqual([[700], [700]]);
     expect(list.capacities).toEqual({
-      two: { maxPeople: 2, maxAdults: 4, maxChildren: 0 },
-      one: { maxPeople: 4, maxAdults: 4, maxChildren: 0 },
+      two: { maxPeople: 2, asksChildren: false },
+      one: { maxPeople: 4, asksChildren: false },
     });
   });
 

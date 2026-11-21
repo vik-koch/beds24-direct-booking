@@ -62,7 +62,7 @@ describe('loadInventory', () => {
         roomTypes: [
           {
             id: 21,
-            // More adults than guests is kept at the guests; no children are asked for.
+            // More adults than guests are any guests; no children are asked for.
             maxPeople: 2,
             maxAdult: 3,
             maxChildren: null,
@@ -116,8 +116,7 @@ describe('loadInventory', () => {
         id: 11,
         propertyId: 1,
         maxPeople: 4,
-        maxAdults: 4,
-        maxChildren: 3,
+        asksChildren: true,
         size: 61,
         bedrooms: 1,
         currency: 'EUR',
@@ -141,8 +140,7 @@ describe('loadInventory', () => {
         id: 21,
         propertyId: 2,
         maxPeople: 2,
-        maxAdults: 2,
-        maxChildren: 0,
+        asksChildren: false,
         size: 34,
         bedrooms: 0,
         currency: 'EUR',
@@ -169,6 +167,19 @@ describe('loadInventory', () => {
       'http://beds24.test/v2/inventory/rooms/calendar?startDate=2027-01-01&endDate=2027-01-05&includeNumAvail=true&includePrices=true&includeOverride=true',
       expect.objectContaining({ headers: { token: 'secret' } }),
     );
+  });
+
+  it('warns of a room that limits adults or children below its total, and takes the total', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const strict = structuredClone(properties);
+    Object.assign(strict.data[0].roomTypes[0], { maxAdult: 3, maxChildren: 2 });
+    answer(200, strict, calendars);
+    const { rooms } = await loadInventory('2027-01-01', '2027-01-05');
+    expect(warn).toHaveBeenCalledExactlyOnceWith(
+      'Room 11 limits adults or children below its total: ignored',
+    );
+    expect(rooms[0]).toMatchObject({ maxPeople: 4, asksChildren: true });
+    warn.mockRestore();
   });
 
   it('asks for the texts in every language', async () => {
@@ -211,8 +222,7 @@ describe('listingOf', () => {
     id: 11,
     propertyId: 1,
     maxPeople: 4,
-    maxAdults: 4,
-    maxChildren: 2,
+    asksChildren: true,
     size: 61,
     bedrooms: 1,
     currency: 'EUR',
@@ -233,8 +243,7 @@ describe('listingOf', () => {
     const listing = listingOf([room], 11, ['de', 'en', 'fr']);
     expect(listing).toEqual({
       maxPeople: 4,
-      maxAdults: 4,
-      maxChildren: 2,
+      asksChildren: true,
       size: 61,
       bedrooms: 1,
       address: 'Musterweg 1, Saalbach',

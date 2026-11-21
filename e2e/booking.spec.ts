@@ -128,10 +128,10 @@ test(
   'the counts offer what one of the apartments takes, and more adults make room by fewer children',
   { tag: '@any-engine' },
   async ({ page }) => {
-    // Lärche's panel offers every apartment's range: at most four adults (Ahorn, Lärche), and
-    // beside two adults up to four children (Ahorn).
+    // Lärche's panel offers every apartment's range, the largest one's total of six (Ahorn): up
+    // to six adults, and beside two adults up to four children.
     await openNext(page, '/de/wohnungen/laerche');
-    expect(await options(page, 'adults')).toEqual([1, 2, 3, 4]);
+    expect(await options(page, 'adults')).toEqual([1, 2, 3, 4, 5, 6]);
     expect(await options(page, 'children')).toEqual([0, 1, 2, 3, 4]);
     await pickCount(page, 'adults', 1);
     await pickCount(page, 'children', 4);
@@ -159,14 +159,14 @@ test(
   'an address over the limits opens at them, and an arrival from the list is chosen',
   { tag: '@any-engine' },
   async ({ page }) => {
-    // What one of the apartments takes: beside four adults two children, beside one four.
+    // What the largest apartment takes, six: six adults and no child, or one adult and five.
     await open(page, '/de/wohnungen/laerche?adults=9&children=9');
-    await expect(page.locator('#adults')).toHaveText('4');
-    await expect(page.locator('#children')).toHaveText('2');
-    await expect(page).toHaveURL(/\?adults=4&children=2$/);
+    await expect(page.locator('#adults')).toHaveText('6');
+    await expect(page.locator('#children')).toHaveText('0');
+    await expect(page).toHaveURL(/\?adults=6$/);
     await open(page, '/de/wohnungen/laerche?adults=0&children=9');
     await expect(page.locator('#adults')).toHaveText('1');
-    await expect(page.locator('#children')).toHaveText('4');
+    await expect(page.locator('#children')).toHaveText('5');
 
     // A week in a later month, as the free-weeks list links it.
     await openNext(page, '/de/wohnungen/laerche');
