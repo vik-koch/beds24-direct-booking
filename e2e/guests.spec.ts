@@ -68,6 +68,8 @@ for (const width of [1280, 320]) {
     await open(page, '/en?adults=3&children=2');
     for (const season of ['shown', 'other']) {
       if (season === 'other') await toOtherSeason(page);
+      // In its last week the shown season may have no week left to offer.
+      if (await weeks(page).locator('.weeks-empty').count()) continue;
       // On a phone each apartment's tab shows its own column.
       for (const [index, small] of [true, true, false].entries()) {
         if (width < 768) await page.locator('.room-tabs label').nth(index).click();
@@ -84,12 +86,20 @@ for (const width of [1280, 320]) {
     await expect(cards.nth(2).locator(':scope > :visible')).toHaveText(
       /^ ?from €[\d,.]+ a week ?$/,
     );
-    // Such a cell is announced and reached like a booked one, and cannot be chosen.
-    if (width < 768) await page.locator('.room-tabs label').first().click();
+    // Such a cell is reached by keyboard and announced like a booked one, and neither Enter,
+    // Space nor a click chooses it. The next season, shown now, always has weeks.
     const cell = column(page, 0).first();
-    await cell.dispatchEvent('click');
-    await expect(cell).not.toHaveAttribute('aria-selected', 'true');
+    if (width < 768) {
+      await page.locator('.room-tabs label').first().click();
+      await page.locator('.room-tabs input').first().focus();
+    } else await page.locator('#children').focus();
+    await page.keyboard.press('Tab');
+    await expect(cell).toBeFocused();
     await expect(cell).toHaveAccessibleName('too small');
+    for (const key of ['Enter', ' ']) await page.keyboard.press(key);
+    await cell.click();
+    await expect(cell).not.toHaveAttribute('aria-selected', 'true');
+    await expect(page.locator('.pick')).toHaveCount(0);
     const axe = await new AxeBuilder({ page }).include('.weeks').analyze();
     expect(axe.violations).toEqual([]);
   });
