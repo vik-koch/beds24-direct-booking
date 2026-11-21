@@ -513,6 +513,7 @@ test('on a phone a bar leads to the panel while it is below the screen, then on 
   );
   // Past the panel the footer's links stay uncovered.
   await page.evaluate(() => scrollTo({ top: document.body.scrollHeight, behavior: 'instant' }));
+  expect(await panel(page).evaluate((box) => box.getBoundingClientRect().bottom)).toBeLessThan(0);
   await expect(bar).toBeHidden();
   await page.setViewportSize({ width: 1280, height: 800 });
   await expect(bar).toBeHidden();
