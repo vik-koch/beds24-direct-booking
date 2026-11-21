@@ -90,9 +90,10 @@ components:
 
 # Design System: beds24-direct-booking
 
-The mock-up this describes is `design/home.html` with `design/home.css`; its tokens are the custom
-properties at the top of that stylesheet. Where this file and the stylesheet disagree, the
-stylesheet is right and this file is stale.
+This describes the site as built: `src/styles.css`, the components' own styles in `src/app/`, and
+the demo's theme in `content/demo/theme.css`. Where this file and that code disagree, the code is
+right and this file is stale. The first mock-up, `design/home.html` with `design/home.css`, is a
+record of the design round and is not kept up to date.
 
 ## Overview
 
@@ -168,7 +169,9 @@ hierarchy; weight barely does.
   from 48rem up, their centre at 0.5 and 0.6 of the cap height above the baseline.
 - **Title** (500, 1.1875rem, 1.2): a column's name, a price.
 - **Body** (400, 1.125rem, 1.5): running text and list rows. Paragraphs stay under about 45rem.
-- **Label** (500, 0.9375rem): switches, small buttons, text links.
+- **Label** (500, 0.9375rem): switches, small buttons, the back link and the booking panel's link to
+  the other season. A text button within a page's content ("Mehr lesen", the list's link to the
+  other season) takes body size, as the text it stands in.
 - **Hint** (400, 0.875rem, ink-soft): every note and hint: the guests' note, the too-small hint with
   its info icon, the list's price note.
 
@@ -252,10 +255,11 @@ downwards, so it reads as lying on the page rather than floating.
 - **Primary:** accent fill, white text at weight 500.
 - **Hover / Focus:** a soft shadow in the accent on hover (underlined instead where the button
   stands on the accent, as in the booking bar); a 2px accent outline, 3px away, on keyboard focus,
-  following the control's shape. A text link (the back link, a text button) is 44 px tall to be
-  touched but only a line of text to see, so its ring lies inside, as tall as a 34 px pill
-  (`--focus-offset-text`). Every tab stop shows it, on the control or on what it draws for a hidden
-  input; an e2e test walks the home page's tab stops and checks each.
+  following the control's shape; a 34 px pill keeps the same ring, 2px to 3px away. A text link (the
+  back link, a text button) is 44 px tall to be touched but only a line of text to see, so its ring
+  lies inside, as tall as a 34 px pill (`--focus-offset-text`). Every tab stop shows it, on the
+  control or on what it draws for a hidden input; an e2e test walks the home page's tab stops and
+  checks each.
 - **Text button:** a sentence in the accent with an arrow, underlined on hover. Its focus ring is a
   pill round the label with air at its sides (0.875rem), as tall as a small control; the label stays
   in line with the column and the ring may reach past it; below 22.5rem the label is at label size,
@@ -313,13 +317,16 @@ text button.
   December). Each group starts with the month's name in soft ink at 0.875rem, with the year where
   the list starts and in January, and every other group lies on a light ground (the page's ground
   mixed 50% into white) that reaches the card's edges; the last month's reaches its lower edge too.
-- **Row:** 0.3125rem above and below the dates, so rows stand 38 px apart with their hairline, as
-  far as the booking panel's; the stay's dates on the left in body text (weekday, day and month in
-  figures, so a row fits at 320 px), one cell per apartment on the right. Below 22.5rem the rows
-  leave the weekday out, since every week starts on the same one; each price's label still names it.
-  On a phone the card has 1.25rem at its sides, room for a chosen price's pill.
+- **Row:** as tall as a price's pill with 2px above and below it, so the pills stand 5px apart
+  across the hairline, about as close as the booking panel's (4px, no line); the stay's dates on the
+  left in body text (weekday, day and month in figures, so a row fits at 320 px), one cell per
+  apartment on the right. Below 22.5rem the rows leave the weekday out, since every week starts on
+  the same one; each price's label still names it. On a phone the card has 1.25rem at its sides,
+  room for a chosen price's pill.
 - **Free week:** the price in the accent at body size and weight 500, as in the booking panel, as a
-  cell of a grid without a visible box. Hover puts a soft tint behind it.
+  cell of a grid without a visible box. Both lists step down to 1rem below 22.5rem; with four
+  apartments the list's rows are 0.9375rem from 48rem to 56rem, where its columns are short of room.
+  Hover puts a soft tint behind it.
 - **Chosen week:** an accent-filled pill with white figures.
 - **Booked week:** the word in soft ink, no decoration.
 - **Keyboard:** the list is one grid, after the WAI-ARIA Authoring Practices' grid pattern. Tab
@@ -366,8 +373,9 @@ as the other; below 22.5rem its text is 1rem, so the button keeps one line.
 
 An apartment's page has the other bar on a phone, at the screen's foot while its booking panel is
 out of view: the season's lowest price beside a button to the panel, or once a week is chosen the
-stay beside a button on to booking. The price's words wrap into two even lines beside the button;
-below 22.5rem the text is 1rem and the button's padding 1rem.
+stay beside a button on to booking. The price's words wrap in balanced lines beside the button, two
+at every width in the demo but one: an English amount with cents ("from €1,956.15 a week") takes
+three lines up to 360 px. Below 22.5rem the text is 1rem and the button's padding 1rem.
 
 One week is chosen at a time, in either season: choosing another replaces it. The bar belongs to the
 chosen week's season, so it is hidden while the other season is shown and returns with its own,
