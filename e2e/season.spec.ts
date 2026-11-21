@@ -362,9 +362,20 @@ test('the hero fills the first screen, and the jump to the weeks ends it at the 
   expect(card.y + card.height).toBeGreaterThan(height / 2);
 
   await expect(page.locator('html')).toHaveAttribute('data-started', '');
+  // Leaving the hero, the header's ground fades in.
+  const fades = header.evaluate(
+    (element) =>
+      new Promise((resolve) =>
+        // At once: headless WebKit's next frame may come after the fade has ended.
+        new MutationObserver(() => resolve(element.getAnimations().length > 0)).observe(element, {
+          attributeFilter: ['data-over'],
+        }),
+      ),
+  );
   await page.getByRole('link', { name: 'See the free weeks' }).click();
   await expect(page).toHaveURL('/en#free-weeks');
   await expect(header).not.toHaveAttribute('data-over');
+  expect(await fades).toBe(true);
   // The header covers the hero's last strip: their lower edges meet.
   const edges = () =>
     page.evaluate(() =>

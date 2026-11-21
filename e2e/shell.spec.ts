@@ -430,7 +430,7 @@ test('narrower than 320 px the page keeps its 320 px layout and scrolls sideways
   expect(await page.locator('app-header').evaluate((header) => header.offsetWidth)).toBe(320);
 });
 
-test('an address with an anchor opens at its section; smooth scrolling starts after it', async ({
+test('an address with an anchor opens at its section under a frosted header; smooth scrolling starts after it', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
@@ -442,6 +442,14 @@ test('an address with an anchor opens at its section; smooth scrolling starts af
     await route.continue();
   });
   await page.addInitScript(() => {
+    // Styles the header while it is still over the hero, as a browser may before the script at
+    // the page's end places it, so that dropping data-over there would start its fade.
+    new MutationObserver((_, observer) => {
+      const header = document.querySelector('app-header');
+      if (!header) return;
+      header.getBoundingClientRect();
+      observer.disconnect();
+    }).observe(document, { childList: true, subtree: true });
     const sample = () => {
       if (!document.body || getComputedStyle(document.body).visibility !== 'visible')
         return requestAnimationFrame(sample);
@@ -451,6 +459,7 @@ test('an address with an anchor opens at its section; smooth scrolling starts af
         y: scrollY,
         behavior: getComputedStyle(document.documentElement).scrollBehavior,
         over: header?.hasAttribute('data-over') ?? true,
+        fading: (header?.getAnimations().length ?? 0) > 0,
         // Not a number when a visible frame lacks the section or the header.
         gap:
           (section?.getBoundingClientRect().top ?? NaN) -
@@ -467,11 +476,13 @@ test('an address with an anchor opens at its section; smooth scrolling starts af
     y: number;
     behavior: string;
     over: boolean;
+    fading: boolean;
     gap: number;
   };
   release();
   expect(first.y).toBeGreaterThan(0);
   expect(first.over).toBe(false);
+  expect(first.fading).toBe(false);
   expect(Math.abs(first.gap)).toBeLessThanOrEqual(1);
 
   // Smooth scrolling comes with the application, after that first jump, and not with reduced

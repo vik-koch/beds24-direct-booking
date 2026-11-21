@@ -412,9 +412,13 @@
     display: block;
     background: color-mix(in srgb, var(--color-ground) 72%, transparent);
     backdrop-filter: blur(1.25rem) saturate(1.3);
-    transition:
-      background-color 0.3s ease,
-      backdrop-filter 0.3s ease;
+
+    /* Not while index.html places the page at its anchor, which drops data-over. */
+    html[data-smooth] & {
+      transition:
+        background-color 0.3s ease,
+        backdrop-filter 0.3s ease;
+    }
 
     /* Only where the script runs: without it nothing would bring the ground back on scroll. */
     html[data-script] &[data-over] {
