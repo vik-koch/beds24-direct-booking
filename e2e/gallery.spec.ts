@@ -384,7 +384,9 @@ test('on a phone the pictures are a strip, and the viewer’s buttons sit under 
   for (const button of ['.viewer-previous', '.viewer-next'])
     expect((await box(viewer(page).locator(button))).y).toBeGreaterThan(frame.y + frame.height);
   await expect(viewer(page).locator('.viewer-thumbs')).toBeHidden();
-  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(320);
+  expect(await page.locator('html').evaluate((html) => html.scrollWidth - html.offsetWidth)).toBe(
+    0,
+  );
 });
 
 test('the page behind the viewer holds still, and keeps its place when it closes', async ({

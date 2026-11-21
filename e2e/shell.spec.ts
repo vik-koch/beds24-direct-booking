@@ -465,13 +465,33 @@ test('the header stays in place between a long page and a short one', async ({
   await browser.close();
 });
 
-test('narrower than 320 px the page keeps its 320 px layout and scrolls sideways', async ({
+test('narrower than 300 px the page keeps its 300 px layout and scrolls sideways', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 280, height: 480 });
   await page.goto('/de');
-  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(320);
-  expect(await page.locator('app-header').evaluate((header) => header.offsetWidth)).toBe(320);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(300);
+  expect(await page.locator('app-header').evaluate((header) => header.offsetWidth)).toBe(300);
+});
+
+test('a 320 px window with a classic scrollbar does not scroll sideways', async ({
+  playwright,
+  baseURL,
+  browserName,
+}) => {
+  test.skip(browserName !== 'chromium', 'Only Chromium can show its scrollbars here.');
+  const browser = await playwright.chromium.launch({ ignoreDefaultArgs: ['--hide-scrollbars'] });
+  const page = await browser.newPage({ baseURL, viewport: { width: 320, height: 480 } });
+  for (const path of ['/de', '/en/apartments/zirbe']) {
+    await page.goto(path);
+    const { client, scroll } = await page.evaluate(() => ({
+      client: document.documentElement.clientWidth,
+      scroll: document.documentElement.scrollWidth,
+    }));
+    expect(client, path).toBeLessThan(320);
+    expect(scroll, path).toBe(client);
+  }
+  await browser.close();
 });
 
 test('an address with an anchor opens at its section under a frosted header; smooth scrolling starts after it', async ({

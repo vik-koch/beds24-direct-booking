@@ -185,9 +185,10 @@ amounts can be compared down a column.
 
 ## Layout
 
-- **Width:** the layout is measured from 320 px, the narrowest phone it promises. Narrower, as in a
-  docked developer tool, the page keeps its 320 px layout and scrolls sideways instead of squeezing.
-  The minimum is in px, not rem, so that zoom up to 400% at 1280 px, which leaves 320 CSS px, still
+- **Width:** the layout is measured from 320 px, the narrowest phone it promises, and holds down to
+  300 px, so that a 320 px window also fits beside a classic scrollbar. Narrower, as in a docked
+  developer tool, the page keeps its 300 px layout and scrolls sideways instead of squeezing. The
+  minimum is in px, not rem, so that zoom up to 400% at 1280 px, which leaves 320 CSS px, still
   reflows.
 - **Column:** content sits in a centred column of 72rem with a gutter of 1rem on a phone and 2rem
   from 48rem up. The hero photo and, later, the map run edge to edge up to 120rem.

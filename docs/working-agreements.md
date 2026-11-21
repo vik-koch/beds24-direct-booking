@@ -132,7 +132,8 @@ Built in from the first slice. A slice is not done while one of these fails:
 - **Structure:** one `h1` per page, landmarks, the page language and the language of
   foreign-language fragments, and alternative texts required by the content schema.
 - **Motion and zoom:** the season switch and any animation respect reduced motion; pages work at
-  200% zoom and 320 px width.
+  200% zoom and 320 px width. The narrowest layout is 300 px, so that a 320 px window also fits
+  beside a scrollbar that takes room.
 - **The embedded booking form is Beds24's,** so its accessibility is outside our control. The frame
   gets a title, and the accessibility statement names the limit.
 
