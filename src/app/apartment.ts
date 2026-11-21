@@ -251,10 +251,6 @@ type Fold = ReturnType<typeof fold>;
         font-size: 0.9375rem;
       }
 
-      .apartment .facts {
-        font-weight: 500;
-      }
-
       /* One column on a phone, which nothing may widen: the panel's rows do not break. */
       .apartment-columns {
         display: grid;
