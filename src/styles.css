@@ -1090,8 +1090,11 @@
     }
   }
 
-  /* The ring goes round the price's or the word's pill, not the whole cell. */
+  /* The ring goes round the price's or the word's pill, not the whole cell, and over the next
+     row's line, which it crosses. */
   :is(.stay, .booked):focus-visible {
+    position: relative;
+    z-index: 1;
     outline: none;
 
     > * {
