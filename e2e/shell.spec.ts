@@ -443,9 +443,10 @@ test('the header stays in place between a long page and a short one', async ({
   const scrolls = () => page.evaluate(() => document.documentElement.scrollHeight > innerHeight);
   const left = (selector: string) =>
     page.locator(selector).evaluate((e) => e.getBoundingClientRect().left);
-  // The wordmark in a wide window; in a narrow one, the menu button at the right.
+  // The wordmark where the 72rem column, at 20 px a rem, has room on both sides; in a narrow
+  // window, the menu button at the right.
   for (const [width, selector] of [
-    [1280, '.wordmark'],
+    [1600, '.wordmark'],
     [350, '.header-narrow .icon-button'],
   ] as const) {
     await page.setViewportSize({ width, height: 2000 });
