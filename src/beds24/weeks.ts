@@ -1,5 +1,8 @@
 import type { SeasonName } from '../content/names';
-import { addDays, type Day, type Inventory, type Room, type Tax } from './client';
+import { addDays, type Day, type Inventory, type Listing, type Room, type Tax } from './client';
+
+// How many guests a room takes.
+export type Capacity = Pick<Listing, 'maxPeople' | 'maxAdults' | 'maxChildren'>;
 
 // A week Beds24 offers: price is null when it is taken.
 export interface Week {
@@ -27,11 +30,15 @@ export interface FreeWeeks {
     guests: number;
     size: number;
     bedrooms: number;
+    tax: Tax | null;
     // Per Beds24 language code of the site, empty where nothing is written.
     headline: Record<string, string>;
   }[];
+  // Per slug, of every listed apartment, also where the weeks are of one apartment alone.
+  capacities: Record<string, Capacity>;
   currency: string;
-  // Shown once beside the prices, so only when every apartment has the same.
+  // Shown once beside the prices, so only when every apartment has the same; each apartment
+  // also carries its own.
   tax: Tax | null;
   seasons: {
     name: SeasonName;
@@ -60,19 +67,22 @@ export function offeredWeeks(room: Room, days: Day[], earliest: string): Week[] 
   });
 }
 
-// The apartments the content lists, in its order, with their weeks per period.
+// The apartments the content lists, in its order, with their weeks per period; with a slug,
+// that apartment's alone.
 export function freeWeeks(
   inventory: Inventory,
   apartments: { slug: string; roomId: number; name: string }[],
   periods: Period[],
   today: string,
   languages: string[],
+  only?: string,
 ): FreeWeeks {
-  const listed = apartments.flatMap((apartment) => {
+  const all = apartments.flatMap((apartment) => {
     const room = inventory.rooms.find((one) => one.id === apartment.roomId);
     if (!room) console.warn(`Beds24 has no room ${apartment.roomId} for ${apartment.slug}`);
     return room ? [{ apartment, room }] : [];
   });
+  const listed = all.filter(({ apartment }) => !only || apartment.slug === only);
   if (!listed.length) throw new Error('Beds24 has none of the rooms the content lists');
   for (const { apartment, room } of listed)
     if (room.multiplier === null)
@@ -88,8 +98,15 @@ export function freeWeeks(
       guests: room.maxPeople,
       size: room.size,
       bedrooms: room.bedrooms,
+      tax: room.tax,
       headline: Object.fromEntries(languages.map((code) => [code, room.headlines[code] ?? ''])),
     })),
+    capacities: Object.fromEntries(
+      all.map(({ apartment, room: { maxPeople, maxAdults, maxChildren } }) => [
+        apartment.slug,
+        { maxPeople, maxAdults, maxChildren },
+      ]),
+    ),
     currency: listed[0].room.currency,
     tax: taxes.size === 1 ? listed[0].room.tax : null,
     seasons: periods.map(({ name, years, start, end }) => {

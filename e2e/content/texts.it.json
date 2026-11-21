@@ -72,6 +72,8 @@
       "spoken": "{size} metri quadrati"
     },
     "taken": "occupata",
+    "small": "troppo piccolo",
+    "smallFor": "Troppo piccolo per {guests}",
     "apartment": "Appartamento",
     "next": "Prossima stagione: {season}",
     "current": "Stagione attuale: {season}",
@@ -84,6 +86,7 @@
       "night": "Più una tassa di soggiorno di {amount} per adulto e notte.",
       "stay": "Più una tassa di soggiorno di {amount} per adulto e soggiorno."
     },
+    "withTax": "{price} con tassa di soggiorno",
     "continue": "Continua con la prenotazione",
     "clear": "Annulla la settimana scelta"
   },
@@ -123,8 +126,8 @@
       "other": "{count} adulti"
     },
     "children": "Bambini",
-    "childAge": "fino a {age} anni",
-    "babies": "I neonati fino a 2 anni non contano. Mettiamo volentieri a disposizione un lettino.",
+    "guestsNote": "Bambini fino a 11 anni. I neonati sotto i 2 anni non contano; mettiamo volentieri a disposizione un lettino.",
+    "small": "{name} ospita fino a {guests}.",
     "from": "da {price} a settimana",
     "week": "Settimana {stay}",
     "tax": {

@@ -109,8 +109,12 @@ test('a chosen week leads to its apartment with the stay, also in a fresh browse
   const price = await first.innerText();
   await first.locator('.price').click();
   await expect(first).toHaveAttribute('aria-selected', 'true');
+  // With the tourist tax of two adults for seven nights at € 3.50.
+  const total = Number(price.replace(/[^\d,]/g, '').replace(',', '.')) + 49;
+  const money = new Intl.NumberFormat('de-AT', { style: 'currency', currency: 'EUR' });
+  const shown = money.format(total).replace(',00', '');
   await expect(page.locator('.pick output')).toHaveText(
-    `${apartment} · ${dates.replace(/\s+/g, ' ').trim()} · ${price}`,
+    `${apartment} · ${dates.replace(/\s+/g, ' ').trim()} · ${shown} mit Ortstaxe`,
   );
   await page.getByRole('link', { name: 'Weiter zur Buchung' }).click();
   await expect(page).toHaveURL(
@@ -237,7 +241,8 @@ test('the list is one tab stop that the keys move through as a grid', async ({ p
   };
   await expect(page.locator('.weeks-grid [tabindex="0"]')).toHaveCount(1);
 
-  await button(page).focus();
+  // From the last control before it, the children's select above the list.
+  await page.locator('#children').focus();
   await page.keyboard.press('Tab');
   await expect.poll(at).toBe('0-0');
   await press('ArrowRight', '1-0');
@@ -281,7 +286,7 @@ test('the list is one tab stop that the keys move through as a grid', async ({ p
   await expect(free).toBeFocused();
   await toOtherSeason(page);
   await toOtherSeason(page);
-  await button(page).focus();
+  await page.locator('#children').focus();
   await page.keyboard.press('Tab');
   await expect(free).toBeFocused();
   await expect(page.locator('.weeks-grid [tabindex="0"]')).toHaveCount(1);

@@ -20,14 +20,16 @@ import {
   lucideCalendar,
   lucideChevronLeft,
   lucideChevronRight,
+  lucideInfo,
   lucideList,
 } from '@ng-icons/lucide';
-import { HlmSelectImports } from '@spartan-ng/helm/select';
 import type { Listing } from '../beds24/client';
 import type { FreeWeeks } from '../beds24/weeks';
 import site from '../content/generated/site';
 import type { SeasonName } from '../content/names';
 import { BookingBar, type BarLine } from './booking-bar';
+import { GuestCounts } from './guest-counts';
+import { fits, Guests, taxed, taxFor } from './guests';
 import { Season } from './season';
 import { swapper } from './swap';
 import { address, fill, formatMoney, LANGUAGE, TEXTS } from './texts';
@@ -73,7 +75,7 @@ const addDays = (date: string, days: number) =>
 @Component({
   encapsulation: ViewEncapsulation.None,
   selector: 'app-booking-panel',
-  imports: [NgIcon, HlmSelectImports, BookingBar, Grid, GridRow, GridCell],
+  imports: [NgIcon, BookingBar, GuestCounts, Grid, GridRow, GridCell],
   providers: [
     provideIcons({
       lucideArrowLeft,
@@ -81,6 +83,7 @@ const addDays = (date: string, days: number) =>
       lucideCalendar,
       lucideChevronLeft,
       lucideChevronRight,
+      lucideInfo,
       lucideList,
     }),
   ],
@@ -282,45 +285,16 @@ const addDays = (date: string, days: number) =>
           }
         </div>
         <div class="guests">
-          @if (limits.maxChildren) {
+          @if (guests.asksChildren()) {
             <h3>{{ texts.panel.guests }}</h3>
           }
-          <div class="counts">
-            <div class="count">
-              <label [class.guests-title]="!limits.maxChildren" for="adults">{{
-                limits.maxChildren ? texts.panel.adults.label : texts.panel.guests
-              }}</label>
-              <hlm-select [value]="adults()" (valueChange)="setAdults($event!)">
-                <hlm-select-trigger buttonId="adults" [class]="trigger">
-                  <hlm-select-value />
-                </hlm-select-trigger>
-                <hlm-select-content *hlmSelectPortal>
-                  @for (n of range(1, limits.maxAdults); track n) {
-                    <hlm-select-item [value]="n">{{ n }}</hlm-select-item>
-                  }
-                </hlm-select-content>
-              </hlm-select>
-            </div>
-            @if (limits.maxChildren) {
-              <div class="count">
-                <label for="children"
-                  >{{ texts.panel.children }}
-                  <small>{{ fill(texts.panel.childAge, { age: childAge }) }}</small></label
-                >
-                <hlm-select [value]="children()" (valueChange)="setChildren($event!)">
-                  <hlm-select-trigger buttonId="children" [class]="trigger">
-                    <hlm-select-value />
-                  </hlm-select-trigger>
-                  <hlm-select-content *hlmSelectPortal>
-                    @for (n of range(0, roomForChildren()); track n) {
-                      <hlm-select-item [value]="n">{{ n }}</hlm-select-item>
-                    }
-                  </hlm-select-content>
-                </hlm-select>
-              </div>
+          <app-guest-counts />
+          <!-- Beside the counts that would make the apartment fit. -->
+          <p class="too-small" role="status">
+            @if (!fitting()) {
+              <ng-icon name="lucideInfo" aria-hidden="true" />{{ small() }}
             }
-          </div>
-          <p class="babies">{{ texts.panel.babies }}</p>
+          </p>
         </div>
         <!-- A season with no week to choose has no total and no button. -->
         @for (season of weeks.seasons; track season.name) {
@@ -343,9 +317,13 @@ const addDays = (date: string, days: number) =>
                     <dd>{{ money(stay.price! + (taxLine()?.amount ?? 0)) }}</dd>
                   </div>
                 </dl>
-                <a class="button wide" [href]="bookingLink(stay)"
-                  >{{ texts.panel.book }}<ng-icon name="lucideArrowRight" aria-hidden="true"
-                /></a>
+                @if (fitting()) {
+                  <a class="button wide" [href]="bookingLink(stay)"
+                    >{{ texts.panel.book }}<ng-icon name="lucideArrowRight" aria-hidden="true"
+                  /></a>
+                } @else {
+                  <button type="button" class="button wide" disabled>{{ texts.panel.book }}</button>
+                }
               } @else {
                 @let from = texts.panel.from.split('{price}');
                 <p class="from">
@@ -743,94 +721,14 @@ const addDays = (date: string, days: number) =>
         margin-bottom: 0.5rem;
       }
 
-      /* The selects line up below their labels, however many lines a label takes. */
-      .counts {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        grid-template-rows: auto auto;
-        gap: 0.375rem 1rem;
-      }
-
-      .count {
-        display: grid;
-        grid-row: span 2;
-        grid-template-rows: subgrid;
-
-        label {
-          align-self: end;
-        }
-
-        small {
-          color: var(--color-ink-soft);
-          font-size: 0.9375rem;
-          white-space: nowrap;
-        }
-
-        .guests-title {
-          font-size: 1.0625rem;
-          font-weight: 500;
-        }
-      }
-
-      /* The copied select in the site's look: a pill like the other controls, its list a menu's
-         card. Here and not in ui.css, so that it loads only with the page that uses it. */
-      .spartan-select-trigger {
-        gap: 0.5rem;
-        min-height: var(--size-control);
-        padding: 0 0.875rem 0 1rem;
-        border: 1px solid var(--color-edge);
-        border-radius: var(--radius-control);
-        background: var(--color-surface);
-        font-weight: 500;
-        cursor: pointer;
-        transition: border-color 0.2s;
-
-        &:hover,
-        &[aria-expanded='true'] {
-          border-color: var(--color-accent);
-        }
-      }
-
-      .spartan-select-trigger-icon {
-        color: var(--color-ink-soft);
-        transition: rotate 0.2s;
-
-        [aria-expanded='true'] > & {
-          rotate: 180deg;
-        }
-      }
-
-      .spartan-select-content {
-        flex-direction: column;
-        max-height: min(18rem, var(--brn-select-content-available-height, 18rem));
-        padding: 0.375rem;
-        border-radius: var(--radius-menu);
-        background: var(--color-surface);
-        box-shadow: var(--shadow-card);
-      }
-
-      .spartan-select-item {
-        justify-content: space-between;
-        min-height: var(--size-control-small);
-        padding: 0 0.75rem;
-        border-radius: 0.5rem;
-        font-weight: 500;
-        cursor: pointer;
-
-        &[data-highlighted] {
-          background: var(--color-ground);
-        }
-      }
-
-      .spartan-select-item-indicator {
-        color: var(--color-accent);
-      }
-
-      .babies,
       .panel-note {
         margin-top: 0.75rem;
         color: var(--color-ink-soft);
         font-size: 0.875rem;
+      }
+
+      .too-small:not(:empty) {
+        margin-top: 0.75rem;
       }
 
       .total {
@@ -893,11 +791,7 @@ export class BookingPanel {
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
   private readonly route = inject(ActivatedRoute).snapshot;
   protected readonly fill = fill;
-  protected readonly childAge = site.childAge;
   protected readonly views = ['list', 'calendar'] as const;
-  // The copied trigger takes its outline away; its ring is the site's, as on every control.
-  protected readonly trigger =
-    'w-full focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-accent';
 
   protected readonly weeks: FreeWeeks | null = this.route.data['weeks'];
   protected readonly limits: Listing | null = this.route.data['listing'];
@@ -942,11 +836,19 @@ export class BookingPanel {
   private readonly months = inject(shownMonths);
   protected readonly view = signal<View>('list');
   protected readonly chosen = signal<{ season: SeasonName; arrival: string } | null>(null);
-  protected readonly adults = signal(1);
-  protected readonly children = signal(0);
-  protected readonly roomForChildren = computed(() =>
-    Math.min(this.limits?.maxChildren ?? 0, (this.limits?.maxPeople ?? 0) - this.adults()),
+  protected readonly guests = inject(Guests);
+  // The apartment's own limits, which the choice for every apartment may exceed.
+  protected readonly fitting = computed(
+    () => !this.limits || fits(this.limits, this.guests.adults(), this.guests.children()),
   );
+  protected readonly small = computed(() => {
+    const count = this.limits!.maxPeople;
+    const { one, other } = this.texts.weeks.guests;
+    return fill(this.texts.panel.small, {
+      name: site.apartments.find(({ slug }) => slug === this.slug)!.name,
+      guests: fill(this.plural.select(count) === 'one' ? one : other, { count }),
+    });
+  });
   protected readonly announced = signal('');
   protected readonly barShown = signal(false);
   // Set by the panel's button: the next season comes from the right, the current from the left.
@@ -956,19 +858,17 @@ export class BookingPanel {
 
   protected readonly taxLine = computed(() => {
     const tax = this.weeks?.tax;
-    if (!tax) return null;
-    const count = this.adults();
-    const forms = this.limits?.maxChildren ? this.texts.panel.adults : this.texts.weeks.guests;
+    if (!tax || !this.limits) return null;
+    const count = taxed(this.limits, this.guests.adults(), this.guests.children());
+    const forms = this.limits.maxChildren ? this.texts.panel.adults : this.texts.weeks.guests;
     const guests = fill(this.plural.select(count) === 'one' ? forms.one : forms.other, { count });
-    const nights = 7;
-    const times = tax.per === 'night' ? count * nights : count;
     return {
       text: fill(this.texts.panel.tax[tax.per], {
         guests,
-        nights,
+        nights: 7,
         amount: this.money(tax.amount),
       }),
-      amount: Math.round(tax.amount * times * 100) / 100,
+      amount: taxFor(tax, count),
     };
   });
 
@@ -983,9 +883,9 @@ export class BookingPanel {
             before: '',
             amount: this.money(stay.price! + (this.taxLine()?.amount ?? 0)),
             after: '',
-            detail: this.stayText(stay),
-            link: this.bookingLink(stay),
-            label: this.texts.panel.bar.book,
+            detail: this.fitting() ? this.stayText(stay) : this.small(),
+            link: this.fitting() ? this.bookingLink(stay) : null,
+            label: this.fitting() ? this.texts.panel.bar.book : this.texts.panel.guests,
           },
         ];
       if (season.state !== 'open') return [];
@@ -1037,10 +937,7 @@ export class BookingPanel {
         this.months.update((months) => ({ ...months, [season.name]: arrival.slice(0, 7) }));
     }
     if (query.get('view') === 'calendar') this.view.set('calendar');
-    const count = (name: string, fallback: number) =>
-      Math.floor(Number(query.get(name) ?? fallback)) || 0;
-    this.adults.set(Math.min(Math.max(count('adults', 2), 1), this.limits?.maxAdults ?? 1));
-    this.children.set(Math.min(Math.max(count('children', 0), 0), this.roomForChildren()));
+    if (this.weeks) this.guests.limit(Object.values(this.weeks.capacities));
   }
 
   // The weeks by the month they arrive in, with the week before that ends in it, and each month
@@ -1160,12 +1057,8 @@ export class BookingPanel {
   }
 
   protected bookingLink(stay: Stay) {
-    const query = new URLSearchParams({
-      arrival: stay.arrival,
-      departure: stay.departure,
-      adults: String(this.adults()),
-    });
-    if (this.limits?.maxChildren) query.set('children', String(this.children()));
+    const { arrival, departure } = stay;
+    const query = new URLSearchParams({ arrival, departure, ...this.guests.params() });
     return `${address(this.language, 'book', this.slug)}?${query}`;
   }
 
@@ -1197,18 +1090,6 @@ export class BookingPanel {
     if (to >= 0 && to < this.monthsOf(season).length) this.page(season, by);
   }
 
-  // More adults than leave room for the children lower the children's count.
-  protected setAdults(value: number) {
-    this.adults.set(value);
-    this.children.set(Math.min(this.children(), this.roomForChildren()));
-    this.keep();
-  }
-
-  protected setChildren(value: number) {
-    this.children.set(value);
-    this.keep();
-  }
-
   // The address keeps the choice, and with a week of the shown season that season, which a
   // shared link then shows first, whatever season the page would show by itself.
   private keep() {
@@ -1223,8 +1104,6 @@ export class BookingPanel {
     } else ['arrival', 'departure', 'season'].forEach((name) => params.delete(name));
     if (this.view() === 'calendar') params.set('view', 'calendar');
     else params.delete('view');
-    params.set('adults', String(this.adults()));
-    if (this.limits?.maxChildren) params.set('children', String(this.children()));
     this.location.replaceState(path, params.toString(), this.location.getState());
   }
 

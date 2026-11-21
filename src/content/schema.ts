@@ -141,9 +141,6 @@ export const siteSchema = z.strictObject({
   rooms: z
     .array(z.strictObject({ code: text, icon: segment }))
     .refine((list) => unique(list, (room) => room.code), 'a room code is listed twice'),
-  // The oldest age that counts as a child, which the booking panel names. Beds24 has no age:
-  // where a child ends depends on the place, usually on its tourist tax.
-  childAge: z.number().int().min(1).max(17),
   // The footer shows what is listed, and no contact without one: a site may give its details
   // on its imprint page instead.
   contact: z
@@ -199,8 +196,21 @@ export const textsSchema = z.strictObject({
     about: segment,
   }),
   skip: text,
+  // A link within the site is a path from its root, which carries the visitor's choices; any
+  // other is a full https address.
   notice: z
-    .strictObject({ text, link: z.strictObject({ text, href: text }).optional() })
+    .strictObject({
+      text,
+      link: z
+        .strictObject({
+          text,
+          href: z.union([
+            z.string().regex(/^\/(?!\/)/, 'a path from the root'),
+            z.url({ protocol: /^https$/, hostname: z.regexes.domain }),
+          ]),
+        })
+        .optional(),
+    })
     .optional(),
   nav: z.strictObject({
     label: text,
@@ -243,12 +253,16 @@ export const textsSchema = z.strictObject({
     // The content script checks that each change a credit lists is named here.
     changes: z.strictObject({ cropped: text.optional(), scaled: text.optional() }).optional(),
   }),
-  // The free-weeks list. {season}, {count} and {amount} are filled in by the page.
+  // The free-weeks list. {season}, {count}, {amount}, {guests} and {price} are filled in by the
+  // page.
   weeks: z.strictObject({
     week: text,
     guests: z.strictObject({ one: text, other: text }),
     size: z.strictObject({ shown: text, spoken: text }),
     taken: text,
+    // An apartment too small for the chosen guests: in its cells, and on its card.
+    small: text,
+    smallFor: text,
     apartment: text,
     next: text,
     current: text,
@@ -259,6 +273,8 @@ export const textsSchema = z.strictObject({
     unavailable: text,
     note: text,
     tax: z.strictObject({ night: text, stay: text }),
+    // A chosen week's price with the tourist tax for the chosen guests.
+    withTax: text,
     continue: text,
     clear: text,
   }),
@@ -281,7 +297,7 @@ export const textsSchema = z.strictObject({
     generated: text,
   }),
   // The apartment page's booking panel. {season}, {age}, {price}, {stay}, {guests}, {nights},
-  // {amount} and {count} are filled in by the page.
+  // {amount}, {count} and {name} are filled in by the page.
   panel: z.strictObject({
     title: text,
     views: z.strictObject({ label: text, list: text, calendar: text }),
@@ -290,8 +306,11 @@ export const textsSchema = z.strictObject({
     guests: text,
     adults: z.strictObject({ label: text, one: text, other: text }),
     children: text,
-    childAge: text,
-    babies: text,
+    // Who counts as a child and how babies are counted, beside the counts; an asterisk points
+    // to it. Beds24 has no age: where a child ends depends on the place, usually on its tax.
+    guestsNote: text.optional(),
+    // The apartment is too small for the chosen guests.
+    small: text,
     from: text,
     week: text,
     tax: z.strictObject({ night: text, stay: text }),

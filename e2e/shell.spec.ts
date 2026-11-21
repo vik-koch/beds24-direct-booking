@@ -61,15 +61,16 @@ test(
 );
 
 test(
-  'the bare address redirects to the browser language, else to the first',
+  'the bare address redirects to the browser language, else to the first, with its query',
   { tag: '@any-engine' },
   async ({ request }) => {
-    const to = async (accept: string) =>
+    const to = async (accept: string, path = '/') =>
       (
-        await request.get('/', { headers: { 'Accept-Language': accept }, maxRedirects: 0 })
+        await request.get(path, { headers: { 'Accept-Language': accept }, maxRedirects: 0 })
       ).headers()['location'];
     expect(await to('en-GB,en;q=0.9,de;q=0.5')).toBe('/en');
     expect(await to('fr-FR,fr;q=0.9')).toBe('/de');
+    expect(await to('en', '/?adults=3&children=1')).toBe('/en?adults=3&children=1');
   },
 );
 
@@ -737,7 +738,7 @@ test('the browser bundle does not know the token', { tag: '@any-engine' }, () =>
 });
 
 // Every tab stop shows the ring: on the element, on what it draws for a hidden input, or on the
-// card it stands for.
+// card or pill it stands for.
 test('every tab stop on the home page shows a focus ring', async ({ page, browserName }) => {
   test.skip(browserName === 'webkit', 'Safari tabs only to fields unless told otherwise');
   await page.goto('/en');
@@ -750,7 +751,7 @@ test('every tab stop on the home page shows a focus ring', async ({ page, browse
       const parts = [
         element,
         element.nextElementSibling,
-        element.closest('.season-switch, .teaser'),
+        element.closest('.season-switch, .teaser, .count'),
         ...element.children,
       ].filter(Boolean) as Element[];
       const ring = parts.some((part) => {

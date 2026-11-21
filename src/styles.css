@@ -569,6 +569,20 @@
     box-shadow: var(--shadow-card);
   }
 
+  /* An apartment too small for the chosen guests: on its card and in its panel. */
+  .too-small {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--color-ink-soft);
+
+    /* The text's capitals sit low in its line; the icon goes up to their middle. */
+    ng-icon {
+      flex: none;
+      margin-bottom: 2px;
+    }
+  }
+
   /* The lowest price of a season, in the booking panel and on an apartment's card. */
   :is(.from, .teaser-price) {
     color: var(--color-ink-soft);

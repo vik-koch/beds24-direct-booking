@@ -125,32 +125,29 @@ test(
 );
 
 test(
-  'the counts offer what Beds24 allows, and more adults make room by fewer children',
+  'the counts offer what one of the apartments takes, and more adults make room by fewer children',
   { tag: '@any-engine' },
   async ({ page }) => {
-    // Lärche: four guests, any of them adults, up to three children.
+    // Lärche's panel offers every apartment's range: at most four adults (Ahorn, Lärche), and
+    // beside two adults up to four children (Ahorn).
     await openNext(page, '/de/wohnungen/laerche');
     expect(await options(page, 'adults')).toEqual([1, 2, 3, 4]);
-    expect(await options(page, 'children')).toEqual([0, 1, 2]);
-    await pickCount(page, 'adults', 1);
-    expect(await options(page, 'children')).toEqual([0, 1, 2, 3]);
-    await pickCount(page, 'children', 3);
-    await pickCount(page, 'adults', 4);
-    await expect(page.locator('#children')).toHaveText('0');
-    expect(await options(page, 'children')).toEqual([0]);
-
-    // Ahorn: six guests, at most four of them adults.
-    await open(page, '/en/apartments/ahorn');
-    await expect(page.locator('label[for=children]')).toHaveText(/Children\s+up to 14/);
-    expect(await options(page, 'adults')).toEqual([1, 2, 3, 4]);
     expect(await options(page, 'children')).toEqual([0, 1, 2, 3, 4]);
+    await pickCount(page, 'adults', 1);
+    await pickCount(page, 'children', 4);
+    await pickCount(page, 'adults', 4);
+    await expect(page.locator('#children')).toHaveText('2');
+    expect(await options(page, 'children')).toEqual([0, 1, 2]);
+    // Both counts are described by the note an asterisk points to, which a screen reader skips.
+    await expect(page.locator('#children')).toHaveAccessibleName('Kinder');
+    for (const id of ['adults', 'children'])
+      await expect(page.locator(`#${id}`)).toHaveAccessibleDescription(/^Kinder bis 14 Jahre\./);
 
-    // Zirbe's room asks Beds24 for no children: one count of guests, each taxed as an adult. The
-    // second site's Vista is that room, in a season of a whole year that always has free weeks.
+    // Zirbe's room asks Beds24 for no children: they count, and are taxed, as adults. The second
+    // site's Vista is that room, in a season of a whole year that always has free weeks.
     await open(page, 'http://localhost:4002/it/appartamenti/vista');
-    await expect(page.locator('#children')).toHaveCount(0);
-    await expect(page.getByRole('combobox', { name: 'Ospiti' })).toHaveText('2');
-    expect(await options(page, 'adults')).toEqual([1, 2]);
+    await pickCount(page, 'adults', 1);
+    await pickCount(page, 'children', 1);
     await (await firstFree(page)).click();
     await expect(panel(page).locator('.outcome:visible .total')).toContainText(
       'Tassa di soggiorno: 2 ospiti × 7 notti',
@@ -162,12 +159,14 @@ test(
   'an address over the limits opens at them, and an arrival from the list is chosen',
   { tag: '@any-engine' },
   async ({ page }) => {
+    // What one of the apartments takes: beside four adults two children, beside one four.
     await open(page, '/de/wohnungen/laerche?adults=9&children=9');
     await expect(page.locator('#adults')).toHaveText('4');
-    await expect(page.locator('#children')).toHaveText('0');
+    await expect(page.locator('#children')).toHaveText('2');
+    await expect(page).toHaveURL(/\?adults=4&children=2$/);
     await open(page, '/de/wohnungen/laerche?adults=0&children=9');
     await expect(page.locator('#adults')).toHaveText('1');
-    await expect(page.locator('#children')).toHaveText('3');
+    await expect(page.locator('#children')).toHaveText('4');
 
     // A week in a later month, as the free-weeks list links it.
     await openNext(page, '/de/wohnungen/laerche');
@@ -555,3 +554,17 @@ for (const width of [320, 1280])
       expect(violations, 'open list').toEqual([]);
     },
   );
+
+test('an apartment too small says how many it takes and does not book', async ({ page }) => {
+  await openNext(page, '/de/wohnungen/laerche?adults=4&children=1');
+  await expect(page.locator('.too-small')).toHaveText('Lärche hat Platz für bis zu 4 Gäste.');
+  await (await firstFree(page)).click();
+  const outcome = panel(page).locator('.outcome:visible');
+  await expect(outcome.getByRole('button', { name: 'Weiter zur Buchung' })).toBeDisabled();
+  await pickCount(page, 'children', 0);
+  await expect(page.locator('.too-small')).toBeEmpty();
+  await expect(outcome.getByRole('link', { name: 'Weiter zur Buchung' })).toHaveAttribute(
+    'href',
+    /\/de\/wohnungen\/laerche\/buchen\?arrival=.+&departure=.+&adults=4$/,
+  );
+});

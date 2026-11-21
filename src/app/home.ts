@@ -6,6 +6,7 @@ import { icons } from '../content/generated/icons';
 import site from '../content/generated/site';
 import { lucideName } from '../content/names';
 import { FreeWeeksList } from './free-weeks-list';
+import { Guests } from './guests';
 import { Season } from './season';
 import { Teasers } from './teasers';
 import { address, LANGUAGE, TEXTS } from './texts';
@@ -40,7 +41,7 @@ import { address, LANGUAGE, TEXTS } from './texts';
             }
           </ul>
         }
-        <a class="button" [href]="weeksLink">{{ texts.hero.button }}</a>
+        <a class="button" [href]="guests.link(weeksLink)">{{ texts.hero.button }}</a>
       </div>
     </section>
     <!-- A jump to the free weeks places the section's top below the header, which then covers
@@ -74,4 +75,9 @@ export class Home {
     url: `url('/${site.seasons[name]!.hero.file}')`,
   }));
   protected readonly weeks: FreeWeeks | null = inject(ActivatedRoute).snapshot.data['weeks'];
+  protected readonly guests = inject(Guests);
+
+  constructor() {
+    if (this.weeks) this.guests.limit(Object.values(this.weeks.capacities));
+  }
 }

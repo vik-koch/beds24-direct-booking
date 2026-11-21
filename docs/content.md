@@ -85,14 +85,17 @@ content. The application has no wording, no colour and no typeface of its own. T
   `amenities.codes`; a bed without a label is left out. A group whose code is not listed is no room:
   its codes count as amenities.
 - **The booking panel** (`panel` in a texts file) is the wording of the apartment page's panel: the
-  week, the guests, the total and the way on to booking. `childAge` in `site.json` is the oldest age
-  that counts as a child, named beside the children's count through `panel.childAge` (`{age}`):
-  Beds24 knows no age, and where a child ends depends on the place, usually on its tourist tax.
-  `babies` says how babies are counted. Where Beds24 does not ask for children, the panel asks only
-  for guests. The tax line takes `{guests}`, `{nights}` and `{amount}`; `adults` has a `one` and an
-  `other` form for it.
+  week, the guests, the total and the way on to booking. The same counts stand above the free-weeks
+  list. The optional `guestsNote` says who counts as a child and how babies are counted, and an
+  asterisk beside the children's count points to it: Beds24 knows no age, and where a child ends
+  depends on the place, usually on its tourist tax. Where no apartment asks Beds24 for children, the
+  counts ask only for guests. `small` (`{name}`, `{guests}`) says how many an apartment too small
+  for the chosen guests takes. The tax line takes `{guests}`, `{nights}` and `{amount}`; `adults`
+  has a `one` and an `other` form for it.
 - **The notice** (`notice` in a texts file) is an optional line above the header, with an optional
-  link. Left out, no line is shown.
+  link. Left out, no line is shown. A link within the site is a path from its root, such as
+  `/en/apartments/ahorn`, which then carries the visitor's guests; any other is a full `https://`
+  address.
 - **The seasons** (`seasons` in `site.json`) are `winter`, `summer` or both, each with its hero
   photo and its `icon`: an SVG file in UTF-8 in `pictures/` that the browser's tab shows while the
   season is shown. It has no alternative text; the page's title stands beside it. The demo's are a
@@ -111,7 +114,9 @@ content. The application has no wording, no colour and no typeface of its own. T
   (a dated season such as "Winter 2026/27"), `{count}` (the guests, with a `one` and an `other`
   form) and `{amount}` (the tourist tax as money). `note` says what the week's price includes, since
   that is how a deployment sets up its Beds24 prices; the tax follows it as `tax.night` or
-  `tax.stay`, by Beds24's upsell item. The apartments' order in the list is their order in
+  `tax.stay`, by Beds24's upsell item. `small` stands in the cells of an apartment too small for the
+  chosen guests and `smallFor` (`{guests}`) on its card; `withTax` (`{price}`) is a chosen week's
+  price with the tax for the chosen guests. The apartments' order in the list is their order in
   `site.json`; their guests, size, prices and tax come from Beds24.
 - **A picture** is a file in `pictures/` with an optional `credit`: its title, author, source
   address and licence with its address, and optionally what was changed: `changes` lists `cropped`,

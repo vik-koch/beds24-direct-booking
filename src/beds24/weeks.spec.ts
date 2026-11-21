@@ -112,6 +112,7 @@ describe('freeWeeks', () => {
         guests: 2,
         size: 34,
         bedrooms: 2,
+        tax: { amount: 3.5, per: 'night' },
         headline: { de: 'Für vier', fr: '' },
       },
       {
@@ -120,6 +121,7 @@ describe('freeWeeks', () => {
         guests: 4,
         size: 61,
         bedrooms: 2,
+        tax: { amount: 3.5, per: 'night' },
         headline: { de: 'Für vier', fr: '' },
       },
     ]);
@@ -135,6 +137,16 @@ describe('freeWeeks', () => {
     });
     expect(list.seasons[1].weeks.map((week) => week.arrival)).toEqual(['2027-01-16', '2027-01-23']);
     expect(list.tax).toEqual({ amount: 3.5, per: 'night' });
+  });
+
+  it('keeps every apartment’s capacity where the weeks are of one apartment alone', () => {
+    const list = freeWeeks(inventory(), apartments, [january], '2026-12-01', ['de'], 'one');
+    expect(list.apartments.map(({ slug }) => slug)).toEqual(['one']);
+    expect(list.seasons[0].weeks.map(({ prices }) => prices)).toEqual([[700], [700]]);
+    expect(list.capacities).toEqual({
+      two: { maxPeople: 2, maxAdults: 4, maxChildren: 0 },
+      one: { maxPeople: 4, maxAdults: 4, maxChildren: 0 },
+    });
   });
 
   it('counts the lead time from today', () => {
