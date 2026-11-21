@@ -114,7 +114,7 @@
 
   > ng-icon:first-child {
     --ng-icon__size: var(--row-icon);
-    color: var(--color-ink-soft);
+    --ng-icon__color: var(--color-ink-soft);
   }
 
   > span {

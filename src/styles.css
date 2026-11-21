@@ -546,7 +546,7 @@
          the line box, an icon looks low next to text with few descenders. The larger icon
          sits a little higher to look centred. */
       --lift: 0.5cap;
-      color: var(--color-accent);
+      --ng-icon__color: var(--color-ink-soft);
       translate: 0 calc(var(--ng-icon__size) / 2 - var(--lift));
 
       @media (min-width: 48rem) {
@@ -569,7 +569,7 @@
     }
 
     ng-icon {
-      color: var(--color-ink-soft);
+      --ng-icon__color: var(--color-ink-soft);
     }
   }
 
