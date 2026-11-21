@@ -266,6 +266,13 @@ test('the generated site gives each picture its files and its texts by address p
   assert.ok(!existsSync(join(out, 'pictures', 'zirbe-1.webp')));
   assert.ok(!existsSync(join(out, 'pictures', 'hero-winter.webp')));
   assert.equal(await writeContent('content/demo', out, cache), 0);
+  // A season's icon that is also its hero is still served as it is, for the tab.
+  const shared = changed(
+    'site.json',
+    (site) => (site.seasons.winter.hero.file = site.seasons.winter.icon),
+  );
+  await writeContent(shared, out, cache);
+  assert.ok(existsSync(join(out, 'pictures', 'icon-winter.svg')));
 });
 
 test('two languages with one address prefix are refused', () => {

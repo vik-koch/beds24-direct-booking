@@ -197,12 +197,16 @@ export async function writeContent(dir, out, cache) {
   const { site, texts } = readContent(dir);
   rmSync(out, { recursive: true, force: true });
   mkdirSync(out, { recursive: true });
-  // The apartments' pictures and the heroes are served only as their converted files.
-  const heroes = Object.values(site.seasons).map(({ hero }) => hero.file);
+  // The apartments' pictures and the heroes are served only as their converted files, unless a
+  // season's icon is the same file.
+  const tabIcons = Object.values(site.seasons).map(({ icon }) => icon);
   const sources = new Set(
-    [...site.apartments.flatMap(({ pictures }) => pictures.map(({ file }) => file)), ...heroes].map(
-      (file) => join(dir, file),
-    ),
+    [
+      ...site.apartments.flatMap(({ pictures }) => pictures.map(({ file }) => file)),
+      ...Object.values(site.seasons).map(({ hero }) => hero.file),
+    ]
+      .filter((file) => !tabIcons.includes(file))
+      .map((file) => join(dir, file)),
   );
   const { pictures, converted: apartmentFiles } = await convertPictures(
     dir,
