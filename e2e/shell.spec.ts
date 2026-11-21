@@ -737,7 +737,7 @@ test('the browser bundle does not know the token', { tag: '@any-engine' }, () =>
 });
 
 // Every tab stop shows the ring: on the element, on what it draws for a hidden input, or on the
-// card it stands for.
+// card or pill it stands for.
 test('every tab stop on the home page shows a focus ring', async ({ page, browserName }) => {
   test.skip(browserName === 'webkit', 'Safari tabs only to fields unless told otherwise');
   await page.goto('/en');
@@ -750,7 +750,7 @@ test('every tab stop on the home page shows a focus ring', async ({ page, browse
       const parts = [
         element,
         element.nextElementSibling,
-        element.closest('.season-switch, .teaser'),
+        element.closest('.season-switch, .teaser, .count'),
         ...element.children,
       ].filter(Boolean) as Element[];
       const ring = parts.some((part) => {

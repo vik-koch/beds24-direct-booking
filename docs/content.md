@@ -85,13 +85,13 @@ content. The application has no wording, no colour and no typeface of its own. T
   `amenities.codes`; a bed without a label is left out. A group whose code is not listed is no room:
   its codes count as amenities.
 - **The booking panel** (`panel` in a texts file) is the wording of the apartment page's panel: the
-  week, the guests, the total and the way on to booking. `childAge` in `site.json` is the oldest age
-  that counts as a child, named beside the children's count through `panel.childAge` (`{age}`):
-  Beds24 knows no age, and where a child ends depends on the place, usually on its tourist tax.
-  `babies` says how babies are counted. The same counts stand above the free-weeks list. Where no
-  apartment asks Beds24 for children, they ask only for guests. `small` (`{name}`, `{guests}`) says
-  how many an apartment too small for the chosen guests takes. The tax line takes `{guests}`,
-  `{nights}` and `{amount}`; `adults` has a `one` and an `other` form for it.
+  week, the guests, the total and the way on to booking. The same counts stand above the free-weeks
+  list. The optional `guestsNote` says who counts as a child and how babies are counted, and an
+  asterisk beside the children's count points to it: Beds24 knows no age, and where a child ends
+  depends on the place, usually on its tourist tax. Where no apartment asks Beds24 for children, the
+  counts ask only for guests. `small` (`{name}`, `{guests}`) says how many an apartment too small
+  for the chosen guests takes. The tax line takes `{guests}`, `{nights}` and `{amount}`; `adults`
+  has a `one` and an `other` form for it.
 - **The notice** (`notice` in a texts file) is an optional line above the header, with an optional
   link. Left out, no line is shown.
 - **The seasons** (`seasons` in `site.json`) are `winter`, `summer` or both, each with its hero

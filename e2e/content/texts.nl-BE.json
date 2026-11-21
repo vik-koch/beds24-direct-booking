@@ -126,8 +126,7 @@
       "other": "{count} volwassenen"
     },
     "children": "Kinderen",
-    "childAge": "tot {age} jaar",
-    "babies": "Baby's tot 2 jaar tellen niet mee. We zetten graag een babybedje klaar.",
+    "guestsNote": "Kinderen tot 11 jaar. Baby's onder 2 jaar tellen niet mee; we zetten graag een babybedje klaar.",
     "small": "{name} biedt plaats aan maximaal {guests}.",
     "from": "vanaf {price} per week",
     "week": "Week {stay}",

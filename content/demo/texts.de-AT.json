@@ -135,8 +135,7 @@
       "other": "{count} Erwachsene"
     },
     "children": "Kinder",
-    "childAge": "bis {age} Jahre",
-    "babies": "Babys bis 2 Jahre zählen nicht mit. Ein Babybett stellen wir gern dazu.",
+    "guestsNote": "Kinder bis 14 Jahre. Babys unter 2 Jahren zählen nicht mit, ein Babybett stellen wir gern dazu.",
     "small": "{name} hat Platz für bis zu {guests}.",
     "from": "ab {price} pro Woche",
     "week": "Woche {stay}",

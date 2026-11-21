@@ -135,8 +135,7 @@
       "other": "{count} adults"
     },
     "children": "Children",
-    "childAge": "up to {age}",
-    "babies": "Babies up to 2 are not counted. We are happy to provide a cot.",
+    "guestsNote": "Children up to 14. Babies under 2 are not counted; we are happy to provide a cot.",
     "small": "{name} sleeps up to {guests}.",
     "from": "from {price} a week",
     "week": "Week {stay}",

@@ -78,7 +78,7 @@ const shownTab = new InjectionToken('shown tab', { providedIn: 'root', factory: 
       <p class="sr-only" aria-live="polite">{{ announced() }}</p>
     </div>
     @if (weeks(); as weeks) {
-      <app-guest-counts class="guest-card" />
+      <app-guest-counts class="guest-bar" />
       @if (weeks.apartments.length > 1) {
         <fieldset class="room-tabs" [style.--word]="longestWord(weeks.apartments)">
           <legend class="sr-only">{{ texts.weeks.apartment }}</legend>

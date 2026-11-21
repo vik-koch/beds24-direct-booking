@@ -126,8 +126,7 @@
       "other": "{count} adulti"
     },
     "children": "Bambini",
-    "childAge": "fino a {age} anni",
-    "babies": "I neonati fino a 2 anni non contano. Mettiamo volentieri a disposizione un lettino.",
+    "guestsNote": "Bambini fino a 11 anni. I neonati sotto i 2 anni non contano; mettiamo volentieri a disposizione un lettino.",
     "small": "{name} ospita fino a {guests}.",
     "from": "da {price} a settimana",
     "week": "Settimana {stay}",

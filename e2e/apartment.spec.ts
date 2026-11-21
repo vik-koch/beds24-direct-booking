@@ -449,7 +449,7 @@ test('every tab stop on an apartment page shows a focus ring', async ({ page, br
       // A radio's ring is its label's, a week's its row's, the season button's its shown label's.
       const ringed = [
         element,
-        element.closest('label, .week'),
+        element.closest('label, .week, .count'),
         ...element.querySelectorAll(':scope > *'),
       ];
       const ring = ringed.some((one) => {

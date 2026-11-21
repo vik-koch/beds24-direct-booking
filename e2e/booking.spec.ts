@@ -138,7 +138,10 @@ test(
     await pickCount(page, 'adults', 4);
     await expect(page.locator('#children')).toHaveText('2');
     expect(await options(page, 'children')).toEqual([0, 1, 2]);
-    await expect(page.locator('label[for=children]')).toHaveText(/Kinder\s+bis 14/);
+    // Both counts are described by the note an asterisk points to, which a screen reader skips.
+    await expect(page.locator('#children')).toHaveAccessibleName('Kinder');
+    for (const id of ['adults', 'children'])
+      await expect(page.locator(`#${id}`)).toHaveAccessibleDescription(/^Kinder bis 14 Jahre\./);
 
     // Zirbe's room asks Beds24 for no children: they count, and are taxed, as adults. The second
     // site's Vista is that room, in a season of a whole year that always has free weeks.
@@ -559,7 +562,7 @@ test('an apartment too small says how many it takes and does not book', async ({
   const outcome = panel(page).locator('.outcome:visible');
   await expect(outcome.getByRole('button', { name: 'Weiter zur Buchung' })).toBeDisabled();
   await pickCount(page, 'children', 0);
-  await expect(page.locator('.panel-small')).toHaveCount(0);
+  await expect(page.locator('.panel-small')).toBeEmpty();
   await expect(outcome.getByRole('link', { name: 'Weiter zur Buchung' })).toHaveAttribute(
     'href',
     /\/de\/wohnungen\/laerche\/buchen\?arrival=.+&departure=.+&adults=4$/,

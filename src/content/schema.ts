@@ -141,9 +141,6 @@ export const siteSchema = z.strictObject({
   rooms: z
     .array(z.strictObject({ code: text, icon: segment }))
     .refine((list) => unique(list, (room) => room.code), 'a room code is listed twice'),
-  // The oldest age that counts as a child, which the booking panel names. Beds24 has no age:
-  // where a child ends depends on the place, usually on its tourist tax.
-  childAge: z.number().int().min(1).max(17),
   // The footer shows what is listed, and no contact without one: a site may give its details
   // on its imprint page instead.
   contact: z
@@ -296,8 +293,9 @@ export const textsSchema = z.strictObject({
     guests: text,
     adults: z.strictObject({ label: text, one: text, other: text }),
     children: text,
-    childAge: text,
-    babies: text,
+    // Who counts as a child and how babies are counted, beside the counts; an asterisk points
+    // to it. Beds24 has no age: where a child ends depends on the place, usually on its tax.
+    guestsNote: text.optional(),
     // The apartment is too small for the chosen guests.
     small: text,
     from: text,

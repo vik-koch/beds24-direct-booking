@@ -32,7 +32,6 @@
     { "code": "PETS_NOT_ALLOWED", "icon": "paw-print" },
     { "area": "comfort", "icon": "sofa", "codes": ["WIFI", "HEATING", "KITCHEN", "DISHWASHER"] }
   ],
-  "childAge": 11,
   "contact": {
     "name": "Casa Prova",
     "email": "ciao@casa-prova.example"
