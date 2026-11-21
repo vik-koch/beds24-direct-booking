@@ -102,14 +102,16 @@ nothing is built or tested for it.
 - **WebKit runs locally before a push,** not only in CI. Where the machine's own WebKit cannot
   start, `npm run e2e:webkit` runs it in the Playwright image CI uses.
 - **A new or changed e2e test runs 10 times under load before its push:**
-  `-g "<its title>" --repeat-each 10 --workers 8`, in WebKit through `npm run e2e:webkit --` and in
-  Chromium and Firefox directly. A test that reads the page straight after a step, before the page
-  shows it, passes every single run on a developer machine and fails in CI now and then. Eight
-  workers rather than more repeats: the guest select's race in #208 passed 40 local runs in a row
-  and showed only on CI's slower runners.
+  `-g "<its title>" --repeat-each 10 --workers 8` in Chromium and Firefox, and with `--workers 4` in
+  WebKit through `npm run e2e:webkit --`. A test that reads the page straight after a step, before
+  the page shows it, passes every single run on a developer machine and fails in CI now and then.
+  Eight workers rather than more repeats: the guest select's race in #208 passed 40 local runs in a
+  row and showed only on CI's slower runners. WebKit takes four: at eight, headless WebKit stops
+  drawing for seconds, and a fade after a language change outlasts the tests' wait without a fault
+  in the site (#224).
 - **A changed helper or app-wide signal that many tests use** runs each spec it touches 3 times,
-  `--repeat-each 3 --workers 8` in the same three browsers, not every test 10 times. The helper
-  already runs many times per spec.
+  `--repeat-each 3` with the same workers in the same three browsers, not every test 10 times. The
+  helper already runs many times per spec.
 - **The screenshot matrix** (2 languages × 2 seasons × phone and desktop) stays on Chromium and the
   WebKit phone, or it is too large to review.
 - **Playwright's WebKit is not Safari.** It is a first signal for layout and forms. Cookie blocking
