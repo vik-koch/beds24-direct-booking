@@ -433,7 +433,7 @@ test('the header stays in place between a long page and a short one', async ({
   test.skip(browserName !== 'chromium', 'only Chromium has a classic scrollbar here');
   const browser = await playwright.chromium.launch({ ignoreDefaultArgs: ['--hide-scrollbars'] });
   const page = await browser.newPage({ baseURL });
-  // A larger default font size leaves the 340 px limit where it is.
+  // A larger default font size leaves the 320 px limit where it is.
   await (
     await page.context().newCDPSession(page)
   ).send('Page.setFontSizes', {
@@ -447,7 +447,7 @@ test('the header stays in place between a long page and a short one', async ({
   // window, the menu button at the right.
   for (const [width, selector] of [
     [1600, '.wordmark'],
-    [350, '.header-narrow .icon-button'],
+    [320, '.header-narrow .icon-button'],
   ] as const) {
     await page.setViewportSize({ width, height: 2000 });
     await page.goto('/en');
@@ -457,11 +457,11 @@ test('the header stays in place between a long page and a short one', async ({
     expect(await scrolls(), `${width}`).toBe(false);
     expect(await left(selector), `${width}`).toBe(long);
   }
-  // At 320 px a short page keeps its whole width, so nothing scrolls sideways.
-  await page.setViewportSize({ width: 320, height: 2000 });
+  // Narrower, a short page keeps its whole width, so nothing scrolls sideways.
+  await page.setViewportSize({ width: 319, height: 2000 });
   expect(await scrolls()).toBe(false);
   expect(await bar()).toBe(0);
-  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(320);
+  await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBe(319);
   await browser.close();
 });
 
@@ -470,8 +470,8 @@ test('narrower than 300 px the page keeps its 300 px layout and scrolls sideways
 }) => {
   await page.setViewportSize({ width: 280, height: 480 });
   await page.goto('/de');
-  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(300);
-  expect(await page.locator('app-header').evaluate((header) => header.offsetWidth)).toBe(300);
+  await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBe(300);
+  await expect.poll(() => page.locator('app-header').evaluate((e) => e.offsetWidth)).toBe(300);
 });
 
 test('a 320 px window with a classic scrollbar does not scroll sideways', async ({
@@ -484,12 +484,17 @@ test('a 320 px window with a classic scrollbar does not scroll sideways', async 
   const page = await browser.newPage({ baseURL, viewport: { width: 320, height: 480 } });
   for (const path of ['/de', '/en/apartments/zirbe']) {
     await page.goto(path);
-    const { client, scroll } = await page.evaluate(() => ({
-      client: document.documentElement.clientWidth,
-      scroll: document.documentElement.scrollWidth,
-    }));
-    expect(client, path).toBeLessThan(320);
-    expect(scroll, path).toBe(client);
+    // The scrollbar takes room, and the page fits in the rest.
+    await expect
+      .poll(
+        () =>
+          page.evaluate(() => {
+            const { clientWidth, scrollWidth } = document.documentElement;
+            return clientWidth < 320 && scrollWidth === clientWidth;
+          }),
+        { message: path },
+      )
+      .toBe(true);
   }
   await browser.close();
 });
@@ -646,13 +651,15 @@ test('an anchor that cannot be decoded opens the page at its top', async ({ page
 test('at 320 px nothing scrolls sideways and a jump lands below the header', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 480 });
   await page.goto('/de/impressum');
-  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(320);
+  const sideways = () =>
+    page.locator('html').evaluate((html) => html.scrollWidth - html.offsetWidth);
+  await expect.poll(sideways).toBe(0);
 
   await page.getByRole('button', { name: 'Menü' }).click();
   await page.getByRole('link', { name: 'Lage' }).click();
   await expect(page).toHaveURL('/de#lage');
   await expect(page.getByRole('dialog')).toBeHidden();
-  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(320);
+  await expect.poll(sideways).toBe(0);
   await expect
     .poll(() =>
       page.evaluate(() => {

@@ -1,5 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Locator, type Page } from '@playwright/test';
+import { phoneWidth } from './phone';
 
 // The server dates the seasons by today, so these tests take the seasons from the page. The
 // simulator prices every season ahead of today, so the next season always has free weeks.
@@ -402,10 +403,10 @@ test('four apartments with long names stand two by two on a phone and fit the ca
 test('three short names share one row on the narrowest phone, four stand in one where they fit', async ({
   page,
 }) => {
-  await page.setViewportSize({ width: 320, height: 800 });
   for (const path of ['/de', '/en']) {
     await page.goto(path);
-    expect(await tabRows(page), path).toEqual(fine([3]));
+    await phoneWidth(page, 320, 800);
+    await expect.poll(() => tabRows(page), { message: path }).toEqual(fine([3]));
   }
   // A fourth short name, as a fourth apartment would add it.
   await page.locator('.room-tabs').evaluate((tabs) => {
@@ -539,7 +540,9 @@ test('on a phone the tabs choose one apartment and clear the chosen week', async
   await page.locator('.room-tabs').getByText('Ahorn').click();
   await expect(header).toContainText('Ahorn');
   await expect(page.locator('.pick')).toHaveCount(0);
-  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(320);
+  await expect
+    .poll(() => page.locator('html').evaluate((html) => html.scrollWidth - html.offsetWidth))
+    .toBe(0);
 });
 
 // The grid focuses its active cell again when a tab hides it, which scrolled to the new

@@ -1,5 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
+import { phoneWidth } from './phone';
 
 const section = (page: Page, name: string) =>
   page.locator('section').filter({ has: page.getByRole('heading', { level: 2, name }) });
@@ -396,11 +397,8 @@ test('at 320 px nothing scrolls sideways, in both seasons and languages', async 
     [320, 1],
     [360, 2],
   ]) {
-    await page.setViewportSize({ width, height: 700 });
     await page.goto('/de/wohnungen/ahorn');
-    // The page itself that wide: Chromium here keeps a scrollbar's room, which a phone has not.
-    const gutter = await page.evaluate(() => innerWidth - document.documentElement.offsetWidth);
-    await page.setViewportSize({ width: width + gutter, height: 700 });
+    await phoneWidth(page, width, 700);
     expect(
       await page
         .locator('.rooms')
@@ -412,7 +410,11 @@ test('at 320 px nothing scrolls sideways, in both seasons and languages', async 
   for (const path of ['/de/wohnungen/ahorn', '/en/apartments/laerche'])
     for (const season of ['winter', 'summer']) {
       await page.goto(`${path}?season=${season}`);
-      expect(await page.evaluate(() => document.documentElement.scrollWidth), path).toBe(320);
+      await expect
+        .poll(() => page.locator('html').evaluate((html) => html.scrollWidth - html.offsetWidth), {
+          message: path,
+        })
+        .toBe(0);
     }
 });
 
