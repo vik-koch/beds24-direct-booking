@@ -67,7 +67,13 @@ test('the notice may be left out, in every language', () => {
 test('a notice links within the site by a path from its root, elsewhere by https', () => {
   for (const href of ['/en/apartments/ahorn', 'https://example.com/a'])
     assert.ok(readContent(bothTexts((texts) => (texts.notice.link = { text: 'More', href }))));
-  for (const href of ['en/apartments/ahorn', '//example.com/a', 'http://example.com/a'])
+  for (const href of [
+    'en/apartments/ahorn',
+    '//example.com/a',
+    'http://example.com/a',
+    'https://',
+    'https:///a',
+  ])
     assert.throws(
       () => readContent(bothTexts((texts) => (texts.notice.link = { text: 'More', href }))),
       /notice\.link\.href/,

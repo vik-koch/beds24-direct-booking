@@ -204,7 +204,10 @@ export const textsSchema = z.strictObject({
       link: z
         .strictObject({
           text,
-          href: z.string().regex(/^(\/(?!\/)|https:\/\/)/, 'a path from the root or https://'),
+          href: z.union([
+            z.string().regex(/^\/(?!\/)/, 'a path from the root'),
+            z.url({ protocol: /^https$/, hostname: z.regexes.domain }),
+          ]),
         })
         .optional(),
     })
