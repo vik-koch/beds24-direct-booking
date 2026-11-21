@@ -226,54 +226,64 @@ Input image: reference for the same apartment's wood, fabrics, window frames and
 ## Winter twins — 21 November 2026
 
 Generated with OpenAI’s built-in image generation tool through Codex, following
-[Winter twins](../apartment-pictures.md#winter-twins). Each generation used only its matching
-summer WebP as the input reference, not the apartment’s first picture. No specific underlying
-image model is claimed. These are fictional AI-generated illustrations.
+[Winter twins](../apartment-pictures.md#winter-twins). Each generation used only its matching summer
+WebP as the input reference, not the apartment’s first picture. No specific underlying image model
+is claimed. These are fictional AI-generated illustrations.
 
-The 9 winter assets listed below are also supplied under the project’s
-[MIT licence](../../LICENSE), to the extent that licensable rights exist. The AI disclosure
-and rights qualifications in [Reuse and disclosure](#reuse-and-disclosure) apply to them too.
-No existing photograph’s licence is changed.
+The 9 winter assets listed below are also supplied under the project’s [MIT licence](../../LICENSE),
+to the extent that licensable rights exist. The AI disclosure and rights qualifications in
+[Reuse and disclosure](#reuse-and-disclosure) apply to them too. No existing photograph’s licence is
+changed.
 
-All winter files are WebP encoded at quality 85. Eight retain native 1536 × 1024 dimensions. The square kitchen was generated at 1254 × 1254
-and downsampled to 1024 × 1024 without cropping to match its summer twin.
+All winter files are WebP encoded at quality 85. Eight retain native 1536 × 1024 dimensions. The
+square kitchen was generated at 1254 × 1254 and downsampled to 1024 × 1024 without cropping to match
+its summer twin.
 
-| File | Sole summer reference | Suggested English alternative text |
-| --- | --- | --- |
-| [ahorn-1-winter.webp](../../content/demo/pictures/ahorn-1-winter.webp) | [ahorn-1.webp](../../content/demo/pictures/ahorn-1.webp) | Maple living room with a lit stove, blue sofa cushions and a snowy terrace beyond the glass doors. |
-| [ahorn-2-winter.webp](../../content/demo/pictures/ahorn-2-winter.webp) | [ahorn-2.webp](../../content/demo/pictures/ahorn-2.webp) | Maple double bedroom with a sand-coloured blanket and snow around the skylight and outside the window. |
+| File                                                                   | Sole summer reference                                    | Suggested English alternative text                                                                                  |
+| ---------------------------------------------------------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| [ahorn-1-winter.webp](../../content/demo/pictures/ahorn-1-winter.webp) | [ahorn-1.webp](../../content/demo/pictures/ahorn-1.webp) | Maple living room with a lit stove, blue sofa cushions and a snowy terrace beyond the glass doors.                  |
+| [ahorn-2-winter.webp](../../content/demo/pictures/ahorn-2-winter.webp) | [ahorn-2.webp](../../content/demo/pictures/ahorn-2.webp) | Maple double bedroom with a sand-coloured blanket and snow around the skylight and outside the window.              |
 | [ahorn-3-winter.webp](../../content/demo/pictures/ahorn-3-winter.webp) | [ahorn-3.webp](../../content/demo/pictures/ahorn-3.webp) | Double bedroom with a sage headboard, dark blue blanket and a lit lamp on the maple chest, overlooking snowy trees. |
-| [ahorn-4-winter.webp](../../content/demo/pictures/ahorn-4-winter.webp) | [ahorn-4.webp](../../content/demo/pictures/ahorn-4.webp) | Maple bunk bedroom with sage linen, a wool throw on the armchair and snowy trees outside the window. |
-| [ahorn-5-winter.webp](../../content/demo/pictures/ahorn-5-winter.webp) | [ahorn-5.webp](../../content/demo/pictures/ahorn-5.webp) | Bathroom with blue towels, two basins, a shower and a softly lit private sauna, with snow outside. |
-| [ahorn-6-winter.webp](../../content/demo/pictures/ahorn-6-winter.webp) | [ahorn-6.webp](../../content/demo/pictures/ahorn-6.webp) | Swept wooden terrace with a bare table, four separate bench sections and snow on the fence, meadow and forest. |
-| [ahorn-7-winter.webp](../../content/demo/pictures/ahorn-7-winter.webp) | [ahorn-7.webp](../../content/demo/pictures/ahorn-7.webp) | Maple kitchen with a glass teapot, two mugs and snowy trees beyond the window. |
-| [ahorn-8-winter.webp](../../content/demo/pictures/ahorn-8-winter.webp) | [ahorn-8.webp](../../content/demo/pictures/ahorn-8.webp) | Maple stairs seen from halfway up, with a dark blue landing runner and snowy trees through the tall window. |
-| [ahorn-9-winter.webp](../../content/demo/pictures/ahorn-9-winter.webp) | [ahorn-9.webp](../../content/demo/pictures/ahorn-9.webp) | Upstairs shower room with sand towels, a single maple vanity and snow around the skylight. |
+| [ahorn-4-winter.webp](../../content/demo/pictures/ahorn-4-winter.webp) | [ahorn-4.webp](../../content/demo/pictures/ahorn-4.webp) | Maple bunk bedroom with sage linen, a wool throw on the armchair and snowy trees outside the window.                |
+| [ahorn-5-winter.webp](../../content/demo/pictures/ahorn-5-winter.webp) | [ahorn-5.webp](../../content/demo/pictures/ahorn-5.webp) | Bathroom with blue towels, two basins, a shower and a softly lit private sauna, with snow outside.                  |
+| [ahorn-6-winter.webp](../../content/demo/pictures/ahorn-6-winter.webp) | [ahorn-6.webp](../../content/demo/pictures/ahorn-6.webp) | Swept wooden terrace with a bare table, four separate bench sections and snow on the fence, meadow and forest.      |
+| [ahorn-7-winter.webp](../../content/demo/pictures/ahorn-7-winter.webp) | [ahorn-7.webp](../../content/demo/pictures/ahorn-7.webp) | Maple kitchen with a glass teapot, two mugs and snowy trees beyond the window.                                      |
+| [ahorn-8-winter.webp](../../content/demo/pictures/ahorn-8-winter.webp) | [ahorn-8.webp](../../content/demo/pictures/ahorn-8.webp) | Maple stairs seen from halfway up, with a dark blue landing runner and snowy trees through the tall window.         |
+| [ahorn-9-winter.webp](../../content/demo/pictures/ahorn-9-winter.webp) | [ahorn-9.webp](../../content/demo/pictures/ahorn-9.webp) | Upstairs shower room with sand towels, a single maple vanity and snow around the skylight.                          |
 
 ### Winter review
 
 Compared all selected winter outputs visually with their summer inputs. The rooms and principal
-furniture remain recognisable, with changed framing and the seasonal details recorded below.
-Snow is outside only. No people, animals, visible writing, brand logos, Christmas decorations,
-ski equipment or indoor snow were identified. No clocks are present. No obvious malformed
-furniture or impossible doors/windows were identified in the final selections.
-These checks do not establish an identical floor plan or precisely measured camera movement:
-new viewpoints introduce small spatial and decorative differences. Treat these as synthetic
-listing illustrations, rather than measured documentation of a real property.
+furniture remain recognisable, with changed framing and the seasonal details recorded below. Snow is
+outside only. No people, animals, visible writing, brand logos, Christmas decorations, ski equipment
+or indoor snow were identified. No clocks are present. No obvious malformed furniture or impossible
+doors/windows were identified in the final selections. These checks do not establish an identical
+floor plan or precisely measured camera movement: new viewpoints introduce small spatial and
+decorative differences. Treat these as synthetic listing illustrations, rather than measured
+documentation of a real property.
 
-- **ahorn-1-winter:** Changed sofa-side view towards kitchen, six dining chairs, small fire, dark blue cushions and snow beyond the glass.
-- **ahorn-2-winter:** More frontal window-side view, sand blanket replaces blue; snowy exterior skylight frame and forest remain visible.
-- **ahorn-3-winter:** Doorway/side view, same sage headboard and chest; dark blue bed throw and small lit chest lamp.
-- **ahorn-4-winter:** Made from the replacement without toys. Window-side view towards bunks and door; sage linen and armchair throw, floor lamp unlit, no toys.
-- **ahorn-5-winter:** Shifted view with double vanity, shower and sauna retained; dark blue towels and visible warm sauna lamp; snowy window and reflection.
-- **ahorn-6-winter:** Lower, offset view in low morning light; swept deck, bare table, four separate cushion-free bench sections; snow outside.
-- **ahorn-7-winter:** More oblique worktop view, tea and two mugs instead of bread, same oven/hob, shelves and maple fronts; exterior sill snow.
-- **ahorn-8-winter:** Closer, offset halfway-up view; blue landing runner, tall narrow window, plant and open maple treads remain visible.
-- **ahorn-9-winter:** View shifted towards the shower side and basin; sand towels, snowy exterior skylight frame, toilet and glass shower; no bath tub or sauna.
+- **ahorn-1-winter:** Changed sofa-side view towards kitchen, six dining chairs, small fire, dark
+  blue cushions and snow beyond the glass.
+- **ahorn-2-winter:** More frontal window-side view, sand blanket replaces blue; snowy exterior
+  skylight frame and forest remain visible.
+- **ahorn-3-winter:** Doorway/side view, same sage headboard and chest; dark blue bed throw and
+  small lit chest lamp.
+- **ahorn-4-winter:** Made from the replacement without toys. Window-side view towards bunks and
+  door; sage linen and armchair throw, floor lamp unlit, no toys.
+- **ahorn-5-winter:** Shifted view with double vanity, shower and sauna retained; dark blue towels
+  and visible warm sauna lamp; snowy window and reflection.
+- **ahorn-6-winter:** Lower, offset view in low morning light; swept deck, bare table, four separate
+  cushion-free bench sections; snow outside.
+- **ahorn-7-winter:** More oblique worktop view, tea and two mugs instead of bread, same oven/hob,
+  shelves and maple fronts; exterior sill snow.
+- **ahorn-8-winter:** Closer, offset halfway-up view; blue landing runner, tall narrow window, plant
+  and open maple treads remain visible.
+- **ahorn-9-winter:** View shifted towards the shower side and basin; sand towels, snowy exterior
+  skylight frame, toilet and glass shower; no bath tub or sauna.
 
-The brief’s old summer paragraph for ahorn-4 still mentions a beanbag; the input WebP is the
-new room with an armchair and no toys. The final winter prompt explicitly resolves that conflict
-in favour of the current source picture, as the winter table requires.
+The brief’s old summer paragraph for ahorn-4 still mentions a beanbag; the input WebP is the new
+room with an armchair and no toys. The final winter prompt explicitly resolves that conflict in
+favour of the current source picture, as the winter table requires.
 
 ### Discarded winter attempts
 

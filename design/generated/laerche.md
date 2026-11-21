@@ -202,39 +202,44 @@ the reference composition.
 ## Winter twins — 21 November 2026
 
 Generated with OpenAI’s built-in image generation tool through Codex, following
-[Winter twins](../apartment-pictures.md#winter-twins). Each generation used only its matching
-summer WebP as the input reference, not the apartment’s first picture. No specific underlying
-image model is claimed. These are fictional AI-generated illustrations.
+[Winter twins](../apartment-pictures.md#winter-twins). Each generation used only its matching summer
+WebP as the input reference, not the apartment’s first picture. No specific underlying image model
+is claimed. These are fictional AI-generated illustrations.
 
-The 4 winter assets listed below are also supplied under the project’s
-[MIT licence](../../LICENSE), to the extent that licensable rights exist. The AI disclosure
-and rights qualifications in [Reuse and disclosure](#reuse-and-disclosure) apply to them too.
-No existing photograph’s licence is changed.
+The 4 winter assets listed below are also supplied under the project’s [MIT licence](../../LICENSE),
+to the extent that licensable rights exist. The AI disclosure and rights qualifications in
+[Reuse and disclosure](#reuse-and-disclosure) apply to them too. No existing photograph’s licence is
+changed.
 
-All winter files are WebP encoded at quality 85. All retain the generator’s native 1536 × 1024 dimensions.
+All winter files are WebP encoded at quality 85. All retain the generator’s native 1536 × 1024
+dimensions.
 
-| File | Sole summer reference | Suggested English alternative text |
-| --- | --- | --- |
-| [laerche-1-winter.webp](../../content/demo/pictures/laerche-1-winter.webp) | [laerche-1.webp](../../content/demo/pictures/laerche-1.webp) | Larch kitchen-living room with a charcoal sofa throw and a snow-covered balcony beyond the glass doors. |
-| [laerche-2-winter.webp](../../content/demo/pictures/laerche-2-winter.webp) | [laerche-2.webp](../../content/demo/pictures/laerche-2.webp) | Larch double bedroom with a charcoal wool throw, felt slippers and a snowy view through the window. |
+| File                                                                       | Sole summer reference                                        | Suggested English alternative text                                                                              |
+| -------------------------------------------------------------------------- | ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------- |
+| [laerche-1-winter.webp](../../content/demo/pictures/laerche-1-winter.webp) | [laerche-1.webp](../../content/demo/pictures/laerche-1.webp) | Larch kitchen-living room with a charcoal sofa throw and a snow-covered balcony beyond the glass doors.         |
+| [laerche-2-winter.webp](../../content/demo/pictures/laerche-2-winter.webp) | [laerche-2.webp](../../content/demo/pictures/laerche-2.webp) | Larch double bedroom with a charcoal wool throw, felt slippers and a snowy view through the window.             |
 | [laerche-3-winter.webp](../../content/demo/pictures/laerche-3-winter.webp) | [laerche-3.webp](../../content/demo/pictures/laerche-3.webp) | Larch bunk bedroom seen from the window, with rust blankets, a cardigan on a hook and a desk in the foreground. |
-| [laerche-5-winter.webp](../../content/demo/pictures/laerche-5-winter.webp) | [laerche-5.webp](../../content/demo/pictures/laerche-5.webp) | Wooden balcony with a bare folding table, folded chairs and snow on the railing and village roofs. |
+| [laerche-5-winter.webp](../../content/demo/pictures/laerche-5-winter.webp) | [laerche-5.webp](../../content/demo/pictures/laerche-5.webp) | Wooden balcony with a bare folding table, folded chairs and snow on the railing and village roofs.              |
 
 ### Winter review
 
 Compared all selected winter outputs visually with their summer inputs. The rooms and principal
-furniture remain recognisable, with changed framing and the seasonal details recorded below.
-Snow is outside only. No people, animals, visible writing, brand logos, Christmas decorations,
-ski equipment or indoor snow were identified. No clocks are present. No obvious malformed
-furniture or impossible doors/windows were identified in the final selections.
-These checks do not establish an identical floor plan or precisely measured camera movement:
-new viewpoints introduce small spatial and decorative differences. Treat these as synthetic
-listing illustrations, rather than measured documentation of a real property.
+furniture remain recognisable, with changed framing and the seasonal details recorded below. Snow is
+outside only. No people, animals, visible writing, brand logos, Christmas decorations, ski equipment
+or indoor snow were identified. No clocks are present. No obvious malformed furniture or impossible
+doors/windows were identified in the final selections. These checks do not establish an identical
+floor plan or precisely measured camera movement: new viewpoints introduce small spatial and
+decorative differences. Treat these as synthetic listing illustrations, rather than measured
+documentation of a real property.
 
-- **laerche-1-winter:** View from the kitchen side towards sofa and balcony, charcoal throw and rearranged cushions; four dining chairs.
-- **laerche-2-winter:** Distinct view from the foot of the bed, charcoal throw and two felt slippers. Final crop excludes the wardrobe rather than relocating it.
-- **laerche-3-winter:** Window-side view towards the bunks and door, rust blankets on both bunks, cardigan on the hooks; snowy window visible at the edge.
-- **laerche-5-winter:** Bare table, two folded cushion-free chairs against the wall, snowy railing and roofs; lower, shifted balcony viewpoint.
+- **laerche-1-winter:** View from the kitchen side towards sofa and balcony, charcoal throw and
+  rearranged cushions; four dining chairs.
+- **laerche-2-winter:** Distinct view from the foot of the bed, charcoal throw and two felt
+  slippers. Final crop excludes the wardrobe rather than relocating it.
+- **laerche-3-winter:** Window-side view towards the bunks and door, rust blankets on both bunks,
+  cardigan on the hooks; snowy window visible at the edge.
+- **laerche-5-winter:** Bare table, two folded cushion-free chairs against the wall, snowy railing
+  and roofs; lower, shifted balcony viewpoint.
 
 `laerche-4.webp` has a frosted window and serves both seasons; no twin was generated.
 

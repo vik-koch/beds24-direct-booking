@@ -155,35 +155,38 @@ Edit this kitchenette photograph. Replace the entire stainless steel electric ke
 ## Winter twins — 21 November 2026
 
 Generated with OpenAI’s built-in image generation tool through Codex, following
-[Winter twins](../apartment-pictures.md#winter-twins). Each generation used only its matching
-summer WebP as the input reference, not the apartment’s first picture. No specific underlying
-image model is claimed. These are fictional AI-generated illustrations.
+[Winter twins](../apartment-pictures.md#winter-twins). Each generation used only its matching summer
+WebP as the input reference, not the apartment’s first picture. No specific underlying image model
+is claimed. These are fictional AI-generated illustrations.
 
-The 2 winter assets listed below are also supplied under the project’s
-[MIT licence](../../LICENSE), to the extent that licensable rights exist. The AI disclosure
-and rights qualifications in [Reuse and disclosure](#reuse-and-disclosure) apply to them too.
-No existing photograph’s licence is changed.
+The 2 winter assets listed below are also supplied under the project’s [MIT licence](../../LICENSE),
+to the extent that licensable rights exist. The AI disclosure and rights qualifications in
+[Reuse and disclosure](#reuse-and-disclosure) apply to them too. No existing photograph’s licence is
+changed.
 
-All winter files are WebP encoded at quality 85. All retain the generator’s native 1536 × 1024 dimensions.
+All winter files are WebP encoded at quality 85. All retain the generator’s native 1536 × 1024
+dimensions.
 
-| File | Sole summer reference | Suggested English alternative text |
-| --- | --- | --- |
+| File                                                                   | Sole summer reference                                    | Suggested English alternative text                                                                       |
+| ---------------------------------------------------------------------- | -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
 | [zirbe-1-winter.webp](../../content/demo/pictures/zirbe-1-winter.webp) | [zirbe-1.webp](../../content/demo/pictures/zirbe-1.webp) | Pine studio with a spread moss green bed blanket, grey throw on the window seat and a snowy forest view. |
-| [zirbe-2-winter.webp](../../content/demo/pictures/zirbe-2-winter.webp) | [zirbe-2.webp](../../content/demo/pictures/zirbe-2.webp) | Pine kitchenette with a teapot and two cups, moss green window-seat cushions and a snowy mountain view. |
+| [zirbe-2-winter.webp](../../content/demo/pictures/zirbe-2-winter.webp) | [zirbe-2.webp](../../content/demo/pictures/zirbe-2.webp) | Pine kitchenette with a teapot and two cups, moss green window-seat cushions and a snowy mountain view.  |
 
 ### Winter review
 
 Compared all selected winter outputs visually with their summer inputs. The rooms and principal
-furniture remain recognisable, with changed framing and the seasonal details recorded below.
-Snow is outside only. No people, animals, visible writing, brand logos, Christmas decorations,
-ski equipment or indoor snow were identified. No clocks are present. No obvious malformed
-furniture or impossible doors/windows were identified in the final selections.
-These checks do not establish an identical floor plan or precisely measured camera movement:
-new viewpoints introduce small spatial and decorative differences. Treat these as synthetic
-listing illustrations, rather than measured documentation of a real property.
+furniture remain recognisable, with changed framing and the seasonal details recorded below. Snow is
+outside only. No people, animals, visible writing, brand logos, Christmas decorations, ski equipment
+or indoor snow were identified. No clocks are present. No obvious malformed furniture or impossible
+doors/windows were identified in the final selections. These checks do not establish an identical
+floor plan or precisely measured camera movement: new viewpoints introduce small spatial and
+decorative differences. Treat these as synthetic listing illustrations, rather than measured
+documentation of a real property.
 
-- **zirbe-1-winter:** Bed, round table, two chairs and window seat remain recognisable; closer window-side framing, green bed cover and grey seat throw.
-- **zirbe-2-winter:** Oblique kitchen view; wide two-pane window retained, teapot and two cups replace the kettle, moss cushions on the seat.
+- **zirbe-1-winter:** Bed, round table, two chairs and window seat remain recognisable; closer
+  window-side framing, green bed cover and grey seat throw.
+- **zirbe-2-winter:** Oblique kitchen view; wide two-pane window retained, teapot and two cups
+  replace the kettle, moss cushions on the seat.
 
 `zirbe-3.webp` has a frosted window and serves both seasons; no twin was generated.
 
