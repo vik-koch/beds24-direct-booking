@@ -433,6 +433,12 @@ test('the header stays in place between a long page and a short one', async ({
   test.skip(browserName !== 'chromium', 'only Chromium has a classic scrollbar here');
   const browser = await playwright.chromium.launch({ ignoreDefaultArgs: ['--hide-scrollbars'] });
   const page = await browser.newPage({ baseURL });
+  // A larger default font size leaves the 340 px limit where it is.
+  await (
+    await page.context().newCDPSession(page)
+  ).send('Page.setFontSizes', {
+    fontSizes: { standard: 20 },
+  });
   const bar = () => page.evaluate(() => innerWidth - document.documentElement.clientWidth);
   const scrolls = () => page.evaluate(() => document.documentElement.scrollHeight > innerHeight);
   const left = (selector: string) =>
