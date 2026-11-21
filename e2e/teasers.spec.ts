@@ -8,16 +8,12 @@ const prices = (page: Page) => page.locator('.teaser-price > :visible');
 const settled = (page: Page) =>
   expect.poll(() => page.evaluate(() => document.getAnimations().length)).toBe(0);
 
-// The free-weeks list's button, repeated until the page follows: a click during hydration can
-// be lost.
+// The free-weeks list's button, once the application has started.
 async function toOtherSeason(page: Page) {
   const before = await page.locator('html').getAttribute('data-season');
-  await expect(async () => {
-    await page.locator('.other-season').click();
-    await expect(page.locator('html')).not.toHaveAttribute('data-season', before!, {
-      timeout: 500,
-    });
-  }).toPass();
+  await expect(page.locator('html')).toHaveAttribute('data-started', '');
+  await page.locator('.other-season').click();
+  await expect(page.locator('html')).not.toHaveAttribute('data-season', before!);
   await settled(page);
 }
 

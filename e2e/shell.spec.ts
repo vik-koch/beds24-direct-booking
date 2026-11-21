@@ -18,17 +18,15 @@ const pages = [
 
 const axe = async (page: Page) => (await new AxeBuilder({ page }).analyze()).violations;
 
-// Opens a menu of the wide header by keyboard. A press during hydration can be undone by it,
-// so the menu must still be open a moment later.
+// Opens a menu of the wide header by keyboard, once the application has started. The menu's
+// pane first appears at the top left, then moves; leaving a pointer resting there closes it.
 async function open(page: Page, name: string) {
   const menu = page.getByRole('button', { name });
-  await expect(async () => {
-    await menu.focus();
-    if ((await menu.getAttribute('aria-expanded')) !== 'true') await page.keyboard.press('Enter');
-    await expect(menu).toHaveAttribute('aria-expanded', 'true', { timeout: 500 });
-    await page.waitForTimeout(300);
-    await expect(menu).toHaveAttribute('aria-expanded', 'true', { timeout: 100 });
-  }).toPass();
+  await expect(page.locator('html')).toHaveAttribute('data-started', '');
+  await page.mouse.move(0, page.viewportSize()!.height - 1);
+  await menu.focus();
+  await page.keyboard.press('Enter');
+  await expect(menu).toHaveAttribute('aria-expanded', 'true');
   return menu;
 }
 
@@ -171,16 +169,12 @@ async function toLanguage(page: Page, current: string, other: string) {
 const settled = (page: Page) =>
   expect.poll(() => page.evaluate(() => document.getAnimations().length)).toBe(0);
 
-// The next season always has free weeks (weeks.spec.ts); the current one may be full. A click
-// during hydration can be lost, so it is repeated until the season changes.
+// The next season always has free weeks (weeks.spec.ts); the current one may be full.
 async function toNextSeason(page: Page) {
   const season = await page.locator('html').getAttribute('data-season');
-  await expect(async () => {
-    await page.locator('.other-season').click();
-    await expect(page.locator('html')).not.toHaveAttribute('data-season', season!, {
-      timeout: 500,
-    });
-  }).toPass();
+  await expect(page.locator('html')).toHaveAttribute('data-started', '');
+  await page.locator('.other-season').click();
+  await expect(page.locator('html')).not.toHaveAttribute('data-season', season!);
   await settled(page);
 }
 
@@ -265,10 +259,8 @@ test('on a phone a language change keeps the apartment of the chosen tab', async
   await page.goto('/en');
   await toNextSeason(page);
   const tabs = page.locator('.room-tabs input');
-  await expect(async () => {
-    await page.locator('.room-tabs label').nth(2).click();
-    await expect(tabs.nth(2)).toBeChecked({ timeout: 500 });
-  }).toPass();
+  await page.locator('.room-tabs label').nth(2).click();
+  await expect(tabs.nth(2)).toBeChecked();
   // The radio is checked at once, its apartment's weeks a frame later.
   const stay = page.locator('.weeks-body:visible [data-pick]:visible').first();
   await expect(stay).toHaveAttribute('data-pick', /^2-/);

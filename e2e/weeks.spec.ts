@@ -9,15 +9,12 @@ const season = (page: Page) => page.locator('html').getAttribute('data-season');
 const settled = (page: Page) =>
   expect.poll(() => page.evaluate(() => document.getAnimations().length)).toBe(0);
 
-// The list's button, repeated until the page follows: a click during hydration can be lost.
+// The list's button, once the application has started.
 async function toOtherSeason(page: Page) {
   const before = await season(page);
-  await expect(async () => {
-    await button(page).click();
-    await expect(page.locator('html')).not.toHaveAttribute('data-season', before!, {
-      timeout: 500,
-    });
-  }).toPass();
+  await expect(page.locator('html')).toHaveAttribute('data-started', '');
+  await button(page).click();
+  await expect(page.locator('html')).not.toHaveAttribute('data-season', before!);
   await settled(page);
 }
 
