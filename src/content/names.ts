@@ -8,6 +8,14 @@ export type SeasonName = (typeof seasonNames)[number];
 // Characters as a reader counts them: an accent typed as its own code point is no second one.
 export const letters = (text: string) => [...new Intl.Segmenter().segment(text)].length;
 
+// Each place in an apartment's galleries with its pictures: one for every season, or one per
+// season. Each season's gallery is the list without the other season's pictures; the content
+// script makes them equally long.
+export const placesOf = (pictures: Picture[], seasons: readonly SeasonName[]) => {
+  const lists = seasons.map((name) => pictures.filter(({ season }) => !season || season === name));
+  return lists[0].map((_, index) => [...new Set(lists.map((list) => list[index]))]);
+};
+
 // A converted picture's files for an img's srcset.
 export const srcset = (picture: Picture) =>
   picture.sources.map(({ url, width }) => `${url} ${width}w`).join(', ');

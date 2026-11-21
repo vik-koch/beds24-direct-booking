@@ -59,6 +59,32 @@ test('a file that is not valid JSON is named', () => {
   }
 });
 
+test("a picture's season is one the site lists, and each season has as many pictures", () => {
+  const winter = changed('apartments/zirbe.json', (apartment) => {
+    apartment.pictures[0].season = 'winter';
+  });
+  assert.throws(() => readContent(winter), /zirbe\.json\n {2}pictures: 4 in winter, 2 in summer/);
+  const withoutWinter = (texts) => {
+    delete texts.seasons.winter;
+    delete texts.hero.winter;
+  };
+  const single = changed(
+    'site.json',
+    (site) => {
+      delete site.seasons.winter;
+      delete site.seasons.summer.start;
+    },
+    'texts.de-AT.json',
+    withoutWinter,
+    'texts.en-GB.json',
+    withoutWinter,
+  );
+  assert.throws(
+    () => readContent(single),
+    /zirbe\.json\n {2}pictures\.1\.season: a season site\.json does not list/,
+  );
+});
+
 test('the notice may be left out, in every language', () => {
   const dir = bothTexts((texts) => delete texts.notice);
   assert.equal(readContent(dir).texts.de.notice, undefined);
