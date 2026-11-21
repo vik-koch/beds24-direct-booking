@@ -301,6 +301,8 @@ test('a language change fades, and changes at once with reduced motion', async (
   for (const motion of ['no-preference', 'reduce'] as const) {
     await page.emulateMedia({ reducedMotion: motion });
     await page.goto('/en');
+    // A change during the first navigation would take the skip of its fade.
+    await expect(page.locator('html')).toHaveAttribute('data-started', '');
     const supported = await page.evaluate(() => 'startViewTransition' in document);
     test.skip(!supported, 'no view transitions in this browser');
     // The number of the fade's animations, counted once it has started.

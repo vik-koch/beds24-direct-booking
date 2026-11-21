@@ -5,7 +5,7 @@ const panel = (page: Page) => page.locator('.panel');
 // Controls used before the application has started are outside what the site supports.
 async function open(page: Page, path: string) {
   const response = await page.goto(path);
-  await expect(page.locator('html')).toHaveAttribute('data-smooth', '');
+  await expect(page.locator('html')).toHaveAttribute('data-started', '');
   return response;
 }
 // The shown season, and not one leaving after a change, and its shown month.

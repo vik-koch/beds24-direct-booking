@@ -1,5 +1,5 @@
 import { DOCUMENT, Location, ViewportScroller } from '@angular/common';
-import { afterNextRender, Component, DestroyRef, inject } from '@angular/core';
+import { afterNextRender, Component, DestroyRef, inject, Injector } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Title } from '@angular/platform-browser';
 import {
@@ -80,6 +80,7 @@ export class Shell {
       const margin = target ? parseFloat(getComputedStyle(target).scrollMarginTop) : 0;
       return [0, header + 16 + margin];
     });
+    const injector = inject(Injector);
     afterNextRender(() => this.document.documentElement.setAttribute('data-smooth', ''));
     this.describe();
     this.router.events
@@ -87,7 +88,14 @@ export class Shell {
         filter((event) => event instanceof NavigationEnd),
         takeUntilDestroyed(),
       )
-      .subscribe(() => this.describe());
+      .subscribe(() => {
+        this.describe();
+        // The sign that the application has started, for the e2e tests: data-smooth may come
+        // from the head's script. Only the browser renders, so the server never writes it.
+        afterNextRender(() => this.document.documentElement.setAttribute('data-started', ''), {
+          injector,
+        });
+      });
     // A page may keep a choice in its address without a navigation, as the booking panel does;
     // the other language's link carries it too.
     inject(DestroyRef).onDestroy(this.location.onUrlChange(() => this.describe()));

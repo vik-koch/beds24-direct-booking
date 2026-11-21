@@ -13,7 +13,7 @@ const settled = (page: Page) =>
 // Controls used before the application has started are outside what the site supports.
 async function open(page: Page, path: string) {
   await page.goto(path);
-  await expect(page.locator('html')).toHaveAttribute('data-smooth', '');
+  await expect(page.locator('html')).toHaveAttribute('data-started', '');
 }
 
 async function toOtherSeason(page: Page) {
