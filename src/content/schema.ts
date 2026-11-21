@@ -360,11 +360,20 @@ export interface Picture {
   height: number;
   sources: { width: number; url: string }[];
 }
+type Files = Pick<Picture, 'width' | 'height' | 'sources'>;
+type Seasons = z.infer<typeof siteSchema>['seasons'];
+// A season's hero photo as converted files, its centre crop of 3:4 too unless it is that narrow,
+// and its credit.
+export type Hero = Files & {
+  portrait?: Files;
+  credit?: NonNullable<Seasons['winter']>['hero']['credit'];
+};
 export type Apartment = { slug: string; pictures: Picture[] } & Omit<
   z.infer<typeof apartmentSchema>,
   'pictures'
 >;
-export type Site = Omit<z.infer<typeof siteSchema>, 'languages' | 'apartments'> & {
+export type Site = Omit<z.infer<typeof siteSchema>, 'languages' | 'apartments' | 'seasons'> & {
   languages: Language[];
   apartments: Apartment[];
+  seasons: { [name in keyof Seasons]: Omit<NonNullable<Seasons[name]>, 'hero'> & { hero: Hero } };
 };

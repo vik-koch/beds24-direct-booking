@@ -55,3 +55,6 @@ copies, in widths a phone does not have to download in full. What weighs on the 
   run again.
 - **When Beds24's API sends pictures,** their list, order and texts move there, and this decision is
   reviewed.
+- **The seasons' hero photos are converted the same way** since
+  [issue 211](https://github.com/vik-koch/beds24-direct-booking/issues/211), with a centre crop of
+  3:4 for portrait screens.

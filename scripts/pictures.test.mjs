@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { after, test } from 'node:test';
 import sharp from 'sharp';
-import { convertPictures } from './pictures.mjs';
+import { convertHero, convertPictures } from './pictures.mjs';
 
 const root = mkdtempSync(join(tmpdir(), 'pictures-test-'));
 after(() => rmSync(root, { recursive: true, force: true }));
@@ -190,4 +190,44 @@ test('two builds can convert into one empty cache at once', async () => {
     readdirSync(cache).filter((file) => file.endsWith('.part')),
     [],
   );
+});
+
+test('a hero is converted whole and as its centre crop of 3:4, which a narrow one does without', async () => {
+  // Left half red, right half blue.
+  const halves = sharp({ create: { width: 2400, height: 1200, channels: 3, background: '#f00' } })
+    .composite([
+      {
+        input: { create: { width: 1200, height: 1200, channels: 3, background: '#00f' } },
+        left: 1200,
+        top: 0,
+      },
+    ])
+    .png()
+    .toBuffer();
+  const dir = await folder({ 'wide.png': halves, 'narrow.png': png(600, 900) });
+  const out = temp('out');
+  const { hero } = await convertHero(dir, 'pictures/wide.png', 'hero-winter', out, temp('cache'));
+  assert.deepEqual([hero.width, hero.height], [1920, 960]);
+  assert.deepEqual(
+    hero.sources.map((s) => s.width),
+    [480, 960, 1440, 1920],
+  );
+  assert.deepEqual([hero.portrait.width, hero.portrait.height], [900, 1200]);
+  assert.deepEqual(
+    hero.portrait.sources.map((s) => s.width),
+    [480, 900],
+  );
+  assert.match(hero.portrait.sources[1].url, /^\/pictures\/hero\/hero-winter-portrait-900\./);
+  const crop = join(out, hero.portrait.sources[1].url.split('/').pop());
+  const pixel = async (left) => {
+    const { data } = await sharp(crop)
+      .extract({ left, top: 600, width: 1, height: 1 })
+      .raw()
+      .toBuffer({ resolveWithObject: true });
+    return data[0] > data[2] ? 'red' : 'blue';
+  };
+  // The halves meet at the crop's middle, so it was cut from the photo's centre.
+  assert.deepEqual([await pixel(447), await pixel(452)], ['red', 'blue']);
+  const narrow = await convertHero(dir, 'pictures/narrow.png', 'hero-summer', out, temp('cache'));
+  assert.equal(narrow.hero.portrait, undefined);
 });

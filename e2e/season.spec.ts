@@ -245,16 +245,71 @@ test('only the shown season’s photo is fetched, the other one on approach', as
   const photos: string[] = [];
   page.on('request', (request) => {
     const path = new URL(request.url()).pathname;
-    if (path.startsWith('/pictures/hero-')) photos.push(path);
+    if (path.startsWith('/pictures/hero/')) photos.push(path.split('.')[0]);
   });
   await page.clock.setFixedTime(november);
   await page.goto('/de');
-  await page.waitForLoadState('networkidle');
-  expect(photos).toEqual(['/pictures/hero-winter.webp']);
-  await expect(async () => {
-    await page.getByRole('radio', { name: 'Sommer' }).focus();
-    expect(photos).toContain('/pictures/hero-summer.webp');
-  }).toPass();
+  // Not networkidle, which Firefox under load may not reach in time.
+  await expect(page.locator('html')).toHaveAttribute('data-started', '');
+  await expect(page.locator('.hero-photo[data-for=winter] img')).toHaveJSProperty('complete', true);
+  expect(photos).toHaveLength(1);
+  expect(photos[0]).toMatch(/^\/pictures\/hero\/hero-winter-/);
+  // The other season's in the same form, the whole photo or its crop.
+  const form = (path: string) => path.includes('-portrait-');
+  const summer = page.getByRole('radio', { name: 'Sommer' });
+  const loaded = page.waitForResponse(/\/pictures\/hero\/hero-summer-/);
+  await summer.focus();
+  await (await loaded).finished();
+  await expect.poll(() => photos[1]).toMatch(/^\/pictures\/hero\/hero-summer-/);
+  expect(form(photos[1])).toBe(form(photos[0]));
+  // Turned once the first has loaded, the next approach fetches the other form; the shown photo
+  // changes form as well.
+  const { width, height } = page.viewportSize()!;
+  await page.setViewportSize({ width: height, height: width });
+  await page.getByRole('radio', { name: 'Winter' }).focus();
+  await summer.focus();
+  const summers = () => photos.filter((path) => path.startsWith('/pictures/hero/hero-summer-'));
+  await expect.poll(() => summers().length).toBe(2);
+  expect(form(summers()[1])).toBe(!form(summers()[0]));
+});
+
+test('the hero shows its crop upright and the whole photo turned, each wide enough', async ({
+  page,
+}) => {
+  await page.clock.setFixedTime(november);
+  const photo = page.locator('.hero-photo[data-for=winter] img');
+  // The file shown, and whether it is as wide as the photo is drawn, or the widest there is. Its
+  // width is in its name: naturalWidth is corrected by the srcset's density.
+  const shown = () =>
+    photo.evaluate((image: HTMLImageElement) => {
+      const file = image.currentSrc.split('/').pop()!.split('.')[0];
+      const set = file.includes('-portrait-')
+        ? image.parentElement!.querySelector('source')!.srcset
+        : image.srcset;
+      const widths = set.split(', ').map((candidate) => parseInt(candidate.split(' ')[1]));
+      const box = image.getBoundingClientRect();
+      const shape = image.naturalWidth / image.naturalHeight;
+      const drawn = Math.max(box.width, box.height * shape) * devicePixelRatio;
+      return {
+        file,
+        sharp:
+          image.complete &&
+          parseInt(file.split('-').pop()!) >= Math.min(drawn, ...widths.slice(-1)) - 1,
+      };
+    });
+  for (const [width, height, file] of [
+    [390, 844, /^hero-winter-portrait-/],
+    [844, 390, /^hero-winter-\d+$/],
+    [320, 568, /^hero-winter-portrait-/],
+    // A hero taller than the screen, under the card.
+    [568, 320, /^hero-winter-\d+$/],
+  ] as const) {
+    await page.setViewportSize({ width, height });
+    if (width === 390) await page.goto('/en');
+    await expect.poll(async () => (await shown()).file).toMatch(file);
+    await expect.poll(async () => (await shown()).sharp).toBe(true);
+  }
+  await expect(photo).toHaveAttribute('alt', /snowy Glemm valley/);
 });
 
 test('both seasons pass axe; the switch keeps its width, the accent part fits the name', async ({
@@ -323,7 +378,7 @@ test('the picture credits name each photo’s author, source and licence', async
   );
   await expect(page.getByText('Ian Gratton')).toBeVisible();
   // The changes follow the title, outside its link.
-  await expect(page.getByText('(scaled down)')).toHaveCount(2);
+  await expect(page.getByText('(cropped, scaled down)')).toHaveCount(2);
   await expect(page.getByRole('link', { name: 'CC BY-SA 4.0' })).toHaveAttribute(
     'href',
     'https://creativecommons.org/licenses/by-sa/4.0',

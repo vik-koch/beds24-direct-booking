@@ -4,7 +4,7 @@ import { NgIcon, provideIcons } from '@ng-icons/core';
 import type { FreeWeeks } from '../beds24/weeks';
 import { icons } from '../content/generated/icons';
 import site from '../content/generated/site';
-import { lucideName } from '../content/names';
+import { heroPortrait, heroSizes, lucideName, srcset } from '../content/names';
 import { FreeWeeksList } from './free-weeks-list';
 import { Guests } from './guests';
 import { Season } from './season';
@@ -19,13 +19,25 @@ import { address, LANGUAGE, TEXTS } from './texts';
     <!-- Every season's photo is in the page; only the shown one is displayed and fetched. -->
     <section class="hero">
       @for (photo of photos; track photo.name) {
-        <div
-          class="hero-photo"
-          role="img"
-          [attr.data-for]="photo.name"
-          [attr.aria-label]="texts.hero[photo.name]"
-          [style.background-image]="photo.url"
-        ></div>
+        <picture class="hero-photo" [attr.data-for]="photo.name">
+          @if (photo.hero.portrait; as portrait) {
+            <source
+              [attr.media]="heroPortrait"
+              [attr.srcset]="srcset(portrait)"
+              [attr.sizes]="heroSizes(portrait)"
+            />
+          }
+          <img
+            class="absolute inset-0 size-full object-cover"
+            [attr.srcset]="srcset(photo.hero)"
+            [attr.sizes]="heroSizes(photo.hero)"
+            [src]="photo.hero.sources[0].url"
+            [width]="photo.hero.width"
+            [height]="photo.hero.height"
+            [alt]="texts.hero[photo.name]"
+            loading="lazy"
+          />
+        </picture>
       }
       <div class="hero-copy">
         <h1 class="display">{{ texts.home.title }}</h1>
@@ -72,8 +84,11 @@ export class Home {
   protected readonly weeksLink = `${address(this.language, 'home')}#${this.anchors.weeks}`;
   protected readonly photos = inject(Season).names.map((name) => ({
     name,
-    url: `url('/${site.seasons[name]!.hero.file}')`,
+    hero: site.seasons[name]!.hero,
   }));
+  protected readonly srcset = srcset;
+  protected readonly heroPortrait = heroPortrait;
+  protected readonly heroSizes = heroSizes;
   protected readonly weeks: FreeWeeks | null = inject(ActivatedRoute).snapshot.data['weeks'];
   protected readonly guests = inject(Guests);
 
