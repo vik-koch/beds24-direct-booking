@@ -1122,28 +1122,9 @@
     gap: 0.5rem 1rem;
     margin-top: 1.25rem;
     padding: 0.75rem 0.75rem 0.75rem 1.25rem;
-    border-radius: var(--radius-card);
-    background: var(--color-accent);
-    color: var(--color-on-accent);
-    box-shadow: var(--shadow-card);
 
     output {
       font-weight: 500;
-    }
-
-    /* On the accent the primary button's shadow would not show: it is underlined instead. */
-    .button {
-      background: var(--color-surface);
-      color: var(--color-accent);
-      text-decoration: underline;
-      text-decoration-color: transparent;
-      text-underline-offset: 0.3em;
-      transition: text-decoration-color 0.2s;
-
-      &:hover {
-        box-shadow: none;
-        text-decoration-color: currentcolor;
-      }
     }
 
     /* On a phone the name has a line of its own, and the cross and the button go to the
@@ -1168,26 +1149,49 @@
       }
     }
 
-    :focus-visible {
-      outline-color: var(--color-on-accent);
-    }
-
     @media (min-width: 48rem) {
       margin-inline: 10%;
     }
 
-    /* On the narrowest screens the button keeps its words on one line. */
+    @media (max-height: 29.9375rem) {
+      position: static;
+    }
+  }
+
+  /* A bar in the accent that carries a choice on to booking: the chosen week below the list,
+     and an apartment's bar at a phone's foot. */
+  :is(.pick, .booking-bar) {
+    border-radius: var(--radius-card);
+    background: var(--color-accent);
+    color: var(--color-on-accent);
+
+    /* On the accent the primary button's shadow would not show: it is underlined instead.
+       Its words keep to one line; the bar's other words wrap. */
+    .button {
+      background: var(--color-surface);
+      color: var(--color-accent);
+      white-space: nowrap;
+      text-decoration: underline;
+      text-decoration-color: transparent;
+      text-underline-offset: 0.3em;
+      transition: text-decoration-color 0.2s;
+
+      &:hover {
+        box-shadow: none;
+        text-decoration-color: currentcolor;
+      }
+    }
+
+    :focus-visible {
+      outline-color: var(--color-on-accent);
+    }
+
     @media (max-width: 22.4375rem) {
       font-size: 1rem;
 
       .button {
-        padding-inline: 1.25rem;
-        white-space: nowrap;
+        padding-inline: 1rem;
       }
-    }
-
-    @media (max-height: 29.9375rem) {
-      position: static;
     }
   }
 
