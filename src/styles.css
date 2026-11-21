@@ -1100,6 +1100,16 @@
     color: var(--color-ink-soft);
   }
 
+  /* Too small for the guests: the hint's icon tells it from a booked week. */
+  .taken.small {
+    display: inline-flex;
+    gap: 0.375rem;
+
+    ng-icon {
+      --ng-icon__size: 1rem;
+    }
+  }
+
   .weeks-note {
     margin: 1.25rem 0.25rem 0;
     color: var(--color-ink-soft);
