@@ -437,11 +437,20 @@ test('the header stays in place between a long page and a short one', async ({
     await page.goto(path);
     return page.locator('.wordmark').evaluate((e) => e.getBoundingClientRect().left);
   };
-  const scrolls = () => page.evaluate(() => document.documentElement.scrollHeight > innerHeight);
+  const bar = () => page.evaluate(() => innerWidth - document.documentElement.clientWidth);
   const long = await place('/en');
-  expect(await scrolls()).toBe(true);
+  expect(await bar()).toBeGreaterThan(0);
   expect(await place('/en/picture-credits')).toBe(long);
-  expect(await scrolls()).toBe(false);
+  expect(await page.evaluate(() => document.documentElement.scrollHeight > innerHeight)).toBe(
+    false,
+  );
+  // At 320 px a short page keeps its whole width, so nothing scrolls sideways.
+  await page.setViewportSize({ width: 320, height: 2000 });
+  expect(await page.evaluate(() => document.documentElement.scrollHeight > innerHeight)).toBe(
+    false,
+  );
+  expect(await bar()).toBe(0);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(320);
   await browser.close();
 });
 
