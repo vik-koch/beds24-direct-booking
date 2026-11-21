@@ -196,9 +196,11 @@ dark blue. A house on two floors with a terrace and a sauna.
 
 > [Shared style paragraph as above.]
 >
-> The third bedroom of the same maple house: a pale maple bunk bed with dark blue and white bed
-> linen and a ladder, a small reading corner with a beanbag, a window with a view of the forested
-> slope. Suitable for children.
+> The third bedroom of the same maple house: a solid pale maple bunk bed for two, sized for adults,
+> with dark blue and white bed linen and a ladder, a small reading corner with a sage green armchair
+> and a floor lamp (switched off), a row of wooden hooks on the wall, a window with a view of the
+> forested slope. A room for friends or children alike: no toys, no soft animals, no children's
+> decorations.
 
 ### ahorn-5: the bathroom and the sauna
 

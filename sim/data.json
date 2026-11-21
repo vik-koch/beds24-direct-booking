@@ -89,8 +89,8 @@
               "en": "For four, with a south-facing balcony and a bath tub"
             },
             "roomDescription": {
-              "de": "<p><span style=\"font-family: sans-serif;\">﻿<b>61 m²</b> im zweiten Stock, mit <i>Südbalkon</i>.</span></p><p><span style=\"font-family: sans-serif;\">Ein Schlafzimmer mit Doppelbett, eines mit Stockbett für Kinder.</span><br></p>",
-              "en": "<p><span style=\"font-family: sans-serif;\">﻿<b>61 m²</b> on the second floor, with a <i>south-facing balcony</i>.</span></p><p><span style=\"font-family: sans-serif;\">One bedroom with a double bed, one with a bunk bed for children.</span><br></p>"
+              "de": "<p><span style=\"font-family: sans-serif;\">﻿<b>61 m²</b> im zweiten Stock, mit <i>Südbalkon</i>.</span></p><p><span style=\"font-family: sans-serif;\">Ein Schlafzimmer mit Doppelbett, eines mit Stockbett.</span><br></p>",
+              "en": "<p><span style=\"font-family: sans-serif;\">﻿<b>61 m²</b> on the second floor, with a <i>south-facing balcony</i>.</span></p><p><span style=\"font-family: sans-serif;\">One bedroom with a double bed, one with a bunk bed.</span><br></p>"
             }
           }
         }
@@ -130,8 +130,8 @@
           "id": 9001021,
           "name": "Ahorn",
           "maxPeople": 6,
-          "maxAdult": 4,
-          "maxChildren": 4,
+          "maxAdult": null,
+          "maxChildren": 5,
           "roomSize": 96,
           "featureCodes": [
             ["BEDROOM", "BED_DOUBLE"],

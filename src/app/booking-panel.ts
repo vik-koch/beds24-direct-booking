@@ -860,7 +860,7 @@ export class BookingPanel {
     const tax = this.weeks?.tax;
     if (!tax || !this.limits) return null;
     const count = taxed(this.limits, this.guests.adults(), this.guests.children());
-    const forms = this.limits.maxChildren ? this.texts.panel.adults : this.texts.weeks.guests;
+    const forms = this.limits.asksChildren ? this.texts.panel.adults : this.texts.weeks.guests;
     const guests = fill(this.plural.select(count) === 'one' ? forms.one : forms.other, { count });
     return {
       text: fill(this.texts.panel.tax[tax.per], {

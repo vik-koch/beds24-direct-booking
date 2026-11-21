@@ -2,7 +2,7 @@ import type { SeasonName } from '../content/names';
 import { addDays, type Day, type Inventory, type Listing, type Room, type Tax } from './client';
 
 // How many guests a room takes.
-export type Capacity = Pick<Listing, 'maxPeople' | 'maxAdults' | 'maxChildren'>;
+export type Capacity = Pick<Listing, 'maxPeople' | 'asksChildren'>;
 
 // A week Beds24 offers: price is null when it is taken.
 export interface Week {
@@ -102,9 +102,9 @@ export function freeWeeks(
       headline: Object.fromEntries(languages.map((code) => [code, room.headlines[code] ?? ''])),
     })),
     capacities: Object.fromEntries(
-      all.map(({ apartment, room: { maxPeople, maxAdults, maxChildren } }) => [
+      all.map(({ apartment, room: { maxPeople, asksChildren } }) => [
         apartment.slug,
-        { maxPeople, maxAdults, maxChildren },
+        { maxPeople, asksChildren },
       ]),
     ),
     currency: listed[0].room.currency,

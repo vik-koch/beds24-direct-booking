@@ -17,11 +17,10 @@ export interface Room extends Listing {
 
 // What a room's page shows of it.
 export interface Listing {
+  // Any of them adults: the site supports a room by its total alone (findings, Guests).
   maxPeople: number;
-  // Of them, at most this many adults and this many children. Where Beds24 does not ask for
-  // children ("Don't Ask" or "None"), children is 0 and every guest counts as an adult.
-  maxAdults: number;
-  maxChildren: number;
+  // Beds24 asks for children; where it does not ("Don't Ask" or "None"), they count as adults.
+  asksChildren: boolean;
   size: number;
   bedrooms: number;
   address: string;
@@ -137,14 +136,16 @@ export const loadInventory = async (first: string, last: string): Promise<Invent
         ['daily', 'oneTime'].includes(item.period),
     );
     return property.roomTypes.map((room) => {
+      const { maxPeople, maxAdult, maxChildren } = room;
+      if ((maxAdult ?? maxPeople) !== maxPeople || (maxChildren && maxChildren < maxPeople - 1))
+        console.warn(`Room ${room.id} limits adults or children apart from its total: ignored`);
       // Unused rules come back as bare IDs; the rule that allows the soonest arrival counts.
       const leads = (room.priceRules ?? []).flatMap((rule) => rule.minDaysUntilCheckin ?? []);
       return {
         id: room.id,
         propertyId: property.id,
-        maxPeople: room.maxPeople,
-        maxAdults: Math.min(room.maxAdult ?? room.maxPeople, room.maxPeople),
-        maxChildren: room.maxChildren ?? 0,
+        maxPeople,
+        asksChildren: !!maxChildren,
         size: room.roomSize,
         bedrooms: room.featureCodes.filter(([code]) => code === 'BEDROOM').length,
         currency: property.currency,
@@ -203,12 +204,11 @@ export const loadInventory = async (first: string, last: string): Promise<Invent
 export function listingOf(rooms: Room[], id: number, languages: string[]): Listing {
   const room = rooms.find((one) => one.id === id);
   if (!room) throw new Error(`Beds24 has no room ${id}`);
-  const { maxPeople, maxAdults, maxChildren, size, bedrooms, address } = room;
+  const { maxPeople, asksChildren, size, bedrooms, address } = room;
   const { checkIn, checkOut, features, texts } = room;
   return {
     maxPeople,
-    maxAdults,
-    maxChildren,
+    asksChildren,
     size,
     bedrooms,
     address,

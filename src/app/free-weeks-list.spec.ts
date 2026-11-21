@@ -15,7 +15,7 @@ describe('FreeWeeksList', () => {
     const fixture = TestBed.createComponent(FreeWeeksList);
     fixture.componentRef.setInput('weeks', {
       apartments: [{ slug: 'one', name: 'One', guests: 2, size: 30 }],
-      capacities: { one: { maxPeople: 2, maxAdults: 2, maxChildren: 0 } },
+      capacities: { one: { maxPeople: 2, asksChildren: false } },
       currency: 'EUR',
       tax: null,
       seasons: [{ name: 'summer', years: null, state: 'full', weeks: [] }],

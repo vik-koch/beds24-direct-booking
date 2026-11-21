@@ -55,7 +55,8 @@ describe('properties', () => {
       maxAdult: number | null;
       maxChildren: number | null;
     }
-    // Zirbe asks for no children ("None"), Ahorn takes at most four adults, Fichte does not ask.
+    // Zirbe asks for no children ("None"), Ahorn any six with up to five children, Fichte does
+    // not ask.
     expect(
       data.flatMap((property: { roomTypes: Limits[] }) =>
         property.roomTypes.map(({ maxPeople, maxAdult, maxChildren }) => [
@@ -67,7 +68,7 @@ describe('properties', () => {
     ).toEqual([
       [2, null, 0],
       [4, null, 3],
-      [6, 4, 4],
+      [6, null, 5],
       [2, null, null],
     ]);
   });

@@ -1,8 +1,8 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 
-// The demo's apartments: Zirbe takes 2 and asks for no children, Lärche 4 with up to 3
-// children, Ahorn 6 with up to 4 adults and 4 children. The server dates the seasons by today;
+// The demo's apartments by their totals, any of them adults: Zirbe 2 and asks for no children,
+// Lärche 4 and Ahorn 6. The server dates the seasons by today;
 // the simulator prices every season ahead of today, so the next season always has free weeks.
 const weeks = (page: Page) => page.locator('.weeks-body:visible');
 const column = (page: Page, index: number, kind = '[role=gridcell]') =>
@@ -184,9 +184,9 @@ test('an address beyond what any apartment takes is held to it, in the page and 
   page,
 }) => {
   for (const [query, adults, children, kept] of [
-    ['adults=100', '4', '0', '?adults=4'],
+    ['adults=100', '6', '0', '?adults=6'],
     ['adults=0', '1', '0', '?adults=1'],
-    ['adults=-1&children=9', '1', '4', '?adults=1&children=4'],
+    ['adults=-1&children=9', '1', '5', '?adults=1&children=5'],
     ['adults=abc', '1', '0', '?adults=1'],
     ['adults=2&children=0', '2', '0', ''],
   ]) {

@@ -1,7 +1,8 @@
 # Ahorn picture credits
 
-Generated on 17 November 2026 (pictures 1–6), with pictures 7–9 added on 19 November 2026, by the
-repository's maintainer for the fictional beds24-direct-booking demo.
+Generated on 17 November 2026 (pictures 1–6), with pictures 7–9 added on 19 November 2026 and
+picture 4 regenerated on 21 November 2026, by the repository's maintainer for the fictional
+beds24-direct-booking demo.
 
 AI-generated with OpenAI’s built-in image generation tool, directed through Codex using the shot
 list in [design/apartment-pictures.md](../apartment-pictures.md). The tool does not expose the
@@ -21,7 +22,7 @@ output was natively 1254 × 1254 despite the requested size, so picture 7 was do
 | [ahorn-1.webp](../../content/demo/pictures/ahorn-1.webp) | Living and dining room with a maple table for six, an open kitchen, sage sofa and terrace doors.       |
 | [ahorn-2.webp](../../content/demo/pictures/ahorn-2.webp) | Upstairs double bedroom with a sloping timber ceiling, skylight and blue blanket.                      |
 | [ahorn-3.webp](../../content/demo/pictures/ahorn-3.webp) | Second double bedroom with a sage upholstered headboard and maple chest of drawers.                    |
-| [ahorn-4.webp](../../content/demo/pictures/ahorn-4.webp) | Children’s bedroom with a maple bunk bed, ladder and reading corner.                                   |
+| [ahorn-4.webp](../../content/demo/pictures/ahorn-4.webp) | Maple bunk bedroom with dark blue and white linen, a ladder, sage armchair, floor lamp and wall hooks. |
 | [ahorn-5.webp](../../content/demo/pictures/ahorn-5.webp) | Bathroom with two basins, a walk-in shower and a private sauna behind glass.                           |
 | [ahorn-6.webp](../../content/demo/pictures/ahorn-6.webp) | Wooden terrace with outdoor dining for six, cushioned benches and a forested mountain view.            |
 | [ahorn-7.webp](../../content/demo/pictures/ahorn-7.webp) | Maple kitchen with a stone worktop, open shelves, an oven and fresh bread by the window.               |
@@ -53,11 +54,11 @@ is implied.
 ## Review
 
 Visually inspected all selected outputs for the requested rooms, furnishings, consistency, people,
-visible writing and logos. No people or visible text/logos were seen. The bunk room contains a toy
-rabbit. The terrace uses split cushioned benches rather than two continuous benches. These are
-synthetic illustrations and do not document a physically verified floor plan. The first terrace
-attempt was discarded because it framed too much of the living room. No application integration or
-application tests were performed.
+visible writing and logos. No people or visible text/logos were seen. The original bunk room
+contained toys and was replaced on 21 November 2026, as recorded below. The terrace uses split
+cushioned benches rather than two continuous benches. These are synthetic illustrations and do not
+document a physically verified floor plan. The first terrace attempt was discarded because it framed
+too much of the living room. No application integration or application tests were performed.
 
 On 19 November 2026, visually inspected pictures 7–9 against the brief's checklist and
 `ahorn-1.webp`. No people, animals, visible writing, logos or brand names were identified in the
@@ -80,6 +81,17 @@ attempts, and the selected third attempt, were 1254 × 1254 rather than the requ
 requested square size is noted above. The stairs and shower room were selected on their first
 attempts. No application integration or application tests were performed for these three asset
 additions.
+
+On 21 November 2026, regenerated picture 4 from the revised bunk-bedroom prompt, using
+`content/demo/pictures/ahorn-1.webp` as the visual reference. The selected first attempt shows a
+substantial pale maple bunk bed with two sleeping places, dark blue and white linen, a ladder, a
+sage green armchair, an unlit floor lamp and wooden wall hooks. No toys, soft animals or children's
+decorations were seen. The white walls, pale timber and snow-free forest view match the apartment's
+palette. No people, animals, visible writing or logos, obvious distorted furniture or impossible
+windows or doors were identified; there are no clocks. Adult sizing is the visual intent, not a
+verified measurement. The original picture with the toy rabbit, wooden train and toy castle was
+superseded; no new attempt was discarded. Saved at the generator's native 1536 × 1024 as WebP at
+quality 85. No application tests were run for this asset replacement.
 
 ## Final prompts
 
@@ -130,9 +142,11 @@ Photorealistic interior photograph for a holiday rental listing in an Austrian a
 
 Maple (Ahorn) is the wood throughout: pale, almost white, smooth. Textiles in sand, sage green and dark blue. A house on two floors with a terrace and a sauna.
 
-The third bedroom of the same maple house: a pale maple bunk bed with dark blue and white bed linen and a ladder, a small reading corner with a beanbag, a window with a view of the forested slope. Suitable for children.
+The third bedroom of the same maple house: a solid pale maple bunk bed for two, sized for adults, with dark blue and white bed linen and a ladder, a small reading corner with a sage green armchair and a floor lamp (switched off), a row of wooden hooks on the wall, a window with a view of the forested slope. A room for friends or children alike: no toys, no soft animals, no children's decorations.
 
-Input image: reference for the SAME house's pale maple wood, fabrics, window frames and architecture; generate a NEW photograph of the requested room, not a collage or a copy of the reference composition. Landscape 3:2, 1536 × 1024. One photograph.
+Landscape 3:2, 1536 × 1024. One photograph, no collage.
+
+Input image: reference for the same apartment's wood, fabrics, window frames and architecture; generate a new photograph of the requested room, not a collage or a copy of the reference composition.
 ```
 
 ### ahorn-5.webp
