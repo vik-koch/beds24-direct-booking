@@ -332,7 +332,6 @@ const addDays = (date: string, days: number) =>
                 </p>
                 <button type="button" class="button wide" disabled>{{ texts.panel.choose }}</button>
               }
-              <p class="panel-note">{{ texts.panel.note }}</p>
             </div>
           }
         }
@@ -721,12 +720,6 @@ const addDays = (date: string, days: number) =>
         margin-bottom: 0.5rem;
       }
 
-      .panel-note {
-        margin-top: 0.75rem;
-        color: var(--color-ink-soft);
-        font-size: 0.875rem;
-      }
-
       .too-small:not(:empty) {
         margin-top: 0.75rem;
       }
@@ -778,10 +771,6 @@ const addDays = (date: string, days: number) =>
           color: var(--color-ink-soft);
           box-shadow: none;
         }
-      }
-
-      .panel-note {
-        text-align: center;
       }
     }
   `,

@@ -319,7 +319,6 @@ export const textsSchema = z.strictObject({
     total: text,
     book: text,
     choose: text,
-    note: text,
     bar: z.strictObject({ choose: text, book: text }),
   }),
   // The pictures' mosaic and viewer; {index} counts from 1.
