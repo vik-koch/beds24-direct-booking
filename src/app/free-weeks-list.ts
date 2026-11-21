@@ -369,7 +369,7 @@ export class FreeWeeksList {
   }
 
   protected guests({ guests }: FreeWeeks['apartments'][number]) {
-    const { one, other } = this.texts.weeks.guests;
+    const { one, other } = this.texts.apartment.guests;
     return fill(this.plural.select(guests) === 'one' ? one : other, { count: guests });
   }
 
