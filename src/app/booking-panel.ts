@@ -1,5 +1,5 @@
 import { Grid, GridCell, GridRow } from '@angular/aria/grid';
-import { Location } from '@angular/common';
+import { DOCUMENT, isPlatformServer, Location } from '@angular/common';
 import {
   afterNextRender,
   Component,
@@ -9,6 +9,7 @@ import {
   inject,
   InjectionToken,
   Injector,
+  PLATFORM_ID,
   signal,
   ViewEncapsulation,
 } from '@angular/core';
@@ -196,6 +197,7 @@ const addDays = (date: string, days: number) =>
                               ngGridRow
                               [class.full]="stay.price === null"
                               [class.outside]="!stay.arrival.startsWith(month.key)"
+                              [class.chosen]="isChosen(season.name, stay)"
                             >
                               <!-- Every week starts on the same weekday, so a row leaves it
                                    out; the row header's label says it. -->
@@ -572,7 +574,7 @@ const addDays = (date: string, days: number) =>
           cursor: pointer;
         }
 
-        &:has([aria-selected='true']) {
+        &.chosen {
           background: var(--color-accent);
           color: var(--color-on-accent);
         }
@@ -603,14 +605,14 @@ const addDays = (date: string, days: number) =>
           font-weight: 500;
         }
 
-        .week:not(.full, :has([aria-selected='true'])) & {
+        .week:not(.full, .chosen) & {
           color: var(--color-accent);
         }
       }
 
       /* Weeks and days of the month before or after, there to lead to it, in the soft ink. */
-      .week.outside:not(:has([aria-selected='true'])),
-      .week.outside:not(:has([aria-selected='true'])) .week-cell,
+      .week.outside:not(.chosen),
+      .week.outside:not(.chosen) .week-cell,
       .day.outside:not(.band-start, .band-end) > * {
         border-color: currentcolor;
         color: var(--color-ink-soft);
@@ -844,7 +846,11 @@ export class BookingPanel {
     });
   });
   protected readonly announced = signal('');
-  protected readonly barShown = signal(false);
+  private readonly document = inject(DOCUMENT);
+  // As the server's script left it at the first paint.
+  protected readonly barShown = signal(
+    this.document.querySelector<HTMLElement>('.booking-bar')?.hidden !== true,
+  );
   // Set by the panel's button: the next season comes from the right, the current from the left.
   private direction = 0;
   private readonly swapSeason = swapper();
@@ -900,11 +906,22 @@ export class BookingPanel {
 
   constructor() {
     this.read();
+    // At the first paint the bar shows unless the panel is already in view, as on a tall tablet.
+    if (isPlatformServer(inject(PLATFORM_ID))) {
+      const script = this.document.createElement('script');
+      script.textContent =
+        '{let b=document.querySelector(".booking-bar");' +
+        'if(b&&document.getElementById("booking").getBoundingClientRect().top<innerHeight)b.hidden=true}';
+      this.document.body.appendChild(script);
+    }
     const destroyRef = inject(DestroyRef);
     destroyRef.onDestroy(this.season.watch((name) => this.move(name)));
     afterNextRender(() => {
       const panel = this.host.querySelector('.panel')!;
-      const seen = new IntersectionObserver(([entry]) => this.barShown.set(!entry.isIntersecting));
+      // The root reaches far above the screen, so a panel scrolled past counts as seen.
+      const seen = new IntersectionObserver(([entry]) => this.barShown.set(!entry.isIntersecting), {
+        rootMargin: '100000px 0px 0px',
+      });
       seen.observe(panel);
       const sized = new ResizeObserver(() =>
         this.host.style.setProperty('--height', `${this.host.offsetHeight}px`),

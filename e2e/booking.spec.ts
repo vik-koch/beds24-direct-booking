@@ -492,10 +492,11 @@ test('beside the content a panel taller than the window shows its foot', async (
   expect(right!.x).toBeGreaterThan(left!.x + left!.width);
 });
 
-test('on a phone a bar leads to the panel while it is out of view, then on to booking', async ({
+test('on a phone a bar leads to the panel while it is below the screen, then on to booking', async ({
   page,
 }) => {
-  await page.setViewportSize({ width: 375, height: 700 });
+  // Low enough that the page scrolls past the panel.
+  await page.setViewportSize({ width: 375, height: 560 });
   await openNext(page, '/de/wohnungen/laerche');
   const bar = page.locator('.booking-bar');
   await expect(bar).toBeVisible();
@@ -510,13 +511,45 @@ test('on a phone a bar leads to the panel while it is out of view, then on to bo
     'href',
     /^\/de\/wohnungen\/laerche\/buchen\?arrival=/,
   );
+  // Past the panel the footer's links stay uncovered.
+  await page.evaluate(() => scrollTo({ top: document.body.scrollHeight, behavior: 'instant' }));
+  expect(await panel(page).evaluate((box) => box.getBoundingClientRect().bottom)).toBeLessThan(0);
+  await expect(bar).toBeHidden();
   await page.setViewportSize({ width: 1280, height: 800 });
   await expect(bar).toBeHidden();
   // A season with no week to choose has no bar: the full one of a site with prices up to today.
-  await page.setViewportSize({ width: 375, height: 700 });
+  await page.setViewportSize({ width: 375, height: 560 });
   await open(page, 'http://localhost:4003/de/wohnungen/laerche');
   await page.evaluate(() => scrollTo({ top: 0, behavior: 'instant' }));
   await expect(bar).toBeHidden();
+});
+
+test('a week in the address is shown at the first paint, before the application starts', async ({
+  page,
+  browser,
+}) => {
+  await openNext(page, '/de/wohnungen/laerche');
+  await (await firstFree(page)).click();
+  const stay = await chosen(page).locator('xpath=..').locator('[role=rowheader]').innerText();
+  // On a tall tablet the panel is in view already, and the bar would cover it.
+  for (const [width, height, barShown] of [
+    [375, 700, true],
+    [820, 1180, false],
+    [1280, 700, false],
+  ] as const) {
+    const fresh = await browser.newPage({ viewport: { width, height } });
+    await fresh.route(/\/main-[\w-]+\.js$/, () => undefined);
+    await fresh.goto(page.url(), { waitUntil: 'commit' });
+    const row = fresh.locator('.panel-season:visible .month[data-current] .week.chosen');
+    await expect(row.locator('[role=rowheader]')).toHaveText(stay);
+    await expect(row).not.toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+    await expect(fresh.locator('.outcome:visible .total')).toBeVisible();
+    const bar = fresh.locator('.booking-bar');
+    await expect(bar).toBeVisible({ visible: barShown });
+    if (barShown) await expect(bar.getByRole('link', { name: 'Weiter' })).toBeVisible();
+    await expect(fresh.locator('html')).not.toHaveAttribute('data-started');
+    await fresh.close();
+  }
 });
 
 // One test per width: six scans in one come too close to the test's time limit.
