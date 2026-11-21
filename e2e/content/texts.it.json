@@ -86,8 +86,7 @@
       "night": "Più una tassa di soggiorno di {amount} per adulto e notte.",
       "stay": "Più una tassa di soggiorno di {amount} per adulto e soggiorno."
     },
-    "withTax": "{price} con tassa di soggiorno",
-    "continue": "Continua con la prenotazione",
+    "withTax": "con tassa di soggiorno",
     "clear": "Annulla la settimana scelta"
   },
   "apartment": {

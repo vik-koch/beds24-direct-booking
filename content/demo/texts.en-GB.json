@@ -95,8 +95,7 @@
       "night": "Plus a local tax of {amount} per adult and night.",
       "stay": "Plus a local tax of {amount} per adult and stay."
     },
-    "withTax": "{price} with local tax",
-    "continue": "Continue to booking",
+    "withTax": "with local tax",
     "clear": "Clear the chosen week"
   },
   "apartment": {

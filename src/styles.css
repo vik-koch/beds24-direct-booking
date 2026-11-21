@@ -1091,7 +1091,7 @@
       background: var(--color-accent-soft);
     }
 
-    .stay[aria-selected='true'] & {
+    .stay.chosen & {
       background: var(--color-accent);
       color: var(--color-on-accent);
     }
@@ -1134,43 +1134,16 @@
     }
   }
 
-  /* The chosen week stays in view at the lower edge, unless the window is too low for it. */
+  /* The chosen week's bar stays in view at the lower edge, unless the window is too low for it. */
   .pick {
     position: sticky;
     bottom: 1rem;
     z-index: 5;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.5rem 1rem;
-    margin-top: 1.25rem;
-    padding: 0.75rem 0.75rem 0.75rem 1.25rem;
+    display: block;
 
-    output {
-      font-weight: 500;
-    }
-
-    /* On a phone the name has a line of its own, and the cross and the button go to the
-       two sides. */
-    @media (width < 48rem) {
-      .pick-name {
-        display: block;
-      }
-
-      .pick-dot {
-        display: none;
-      }
-
-      .pick-actions {
-        flex: 1 1 100%;
-        justify-content: space-between;
-      }
-
-      /* Its circle as far from the bar's edge as the button's, its cross under the name. */
-      .pick-clear {
-        margin-left: -0.5rem;
-      }
+    /* Only with the bar shown: in the other season it is hidden. */
+    .booking-bar {
+      margin-top: 1.25rem;
     }
 
     @media (min-width: 48rem) {
@@ -1179,62 +1152,6 @@
 
     @media (max-height: 29.9375rem) {
       position: static;
-    }
-  }
-
-  /* A bar in the accent that carries a choice on to booking: the chosen week below the list,
-     and an apartment's bar at a phone's foot. */
-  :is(.pick, .booking-bar) {
-    border-radius: var(--radius-card);
-    background: var(--color-accent);
-    color: var(--color-on-accent);
-
-    /* On the accent the primary button's shadow would not show: it is underlined instead.
-       Its words keep to one line; the bar's other words wrap. */
-    .button {
-      background: var(--color-surface);
-      color: var(--color-accent);
-      white-space: nowrap;
-      text-decoration: underline;
-      text-decoration-color: transparent;
-      text-underline-offset: 0.3em;
-      transition: text-decoration-color 0.2s;
-
-      &:hover {
-        box-shadow: none;
-        text-decoration-color: currentcolor;
-      }
-    }
-
-    :focus-visible {
-      outline-color: var(--color-on-accent);
-    }
-
-    @media (max-width: 22.4375rem) {
-      font-size: 1rem;
-
-      .button {
-        padding-inline: 1rem;
-      }
-    }
-  }
-
-  .pick-actions {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  /* An icon button that shows a light ground under the pointer. */
-  .pick-clear {
-    transition: background-color 0.2s;
-
-    &:hover {
-      background: color-mix(in srgb, var(--color-on-accent) 15%, transparent);
-    }
-
-    ng-icon {
-      --ng-icon__size: 1.375rem;
     }
   }
 }

@@ -1,40 +1,72 @@
 import { DOCUMENT } from '@angular/common';
-import { Component, inject, input, ViewEncapsulation } from '@angular/core';
+import { Component, inject, input, output, ViewEncapsulation } from '@angular/core';
+import { NgIcon, provideIcons } from '@ng-icons/core';
+import { lucideX } from '@ng-icons/lucide';
 import type { SeasonName } from '../content/names';
+import { TEXTS } from './texts';
 
-// What the bar says in one season: an amount with words around it, maybe a line below, and a
-// link on to booking with its label, or without a link the way to the panel.
+// What the bar says in one season: maybe an apartment's name, an amount with words around it,
+// maybe the parts of a line below, and a link on to booking with its label, or without a link
+// the way to the panel. A chosen week has a cross that clears it.
 export interface BarLine {
   season: SeasonName;
+  name: string;
   before: string;
   amount: string;
   after: string;
-  detail: string;
+  detail: string[];
   link: string | null;
   label: string;
+  chosen: boolean;
 }
 
-// On a phone, while the booking panel is still below the screen, a bar at the screen's foot keeps
-// the way to it, or on to booking once a week is chosen. One line per season, as in the panel.
+// A bar in the accent that carries a choice on to booking, one line per season: the home page's
+// chosen week below the list, and on a phone the apartment page's at the screen's foot. Each
+// page places it.
 @Component({
   encapsulation: ViewEncapsulation.None,
   selector: 'app-booking-bar',
+  imports: [NgIcon],
+  providers: [provideIcons({ lucideX })],
   template: `
     <div class="booking-bar" [hidden]="!shown()">
       @for (line of lines(); track line.season) {
         <div [attr.data-for]="line.season">
-          <output
-            >{{ line.before }}<strong>{{ line.amount }}</strong
-            >{{ line.after }}
-            @if (line.detail) {
-              <small>{{ line.detail }}</small>
+          <output>
+            <span class="bar-parts">
+              @if (line.name) {
+                <span>{{ line.name }}</span>
+              }
+              <span
+                >{{ line.before }}<strong>{{ line.amount }}</strong
+                >{{ line.after }}</span
+              >
+            </span>
+            @if (line.detail.length) {
+              <small class="bar-parts">
+                @for (part of line.detail; track $index) {
+                  <span>{{ part }}</span>
+                }
+              </small>
             }
           </output>
-          @if (line.link) {
-            <a class="button" [href]="line.link">{{ line.label }}</a>
-          } @else {
-            <button type="button" class="button" (click)="toPanel()">{{ line.label }}</button>
-          }
+          <div class="bar-actions">
+            @if (line.chosen) {
+              <button
+                type="button"
+                class="icon-button bar-clear"
+                [attr.aria-label]="texts.weeks.clear"
+                (click)="cleared.emit($event)"
+              >
+                <ng-icon name="lucideX" aria-hidden="true" />
+              </button>
+            }
+            @if (line.link) {
+              <a class="button" [href]="line.link">{{ line.label }}</a>
+            } @else {
+              <button type="button" class="button" (click)="toPanel()">{{ line.label }}</button>
+            }
+          </div>
         </div>
       }
     </div>
@@ -42,10 +74,10 @@ export interface BarLine {
   styles: `
     @layer components {
       .booking-bar {
-        position: fixed;
-        inset: auto 0.75rem 0.75rem;
-        z-index: 15;
         padding: 0.625rem 0.625rem 0.625rem 1.25rem;
+        border-radius: var(--radius-card);
+        background: var(--color-accent);
+        color: var(--color-on-accent);
 
         > div {
           display: flex;
@@ -58,13 +90,62 @@ export interface BarLine {
           line-height: 1.25;
           text-wrap: balance;
 
+          /* A line's parts share it where they fit, with a dot between them that goes beyond
+             the bar's edge, clipped, when a part wraps to a line of its own. */
+          .bar-parts {
+            display: flex;
+            flex-wrap: wrap;
+            column-gap: 0.75em;
+            overflow: hidden;
+
+            > * + * {
+              position: relative;
+
+              &::before {
+                content: '·' / '';
+                position: absolute;
+                right: 100%;
+                width: 0.75em;
+                text-align: center;
+              }
+            }
+          }
+
           strong {
             font-weight: 500;
           }
 
           small {
-            display: block;
             font-size: 0.875rem;
+          }
+        }
+
+        /* On the accent the primary button's shadow would not show: it is underlined instead.
+           Its words keep to one line; the bar's other words wrap. */
+        .button {
+          background: var(--color-surface);
+          color: var(--color-accent);
+          white-space: nowrap;
+          text-decoration: underline;
+          text-decoration-color: transparent;
+          text-underline-offset: 0.3em;
+          transition: text-decoration-color 0.2s;
+
+          &:hover {
+            box-shadow: none;
+            text-decoration-color: currentcolor;
+          }
+        }
+
+        :focus-visible {
+          outline-color: var(--color-on-accent);
+        }
+
+        @media (max-width: 22.4375rem) {
+          font-size: 1rem;
+
+          .button {
+            padding-inline: 1rem;
           }
         }
 
@@ -75,9 +156,24 @@ export interface BarLine {
         html[data-season='summer'] &:not(:has([data-for='summer'])) {
           display: none;
         }
+      }
 
-        @media (min-width: 64rem) {
-          display: none;
+      .bar-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      /* An icon button that shows a light ground under the pointer. */
+      .bar-clear {
+        transition: background-color 0.2s;
+
+        &:hover {
+          background: color-mix(in srgb, var(--color-on-accent) 15%, transparent);
+        }
+
+        ng-icon {
+          --ng-icon__size: 1.375rem;
         }
       }
     }
@@ -86,6 +182,8 @@ export interface BarLine {
 export class BookingBar {
   readonly lines = input.required<BarLine[]>();
   readonly shown = input.required<boolean>();
+  readonly cleared = output<MouseEvent>();
+  protected readonly texts = inject(TEXTS);
   private readonly document = inject(DOCUMENT);
 
   // The focus goes to the panel's heading, which scrolls the panel into view.

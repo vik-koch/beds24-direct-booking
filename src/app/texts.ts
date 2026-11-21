@@ -26,6 +26,16 @@ export function address(language: Language, page: Page, slug?: string): string {
 export const fill = (text: string, values: Record<string, string | number>) =>
   text.replace(/\{(\w+)\}/g, (_, key: string) => String(values[key] ?? ''));
 
+// A week from its first day to its last, which may break only after the dash. Not formatRange:
+// across the turn of the year it adds both years.
+export const formatStay = (
+  dates: Intl.DateTimeFormat,
+  { arrival, departure }: { arrival: string; departure: string },
+) =>
+  [arrival, departure]
+    .map((day) => dates.format(new Date(day)).replaceAll(' ', '\u00a0'))
+    .join('\u00a0– ');
+
 // Whole amounts without cents, as the prices are; any other amount with both digits.
 export function formatMoney(tag: string, currency: string, amount: number) {
   const digits = Number.isInteger(amount) ? 0 : 2;

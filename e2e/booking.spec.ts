@@ -1,5 +1,5 @@
 import AxeBuilder from '@axe-core/playwright';
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Locator, type Page } from '@playwright/test';
 
 const panel = (page: Page) => page.locator('.panel');
 // Controls used before the application has started are outside what the site supports, and
@@ -215,7 +215,7 @@ test('the calendar shows the list’s month and week, at the same height', async
     Math.min(6, new Date(Date.UTC(2000, Number(arrival.slice(5, 7)), 0)).getUTCDate() - day),
   );
   // A free week's first day is named with its stay and price, another day with its date.
-  await expect(start).toHaveAttribute('aria-label', /^Samstag, .+ – Samstag, .+, €\s/);
+  await expect(start).toHaveAttribute('aria-label', /^Samstag,\s.+\s–\sSamstag,\s.+, €\s/);
   await expect(month(page).locator('.day:not(:has(.start))').first()).toHaveAttribute(
     'aria-label',
     /^\d+\. \p{L}+(, belegt)?$/u,
@@ -551,6 +551,111 @@ test('a week in the address is shown at the first paint, before the application 
     await fresh.close();
   }
 });
+
+// A bar's shown line by its parts, and where it sits: its distance from the screen's sides and
+// foot, and whether its buttons stand to the right of its words.
+const parts = (bar: Locator) => bar.locator('.bar-parts > span:visible').allInnerTexts();
+const place = (bar: Locator) =>
+  bar.evaluate((box) => {
+    const { left, right, bottom } = box.getBoundingClientRect();
+    const line = [...box.children].find((one) => one.checkVisibility())!;
+    const words = line.querySelector('output')!.getBoundingClientRect();
+    const buttons = line.querySelector('.bar-actions')!.getBoundingClientRect();
+    return {
+      edges: [left, innerWidth - right, innerHeight - bottom].map(Math.round),
+      right: buttons.left >= words.right && buttons.top < words.bottom,
+    };
+  });
+
+for (const [path, book, tax] of [
+  ['/de/wohnungen/laerche', 'Weiter', 'mit Ortstaxe'],
+  ['/en/apartments/laerche', 'Continue', 'with local tax'],
+] as const)
+  test(`a chosen week comes back home in a bar alike (${path.slice(1, 3)})`, async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 640 });
+    await openNext(page, path);
+    await (await firstFree(page)).click();
+    await page.evaluate(() => scrollTo({ top: 0, behavior: 'instant' }));
+    const phone = page.locator('.booking-bar');
+    await expect(phone.locator('.bar-parts > span:visible')).toHaveText([
+      /^Lärche$/,
+      /€/,
+      /./,
+      tax,
+    ]);
+    await expect(phone.getByRole('link', { name: book })).toBeVisible();
+    const said = await parts(phone);
+    const sits = await place(phone);
+    expect(sits.right).toBe(true);
+    // Back to the home page: the week is chosen in the list, and its bar reads and sits alike.
+    await expect(page.locator('a.back')).toHaveAttribute('href', /apartment=laerche&arrival=/);
+    await page.locator('a.back').click();
+    await expect(page).toHaveURL(/apartment=laerche&arrival=\d{4}-\d\d-\d\d/);
+    await expect(page.locator('.stay.chosen:visible')).toHaveCount(1);
+    const home = page.locator('.pick .booking-bar');
+    await expect(home).toBeVisible();
+    // At the list's top, where the bar keeps to the screen's foot.
+    await page
+      .locator('.weeks')
+      .evaluate((list) => scrollTo({ top: list.offsetTop, behavior: 'instant' }));
+    await expect(home.locator('.bar-parts > span:visible')).toHaveText(said);
+    await expect.poll(() => place(home)).toEqual(sits);
+    await expect(home.getByRole('link', { name: book })).toBeVisible();
+    // On a desktop too the buttons stand to the right.
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await expect.poll(async () => (await place(home)).right).toBe(true);
+  });
+
+test('a week from the address is chosen on the home page at the first paint', async ({
+  page,
+  browser,
+}) => {
+  await openNext(page, '/de/wohnungen/laerche');
+  await (await firstFree(page)).click();
+  await expect(page.locator('a.back')).toHaveAttribute('href', /apartment=laerche&arrival=/);
+  const back = await page.locator('a.back').getAttribute('href');
+  for (const width of [375, 1280]) {
+    const fresh = await browser.newPage({ viewport: { width, height: 700 } });
+    await fresh.route(/\/main-[\w-]+\.js$/, () => undefined);
+    await fresh.goto(back!, { waitUntil: 'commit' });
+    await expect(fresh.locator('.stay.chosen:visible')).toHaveCount(1);
+    await expect(fresh.locator('.pick .booking-bar')).toContainText('Lärche');
+    await expect(fresh.locator('html')).not.toHaveAttribute('data-started');
+    await fresh.close();
+  }
+});
+
+test('the phone bar’s cross clears the week and leaves the focus on its button', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 375, height: 700 });
+  await openNext(page, '/de/wohnungen/laerche');
+  await (await firstFree(page)).click();
+  await page.evaluate(() => scrollTo({ top: 0, behavior: 'instant' }));
+  const bar = page.locator('.booking-bar');
+  await bar.getByRole('button', { name: 'Gewählte Woche aufheben' }).click();
+  await expect(bar.getByRole('button', { name: 'Woche wählen' })).toBeFocused();
+  await expect(page).not.toHaveURL(/arrival=/);
+  await expect(panel(page).locator('[aria-selected=true]')).toHaveCount(0);
+});
+
+test(
+  'the calendar view stays from one apartment page to the next',
+  { tag: '@any-engine' },
+  async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await open(page, '/en/apartments/laerche');
+    await page.locator('.views').getByTitle('Calendar').click();
+    await expect(page).toHaveURL(/view=calendar/);
+    await page.getByRole('button', { name: 'Apartments' }).click();
+    await page
+      .getByRole('navigation', { name: 'Apartments' })
+      .getByRole('link', { name: 'Ahorn' })
+      .click();
+    await expect(page).toHaveURL(/\/en\/apartments\/ahorn\?view=calendar/);
+    await expect(page.getByRole('radio', { name: 'Calendar' })).toBeChecked();
+  },
+);
 
 // One test per width: six scans in one come too close to the test's time limit.
 for (const width of [320, 1280])

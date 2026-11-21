@@ -277,7 +277,6 @@ export const textsSchema = z.strictObject({
     tax: z.strictObject({ night: text, stay: text }),
     // A chosen week's price with the tourist tax for the chosen guests.
     withTax: text,
-    continue: text,
     clear: text,
   }),
   // The apartment page. {count}, {from} and {until} are filled in by the page.

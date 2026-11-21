@@ -142,7 +142,12 @@ test('the chosen week’s bar counts the tourist tax of the chosen adults', asyn
   const total = new Intl.NumberFormat('de-AT', { style: 'currency', currency: 'EUR' })
     .format(price + 98)
     .replace(',00', '');
-  await expect(page.locator('.pick output')).toContainText(`${total} mit Ortstaxe`);
+  await expect(page.locator('.pick .bar-parts > span')).toHaveText([
+    'Ahorn',
+    total,
+    /Sa\./,
+    'mit Ortstaxe',
+  ]);
   await expect(page.locator('.pick a')).toHaveAttribute('href', /&adults=4&children=2$/);
 });
 

@@ -30,10 +30,10 @@ import site from '../content/generated/site';
 import type { SeasonName } from '../content/names';
 import { BookingBar, type BarLine } from './booking-bar';
 import { GuestCounts } from './guest-counts';
-import { fits, Guests, taxed, taxFor } from './guests';
+import { fits, Guests, replaceQuery, taxed, taxFor } from './guests';
 import { Season } from './season';
 import { swapper } from './swap';
-import { address, fill, formatMoney, LANGUAGE, TEXTS } from './texts';
+import { address, fill, formatMoney, formatStay, LANGUAGE, TEXTS } from './texts';
 
 type SeasonWeeks = FreeWeeks['seasons'][number];
 interface Stay {
@@ -342,13 +342,24 @@ const addDays = (date: string, days: number) =>
       }
     </section>
     @if (weeks && limits) {
-      <app-booking-bar [lines]="barLines()" [shown]="barShown()" />
+      <app-booking-bar [lines]="barLines()" [shown]="barShown()" (cleared)="clear()" />
     }
   `,
   styles: `
     @layer components {
       .booking {
         display: block;
+
+        /* On a phone the bar stays at the screen's foot. */
+        .booking-bar {
+          position: fixed;
+          inset: auto 1rem 1rem;
+          z-index: 15;
+
+          @media (min-width: 64rem) {
+            display: none;
+          }
+        }
 
         /* Beside the content it stays in view, and one taller than the window scrolls with the
            page until its foot shows (--height, measured). */
@@ -792,6 +803,7 @@ export class BookingPanel {
   protected readonly weeks: FreeWeeks | null = this.route.data['weeks'];
   protected readonly limits: Listing | null = this.route.data['listing'];
   private readonly slug: string = this.route.params['slug'];
+  private readonly name = site.apartments.find(({ slug }) => slug === this.slug)!.name;
 
   private readonly dates = new Intl.DateTimeFormat(this.language.tag, {
     weekday: 'short',
@@ -830,9 +842,10 @@ export class BookingPanel {
   });
 
   private readonly months = inject(shownMonths);
-  protected readonly view = signal<View>('list');
   protected readonly chosen = signal<{ season: SeasonName; arrival: string } | null>(null);
   protected readonly guests = inject(Guests);
+  // In the root injector, so that links carry it to the next apartment.
+  protected readonly view = this.guests.view;
   // The apartment's own limits, which the choice for every apartment may exceed.
   protected readonly fitting = computed(
     () => !this.limits || fits(this.limits, this.guests.adults(), this.guests.children()),
@@ -841,7 +854,7 @@ export class BookingPanel {
     const count = this.limits!.maxPeople;
     const { one, other } = this.texts.weeks.guests;
     return fill(this.texts.panel.small, {
-      name: site.apartments.find(({ slug }) => slug === this.slug)!.name,
+      name: this.name,
       guests: fill(this.plural.select(count) === 'one' ? one : other, { count }),
     });
   });
@@ -880,12 +893,18 @@ export class BookingPanel {
         return [
           {
             season: season.name,
+            name: this.name,
             before: '',
             amount: this.money(stay.price! + (this.taxLine()?.amount ?? 0)),
             after: '',
-            detail: this.fitting() ? this.stayText(stay) : this.small(),
+            detail: !this.fitting()
+              ? [this.small()]
+              : this.taxLine()
+                ? [this.stayText(stay), this.texts.weeks.withTax]
+                : [this.stayText(stay)],
             link: this.fitting() ? this.bookingLink(stay) : null,
             label: this.fitting() ? this.texts.panel.bar.book : this.texts.panel.guests,
+            chosen: true,
           },
         ];
       if (season.state !== 'open') return [];
@@ -893,12 +912,14 @@ export class BookingPanel {
       return [
         {
           season: season.name,
+          name: '',
           before,
           amount: this.money(this.lowest(season)),
           after,
-          detail: '',
+          detail: [],
           link: null,
           label: this.texts.panel.bar.choose,
+          chosen: false,
         },
       ];
     }),
@@ -947,7 +968,8 @@ export class BookingPanel {
       if (!this.months()[season.name])
         this.months.update((months) => ({ ...months, [season.name]: arrival.slice(0, 7) }));
     }
-    if (query.get('view') === 'calendar') this.view.set('calendar');
+    this.view.set(query.get('view') === 'calendar' ? 'calendar' : 'list');
+    this.carry();
     if (this.weeks) this.guests.limit(Object.values(this.weeks.capacities));
   }
 
@@ -1019,8 +1041,8 @@ export class BookingPanel {
     return Array.from({ length: Math.max(to - from + 1, 0) }, (_, i) => from + i);
   }
 
-  protected stayText({ arrival, departure }: Stay, dates = this.dates) {
-    return `${dates.format(new Date(arrival))} – ${dates.format(new Date(departure))}`;
+  protected stayText(stay: Stay, dates = this.dates) {
+    return formatStay(dates, stay);
   }
 
   protected money(amount: number) {
@@ -1083,6 +1105,20 @@ export class BookingPanel {
     if (selected && to !== from) this.page(season, to - from, stay.arrival);
   }
 
+  // The bar's cross. The focus goes to the button that takes its place: the week in the panel
+  // lies below the screen.
+  protected clear() {
+    this.chosen.set(null);
+    this.keep();
+    afterNextRender(
+      () =>
+        this.host
+          .querySelector<HTMLElement>(`.booking-bar [data-for=${this.season.current()}] .button`)
+          ?.focus(),
+      { injector: this.injector },
+    );
+  }
+
   // A click on a day or a booked week that does not start a free one would clear the chosen
   // week; so would Enter or Space on it. Page Up and Page Down show the month before or after.
   protected guard(event: Event, free: boolean) {
@@ -1104,18 +1140,34 @@ export class BookingPanel {
   // The address keeps the choice, and with a week of the shown season that season, which a
   // shared link then shows first, whatever season the page would show by itself.
   private keep() {
-    const [path, query = ''] = this.location.path().split('?');
-    const params = new URLSearchParams(query.split('#')[0]);
     const pick = this.chosen();
     const stay = pick && this.pickIn(pick.season);
-    if (stay) {
-      params.set('arrival', stay.arrival);
-      params.set('departure', stay.departure);
-      if (pick.season === this.season.current()) params.set('season', pick.season);
-    } else ['arrival', 'departure', 'season'].forEach((name) => params.delete(name));
-    if (this.view() === 'calendar') params.set('view', 'calendar');
-    else params.delete('view');
-    this.location.replaceState(path, params.toString(), this.location.getState());
+    replaceQuery(this.location, (params) => {
+      if (stay) {
+        params.set('arrival', stay.arrival);
+        params.set('departure', stay.departure);
+        if (pick.season === this.season.current()) params.set('season', pick.season);
+      } else ['arrival', 'departure', 'season'].forEach((name) => params.delete(name));
+      if (this.view() === 'calendar') params.set('view', 'calendar');
+      else params.delete('view');
+    });
+    this.carry();
+  }
+
+  // The chosen week for the links to the home page and to this page.
+  private carry() {
+    const pick = this.chosen();
+    const stay = pick && this.pickIn(pick.season);
+    this.guests.week.set(
+      stay && {
+        home: address(this.language, 'home'),
+        page: address(this.language, 'apartment', this.slug),
+        slug: this.slug,
+        arrival: stay.arrival,
+        departure: stay.departure,
+        season: pick.season,
+      },
+    );
   }
 
   // A change of view fades the new one in; the month and the chosen week stay.
