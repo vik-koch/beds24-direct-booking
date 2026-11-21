@@ -198,3 +198,188 @@ Input image: reference for the same apartment's wood, fabrics, window frames and
 architecture; generate a new photograph of the requested room, not a collage or a copy of
 the reference composition.
 ```
+
+## Winter twins — 21 November 2026
+
+Generated with OpenAI’s built-in image generation tool through Codex, following
+[Winter twins](../apartment-pictures.md#winter-twins). Each generation used only its matching
+summer WebP as the input reference, not the apartment’s first picture. No specific underlying
+image model is claimed. These are fictional AI-generated illustrations.
+
+The 4 winter assets listed below are also supplied under the project’s
+[MIT licence](../../LICENSE), to the extent that licensable rights exist. The AI disclosure
+and rights qualifications in [Reuse and disclosure](#reuse-and-disclosure) apply to them too.
+No existing photograph’s licence is changed.
+
+All winter files are WebP encoded at quality 85. All retain the generator’s native 1536 × 1024 dimensions.
+
+| File | Sole summer reference | Suggested English alternative text |
+| --- | --- | --- |
+| [laerche-1-winter.webp](../../content/demo/pictures/laerche-1-winter.webp) | [laerche-1.webp](../../content/demo/pictures/laerche-1.webp) | Larch kitchen-living room with a charcoal sofa throw and a snow-covered balcony beyond the glass doors. |
+| [laerche-2-winter.webp](../../content/demo/pictures/laerche-2-winter.webp) | [laerche-2.webp](../../content/demo/pictures/laerche-2.webp) | Larch double bedroom with a charcoal wool throw, felt slippers and a snowy view through the window. |
+| [laerche-3-winter.webp](../../content/demo/pictures/laerche-3-winter.webp) | [laerche-3.webp](../../content/demo/pictures/laerche-3.webp) | Larch bunk bedroom seen from the window, with rust blankets, a cardigan on a hook and a desk in the foreground. |
+| [laerche-5-winter.webp](../../content/demo/pictures/laerche-5-winter.webp) | [laerche-5.webp](../../content/demo/pictures/laerche-5.webp) | Wooden balcony with a bare folding table, folded chairs and snow on the railing and village roofs. |
+
+### Winter review
+
+Compared all selected winter outputs visually with their summer inputs. The rooms and principal
+furniture remain recognisable, with changed framing and the seasonal details recorded below.
+Snow is outside only. No people, animals, visible writing, brand logos, Christmas decorations,
+ski equipment or indoor snow were identified. No clocks are present. No obvious malformed
+furniture or impossible doors/windows were identified in the final selections.
+These checks do not establish an identical floor plan or precisely measured camera movement:
+new viewpoints introduce small spatial and decorative differences. Treat these as synthetic
+listing illustrations, rather than measured documentation of a real property.
+
+- **laerche-1-winter:** View from the kitchen side towards sofa and balcony, charcoal throw and rearranged cushions; four dining chairs.
+- **laerche-2-winter:** Distinct view from the foot of the bed, charcoal throw and two felt slippers. Final crop excludes the wardrobe rather than relocating it.
+- **laerche-3-winter:** Window-side view towards the bunks and door, rust blankets on both bunks, cardigan on the hooks; snowy window visible at the edge.
+- **laerche-5-winter:** Bare table, two folded cushion-free chairs against the wall, snowy railing and roofs; lower, shifted balcony viewpoint.
+
+`laerche-4.webp` has a frosted window and serves both seasons; no twin was generated.
+
+### Discarded winter attempts
+
+- **laerche-2-winter:** Composition too close to summer viewpoint.
+- **laerche-3-winter:** View remained near doorway rather than window side.
+- **laerche-2-winter:** Wardrobe moved from its original wall in the head-on retry.
+
+### Final winter prompts
+
+These are the exact prompts sent for the selected outputs. Each uses the summer reference listed
+above and no other image. Additional constraints before the ending record corrections made after
+review. Generation is stochastic; identical prompts need not reproduce these images.
+
+#### laerche-1-winter.webp
+
+```text
+Photorealistic interior photograph for a holiday rental listing in an Austrian alpine village. Natural daylight from the windows, soft and even, no visible lamps switched on except where stated. Shot at eye level with a 24 mm lens, verticals straight, calm and uncluttered, tidy as if just cleaned. Modern alpine style: clean lines, natural wood, white plastered walls, wool and linen textiles, a few plants. No people, no animals, no text, no logos, no brand names, no artwork with writing. Through any window: the same forested mountain slope opposite in deep winter, fresh snow on the ground and on the dark spruce, a clear blue sky or bright, soft winter light. The room is warm and cosy.
+
+The kitchen-living room of a 61 m² holiday apartment on the second floor, for four people. In the back a kitchen with honey-coloured larch fronts, a white stone worktop, an oven and a dishwasher built in. In front of it a larch dining table with four chairs. In the foreground a charcoal sofa with rust and off-white cushions and a low larch coffee table. On the right a glass door opens onto a sunny balcony with a wooden railing. Larch floor, sunlight falling in from the south.
+
+This is the same room as in the input image, in winter. Keep its furniture, its wood, its fabrics, its window and its layout exactly. Take the photograph from a different position: about one metre to the side and turned slightly, so that the composition is clearly not the same as in the input image. No Christmas decorations, no ski equipment or boots indoors, no snow indoors.
+
+The balcony beyond the glass door under snow; a charcoal wool throw on the sofa, the cushions rearranged. Seen from the kitchen side towards the sofa.
+
+Landscape 3:2, 1536 × 1024. One photograph, no collage.
+
+Input image: the same room in summer; keep its furniture, wood, fabrics, window and architecture, change the season outside, the camera position and the details named above. Generate a new photograph, not an edit or a copy of the input image's composition.
+```
+
+#### laerche-2-winter.webp
+
+```text
+Photorealistic interior photograph for a holiday rental listing in an Austrian alpine village. Natural daylight from the windows, soft and even, no visible lamps switched on except where stated. Shot at eye level with a 24 mm lens, verticals straight, calm and uncluttered, tidy as if just cleaned. Modern alpine style: clean lines, natural wood, white plastered walls, wool and linen textiles, a few plants. No people, no animals, no text, no logos, no brand names, no artwork with writing. Through any window: the same forested mountain slope opposite in deep winter, fresh snow on the ground and on the dark spruce, a clear blue sky or bright, soft winter light. The room is warm and cosy.
+
+The main bedroom of the same larch apartment: a double bed with a larch headboard, off-white bed linen and a rust-coloured wool throw, two small bedside shelves with reading lamps (switched off), a built-in larch wardrobe with plain doors, a window with a view of the mountain slope. Larch floor and a pale wool rug.
+
+This is the same room as in the input image, in winter. Keep its furniture, its wood, its fabrics, its window and its layout exactly. Take the photograph from a different position: about one metre to the side and turned slightly, so that the composition is clearly not the same as in the input image. No Christmas decorations, no ski equipment or boots indoors, no snow indoors.
+
+A charcoal wool throw instead of the rust one; a pair of felt slippers by the bed. Seen from the foot of the bed towards the window.
+
+Camera constraint: stand centrally at the FOOT of the double bed, facing the headboard nearly head-on; show the bed foreshortened from its foot, with the original window still visible to the side. This must be clearly different from the input's diagonal bedside composition. Keep the headboard, bedside shelves, wardrobe and window in their original relative positions.
+
+Preserve the original floor plan: the wardrobe stays on the wall OPPOSITE the headboard, and must be outside this head-on frame behind the camera, never beside the headboard. Original two-pane window stays on the adjacent wall to the right. Crop so only bed, headboard, shelves, right window and slippers are visible.
+
+Landscape 3:2, 1536 × 1024. One photograph, no collage.
+
+Input image: the same room in summer; keep its furniture, wood, fabrics, window and architecture, change the season outside, the camera position and the details named above. Generate a new photograph, not an edit or a copy of the input image's composition.
+```
+
+#### laerche-3-winter.webp
+
+```text
+Photorealistic interior photograph for a holiday rental listing in an Austrian alpine village. Natural daylight from the windows, soft and even, no visible lamps switched on except where stated. Shot at eye level with a 24 mm lens, verticals straight, calm and uncluttered, tidy as if just cleaned. Modern alpine style: clean lines, natural wood, white plastered walls, wool and linen textiles, a few plants. No people, no animals, no text, no logos, no brand names, no artwork with writing. Through any window: the same forested mountain slope opposite in deep winter, fresh snow on the ground and on the dark spruce, a clear blue sky or bright, soft winter light. The room is warm and cosy.
+
+The second bedroom of the same larch apartment: a solid larch bunk bed for two, with a ladder and charcoal and off-white bed linen, a small desk with a chair under the window, a row of wooden hooks on the wall. Bright and friendly, suitable for children or friends. Larch floor.
+
+This is the same room as in the input image, in winter. Keep its furniture, its wood, its fabrics, its window and its layout exactly. Take the photograph from a different position: about one metre to the side and turned slightly, so that the composition is clearly not the same as in the input image. No Christmas decorations, no ski equipment or boots indoors, no snow indoors.
+
+Rust-coloured blankets on both bunks instead of charcoal; a wool cardigan on a hook. Seen from the window side towards the bunk bed.
+
+Camera constraint: stand beside the WINDOW and look diagonally back towards the bunk bed and entrance, showing the bunk from its opposite end compared with the input. The desk is close in the foreground, the wooden wall hooks and cardigan farther away; include a sliver of the snowy window at the frame edge. Preserve the room layout; do not reproduce the doorway-side composition.
+
+Landscape 3:2, 1536 × 1024. One photograph, no collage.
+
+Input image: the same room in summer; keep its furniture, wood, fabrics, window and architecture, change the season outside, the camera position and the details named above. Generate a new photograph, not an edit or a copy of the input image's composition.
+```
+
+#### laerche-5-winter.webp
+
+```text
+Photorealistic interior photograph for a holiday rental listing in an Austrian alpine village. Natural daylight from the windows, soft and even, no visible lamps switched on except where stated. Shot at eye level with a 24 mm lens, verticals straight, calm and uncluttered, tidy as if just cleaned. Modern alpine style: clean lines, natural wood, white plastered walls, wool and linen textiles, a few plants. No people, no animals, no text, no logos, no brand names, no artwork with writing. Through any window: the same forested mountain slope opposite in deep winter, fresh snow on the ground and on the dark spruce, a clear blue sky or bright, soft winter light. The room is warm and cosy.
+
+The south-facing balcony of the same larch apartment on the second floor, seen from the doorway: a wooden balcony with a larch railing, a small folding table and two chairs with rust-coloured seat cushions, in sunshine. Beyond the railing the village roofs and the forested mountain slope opposite, early autumn, no snow.
+
+Framing: the camera stands in the open balcony doorway, looking out; the balcony fills the foreground and most of the picture. No sofa or dining table of the room in frame, at most a slim door frame at the edge. The balcony is the main subject.
+
+This is the same room as in the input image, in winter. Keep its furniture, its wood, its fabrics, its window and its layout exactly. Take the photograph from a different position: about one metre to the side and turned slightly, so that the composition is clearly not the same as in the input image. No Christmas decorations, no ski equipment or boots indoors, no snow indoors.
+
+Snow on the balcony's railing and roofs; the table bare, the chairs folded against the wall, no cushions. A slightly lower camera, more of the snowy slope in the frame.
+
+Landscape 3:2, 1536 × 1024. One photograph, no collage.
+
+Input image: the same room in summer; keep its furniture, wood, fabrics, window and architecture, change the season outside, the camera position and the details named above. Generate a new photograph, not an edit or a copy of the input image's composition.
+```
+
+### Discarded winter prompts
+
+These prompts produced the rejected attempts listed above; they used the same summer references.
+
+#### laerche-2-winter — discarded attempt 1
+
+Reason: Composition too close to summer viewpoint.
+
+```text
+Photorealistic interior photograph for a holiday rental listing in an Austrian alpine village. Natural daylight from the windows, soft and even, no visible lamps switched on except where stated. Shot at eye level with a 24 mm lens, verticals straight, calm and uncluttered, tidy as if just cleaned. Modern alpine style: clean lines, natural wood, white plastered walls, wool and linen textiles, a few plants. No people, no animals, no text, no logos, no brand names, no artwork with writing. Through any window: the same forested mountain slope opposite in deep winter, fresh snow on the ground and on the dark spruce, a clear blue sky or bright, soft winter light. The room is warm and cosy.
+
+The main bedroom of the same larch apartment: a double bed with a larch headboard, off-white bed linen and a rust-coloured wool throw, two small bedside shelves with reading lamps (switched off), a built-in larch wardrobe with plain doors, a window with a view of the mountain slope. Larch floor and a pale wool rug.
+
+This is the same room as in the input image, in winter. Keep its furniture, its wood, its fabrics, its window and its layout exactly. Take the photograph from a different position: about one metre to the side and turned slightly, so that the composition is clearly not the same as in the input image. No Christmas decorations, no ski equipment or boots indoors, no snow indoors.
+
+A charcoal wool throw instead of the rust one; a pair of felt slippers by the bed. Seen from the foot of the bed towards the window.
+
+Landscape 3:2, 1536 × 1024. One photograph, no collage.
+
+Input image: the same room in summer; keep its furniture, wood, fabrics, window and architecture, change the season outside, the camera position and the details named above. Generate a new photograph, not an edit or a copy of the input image's composition.
+```
+
+#### laerche-3-winter — discarded attempt 1
+
+Reason: View remained near doorway rather than window side.
+
+```text
+Photorealistic interior photograph for a holiday rental listing in an Austrian alpine village. Natural daylight from the windows, soft and even, no visible lamps switched on except where stated. Shot at eye level with a 24 mm lens, verticals straight, calm and uncluttered, tidy as if just cleaned. Modern alpine style: clean lines, natural wood, white plastered walls, wool and linen textiles, a few plants. No people, no animals, no text, no logos, no brand names, no artwork with writing. Through any window: the same forested mountain slope opposite in deep winter, fresh snow on the ground and on the dark spruce, a clear blue sky or bright, soft winter light. The room is warm and cosy.
+
+The second bedroom of the same larch apartment: a solid larch bunk bed for two, with a ladder and charcoal and off-white bed linen, a small desk with a chair under the window, a row of wooden hooks on the wall. Bright and friendly, suitable for children or friends. Larch floor.
+
+This is the same room as in the input image, in winter. Keep its furniture, its wood, its fabrics, its window and its layout exactly. Take the photograph from a different position: about one metre to the side and turned slightly, so that the composition is clearly not the same as in the input image. No Christmas decorations, no ski equipment or boots indoors, no snow indoors.
+
+Rust-coloured blankets on both bunks instead of charcoal; a wool cardigan on a hook. Seen from the window side towards the bunk bed.
+
+Landscape 3:2, 1536 × 1024. One photograph, no collage.
+
+Input image: the same room in summer; keep its furniture, wood, fabrics, window and architecture, change the season outside, the camera position and the details named above. Generate a new photograph, not an edit or a copy of the input image's composition.
+```
+
+#### laerche-2-winter — discarded attempt 2
+
+Reason: Wardrobe moved from its original wall in the head-on retry.
+
+```text
+Photorealistic interior photograph for a holiday rental listing in an Austrian alpine village. Natural daylight from the windows, soft and even, no visible lamps switched on except where stated. Shot at eye level with a 24 mm lens, verticals straight, calm and uncluttered, tidy as if just cleaned. Modern alpine style: clean lines, natural wood, white plastered walls, wool and linen textiles, a few plants. No people, no animals, no text, no logos, no brand names, no artwork with writing. Through any window: the same forested mountain slope opposite in deep winter, fresh snow on the ground and on the dark spruce, a clear blue sky or bright, soft winter light. The room is warm and cosy.
+
+The main bedroom of the same larch apartment: a double bed with a larch headboard, off-white bed linen and a rust-coloured wool throw, two small bedside shelves with reading lamps (switched off), a built-in larch wardrobe with plain doors, a window with a view of the mountain slope. Larch floor and a pale wool rug.
+
+This is the same room as in the input image, in winter. Keep its furniture, its wood, its fabrics, its window and its layout exactly. Take the photograph from a different position: about one metre to the side and turned slightly, so that the composition is clearly not the same as in the input image. No Christmas decorations, no ski equipment or boots indoors, no snow indoors.
+
+A charcoal wool throw instead of the rust one; a pair of felt slippers by the bed. Seen from the foot of the bed towards the window.
+
+Camera constraint: stand centrally at the FOOT of the double bed, facing the headboard nearly head-on; show the bed foreshortened from its foot, with the original window still visible to the side. This must be clearly different from the input's diagonal bedside composition. Keep the headboard, bedside shelves, wardrobe and window in their original relative positions.
+
+Landscape 3:2, 1536 × 1024. One photograph, no collage.
+
+Input image: the same room in summer; keep its furniture, wood, fabrics, window and architecture, change the season outside, the camera position and the details named above. Generate a new photograph, not an edit or a copy of the input image's composition.
+```
+
+No application integration or application tests were performed for these asset additions.
