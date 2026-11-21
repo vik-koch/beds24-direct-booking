@@ -362,9 +362,25 @@ test('the hero fills the first screen, and the jump to the weeks ends it at the 
   expect(card.y + card.height).toBeGreaterThan(height / 2);
 
   await expect(page.locator('html')).toHaveAttribute('data-started', '');
+  // Leaving the hero, the header's ground fades in, and changes at once with reduced motion.
+  // Read at once: headless WebKit's next frame may come after the fade has ended.
+  const watch = () =>
+    header.evaluate((element) => {
+      (window as unknown as { faded: Promise<boolean> }).faded = new Promise((resolve) => {
+        const observer = new MutationObserver(() => {
+          if (element.hasAttribute('data-over')) return;
+          observer.disconnect();
+          resolve(element.getAnimations().length > 0);
+        });
+        observer.observe(element, { attributeFilter: ['data-over'] });
+      });
+    });
+  const faded = () => page.evaluate(() => (window as unknown as { faded: Promise<boolean> }).faded);
+  await watch();
   await page.getByRole('link', { name: 'See the free weeks' }).click();
   await expect(page).toHaveURL('/en#free-weeks');
   await expect(header).not.toHaveAttribute('data-over');
+  expect(await faded()).toBe(true);
   // The header covers the hero's last strip: their lower edges meet.
   const edges = () =>
     page.evaluate(() =>
@@ -373,6 +389,13 @@ test('the hero fills the first screen, and the jump to the weeks ends it at the 
       ),
     );
   await expect.poll(async () => new Set(await edges()).size).toBe(1);
+
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.evaluate(() => scrollTo({ top: 0, behavior: 'instant' }));
+  await expect(header).toHaveAttribute('data-over', '');
+  await watch();
+  await page.evaluate(() => scrollTo({ top: 300, behavior: 'instant' }));
+  expect(await faded()).toBe(false);
 });
 
 test('over the hero the header takes its ground while the menu is open', async ({ page }) => {
