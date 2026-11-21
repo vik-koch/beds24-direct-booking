@@ -193,7 +193,7 @@ test('two builds can convert into one empty cache at once', async () => {
 });
 
 test('a hero is converted whole and as its centre crop of 3:4, which a narrow one does without', async () => {
-  // Left half red, right half blue: the crop's edges show where it was cut.
+  // Left half red, right half blue.
   const halves = sharp({ create: { width: 2400, height: 1200, channels: 3, background: '#f00' } })
     .composite([
       {
@@ -226,7 +226,8 @@ test('a hero is converted whole and as its centre crop of 3:4, which a narrow on
       .toBuffer({ resolveWithObject: true });
     return data[0] > data[2] ? 'red' : 'blue';
   };
-  assert.deepEqual([await pixel(2), await pixel(897)], ['red', 'blue']);
+  // The halves meet at the crop's middle, so it was cut from the photo's centre.
+  assert.deepEqual([await pixel(447), await pixel(452)], ['red', 'blue']);
   const narrow = await convertHero(dir, 'pictures/narrow.png', 'hero-summer', out, temp('cache'));
   assert.equal(narrow.hero.portrait, undefined);
 });
