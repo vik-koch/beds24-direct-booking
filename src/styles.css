@@ -590,10 +590,8 @@
     color: var(--color-ink-soft);
     font-size: 0.875rem;
 
-    /* The text's capitals sit low in its line; the icon goes up to their middle. */
     ng-icon {
       flex: none;
-      margin-bottom: 2px;
     }
   }
 
