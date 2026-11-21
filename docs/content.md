@@ -93,7 +93,9 @@ content. The application has no wording, no colour and no typeface of its own. T
   for the chosen guests takes. The tax line takes `{guests}`, `{nights}` and `{amount}`; `adults`
   has a `one` and an `other` form for it.
 - **The notice** (`notice` in a texts file) is an optional line above the header, with an optional
-  link. Left out, no line is shown.
+  link. Left out, no line is shown. A link within the site is a path from its root, such as
+  `/en/apartments/ahorn`, which then carries the visitor's guests; any other is a full `https://`
+  address.
 - **The seasons** (`seasons` in `site.json`) are `winter`, `summer` or both, each with its hero
   photo and its `icon`: an SVG file in UTF-8 in `pictures/` that the browser's tab shows while the
   season is shown. It has no alternative text; the page's title stands beside it. The demo's are a

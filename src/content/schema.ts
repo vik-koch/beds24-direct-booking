@@ -196,8 +196,18 @@ export const textsSchema = z.strictObject({
     about: segment,
   }),
   skip: text,
+  // A link within the site is a path from its root, which carries the visitor's choices; any
+  // other is a full https address.
   notice: z
-    .strictObject({ text, link: z.strictObject({ text, href: text }).optional() })
+    .strictObject({
+      text,
+      link: z
+        .strictObject({
+          text,
+          href: z.string().regex(/^(\/(?!\/)|https:\/\/)/, 'a path from the root or https://'),
+        })
+        .optional(),
+    })
     .optional(),
   nav: z.strictObject({
     label: text,
