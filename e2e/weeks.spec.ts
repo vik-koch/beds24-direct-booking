@@ -28,9 +28,11 @@ test('the next season lists its weeks with a price or "booked" per apartment', a
   await toOtherSeason(page);
   const grid = page.getByRole('grid', { name: 'Free weeks' });
   for (const name of ['Zirbe', 'Lärche', 'Ahorn'])
-    await expect(grid.getByRole('columnheader', { name })).toContainText(/\d guests · \d+\sm²/);
+    await expect(grid.getByRole('columnheader', { name })).toContainText(
+      /Up to \d guests · \d+\sm²/,
+    );
   await expect(grid.getByRole('columnheader', { name: 'Zirbe' })).toHaveAccessibleName(
-    /^Zirbe · \d guests · \d+ square metres$/,
+    /^Zirbe · Up to \d guests · \d+ square metres$/,
   );
   const dates = await panel(page).getByRole('rowheader').first().innerText();
   // Older locale data puts a comma after the weekday, as WebKit on Ubuntu 24.04 does.

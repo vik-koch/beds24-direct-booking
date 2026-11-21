@@ -14,7 +14,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { NgIcon, provideIcons } from '@ng-icons/core';
-import { lucideArrowLeft, lucideArrowRight, lucideX } from '@ng-icons/lucide';
+import { lucideArrowLeft, lucideArrowRight, lucideInfo, lucideX } from '@ng-icons/lucide';
 import type { FreeWeeks } from '../beds24/weeks';
 import type { SeasonName } from '../content/names';
 import { GuestCounts } from './guest-counts';
@@ -44,7 +44,7 @@ const shownTab = new InjectionToken('shown tab', { providedIn: 'root', factory: 
 @Component({
   selector: 'app-free-weeks',
   imports: [NgIcon, Grid, GridRow, GridCell, GuestCounts],
-  providers: [provideIcons({ lucideArrowLeft, lucideArrowRight, lucideX })],
+  providers: [provideIcons({ lucideArrowLeft, lucideArrowRight, lucideInfo, lucideX })],
   template: `
     <div class="weeks-head">
       <!-- The seasons' names, and the button's labels, lie over each other: the heading and the
@@ -173,10 +173,14 @@ const shownTab = new InjectionToken('shown tab', { providedIn: 'root', factory: 
                               >
                                 @if (free) {
                                   <span class="price">{{ money(price!) }}</span>
+                                } @else if (fitting()[$index]) {
+                                  <span class="taken">{{ texts.weeks.taken }}</span>
                                 } @else {
-                                  <span class="taken">{{
-                                    fitting()[$index] ? texts.weeks.taken : texts.weeks.small
-                                  }}</span>
+                                  <span class="taken small"
+                                    ><ng-icon name="lucideInfo" aria-hidden="true" />{{
+                                      texts.weeks.small
+                                    }}</span
+                                  >
                                 }
                               </span>
                             }
@@ -369,7 +373,7 @@ export class FreeWeeksList {
   }
 
   protected guests({ guests }: FreeWeeks['apartments'][number]) {
-    const { one, other } = this.texts.weeks.guests;
+    const { one, other } = this.texts.apartment.guests;
     return fill(this.plural.select(guests) === 'one' ? one : other, { count: guests });
   }
 
