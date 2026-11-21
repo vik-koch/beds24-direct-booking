@@ -448,7 +448,7 @@ type Fold = ReturnType<typeof fold>;
         ng-icon {
           --ng-icon__size: 1.25rem;
           flex: none;
-          color: var(--color-ink-soft);
+          --ng-icon__color: var(--color-ink-soft);
         }
 
         p,

@@ -508,7 +508,7 @@ import { fill, LANGUAGE, TEXTS } from './texts';
 
         /* Only the icon is soft: as text the soft colour falls short of 4.5:1 on the ground. */
         ng-icon {
-          color: var(--color-ink-soft);
+          --ng-icon__color: var(--color-ink-soft);
         }
       }
 
