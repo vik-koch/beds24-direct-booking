@@ -14,13 +14,11 @@ const store = (page: Page, value: string) =>
 const november = new Date(2026, 10, 16, 12);
 const july = new Date(2027, 6, 1, 12);
 
-// Switches by clicking the season's side of the pill. A click during hydration can be lost,
-// so it is repeated until the page follows.
+// Switches by clicking the season's side of the pill, once the application has started.
 async function switchTo(page: Page, name: 'winter' | 'summer') {
-  await expect(async () => {
-    await page.locator(`.season-switch label[data-for=${name}]`).click();
-    await expect(page.locator('html')).toHaveAttribute('data-season', name, { timeout: 500 });
-  }).toPass();
+  await expect(page.locator('html')).toHaveAttribute('data-started', '');
+  await page.locator(`.season-switch label[data-for=${name}]`).click();
+  await expect(page.locator('html')).toHaveAttribute('data-season', name);
 }
 
 test(
@@ -123,12 +121,10 @@ test(
 test('the switch works by keyboard', async ({ page }) => {
   await page.clock.setFixedTime(november);
   await page.goto('/en');
-  const winter = page.getByRole('radio', { name: 'Winter' });
-  await expect(async () => {
-    await winter.focus();
-    await page.keyboard.press('ArrowRight');
-    await expect(page.locator('html')).toHaveAttribute('data-season', 'summer', { timeout: 500 });
-  }).toPass();
+  await expect(page.locator('html')).toHaveAttribute('data-started', '');
+  await page.getByRole('radio', { name: 'Winter' }).focus();
+  await page.keyboard.press('ArrowRight');
+  await expect(page.locator('html')).toHaveAttribute('data-season', 'summer');
   await expect(page.getByRole('radio', { name: 'Summer' })).toBeFocused();
   await settled(page);
   expect(await axe(page)).toEqual([]);
@@ -144,17 +140,15 @@ test('a switch on a scrolled page keeps its place, and focus in the page lands b
   for (const width of [1280, 320]) {
     await page.setViewportSize({ width, height: 700 });
     await page.goto('/en');
+    // The first navigation restores the scroll position, so the page is scrolled after it.
+    await expect(page.locator('html')).toHaveAttribute('data-started', '');
     await scrollTo(832);
+    expect(await at()).toBe(832);
     // By the pointer at the label's place: a locator's click would first scroll it into view
     // itself, which WebKit does even for the sticky header.
-    const summer = page.locator('.season-switch label[data-for=summer]');
-    await expect(async () => {
-      const box = (await summer.boundingBox())!;
-      await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
-      await expect(page.locator('html')).toHaveAttribute('data-season', 'summer', {
-        timeout: 500,
-      });
-    }).toPass();
+    const box = (await page.locator('.season-switch label[data-for=summer]').boundingBox())!;
+    await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+    await expect(page.locator('html')).toHaveAttribute('data-season', 'summer');
     await settled(page);
     expect(await at(), `click at ${width}`).toBe(832);
 
@@ -367,10 +361,9 @@ test('the hero fills the first screen, and the jump to the weeks ends it at the 
   expect(card.y + card.height).toBeLessThanOrEqual(height);
   expect(card.y + card.height).toBeGreaterThan(height / 2);
 
-  await expect(async () => {
-    await page.getByRole('link', { name: 'See the free weeks' }).click();
-    await expect(page).toHaveURL('/en#free-weeks', { timeout: 500 });
-  }).toPass();
+  await expect(page.locator('html')).toHaveAttribute('data-started', '');
+  await page.getByRole('link', { name: 'See the free weeks' }).click();
+  await expect(page).toHaveURL('/en#free-weeks');
   await expect(header).not.toHaveAttribute('data-over');
   // The header covers the hero's last strip: their lower edges meet.
   const edges = () =>
@@ -392,11 +385,9 @@ test('over the hero the header takes its ground while the menu is open', async (
       await expect(header).toHaveAttribute('data-over', '');
       // Found by place: while the sheet is open, the page behind it has no names.
       const menu = page.locator('.header-narrow > button');
-      // A click during hydration can be undone by it.
-      await expect(async () => {
-        if ((await menu.getAttribute('aria-expanded')) !== 'true') await menu.click();
-        await expect(menu).toHaveAttribute('aria-expanded', 'true', { timeout: 500 });
-      }).toPass();
+      await expect(page.locator('html')).toHaveAttribute('data-started', '');
+      await menu.click();
+      await expect(menu).toHaveAttribute('aria-expanded', 'true');
       await expect(header).not.toHaveAttribute('data-over');
       await expect.poll(ground).not.toBe('rgba(0, 0, 0, 0)');
       await page.keyboard.press('Escape');

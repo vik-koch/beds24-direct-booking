@@ -10,20 +10,18 @@ const column = (page: Page, index: number, kind = '[role=gridcell]') =>
 const settled = (page: Page) =>
   expect.poll(() => page.evaluate(() => document.getAnimations().length)).toBe(0);
 
-// Controls used before the application has started are outside what the site supports.
+// Controls used before the application has started are outside what the site supports, and
+// data-smooth cannot tell: the head's script sets it before Angular runs.
 async function open(page: Page, path: string) {
   await page.goto(path);
-  await expect(page.locator('html')).toHaveAttribute('data-smooth', '');
+  await expect(page.locator('html')).toHaveAttribute('data-started', '');
 }
 
 async function toOtherSeason(page: Page) {
   const before = await page.locator('html').getAttribute('data-season');
-  await expect(async () => {
-    await page.locator('.other-season').first().click();
-    await expect(page.locator('html')).not.toHaveAttribute('data-season', before!, {
-      timeout: 500,
-    });
-  }).toPass();
+  await expect(page.locator('html')).toHaveAttribute('data-started', '');
+  await page.locator('.other-season').first().click();
+  await expect(page.locator('html')).not.toHaveAttribute('data-season', before!);
   await settled(page);
 }
 
@@ -33,7 +31,8 @@ async function pickCount(page: Page, id: 'adults' | 'children', value: number) {
   const from = Number(await select.innerText());
   await select.focus();
   await page.keyboard.press('Enter');
-  await expect(page.getByRole('listbox')).toBeVisible();
+  // The list shows at once and marks its current option a render later.
+  await expect(select).toHaveAttribute('aria-activedescendant', /./);
   for (let i = 0; i < Math.abs(value - from); i++)
     await page.keyboard.press(value > from ? 'ArrowDown' : 'ArrowUp');
   await page.keyboard.press('Enter');

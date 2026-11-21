@@ -61,7 +61,7 @@ test('each season shows its own pictures, and a change fades to them in place', 
   const fetched: string[] = [];
   page.on('request', (request) => fetched.push(new URL(request.url()).pathname));
   await page.goto('/de/wohnungen/ahorn?season=summer');
-  await expect(page.locator('html')).toHaveAttribute('data-smooth', '');
+  await expect(page.locator('html')).toHaveAttribute('data-started', '');
   const first = page.locator('.tile').first();
   expect(await shownAlt(first)).toEqual([
     expect.stringMatching(/^Wohn- und Essraum mit Ahorntisch/),
@@ -350,17 +350,14 @@ test('on a phone the pictures are a strip, and the viewer’s buttons sit under 
   await page.setViewportSize({ width: 320, height: 640 });
   await page.goto('/de/wohnungen/ahorn');
   await expect(page.locator('.strip-count')).toHaveText('1 / 9');
-  // A swipe before the application has started is outside what the site supports, and no
-  // attribute tells when it has (data-smooth comes from the head's script): the swipe is
-  // repeated until the count follows.
-  const strip = page.locator('.tiles');
-  await expect(async () => {
-    await strip.evaluate((element) => element.scrollTo({ left: 0, behavior: 'instant' }));
-    await strip.evaluate((element) =>
+  // A swipe before the application has started is outside what the site supports.
+  await expect(page.locator('html')).toHaveAttribute('data-started', '');
+  await page
+    .locator('.tiles')
+    .evaluate((element) =>
       element.scrollTo({ left: element.clientWidth * 3, behavior: 'instant' }),
     );
-    await expect(page.locator('.strip-count')).toHaveText('4 / 9', { timeout: 500 });
-  }).toPass();
+  await expect(page.locator('.strip-count')).toHaveText('4 / 9');
   // A tap on the count reaches the picture under it.
   const counter = await box(page.locator('.strip-count'));
   await page.mouse.click(counter.x + counter.width / 2, counter.y + counter.height / 2);

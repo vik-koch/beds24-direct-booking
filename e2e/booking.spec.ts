@@ -2,10 +2,11 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 
 const panel = (page: Page) => page.locator('.panel');
-// Controls used before the application has started are outside what the site supports.
+// Controls used before the application has started are outside what the site supports, and
+// data-smooth cannot tell: the head's script sets it before Angular runs.
 async function open(page: Page, path: string) {
   const response = await page.goto(path);
-  await expect(page.locator('html')).toHaveAttribute('data-smooth', '');
+  await expect(page.locator('html')).toHaveAttribute('data-started', '');
   return response;
 }
 // The shown season, and not one leaving after a change, and its shown month.
@@ -336,7 +337,8 @@ test('the week, the view and the guests can be chosen by keyboard alone', async 
   // The counts: Enter opens, the arrows move, Enter chooses.
   await page.locator('#adults').focus();
   await page.keyboard.press('Enter');
-  await expect(page.getByRole('listbox')).toBeVisible();
+  // The list shows at once and marks its current option a render later.
+  await expect(page.locator('#adults')).toHaveAttribute('aria-activedescendant', /./);
   await page.keyboard.press('ArrowDown');
   await page.keyboard.press('Enter');
   await expect(page.locator('#adults')).toHaveText('3');
