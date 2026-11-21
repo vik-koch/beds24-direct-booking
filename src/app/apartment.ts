@@ -251,10 +251,6 @@ type Fold = ReturnType<typeof fold>;
         font-size: 0.9375rem;
       }
 
-      .apartment .facts {
-        font-weight: 500;
-      }
-
       /* One column on a phone, which nothing may widen: the panel's rows do not break. */
       .apartment-columns {
         display: grid;
@@ -369,6 +365,10 @@ type Fold = ReturnType<typeof fold>;
           text-decoration-color: currentColor;
         }
 
+        &:focus-visible {
+          outline-offset: var(--focus-offset-text);
+        }
+
         ng-icon {
           @media (prefers-reduced-motion: no-preference) {
             transition: rotate 0.25s cubic-bezier(0.16, 1, 0.3, 1);
@@ -448,7 +448,7 @@ type Fold = ReturnType<typeof fold>;
         ng-icon {
           --ng-icon__size: 1.25rem;
           flex: none;
-          color: var(--color-ink-soft);
+          --ng-icon__color: var(--color-ink-soft);
         }
 
         p,

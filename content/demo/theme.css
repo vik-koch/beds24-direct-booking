@@ -9,12 +9,12 @@
 :root {
   --font-sans: Jost, system-ui, sans-serif;
 
-  --color-ground: #f1f1ef;
+  --color-ground: #f5f1ec;
   --color-surface: #ffffff;
   --color-oak: #eadfce;
   --color-ink: #27323a;
   --color-ink-soft: #5a666e;
-  --color-line: #e7e5e0;
+  --color-line: #e9e3db;
   --color-edge: #7c878f;
 
   --color-accent: #3b587c;

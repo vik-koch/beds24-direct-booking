@@ -179,7 +179,7 @@ import { TEXTS } from './texts';
       }
 
       .spartan-select-trigger-icon {
-        color: var(--color-ink-soft);
+        --ng-icon__color: var(--color-ink-soft);
         transition: rotate 0.2s;
 
         [aria-expanded='true'] > & {

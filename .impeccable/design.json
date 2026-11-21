@@ -26,8 +26,8 @@
       },
       "ground": {
         "role": "neutral",
-        "displayName": "Wall Grey",
-        "canonical": "#f1f1ef"
+        "displayName": "Milk",
+        "canonical": "#f5f1ec"
       },
       "surface": {
         "role": "neutral",
@@ -52,7 +52,7 @@
       "line": {
         "role": "neutral",
         "displayName": "Hairline",
-        "canonical": "#e7e5e0"
+        "canonical": "#e9e3db"
       },
       "edge": {
         "role": "neutral",

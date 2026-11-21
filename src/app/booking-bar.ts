@@ -46,23 +46,19 @@ export interface BarLine {
         inset: auto 0.75rem 0.75rem;
         z-index: 15;
         padding: 0.625rem 0.625rem 0.625rem 1.25rem;
-        border-radius: var(--radius-card);
-        background: var(--color-surface);
-        box-shadow: 0 0.5rem 2rem -0.5rem rgb(39 50 58 / 0.35);
 
         > div {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          gap: 1rem;
+          gap: 0.75rem;
         }
 
         output {
-          color: var(--color-ink-soft);
           line-height: 1.25;
+          text-wrap: balance;
 
           strong {
-            color: var(--color-ink);
             font-weight: 500;
           }
 

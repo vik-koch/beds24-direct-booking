@@ -506,9 +506,9 @@ import { fill, LANGUAGE, TEXTS } from './texts';
         margin-left: 0.25rem;
         white-space: nowrap;
 
-        /* Only the icon is soft: as text the soft colour falls short of 4.5:1 on the ground. */
+        /* Only the icon is soft, as beside other text; the note's words keep the caption's ink. */
         ng-icon {
-          color: var(--color-ink-soft);
+          --ng-icon__color: var(--color-ink-soft);
         }
       }
 
