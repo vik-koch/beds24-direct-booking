@@ -27,8 +27,10 @@ if (password) {
 }
 
 const languages = site.languages.map(({ code }) => code);
+// With the address's query, which may carry the visitor's guests.
 app.get('/', (req, res) => {
-  res.vary('Accept-Language').redirect(`/${req.acceptsLanguages(languages) || languages[0]}`);
+  const language = req.acceptsLanguages(languages) || languages[0];
+  res.vary('Accept-Language').redirect(`/${language}${req.originalUrl.slice(1)}`);
 });
 
 app.use(
