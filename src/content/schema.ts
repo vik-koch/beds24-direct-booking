@@ -243,12 +243,16 @@ export const textsSchema = z.strictObject({
     // The content script checks that each change a credit lists is named here.
     changes: z.strictObject({ cropped: text.optional(), scaled: text.optional() }).optional(),
   }),
-  // The free-weeks list. {season}, {count} and {amount} are filled in by the page.
+  // The free-weeks list. {season}, {count}, {amount}, {guests} and {price} are filled in by the
+  // page.
   weeks: z.strictObject({
     week: text,
     guests: z.strictObject({ one: text, other: text }),
     size: z.strictObject({ shown: text, spoken: text }),
     taken: text,
+    // An apartment too small for the chosen guests: in its cells, and on its card.
+    small: text,
+    smallFor: text,
     apartment: text,
     next: text,
     current: text,
@@ -259,6 +263,8 @@ export const textsSchema = z.strictObject({
     unavailable: text,
     note: text,
     tax: z.strictObject({ night: text, stay: text }),
+    // A chosen week's price with the tourist tax for the chosen guests.
+    withTax: text,
     continue: text,
     clear: text,
   }),
@@ -281,7 +287,7 @@ export const textsSchema = z.strictObject({
     generated: text,
   }),
   // The apartment page's booking panel. {season}, {age}, {price}, {stay}, {guests}, {nights},
-  // {amount} and {count} are filled in by the page.
+  // {amount}, {count} and {name} are filled in by the page.
   panel: z.strictObject({
     title: text,
     views: z.strictObject({ label: text, list: text, calendar: text }),
@@ -292,6 +298,8 @@ export const textsSchema = z.strictObject({
     children: text,
     childAge: text,
     babies: text,
+    // The apartment is too small for the chosen guests.
+    small: text,
     from: text,
     week: text,
     tax: z.strictObject({ night: text, stay: text }),

@@ -27,6 +27,10 @@ slug is the same in both languages and comes from the deployment's content.
 - **The demo's apartments** have the slugs `zirbe`, `laerche` and `ahorn`.
 - **The address without a prefix** (`/`) redirects to the home page in the browser's language if the
   deployment has it, and in the deployment's first language otherwise.
+- **The guests** are chosen once for every apartment and kept as `?adults=4&children=2` on the home
+  page, an apartment's page and every link between the pages; two adults without children, the
+  default, leave the address bare. A value beyond what any apartment takes is held to it, in the
+  page and the address.
 - **The booking step** belongs to one apartment and takes the stay as query parameters, which are
   not translated. The stay is in the address so that a reload or a shared link keeps it. Opened
   without a stay, or with one that is not free, it redirects to the apartment's page and its stay

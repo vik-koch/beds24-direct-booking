@@ -4,6 +4,7 @@ import { lucideBedDouble, lucideRuler, lucideSparkles, lucideUsers } from '@ng-i
 import type { FreeWeeks } from '../beds24/weeks';
 import site from '../content/generated/site';
 import { srcset } from '../content/names';
+import { fits, Guests } from './guests';
 import { address, fill, formatMoney, LANGUAGE, TEXTS } from './texts';
 
 type Season = FreeWeeks['seasons'][number];
@@ -66,28 +67,32 @@ type Season = FreeWeeks['seasons'][number];
                 </li>
               </ul>
               <!-- Both seasons' lines in one place: a card keeps its height across a switch. -->
-              <p class="teaser-price stack">
-                @for (season of weeks()!.seasons; track season.name) {
-                  @let lowest = lowestOf(season, card.index);
-                  <span [attr.data-for]="season.name">
-                    @if (lowest !== null) {
-                      {{ from[0] }}<strong>{{ money(lowest) }}</strong
-                      >{{ from[1] }}
-                    } @else {
-                      {{
-                        fill(
-                          texts.weeks[
-                            season.states[card.index] === 'notOpen' ? 'notOpenShort' : 'full'
-                          ],
-                          {
-                            season: texts.seasons[season.name]!,
-                          }
-                        )
-                      }}
-                    }
-                  </span>
-                }
-              </p>
+              @if (card.small) {
+                <p class="teaser-price">{{ card.small }}</p>
+              } @else {
+                <p class="teaser-price stack">
+                  @for (season of weeks()!.seasons; track season.name) {
+                    @let lowest = lowestOf(season, card.index);
+                    <span [attr.data-for]="season.name">
+                      @if (lowest !== null) {
+                        {{ from[0] }}<strong>{{ money(lowest) }}</strong
+                        >{{ from[1] }}
+                      } @else {
+                        {{
+                          fill(
+                            texts.weeks[
+                              season.states[card.index] === 'notOpen' ? 'notOpenShort' : 'full'
+                            ],
+                            {
+                              season: texts.seasons[season.name]!,
+                            }
+                          )
+                        }}
+                      }
+                    </span>
+                  }
+                </p>
+              }
             }
           </div>
         </li>
@@ -187,19 +192,29 @@ export class Teasers {
   protected readonly fill = fill;
   protected readonly from = this.texts.panel.from.split('{price}');
   private readonly plural = new Intl.PluralRules(this.language.tag);
+  private readonly guests = inject(Guests);
 
   protected readonly srcset = srcset;
   protected readonly cards = computed(() => {
-    const listed = this.weeks()?.apartments ?? [];
+    const weeks = this.weeks();
+    const listed = weeks?.apartments ?? [];
+    const { adults, children } = this.guests;
+    const count = adults() + children();
+    const { one, other } = this.texts.weeks.guests;
+    const small = fill(this.texts.weeks.smallFor, {
+      guests: fill(this.plural.select(count) === 'one' ? one : other, { count }),
+    });
     return site.apartments.map(({ slug, name, pictures }) => {
       const index = listed.findIndex((one) => one.slug === slug);
+      const capacity = weeks?.capacities[slug];
       return {
         slug,
         name,
         index,
         picture: pictures[0],
-        link: address(this.language, 'apartment', slug),
+        link: this.guests.link(address(this.language, 'apartment', slug)),
         facts: listed[index] ?? null,
+        small: capacity && !fits(capacity, adults(), children()) ? small : null,
       };
     });
   });

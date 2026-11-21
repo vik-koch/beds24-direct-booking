@@ -4,6 +4,7 @@ import {
   Component,
   computed,
   DestroyRef,
+  effect,
   ElementRef,
   inject,
   InjectionToken,
@@ -16,6 +17,8 @@ import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideArrowLeft, lucideArrowRight, lucideX } from '@ng-icons/lucide';
 import type { FreeWeeks } from '../beds24/weeks';
 import type { SeasonName } from '../content/names';
+import { GuestCounts } from './guest-counts';
+import { fits, Guests, taxed, taxFor } from './guests';
 import { Season } from './season';
 import { swapper } from './swap';
 import { address, fill, formatMoney, LANGUAGE, TEXTS } from './texts';
@@ -40,7 +43,7 @@ const shownTab = new InjectionToken('shown tab', { providedIn: 'root', factory: 
 // comes from the list's own button and cross-fades them when it comes from the header.
 @Component({
   selector: 'app-free-weeks',
-  imports: [NgIcon, Grid, GridRow, GridCell],
+  imports: [NgIcon, Grid, GridRow, GridCell, GuestCounts],
   providers: [provideIcons({ lucideArrowLeft, lucideArrowRight, lucideX })],
   template: `
     <div class="weeks-head">
@@ -75,6 +78,7 @@ const shownTab = new InjectionToken('shown tab', { providedIn: 'root', factory: 
       <p class="sr-only" aria-live="polite">{{ announced() }}</p>
     </div>
     @if (weeks(); as weeks) {
+      <app-guest-counts class="guest-card" />
       @if (weeks.apartments.length > 1) {
         <fieldset class="room-tabs" [style.--word]="longestWord(weeks.apartments)">
           <legend class="sr-only">{{ texts.weeks.apartment }}</legend>
@@ -146,29 +150,33 @@ const shownTab = new InjectionToken('shown tab', { providedIn: 'root', factory: 
                               }}</span
                             >
                             @for (price of week.prices; track $index) {
-                              <!-- A booked cell can be reached but not chosen: Enter, Space or
-                                   a click on it would clear the chosen week. -->
+                              @let free = price !== null && fitting()[$index];
+                              <!-- A booked cell, or one too small for the guests, can be
+                                   reached but not chosen: Enter, Space or a click on it would
+                                   clear the chosen week. -->
                               <span
                                 ngGridCell
                                 role="gridcell"
-                                [class]="price === null ? 'booked' : 'stay'"
+                                [class]="free ? 'stay' : 'booked'"
                                 [class.elsewhere]="$index !== tab()"
                                 [colIndex]="$index + 2"
                                 [disabled]="!shown(season.name, $index)"
-                                [selectable]="price !== null"
+                                [selectable]="free"
                                 [selected]="isChosen(season.name, $index, week.row)"
                                 (selectedChange)="select($event, season.name, $index, week.row)"
                                 [attr.data-pick]="$index + '-' + week.row"
-                                (click)="guard($event, price !== null)"
-                                (keydown.enter)="price === null && $event.stopPropagation()"
-                                (keydown.space)="price === null && hold($event)"
+                                (click)="guard($event, free)"
+                                (keydown.enter)="!free && $event.stopPropagation()"
+                                (keydown.space)="!free && hold($event)"
                                 (keydown.pageup)="byMonth($event, -1)"
                                 (keydown.pagedown)="byMonth($event, 1)"
                               >
-                                @if (price === null) {
-                                  <span class="taken">{{ texts.weeks.taken }}</span>
+                                @if (free) {
+                                  <span class="price">{{ money(price!) }}</span>
                                 } @else {
-                                  <span class="price">{{ money(price) }}</span>
+                                  <span class="taken">{{
+                                    fitting()[$index] ? texts.weeks.taken : texts.weeks.small
+                                  }}</span>
                                 }
                               </span>
                             }
@@ -234,16 +242,31 @@ export class FreeWeeksList {
   // On a phone the list shows one apartment, the one of the chosen tab.
   protected readonly tab = inject(shownTab);
   protected readonly chosen = inject(chosenWeek);
+  private readonly group = inject(Guests);
+  // Per apartment, whether it takes the chosen guests.
+  protected readonly fitting = computed(() => {
+    const { adults, children } = this.group;
+    const weeks = this.weeks();
+    return (weeks?.apartments ?? []).map(({ slug }) =>
+      fits(weeks!.capacities[slug], adults(), children()),
+    );
+  });
   protected readonly picked = computed(() => {
     const pick = this.chosen();
-    const season = pick && this.weeks()?.seasons.find(({ name }) => name === pick.season);
+    const weeks = this.weeks();
+    const season = pick && weeks?.seasons.find(({ name }) => name === pick.season);
     if (!pick || !season) return null;
     const week = season.weeks[pick.row];
+    const { slug, name } = weeks!.apartments[pick.apartment];
+    const price = week.prices[pick.apartment]!;
+    const count = taxed(weeks!.capacities[slug], this.group.adults(), this.group.children());
     return {
       season,
-      name: this.weeks()!.apartments[pick.apartment].name,
+      name,
       stay: this.stay(week),
-      price: this.money(week.prices[pick.apartment]!),
+      price: weeks!.tax
+        ? fill(this.texts.weeks.withTax, { price: this.money(price + taxFor(weeks!.tax, count)) })
+        : this.money(price),
       link: this.link(season, pick.apartment, pick.row),
     };
   });
@@ -283,6 +306,11 @@ export class FreeWeeksList {
   constructor() {
     const destroyRef = inject(DestroyRef);
     destroyRef.onDestroy(this.season.watch((name) => this.move(name)));
+    // A week of an apartment that has become too small for the guests is no longer chosen.
+    effect(() => {
+      const pick = this.chosen();
+      if (pick && !this.fitting()[pick.apartment]) this.chosen.set(null);
+    });
     afterNextRender(() => {
       const query = matchMedia('(min-width: 48rem)');
       // A narrow screen shows only the tab's apartment, so it shows the chosen week's.
@@ -383,7 +411,12 @@ export class FreeWeeksList {
   protected link(season: SeasonWeeks, apartment: number, row: number) {
     const { arrival, departure } = season.weeks[row];
     const { slug } = this.weeks()!.apartments[apartment];
-    const query = new URLSearchParams({ arrival, departure, season: season.name });
+    const query = new URLSearchParams({
+      arrival,
+      departure,
+      season: season.name,
+      ...this.group.params(),
+    });
     return `${address(this.language, 'apartment', slug)}?${query}`;
   }
 

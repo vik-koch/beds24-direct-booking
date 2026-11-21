@@ -81,6 +81,8 @@
       "spoken": "{size} Quadratmeter"
     },
     "taken": "belegt",
+    "small": "zu klein",
+    "smallFor": "Zu klein für {guests}",
     "apartment": "Wohnung",
     "next": "Nächste Saison: {season}",
     "current": "Aktuelle Saison: {season}",
@@ -93,6 +95,7 @@
       "night": "Zuzüglich Ortstaxe von {amount} pro Erwachsenem und Nacht.",
       "stay": "Zuzüglich Ortstaxe von {amount} pro Erwachsenem und Aufenthalt."
     },
+    "withTax": "{price} mit Ortstaxe",
     "continue": "Weiter zur Buchung",
     "clear": "Gewählte Woche aufheben"
   },
@@ -134,6 +137,7 @@
     "children": "Kinder",
     "childAge": "bis {age} Jahre",
     "babies": "Babys bis 2 Jahre zählen nicht mit. Ein Babybett stellen wir gern dazu.",
+    "small": "{name} hat Platz für bis zu {guests}.",
     "from": "ab {price} pro Woche",
     "week": "Woche {stay}",
     "tax": {

@@ -81,6 +81,8 @@
       "spoken": "{size} square metres"
     },
     "taken": "booked",
+    "small": "too small",
+    "smallFor": "Too small for {guests}",
     "apartment": "Apartment",
     "next": "Next season: {season}",
     "current": "Current season: {season}",
@@ -93,6 +95,7 @@
       "night": "Plus a local tax of {amount} per adult and night.",
       "stay": "Plus a local tax of {amount} per adult and stay."
     },
+    "withTax": "{price} with local tax",
     "continue": "Continue to booking",
     "clear": "Clear the chosen week"
   },
@@ -134,6 +137,7 @@
     "children": "Children",
     "childAge": "up to {age}",
     "babies": "Babies up to 2 are not counted. We are happy to provide a cot.",
+    "small": "{name} sleeps up to {guests}.",
     "from": "from {price} a week",
     "week": "Week {stay}",
     "tax": {

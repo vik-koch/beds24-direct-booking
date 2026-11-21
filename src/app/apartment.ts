@@ -27,6 +27,7 @@ import site from '../content/generated/site';
 import { lucideName } from '../content/names';
 import { BookingPanel } from './booking-panel';
 import { Gallery } from './gallery';
+import { Guests } from './guests';
 import { address, fill, LANGUAGE, TEXTS } from './texts';
 
 // A room or an area of amenities: its icon, its name and what it holds; a code shown alone has
@@ -60,7 +61,7 @@ type Fold = ReturnType<typeof fold>;
   ],
   template: `
     <div class="column apartment">
-      <a class="back" [href]="back"
+      <a class="back" [href]="guests.link(back)"
         ><ng-icon name="lucideArrowLeft" aria-hidden="true" />{{ texts.apartment.back }}</a
       >
       <h1 class="headline">{{ apartment.name }}</h1>
@@ -512,6 +513,7 @@ export class Apartment {
     return text && fill(text, { from: from ?? '', until: until ?? '' });
   })();
   protected readonly back = `${address(this.language, 'home')}#${this.language.anchors.apartments}`;
+  protected readonly guests = inject(Guests);
 
   private readonly labels = this.texts.amenities;
   private readonly groups = this.listing?.features ?? [];
