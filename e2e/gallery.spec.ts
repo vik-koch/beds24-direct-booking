@@ -179,14 +179,22 @@ test('a picture opens full screen, and the buttons, the keys and the thumbnails 
   await expect(count).toHaveText('Bild 1 von 9');
   // It fades out as it faded in, then gives the focus back. A second request while it fades
   // starts no second fade; Chromium may close at once, as it lets one Escape wait, not two.
+  // The fades, the dialog's and its backdrop's, are counted as they start and last 2 s: under
+  // load the 200 ms can be over before the second key.
   await settled(page);
+  await viewer(page).evaluate((dialog) => {
+    const animate = dialog.animate.bind(dialog);
+    dialog.dataset['fades'] = '0';
+    dialog.animate = (keyframes, options) => {
+      dialog.dataset['fades'] = String(Number(dialog.dataset['fades']) + 1);
+      return animate(keyframes, { ...(options as KeyframeAnimationOptions), duration: 2000 });
+    };
+  });
   await page.keyboard.press('Escape');
-  expect(await viewer(page).evaluate((dialog) => dialog.getAnimations().length)).toBe(1);
+  await expect(viewer(page)).toHaveAttribute('data-fades', '2');
   await page.keyboard.press('Escape');
-  expect(
-    await viewer(page).evaluate((dialog) => dialog.getAnimations().length),
-  ).toBeLessThanOrEqual(1);
   await expect(viewer(page)).toBeHidden();
+  await expect(viewer(page)).toHaveAttribute('data-fades', '2');
   await expect(cell).toBeFocused();
   // A fade the browser cuts short, as when it will not let Escape wait, does not close the viewer
   // opened again.
