@@ -14,8 +14,8 @@ export interface BarLine {
   label: string;
 }
 
-// On a phone, while the booking panel is out of view, a bar at the screen's foot keeps the way
-// to it, or on to booking once a week is chosen. One line per season, as in the panel.
+// On a phone, while the booking panel is still below the screen, a bar at the screen's foot keeps
+// the way to it, or on to booking once a week is chosen. One line per season, as in the panel.
 @Component({
   encapsulation: ViewEncapsulation.None,
   selector: 'app-booking-bar',

@@ -906,7 +906,10 @@ export class BookingPanel {
     destroyRef.onDestroy(this.season.watch((name) => this.move(name)));
     afterNextRender(() => {
       const panel = this.host.querySelector('.panel')!;
-      const seen = new IntersectionObserver(([entry]) => this.barShown.set(!entry.isIntersecting));
+      // The root reaches far above the screen, so a panel scrolled past counts as seen.
+      const seen = new IntersectionObserver(([entry]) => this.barShown.set(!entry.isIntersecting), {
+        rootMargin: '100000px 0px 0px',
+      });
       seen.observe(panel);
       const sized = new ResizeObserver(() =>
         this.host.style.setProperty('--height', `${this.host.offsetHeight}px`),

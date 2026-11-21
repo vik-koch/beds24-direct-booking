@@ -492,10 +492,11 @@ test('beside the content a panel taller than the window shows its foot', async (
   expect(right!.x).toBeGreaterThan(left!.x + left!.width);
 });
 
-test('on a phone a bar leads to the panel while it is out of view, then on to booking', async ({
+test('on a phone a bar leads to the panel while it is below the screen, then on to booking', async ({
   page,
 }) => {
-  await page.setViewportSize({ width: 375, height: 700 });
+  // Low enough that the page scrolls past the panel.
+  await page.setViewportSize({ width: 375, height: 560 });
   await openNext(page, '/de/wohnungen/laerche');
   const bar = page.locator('.booking-bar');
   await expect(bar).toBeVisible();
@@ -510,10 +511,13 @@ test('on a phone a bar leads to the panel while it is out of view, then on to bo
     'href',
     /^\/de\/wohnungen\/laerche\/buchen\?arrival=/,
   );
+  // Past the panel the footer's links stay uncovered.
+  await page.evaluate(() => scrollTo({ top: document.body.scrollHeight, behavior: 'instant' }));
+  await expect(bar).toBeHidden();
   await page.setViewportSize({ width: 1280, height: 800 });
   await expect(bar).toBeHidden();
   // A season with no week to choose has no bar: the full one of a site with prices up to today.
-  await page.setViewportSize({ width: 375, height: 700 });
+  await page.setViewportSize({ width: 375, height: 560 });
   await open(page, 'http://localhost:4003/de/wohnungen/laerche');
   await page.evaluate(() => scrollTo({ top: 0, behavior: 'instant' }));
   await expect(bar).toBeHidden();
