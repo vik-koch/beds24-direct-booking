@@ -19,7 +19,7 @@ import {
   siteSchema,
   textsSchema,
 } from '../src/content/schema.ts';
-import { convertPictures } from './pictures.mjs';
+import { convertHero, convertPictures } from './pictures.mjs';
 
 // Every key one of two texts has and the other lacks, and whether the second lacks it.
 function differences(a, b, path = []) {
@@ -197,20 +197,27 @@ export async function writeContent(dir, out, cache) {
   const { site, texts } = readContent(dir);
   rmSync(out, { recursive: true, force: true });
   mkdirSync(out, { recursive: true });
-  // An apartment's picture is served only as its converted files, unless a season's hero or
-  // icon is the same file.
-  const seasonal = Object.values(site.seasons).flatMap(({ hero, icon }) => [hero.file, icon]);
+  // The apartments' pictures and the heroes are served only as their converted files.
+  const heroes = Object.values(site.seasons).map(({ hero }) => hero.file);
   const sources = new Set(
-    site.apartments.flatMap(({ pictures }) =>
-      pictures.filter(({ file }) => !seasonal.includes(file)).map(({ file }) => join(dir, file)),
+    [...site.apartments.flatMap(({ pictures }) => pictures.map(({ file }) => file)), ...heroes].map(
+      (file) => join(dir, file),
     ),
   );
-  const { pictures, converted } = await convertPictures(
+  const { pictures, converted: apartmentFiles } = await convertPictures(
     dir,
     site.apartments,
     join(out, 'pictures', 'apartments'),
     cache,
   );
+  let converted = apartmentFiles;
+  const heroOut = join(out, 'pictures', 'hero');
+  const seasons = {};
+  for (const [name, season] of Object.entries(site.seasons)) {
+    const files = await convertHero(dir, season.hero.file, `hero-${name}`, heroOut, cache);
+    converted += files.converted;
+    seasons[name] = { ...season, hero: { credit: season.hero.credit, ...files.hero } };
+  }
   // Alternative texts by address prefix, as the texts are.
   const apartments = site.apartments.map((apartment) => ({
     ...apartment,
@@ -223,7 +230,7 @@ export async function writeContent(dir, out, cache) {
   }));
   const module = (type, value) =>
     `import type { ${type} } from '../schema';\n\nconst value: ${type} = ${JSON.stringify(value, null, 2)};\nexport default value;\n`;
-  writeFileSync(join(out, 'site.ts'), module('Site', { ...site, apartments }));
+  writeFileSync(join(out, 'site.ts'), module('Site', { ...site, seasons, apartments }));
   for (const [code, value] of Object.entries(texts))
     writeFileSync(join(out, `texts.${code}.ts`), module('Texts', value));
   const loaders = Object.keys(texts).map(

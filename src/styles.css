@@ -461,9 +461,11 @@
     }
   }
 
+  /* The photo covers the hero without sizing it, so its own shape does not set the row's height. */
   .hero-photo {
+    position: relative;
     grid-area: 1 / 1;
-    background: var(--color-oak) center / cover no-repeat;
+    background: var(--color-oak);
   }
 
   /* The hero's photos and an apartment's pictures of one season; the other's are left out. */

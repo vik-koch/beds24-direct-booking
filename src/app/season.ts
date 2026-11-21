@@ -1,7 +1,7 @@
 import { DOCUMENT, isPlatformServer, Location } from '@angular/common';
 import { inject, Injectable, PLATFORM_ID, signal } from '@angular/core';
 import site from '../content/generated/site';
-import { seasonNames, type SeasonName } from '../content/names';
+import { heroPortrait, heroSizes, seasonNames, srcset, type SeasonName } from '../content/names';
 
 // Each listed season and the day it starts as MM-DD; a single season has none.
 export type Starts = Partial<Record<SeasonName, string | null>>;
@@ -170,12 +170,16 @@ export class Season {
     after.forEach((then) => then());
   }
 
-  // Fetches the other season's hero photo before it is needed, on hover or focus.
+  // Fetches the other season's hero photo before it is needed, on hover or focus: the file the
+  // hero's picture would take on this screen.
   preload(name: SeasonName) {
-    const file = site.seasons[name]?.hero.file;
-    if (this.server || !file || this.preloaded.has(name)) return;
+    const hero = site.seasons[name]?.hero;
+    if (this.server || !hero || this.preloaded.has(name)) return;
     this.preloaded.add(name);
-    new Image().src = `/${file}`;
+    const shown = hero.portrait && matchMedia(heroPortrait).matches ? hero.portrait : hero;
+    const image = new Image();
+    image.sizes = heroSizes(shown);
+    image.srcset = srcset(shown);
   }
 
   // In the browser the inline script has chosen already. This repeats the choice to know the

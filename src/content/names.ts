@@ -27,8 +27,15 @@ export const placesOf = (pictures: Picture[], seasons: readonly SeasonName[]): S
 };
 
 // A converted picture's files for an img's srcset.
-export const srcset = (picture: Picture) =>
+export const srcset = (picture: Pick<Picture, 'sources'>) =>
   picture.sources.map(({ url, width }) => `${url} ${width}w`).join(', ');
+
+// The hero's photo covers a box as wide as the screen, up to the hero's 120rem, and as tall: its
+// file is as wide as the photo grows to fill both. A screen of 3:4 or narrower shows the photo's
+// centre crop of that shape (scripts/pictures.mjs).
+export const heroPortrait = '(max-aspect-ratio: 3/4)';
+export const heroSizes = ({ width, height }: Pick<Picture, 'width' | 'height'>) =>
+  `max(min(100vw, 120rem), ${+((100 * width) / height).toFixed(2)}vh)`;
 
 // A Lucide icon's name as lucide.dev shows it, such as calendar-days, and its name in
 // @ng-icons/lucide, lucideCalendarDays.

@@ -256,17 +256,16 @@ test('the generated site gives each picture its files and its texts by address p
   );
   assert.match(first.sources[0].url, /^\/pictures\/apartments\/zirbe-1-480\.[0-9a-f]{8}\.webp$/);
   assert.ok(existsSync(join(out, first.sources[0].url)));
-  // The source is served only as its converted files.
+  // A season's hero, with its credit, in its files and its portrait crop's.
+  const { hero } = value.seasons.winter;
+  assert.deepEqual(Object.keys(hero), ['credit', 'width', 'height', 'sources', 'portrait']);
+  assert.match(hero.sources[0].url, /^\/pictures\/hero\/hero-winter-480\.[0-9a-f]{8}\.webp$/);
+  assert.match(hero.portrait.sources[0].url, /^\/pictures\/hero\/hero-winter-portrait-480\./);
+  assert.ok(existsSync(join(out, hero.portrait.sources[0].url)));
+  // The sources are served only as their converted files.
   assert.ok(!existsSync(join(out, 'pictures', 'zirbe-1.webp')));
-  assert.ok(existsSync(join(out, 'pictures', 'hero-winter.webp')));
+  assert.ok(!existsSync(join(out, 'pictures', 'hero-winter.webp')));
   assert.equal(await writeContent('content/demo', out, cache), 0);
-  // A hero that is also an apartment's picture is still served as it is.
-  const shared = changed(
-    'apartments/zirbe.json',
-    (a) => (a.pictures[0].file = 'pictures/hero-winter.webp'),
-  );
-  await writeContent(shared, out, cache);
-  assert.ok(existsSync(join(out, 'pictures', 'hero-winter.webp')));
 });
 
 test('two languages with one address prefix are refused', () => {

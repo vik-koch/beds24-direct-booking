@@ -121,10 +121,12 @@ content. The application has no wording, no colour and no typeface of its own. T
 - **A picture** is a file in `pictures/` with an optional `credit`: its title, author, source
   address and licence with its address, and optionally what was changed: `changes` lists `cropped`,
   `scaled` or both, and each language's texts name them under `credits.changes`. The picture credits
-  page lists every credited picture, with the changes in parentheses after its title. Pictures are
-  served at `/pictures/<file>` as they are and kept by browsers for a year, like the fonts: give a
-  changed picture a new name. WebP keeps a photo smaller than JPEG at the same quality; the demo's
-  hero photos are 2000 px wide WebP files at quality 80.
+  page lists every credited picture, with the changes in parentheses after its title. A season's
+  hero photo is converted like an apartment's pictures, at `/pictures/hero/`, and also as its centre
+  crop of 3:4, which a portrait screen shows in its place: the hero covers the screen, so such a
+  screen showed only that part of the photo anyway. Keep what matters in the photo's middle, and
+  give it at least 1920 px. Other pictures, such as the icons, are served at `/pictures/<file>` as
+  they are and kept by browsers for a year, like the fonts: give a changed picture a new name.
 - **The contact** in `site.json` lists any of a name, address lines, a phone number and an email
   address. The footer shows what is listed, and no contact column without `contact`, so a site can
   keep its footer short and give the full details on its imprint page.

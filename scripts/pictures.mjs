@@ -1,4 +1,5 @@
-// Converts the apartments' pictures into WebP files in several widths, named by their content.
+// Converts the apartments' pictures and the heroes into WebP files in several widths, named by
+// their content.
 import { createHash, randomUUID } from 'node:crypto';
 import {
   copyFileSync,
@@ -46,9 +47,56 @@ async function read(dir, file, cache) {
   return { bytes, keep: () => place(kept, (part) => writeFileSync(part, bytes)) };
 }
 
-// Each apartment's pictures by slug, written to `out`, and how many files had to be converted. A
-// conversion is kept in the cache under the source's digest and published under a digest of the
-// file itself, so a different encoding gets a new address.
+// A picture's WebP files in the widths up to its own, of `region` if given, named
+// `<name>-<width>.<digest>.webp` in `out` and served from `url`. A conversion is kept in the cache
+// under the source's digest and published under a digest of the file itself, so a different
+// encoding gets a new address. Sizes and region are measured as shown, after the camera's
+// orientation is applied.
+async function convert(bytes, { file, width, height, region }, name, out, url, cache) {
+  const shown = region ?? { width, height };
+  const sizes = [
+    ...new Set([...widths.filter((w) => w < shown.width), Math.min(shown.width, widths.at(-1))]),
+  ];
+  const key = region
+    ? `${digest(bytes)}-${region.left}-${region.top}-${region.width}x${region.height}`
+    : digest(bytes);
+  let converted = 0;
+  const sources = [];
+  for (const w of sizes) {
+    const kept = join(cache, `${key}-${w}-q${quality}.webp`);
+    if (!existsSync(kept)) {
+      await place(kept, (part) => {
+        const image = sharp(bytes).rotate();
+        return (region ? image.extract(region) : image).resize(w).webp({ quality }).toFile(part);
+      }).catch((error) => {
+        throw new Error(`${file} cannot be converted: ${error.message}`);
+      });
+      converted++;
+    }
+    const served = `${name}-${w}.${digest(readFileSync(kept)).slice(0, 8)}.webp`;
+    copyFileSync(kept, join(out, served));
+    sources.push({ width: w, url: `${url}/${served}` });
+  }
+  const largest = sizes.at(-1);
+  const picture = {
+    width: largest,
+    height: Math.round((largest * shown.height) / shown.width),
+    sources,
+  };
+  return { picture, converted };
+}
+
+const measure = (bytes, file) =>
+  sharp(bytes)
+    .metadata()
+    .then(
+      (size) => ({ file, ...size.autoOrient }),
+      () => {
+        throw new Error(`${file} is not a picture`);
+      },
+    );
+
+// Each apartment's pictures by slug, written to `out`, and how many files had to be converted.
 export async function convertPictures(dir, apartments, out, cache) {
   mkdirSync(cache, { recursive: true });
   mkdirSync(out, { recursive: true });
@@ -59,43 +107,19 @@ export async function convertPictures(dir, apartments, out, cache) {
     for (const [index, { file, alt, generated, season }] of list.entries()) {
       try {
         const { bytes, keep } = await read(dir, file, cache);
-        const size = await sharp(bytes)
-          .metadata()
-          .catch(() => {
-            throw new Error(`${file} is not a picture`);
-          });
-        // Measured as shown, after the camera's orientation is applied.
-        const { width, height } = size.autoOrient;
+        const size = await measure(bytes, file);
+        const { width, height } = size;
         if (width < height * (1 - slack) || width > height * 2 * (1 + slack))
           throw new Error(`${file} is ${width} × ${height}, not between square and 2:1`);
-        const sizes = [
-          ...new Set([...widths.filter((w) => w < width), Math.min(width, widths.at(-1))]),
-        ];
-        const hash = digest(bytes);
-        const sources = [];
-        for (const w of sizes) {
-          const kept = join(cache, `${hash}-${w}-q${quality}.webp`);
-          if (!existsSync(kept)) {
-            await place(kept, (part) =>
-              sharp(bytes).rotate().resize(w).webp({ quality }).toFile(part),
-            ).catch((error) => {
-              throw new Error(`${file} cannot be converted: ${error.message}`);
-            });
-            converted++;
-          }
-          const name = `${slug}-${index + 1}-${w}.${digest(readFileSync(kept)).slice(0, 8)}.webp`;
-          copyFileSync(kept, join(out, name));
-          sources.push({ width: w, url: `/pictures/apartments/${name}` });
-        }
+        const name = `${slug}-${index + 1}`;
+        const files = await convert(bytes, size, name, out, '/pictures/apartments', cache);
+        converted += files.converted;
         await keep();
-        const largest = sizes.at(-1);
         pictures[slug].push({
           alt,
           ...(generated && { generated }),
           ...(season && { season }),
-          width: largest,
-          height: Math.round((largest * height) / width),
-          sources,
+          ...files.picture,
         });
       } catch (error) {
         throw new Error(
@@ -105,4 +129,23 @@ export async function convertPictures(dir, apartments, out, cache) {
     }
   }
   return { pictures, converted };
+}
+
+// A season's hero photo, and its centre crop of 3:4: all that a screen of that shape or narrower
+// shows of it under cover (the page's heroPortrait). A photo that narrow needs no crop.
+export async function convertHero(dir, file, name, out, cache) {
+  mkdirSync(cache, { recursive: true });
+  mkdirSync(out, { recursive: true });
+  const bytes = readFileSync(join(dir, file));
+  const size = await measure(bytes, file);
+  const full = await convert(bytes, size, name, out, '/pictures/hero', cache);
+  const width = Math.round((size.height * 3) / 4);
+  const region = { left: Math.floor((size.width - width) / 2), top: 0, width, height: size.height };
+  const portrait =
+    width < size.width &&
+    (await convert(bytes, { ...size, region }, `${name}-portrait`, out, '/pictures/hero', cache));
+  return {
+    hero: { ...full.picture, ...(portrait && { portrait: portrait.picture }) },
+    converted: full.converted + (portrait ? portrait.converted : 0),
+  };
 }
