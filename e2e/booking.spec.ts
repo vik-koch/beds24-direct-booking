@@ -557,12 +557,12 @@ for (const width of [320, 1280])
 
 test('an apartment too small says how many it takes and does not book', async ({ page }) => {
   await openNext(page, '/de/wohnungen/laerche?adults=4&children=1');
-  await expect(page.locator('.panel-small')).toHaveText('Lärche hat Platz für bis zu 4 Gäste.');
+  await expect(page.locator('.too-small')).toHaveText('Lärche hat Platz für bis zu 4 Gäste.');
   await (await firstFree(page)).click();
   const outcome = panel(page).locator('.outcome:visible');
   await expect(outcome.getByRole('button', { name: 'Weiter zur Buchung' })).toBeDisabled();
   await pickCount(page, 'children', 0);
-  await expect(page.locator('.panel-small')).toBeEmpty();
+  await expect(page.locator('.too-small')).toBeEmpty();
   await expect(outcome.getByRole('link', { name: 'Weiter zur Buchung' })).toHaveAttribute(
     'href',
     /\/de\/wohnungen\/laerche\/buchen\?arrival=.+&departure=.+&adults=4$/,

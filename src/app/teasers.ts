@@ -1,6 +1,12 @@
 import { Component, computed, inject, input, ViewEncapsulation } from '@angular/core';
 import { NgIcon, provideIcons } from '@ng-icons/core';
-import { lucideBedDouble, lucideRuler, lucideSparkles, lucideUsers } from '@ng-icons/lucide';
+import {
+  lucideBedDouble,
+  lucideInfo,
+  lucideRuler,
+  lucideSparkles,
+  lucideUsers,
+} from '@ng-icons/lucide';
 import type { FreeWeeks } from '../beds24/weeks';
 import site from '../content/generated/site';
 import { srcset } from '../content/names';
@@ -15,7 +21,9 @@ type Season = FreeWeeks['seasons'][number];
   encapsulation: ViewEncapsulation.None,
   selector: 'app-teasers',
   imports: [NgIcon],
-  providers: [provideIcons({ lucideBedDouble, lucideRuler, lucideSparkles, lucideUsers })],
+  providers: [
+    provideIcons({ lucideBedDouble, lucideInfo, lucideRuler, lucideSparkles, lucideUsers }),
+  ],
   template: `
     <ul class="teasers" [attr.data-count]="cards().length">
       @for (card of cards(); track card.slug) {
@@ -68,7 +76,9 @@ type Season = FreeWeeks['seasons'][number];
               </ul>
               <!-- Both seasons' lines in one place: a card keeps its height across a switch. -->
               @if (card.small) {
-                <p class="teaser-price">{{ card.small }}</p>
+                <p class="teaser-price too-small">
+                  <ng-icon name="lucideInfo" aria-hidden="true" />{{ card.small }}
+                </p>
               } @else {
                 <p class="teaser-price stack">
                   @for (season of weeks()!.seasons; track season.name) {

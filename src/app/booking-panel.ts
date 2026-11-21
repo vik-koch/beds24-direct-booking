@@ -20,6 +20,7 @@ import {
   lucideCalendar,
   lucideChevronLeft,
   lucideChevronRight,
+  lucideInfo,
   lucideList,
 } from '@ng-icons/lucide';
 import type { Listing } from '../beds24/client';
@@ -82,6 +83,7 @@ const addDays = (date: string, days: number) =>
       lucideCalendar,
       lucideChevronLeft,
       lucideChevronRight,
+      lucideInfo,
       lucideList,
     }),
   ],
@@ -138,12 +140,6 @@ const addDays = (date: string, days: number) =>
       }
       @if (weeks && limits) {
         <p class="sr-only" aria-live="polite">{{ announced() }}</p>
-        <!-- Above the weeks, so it is read before a week is chosen; the counts are below. -->
-        <p class="panel-small" role="status">
-          @if (!fitting()) {
-            {{ small() }}
-          }
-        </p>
         <div class="panel-seasons">
           @for (season of weeks.seasons; track season.name) {
             <div class="panel-season" [attr.data-for]="season.name">
@@ -293,6 +289,12 @@ const addDays = (date: string, days: number) =>
             <h3>{{ texts.panel.guests }}</h3>
           }
           <app-guest-counts />
+          <!-- Beside the counts that would make the apartment fit. -->
+          <p class="too-small" role="status">
+            @if (!fitting()) {
+              <ng-icon name="lucideInfo" aria-hidden="true" />{{ small() }}
+            }
+          </p>
         </div>
         <!-- A season with no week to choose has no total and no button. -->
         @for (season of weeks.seasons; track season.name) {
@@ -725,9 +727,8 @@ const addDays = (date: string, days: number) =>
         font-size: 0.875rem;
       }
 
-      .panel-small:not(:empty) {
-        margin-top: 1rem;
-        font-weight: 500;
+      .too-small:not(:empty) {
+        margin-top: 0.75rem;
       }
 
       .total {
