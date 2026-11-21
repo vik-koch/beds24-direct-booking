@@ -19,6 +19,10 @@ describe('Guests', () => {
     expect(guests.link('//example.com/a')).toBe('//example.com/a');
   });
 
+  it('replaces the guests an address of the site carries', () => {
+    expect(at('/de?adults=3').link('/de?children=2')).toBe('/de?adults=3');
+  });
+
   it('counts children as guests where no room asks for them', () => {
     const guests = at('/de?adults=1&children=1');
     guests.limit([twin]);

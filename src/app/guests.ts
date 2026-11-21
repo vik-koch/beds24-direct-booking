@@ -81,6 +81,8 @@ export class Guests {
     const [rest, hash] = href.split('#');
     const [path, search] = rest.split('?');
     const params = new URLSearchParams(search);
+    params.delete('adults');
+    params.delete('children');
     for (const [name, value] of Object.entries(this.params())) params.set(name, value);
     return `${path}${params.size ? `?${params}` : ''}${hash === undefined ? '' : `#${hash}`}`;
   }
