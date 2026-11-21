@@ -112,6 +112,7 @@ describe('freeWeeks', () => {
         guests: 2,
         size: 34,
         bedrooms: 2,
+        tax: { amount: 3.5, per: 'night' },
         headline: { de: 'Für vier', fr: '' },
       },
       {
@@ -120,6 +121,7 @@ describe('freeWeeks', () => {
         guests: 4,
         size: 61,
         bedrooms: 2,
+        tax: { amount: 3.5, per: 'night' },
         headline: { de: 'Für vier', fr: '' },
       },
     ]);

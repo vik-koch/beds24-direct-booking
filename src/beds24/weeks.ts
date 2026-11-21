@@ -30,13 +30,15 @@ export interface FreeWeeks {
     guests: number;
     size: number;
     bedrooms: number;
+    tax: Tax | null;
     // Per Beds24 language code of the site, empty where nothing is written.
     headline: Record<string, string>;
   }[];
   // Per slug, of every listed apartment, also where the weeks are of one apartment alone.
   capacities: Record<string, Capacity>;
   currency: string;
-  // Shown once beside the prices, so only when every apartment has the same.
+  // Shown once beside the prices, so only when every apartment has the same; each apartment
+  // also carries its own.
   tax: Tax | null;
   seasons: {
     name: SeasonName;
@@ -96,6 +98,7 @@ export function freeWeeks(
       guests: room.maxPeople,
       size: room.size,
       bedrooms: room.bedrooms,
+      tax: room.tax,
       headline: Object.fromEntries(languages.map((code) => [code, room.headlines[code] ?? ''])),
     })),
     capacities: Object.fromEntries(

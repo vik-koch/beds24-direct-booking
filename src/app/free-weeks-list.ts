@@ -257,15 +257,15 @@ export class FreeWeeksList {
     const season = pick && weeks?.seasons.find(({ name }) => name === pick.season);
     if (!pick || !season) return null;
     const week = season.weeks[pick.row];
-    const { slug, name } = weeks!.apartments[pick.apartment];
+    const { slug, name, tax } = weeks!.apartments[pick.apartment];
     const price = week.prices[pick.apartment]!;
     const count = taxed(weeks!.capacities[slug], this.group.adults(), this.group.children());
     return {
       season,
       name,
       stay: this.stay(week),
-      price: weeks!.tax
-        ? fill(this.texts.weeks.withTax, { price: this.money(price + taxFor(weeks!.tax, count)) })
+      price: tax
+        ? fill(this.texts.weeks.withTax, { price: this.money(price + taxFor(tax, count)) })
         : this.money(price),
       link: this.link(season, pick.apartment, pick.row),
     };
