@@ -110,10 +110,6 @@ nothing is built or tested for it.
 - **A changed helper or app-wide signal that many tests use** runs each spec it touches 3 times,
   `--repeat-each 3 --workers 8` in the same three browsers, not every test 10 times. The helper
   already runs many times per spec.
-- **Two long tests time out under this load** and pass in CI: "the wordmark keeps one line on a
-  phone" and "below 24rem the switch shows its icons only, the names stay the radios’ names". Their
-  timeouts do not block a push; any other failure of theirs does. #216 makes them fit, and removes
-  this exception.
 - **The screenshot matrix** (2 languages × 2 seasons × phone and desktop) stays on Chromium and the
   WebKit phone, or it is too large to review.
 - **Playwright's WebKit is not Safari.** It is a first signal for layout and forms. Cookie blocking
