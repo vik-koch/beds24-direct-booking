@@ -23,6 +23,12 @@ describe('Guests', () => {
     expect(at('/de?adults=3').link('/de?children=2')).toBe('/de?adults=3');
   });
 
+  it('keeps the rest of an address of the site, a second ? or # included', () => {
+    expect(at('/de?adults=3').link('/de/faq?topic=a?b&children=2#x#y')).toBe(
+      '/de/faq?topic=a%3Fb&adults=3#x#y',
+    );
+  });
+
   it('counts children as guests where no room asks for them', () => {
     const guests = at('/de?adults=1&children=1');
     guests.limit([twin]);
