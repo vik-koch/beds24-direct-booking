@@ -2,7 +2,8 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 
 const panel = (page: Page) => page.locator('.panel');
-// Controls used before the application has started are outside what the site supports.
+// Controls used before the application has started are outside what the site supports, and
+// data-smooth cannot tell: the head's script sets it before Angular runs.
 async function open(page: Page, path: string) {
   const response = await page.goto(path);
   await expect(page.locator('html')).toHaveAttribute('data-started', '');

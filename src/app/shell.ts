@@ -9,7 +9,7 @@ import {
   Router,
   RouterOutlet,
 } from '@angular/router';
-import { filter } from 'rxjs';
+import { filter, first } from 'rxjs';
 import { fonts } from '../content/generated/fonts';
 import site from '../content/generated/site';
 import type { Texts } from '../content/schema';
@@ -88,14 +88,14 @@ export class Shell {
         filter((event) => event instanceof NavigationEnd),
         takeUntilDestroyed(),
       )
-      .subscribe(() => {
-        this.describe();
-        // The sign that the application has started, for the e2e tests: data-smooth may come
-        // from the head's script. Only the browser renders, so the server never writes it.
-        afterNextRender(() => this.document.documentElement.setAttribute('data-started', ''), {
-          injector,
-        });
-      });
+      .subscribe(() => this.describe());
+    // The sign that the application has started, for the e2e tests: data-smooth may come from
+    // the head's script. Only the browser renders, so the server never writes it.
+    this.router.events.pipe(first((event) => event instanceof NavigationEnd)).subscribe(() =>
+      afterNextRender(() => this.document.documentElement.setAttribute('data-started', ''), {
+        injector,
+      }),
+    );
     // A page may keep a choice in its address without a navigation, as the booking panel does;
     // the other language's link carries it too.
     inject(DestroyRef).onDestroy(this.location.onUrlChange(() => this.describe()));
