@@ -51,6 +51,12 @@
   background: var(--color-ground);
 }
 
+/* CDK places a menu's overlay a frame after it opens. Until then it sits at the top left, where a
+   resting pointer would hover it, then leave it as it moves away: a hover menu closes (#212). */
+.cdk-overlay-connected-position-bounding-box:not([style]) {
+  visibility: hidden;
+}
+
 .spartan-sheet-overlay {
   position: fixed;
   inset: 0;

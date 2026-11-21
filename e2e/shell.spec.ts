@@ -18,12 +18,12 @@ const pages = [
 
 const axe = async (page: Page) => (await new AxeBuilder({ page }).analyze()).violations;
 
-// Opens a menu of the wide header by keyboard, once the application has started. The menu's
-// pane first appears at the top left, then moves; leaving a pointer resting there closes it.
+// Opens a menu of the wide header by keyboard, once the application has started, with the
+// pointer resting where its pane is attached before it is placed (#212).
 async function open(page: Page, name: string) {
   const menu = page.getByRole('button', { name });
   await expect(page.locator('html')).toHaveAttribute('data-started', '');
-  await page.mouse.move(0, page.viewportSize()!.height - 1);
+  await page.mouse.move(0, 0);
   await menu.focus();
   await page.keyboard.press('Enter');
   await expect(menu).toHaveAttribute('aria-expanded', 'true');
