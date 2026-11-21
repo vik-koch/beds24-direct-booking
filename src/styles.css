@@ -1018,10 +1018,10 @@
     text-wrap: pretty;
   }
 
-  /* Four apartments' columns are short of room below 56rem: their text is a step smaller. */
+  /* Four apartments' columns are short of room below 56rem: their text takes the narrow step. */
   @media (48rem <= width < 56rem) {
     .weeks-grid:has(.weeks-columns > :nth-child(5)) {
-      font-size: 0.9375rem;
+      font-size: 1rem;
 
       .weeks-columns > * + * {
         font-size: 1rem;
