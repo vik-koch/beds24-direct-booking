@@ -354,7 +354,7 @@ export class FreeWeeksList implements OnInit {
     const apartment =
       weeks?.apartments.findIndex(({ slug }) => slug === query.get('apartment')) ?? -1;
     const arrival = query.get('arrival') ?? '';
-    const season = weeks && seasonOf(weeks, arrival);
+    const season = weeks && apartment >= 0 ? seasonOf(weeks, apartment, arrival) : undefined;
     const pick = season && apartment >= 0 ? { season: season.name, apartment, arrival } : null;
     this.chosen.set(pick);
     if (pick) this.tab.set(pick.apartment);

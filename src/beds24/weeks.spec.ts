@@ -113,6 +113,7 @@ describe('freeWeeks', () => {
         bedrooms: 2,
         tax: { amount: 3.5, per: 'night' },
         headline: { de: 'Für vier', fr: '' },
+        changeover: [6],
       },
       {
         slug: 'one',
@@ -122,6 +123,7 @@ describe('freeWeeks', () => {
         bedrooms: 2,
         tax: { amount: 3.5, per: 'night' },
         headline: { de: 'Für vier', fr: '' },
+        changeover: [6],
       },
     ]);
     expect(list.seasons[0]).toEqual({

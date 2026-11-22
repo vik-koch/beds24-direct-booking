@@ -33,6 +33,9 @@ export interface FreeWeeks {
     tax: Tax | null;
     // Per Beds24 language code of the site, empty where nothing is written.
     headline: Record<string, string>;
+    // The weekdays (0 is Sunday) of its changeover days, on which a week of it may start; also
+    // where no week has a price.
+    changeover: number[];
   }[];
   // Per slug, of every listed apartment, also where the weeks are of one apartment alone.
   capacities: Record<string, Capacity>;
@@ -103,6 +106,13 @@ export function freeWeeks(
       bedrooms: room.bedrooms,
       tax: room.tax,
       headline: Object.fromEntries(languages.map((code) => [code, room.headlines[code] ?? ''])),
+      changeover: [
+        ...new Set(
+          (inventory.days[room.id] ?? [])
+            .filter((day) => day.changeover)
+            .map((day) => new Date(day.date).getUTCDay()),
+        ),
+      ].sort(),
     })),
     capacities: Object.fromEntries(
       all.map(({ apartment, room: { maxPeople, asksChildren } }) => [

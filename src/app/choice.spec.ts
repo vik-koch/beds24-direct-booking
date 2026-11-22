@@ -71,6 +71,8 @@ describe('Choice', () => {
   it('finds the season of a week the site offers or offered, and of no other day', () => {
     const week = (arrival: string) => ({ arrival, departure: '', prices: [] });
     const weeks = {
+      // Saturdays, and Fridays.
+      apartments: [{ changeover: [6] }, { changeover: [5] }],
       seasons: [
         {
           name: 'winter',
@@ -81,15 +83,24 @@ describe('Choice', () => {
         { name: 'summer', start: '2027-04-01', end: '2027-08-31', weeks: [] },
       ],
     } as unknown as FreeWeeks;
-    const of = (arrival: string) => seasonOf(weeks, arrival)?.name;
-    // Listed, or before the listed weeks on their weekday, a Saturday.
-    expect([of('2026-12-12'), of('2026-11-28'), of('2027-05-01')]).toEqual([
+    const of = (arrival: string, apartment = 0) => seasonOf(weeks, apartment, arrival)?.name;
+    // Listed, before the listed weeks, or in a season that lists none, on the apartment's day.
+    expect([of('2026-12-12'), of('2026-11-28'), of('2027-05-01'), of('2026-11-27', 1)]).toEqual([
       'winter',
       'winter',
       'summer',
+      'winter',
     ]);
-    // After the first listed week but listed nowhere, on another weekday, or outside the seasons.
-    for (const day of ['2026-12-19', '2026-11-24', '2027-05-04', '2025-12-06', '2027-02-30'])
-      expect(of(day)).toBeUndefined();
+    // Another day of the apartment's, a Saturday after the first listed week listed nowhere, or
+    // outside the seasons.
+    for (const [day, apartment] of [
+      ['2026-11-24', 0],
+      ['2027-05-04', 0],
+      ['2026-11-28', 1],
+      ['2026-12-19', 0],
+      ['2025-12-06', 0],
+      ['2027-02-30', 0],
+    ] as const)
+      expect(of(day, apartment)).toBeUndefined();
   });
 });

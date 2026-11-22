@@ -806,6 +806,14 @@ test('a linked week that has passed stays blocked, also in a full season', async
   await page.keyboard.press('Enter');
   await expect(page.locator('.weeks h2')).toBeFocused();
   await expect(page).not.toHaveURL(/arrival=/);
+  // A Tuesday of the same season starts no week: both pages drop it, though no week is listed.
+  const tuesday = plus(passed, 3);
+  await open(page, `${site}/de/wohnungen/laerche?arrival=${tuesday}`);
+  await expect(page).not.toHaveURL(/arrival=/);
+  await expect(panel(page)).not.toHaveAttribute('data-blocked');
+  await open(page, `${site}/de?apartment=laerche&arrival=${tuesday}`);
+  await expect(page).not.toHaveURL(/arrival=/);
+  await expect(page.locator('.pick')).toHaveCount(0);
   // On a desktop, with no bar, the panel's own button clears it.
   await page.setViewportSize({ width: 1280, height: 800 });
   await open(page, `${site}/de/wohnungen/laerche?arrival=${passed}`);

@@ -1008,7 +1008,7 @@ export class BookingPanel {
     const query = this.route.queryParamMap;
     const arrival = query.get('arrival') ?? '';
     // Also a week booked or passed since, which stays chosen as blocked.
-    const season = this.weeks && seasonOf(this.weeks, arrival);
+    const season = this.weeks && seasonOf(this.weeks, 0, arrival);
     // A month browsed to before a change of language stays shown.
     if (season) {
       this.chosen.set({ season: season.name, arrival });
