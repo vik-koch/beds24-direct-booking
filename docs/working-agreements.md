@@ -20,8 +20,13 @@ The process is part of what the project shows: issues, pull requests and agent r
 
 ## Batches and debt
 
-- **One issue, one branch, one pull request.** Every bug and every piece of debt is its own issue. A
-  small pull request costs little with an agent committing and a fast suite.
+- **One issue, one branch, one pull request.** A small pull request costs little with an agent
+  committing and a fast suite.
+- **A bug in code not yet released is fixed where it is found,** in the pull request whose work runs
+  into it, in a commit of its own and named in the description: that is finishing the slice. A bug
+  in released code or in an area the branch does not touch is its own issue, and so is every piece
+  of debt. Small polish for one milestone gathers in one issue with a checklist and one pull
+  request.
 - **The history of `main` is one line.** A branch is rebased onto `main` right before it is merged,
   so each pull request shows as its commits followed by one merge commit and no two branches run
   side by side. Claude rebases when asked or when `main` has moved; with several pull requests open,
@@ -104,8 +109,9 @@ nothing is built or tested for it.
   WebKit when it relies on the phone's own width or its menu sheet, on touch, focus, scrolling,
   motion, layout, date formats or decoding a picture. When in doubt, it stays.
 - **The e2e suite runs against the simulator,** never against Beds24.
-- **A new or changed e2e test runs once on each engine before its push,** WebKit included. Where the
-  machine's own WebKit cannot start, `npm run e2e:webkit` runs it in the Playwright image CI uses.
+- **A new or changed e2e test runs once locally in Chromium before its push.** CI runs the whole
+  suite on all three engines in about five minutes and is the gate. `npm run e2e:webkit` runs WebKit
+  in the Playwright image CI uses, to reproduce a WebKit failure from CI.
 - **A test reads only what an `expect` waits for,** never the page straight after a step. Such a
   read passes on a developer machine and fails in CI now and then, and repeating it locally does not
   find it: the guest select's race in #208 passed 40 local runs and failed only on CI's slower
