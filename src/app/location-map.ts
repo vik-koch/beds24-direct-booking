@@ -266,10 +266,16 @@ function flavor(c: (name: string) => string): Flavor {
         margin-inline: auto;
       }
 
+      /* On a phone a square, so that the panel below it starts within the screen. */
       .map-frame {
         position: relative;
-        height: clamp(28rem, 70svh, 48rem);
+        aspect-ratio: 1;
         background: var(--color-ground);
+
+        @media (min-width: 48rem) {
+          aspect-ratio: auto;
+          height: clamp(28rem, 70svh, 48rem);
+        }
       }
 
       /* Its own layers, such as the hint to zoom with Ctrl, stay under the panel. */
@@ -369,35 +375,11 @@ function flavor(c: (name: string) => string): Flavor {
         gap: 0.5rem;
         margin-top: 0.5rem;
 
-        input {
-          position: absolute;
-          opacity: 0;
-        }
-
         span {
           display: grid;
           place-items: center;
           min-height: var(--size-control-small);
           padding: 0 1rem;
-          border: 1px solid var(--color-edge);
-          border-radius: var(--radius-control);
-          font-weight: 500;
-          cursor: pointer;
-          transition:
-            background-color 0.2s,
-            border-color 0.2s,
-            color 0.2s;
-        }
-
-        :checked + span {
-          border-color: var(--color-ink);
-          background: var(--color-ink);
-          color: var(--color-surface);
-        }
-
-        :focus-visible + span {
-          outline: var(--focus-ring);
-          outline-offset: 3px;
         }
       }
 
@@ -426,15 +408,18 @@ function flavor(c: (name: string) => string): Flavor {
         }
       }
 
+      /* The button's height leaves room above its text, so the panel's gap need not be whole. */
       .map-unfold {
-        justify-self: start;
+        justify-self: center;
+        margin-top: -0.625rem;
       }
 
       .map-zoom {
         position: absolute;
         /* Over the map's own layers. */
         z-index: 1;
-        inset: 0.75rem 0.75rem auto auto;
+        /* Level with the panel's top. */
+        inset: 1.5rem 0.75rem auto auto;
         display: none;
         flex-direction: column;
         border-radius: var(--radius-control);

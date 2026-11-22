@@ -134,20 +134,27 @@ test("the map's hint to hold Ctrl while scrolling stays under the panel", async 
   expect(Math.min(...data.subarray(at, at + 3))).toBeGreaterThan(240);
 });
 
+// Once the fold has finished: a view the fold moved would be moving by then.
+const folded = (page: Page) =>
+  page.waitForFunction(() => !document.querySelector('.map-more')!.getAnimations().length);
+
 test('the arrow unfolds the other places with their pins, and leaves the view', async ({
   page,
 }) => {
   await openMap(page);
-  const more = panel(page).getByRole('button', { name: 'More places' });
-  // Where the pin stands in the map, whatever the page's scroll.
-  const spot = () =>
-    page
-      .getByRole('button', { name: 'Ahorn' })
-      .evaluate(
-        (pin) =>
-          pin.getBoundingClientRect().y - pin.closest('.map-frame')!.getBoundingClientRect().y,
-      );
-  const before = await spot();
+  const more = panel(page).locator('.map-unfold');
+  // Where two apartments stand in the map, whatever the page's scroll.
+  const spots = () =>
+    page.locator('.map-frame').evaluate((frame) => {
+      const { x, y } = frame.getBoundingClientRect();
+      return [...frame.querySelectorAll('button.map-pin')].slice(0, 2).map((pin) => {
+        const box = pin.getBoundingClientRect();
+        return [box.x - x, box.y - y];
+      });
+    });
+  const near = (a: number[][], b: number[][]) =>
+    a.flat().every((value, i) => Math.abs(value - b.flat()[i]!) < 1);
+  const before = await spots();
   await expect(page.locator('.map-place')).toHaveCount(2);
   await expect(panel(page).locator('#map-more')).toHaveAttribute('inert');
   await more.click();
@@ -160,20 +167,41 @@ test('the arrow unfolds the other places with their pins, and leaves the view', 
     /Supermarket/,
   ]);
   await expect(page.locator('.map-place')).toHaveCount(4);
-  expect(await spot()).toBe(before);
+  await folded(page);
+  expect(near(await spots(), before)).toBe(true);
   await more.click();
   await expect(page.locator('.map-place')).toHaveCount(2);
-  expect(await spot()).toBe(before);
+  await folded(page);
+  expect(near(await spots(), before)).toBe(true);
 });
+
+// The heights of the other places' list over the frames after the arrow is pressed.
+const unfolding = (page: Page) =>
+  page.evaluate(async () => {
+    document.querySelector<HTMLElement>('.map-unfold')!.click();
+    const list = document.querySelector('#map-more')!;
+    const heights: number[] = [];
+    for (let i = 0; i < 40; i++) {
+      await new Promise(requestAnimationFrame);
+      heights.push(list.getBoundingClientRect().height);
+    }
+    return heights;
+  });
 
 test('the other places grow into the list, and appear at once with reduced motion', async ({
   page,
 }) => {
   await openMap(page);
-  const fold = panel(page).locator('.map-more');
-  await expect(fold).toHaveCSS('transition-duration', '0.3s');
+  const grown = await unfolding(page);
+  const full = grown.at(-1)!;
+  expect(full).toBeGreaterThan(50);
+  expect(grown.some((height) => height > 1 && height < full - 1)).toBe(true);
+  await page.locator('.map-unfold').click();
+  await folded(page);
   await page.emulateMedia({ reducedMotion: 'reduce' });
-  await expect(fold).toHaveCSS('transition-duration', '0s');
+  const sudden = await unfolding(page);
+  expect(sudden.some((height) => height > 1 && height < full - 1)).toBe(false);
+  expect(sudden.at(-1)).toBe(full);
 });
 
 test('the zoom buttons zoom the map, and stop at its widest view', async ({ page }) => {
@@ -190,22 +218,35 @@ test('the zoom buttons zoom the map, and stop at its widest view', async ({ page
   }).toPass({ timeout: 15000 });
 });
 
-for (const width of [320, 390]) {
-  test(`on a ${width} px phone the panel follows the map and needs no scroll of its own`, async ({
+for (const [width, path] of [
+  [320, '/de'],
+  [390, '/en'],
+] as const) {
+  test(`on a ${width} px phone the map is square, the panel below it without a scroll`, async ({
     page,
   }) => {
     await page.setViewportSize({ width, height: 800 });
-    await openMap(page);
-    await panel(page).getByRole('button', { name: 'More places' }).click();
-    await panel(page).getByText('Lärche').click();
-    const frame = (await page.locator('.map-frame').boundingBox())!;
-    const box = (await panel(page).boundingBox())!;
-    expect(box.y).toBeGreaterThanOrEqual(frame.y + frame.height);
-    expect(box.x).toBeGreaterThanOrEqual(16);
-    expect(box.x + box.width).toBeLessThanOrEqual(width - 16);
-    expect(await panel(page).evaluate((e) => e.scrollHeight - e.clientHeight)).toBe(0);
-    const { scrollWidth, clientWidth } = await page.evaluate(() => document.documentElement);
-    expect(scrollWidth).toBe(clientWidth);
+    await openMap(page, path);
+    await panel(page).locator('.map-unfold').click();
+    await panel(page).locator('.map-choices label').nth(1).click();
+    await folded(page);
+    const layout = () =>
+      page.evaluate(() => {
+        const frame = document.querySelector('.map-frame')!.getBoundingClientRect();
+        const box = document.querySelector('.map-panel')!.getBoundingClientRect();
+        const panel = document.querySelector('.map-panel')!;
+        const root = document.documentElement;
+        return {
+          square: Math.round(frame.height) === Math.round(frame.width),
+          below: box.top >= frame.bottom,
+          gutters: box.left >= 16 && box.right <= root.clientWidth - 16,
+          innerScroll: panel.scrollHeight - panel.clientHeight,
+          sideways: root.scrollWidth > root.clientWidth,
+        };
+      });
+    await expect
+      .poll(layout)
+      .toEqual({ square: true, below: true, gutters: true, innerScroll: 0, sideways: false });
   });
 }
 
