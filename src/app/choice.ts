@@ -10,9 +10,9 @@ import {
   signal,
 } from '@angular/core';
 import type { Tax } from '../beds24/client';
-import type { Capacity } from '../beds24/weeks';
+import type { Capacity, FreeWeeks } from '../beds24/weeks';
 import { Season } from './season';
-import { replaceQuery } from './texts';
+import { isDay, replaceQuery } from './texts';
 
 const usual = { adults: 2, children: 0 };
 
@@ -30,6 +30,21 @@ export const taxed = (room: Capacity, adults: number, children: number) =>
 
 export const taxFor = (tax: Tax, count: number) =>
   Math.round(tax.amount * count * (tax.per === 'night' ? 7 : 1) * 100) / 100;
+
+// The season of a link's week, if it is a week the site offers or offered: one of the listed
+// weeks, or one before them on the weekday they start on, booked or passed since. A day after the
+// first listed week that starts none, a weekday on which no week starts, or a day outside both
+// seasons, as last year's, belongs to none. Without listed weeks any day of a season counts.
+export function seasonOf({ seasons }: FreeWeeks, arrival: string) {
+  if (!isDay(arrival)) return undefined;
+  const season = seasons.find(({ start, end }) => arrival >= start && arrival <= end);
+  const listed = season?.weeks ?? [];
+  if (listed.length && arrival >= listed[0].arrival)
+    return listed.some((week) => week.arrival === arrival) ? season : undefined;
+  const first = seasons.flatMap(({ weeks }) => weeks)[0]?.arrival;
+  const weekday = (day: string) => new Date(day).getUTCDay();
+  return !first || weekday(arrival) === weekday(first) ? season : undefined;
+}
 
 // A chosen week, with the home page's address and its apartment's page.
 export interface ChosenWeek {

@@ -21,7 +21,7 @@ import { lucideArrowLeft, lucideArrowRight, lucideInfo } from '@ng-icons/lucide'
 import type { FreeWeeks } from '../beds24/weeks';
 import type { SeasonName } from '../content/names';
 import { BookingBar, type BarLine } from './booking-bar';
-import { Choice, fits } from './choice';
+import { Choice, fits, seasonOf } from './choice';
 import { GuestCounts } from './guest-counts';
 import { Season } from './season';
 import { swapper } from './swap';
@@ -31,7 +31,6 @@ import {
   fill,
   formatMoney,
   formatStay,
-  isDay,
   LANGUAGE,
   replaceQuery,
   TEXTS,
@@ -355,9 +354,7 @@ export class FreeWeeksList implements OnInit {
     const apartment =
       weeks?.apartments.findIndex(({ slug }) => slug === query.get('apartment')) ?? -1;
     const arrival = query.get('arrival') ?? '';
-    const season = isDay(arrival)
-      ? weeks?.seasons.find(({ start, end }) => arrival >= start && arrival <= end)
-      : undefined;
+    const season = weeks && seasonOf(weeks, arrival);
     const pick = season && apartment >= 0 ? { season: season.name, apartment, arrival } : null;
     this.chosen.set(pick);
     if (pick) this.tab.set(pick.apartment);

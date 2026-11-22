@@ -718,7 +718,7 @@ for (const [lang, path, gone, book, taken] of [
     await openNext(page, path);
     const later = await page.locator('html').getAttribute('data-season');
     const booked = month(page).locator('.week.full .week-cell');
-    for (let i = 0; i < 8 && !(await booked.count()); i++) await next(page).click();
+    for (let i = 0; i < 8 && !(await booked.count()); i++) await toNext(page);
     const arrival = (await booked.first().getAttribute('data-date'))!;
     const link = `${path}?arrival=${arrival}&departure=${plus(arrival, 7)}&season=${later}`;
     // At the first paint already, before the application starts.
@@ -806,12 +806,25 @@ test('a linked week that has passed stays blocked, also in a full season', async
   await page.keyboard.press('Enter');
   await expect(page.locator('.weeks h2')).toBeFocused();
   await expect(page).not.toHaveURL(/arrival=/);
+  // On a desktop, with no bar, the panel's own button clears it.
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await open(page, `${site}/de/wohnungen/laerche?arrival=${passed}`);
+  await outcome.getByRole('button', { name: 'Gewählte Woche aufheben' }).focus();
+  await page.keyboard.press('Enter');
+  await expect(panel(page).locator('h2')).toBeFocused();
+  await expect(panel(page)).not.toHaveAttribute('data-blocked');
+  await expect(page).not.toHaveURL(/arrival=/);
 });
 
-test('a linked week from last year or of no date is dropped from both pages', async ({ page }) => {
+test('a linked week from last year, of no date or of a day no week starts on is dropped', async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 375, height: 700 });
-  const last = plus(new Date().toISOString().slice(0, 10), -365);
-  for (const arrival of [last, '2027-02-00']) {
+  const today = new Date().toISOString().slice(0, 10);
+  const last = plus(today, -365);
+  // A Tuesday a month ahead, between the Saturdays the weeks start on.
+  const tuesday = plus(saturdayFrom(plus(today, 30)), 3);
+  for (const arrival of [last, '2027-02-00', tuesday]) {
     await open(page, `/de/wohnungen/laerche?arrival=${arrival}&departure=${plus(last, 7)}`);
     await expect(page).not.toHaveURL(/arrival=/);
     await expect(panel(page)).not.toHaveAttribute('data-blocked');
@@ -948,8 +961,9 @@ test('an apartment too small says how many it takes and does not book', async ({
   await week.click();
   const outcome = panel(page).locator('.outcome:visible');
   await expect(outcome.getByRole('button', { name: 'Weiter zur Buchung' })).toBeDisabled();
-  // The chosen week, blocked, is cleared by the bar's cross alone: a click or Enter keeps it.
+  // The chosen week, blocked, stays chosen after a click and after Enter on it.
   await week.click();
+  await expect(week).toHaveAttribute('aria-selected', 'true');
   await page.keyboard.press('Enter');
   await expect(week).toHaveAttribute('aria-selected', 'true');
   await pickCount(page, 'children', 0);

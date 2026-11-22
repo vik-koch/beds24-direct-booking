@@ -29,7 +29,7 @@ import type { FreeWeeks } from '../beds24/weeks';
 import site from '../content/generated/site';
 import type { SeasonName } from '../content/names';
 import { BookingBar, type BarLine } from './booking-bar';
-import { Choice, fits, taxed, taxFor, type View } from './choice';
+import { Choice, fits, seasonOf, taxed, taxFor, type View } from './choice';
 import { GuestCounts } from './guest-counts';
 import { Season } from './season';
 import { swapper } from './swap';
@@ -39,7 +39,6 @@ import {
   fill,
   formatMoney,
   formatStay,
-  isDay,
   LANGUAGE,
   replaceQuery,
   TEXTS,
@@ -347,6 +346,10 @@ const shownMonths = new InjectionToken('booking panel months', {
                   /></a>
                 } @else {
                   <button type="button" class="button wide" disabled>{{ texts.panel.book }}</button>
+                  <!-- The bar and its cross are not there on a desktop. -->
+                  <button type="button" class="text-button clear-week" (click)="clear()">
+                    {{ texts.weeks.clear }}
+                  </button>
                 }
               } @else {
                 @let from = texts.panel.from.split('{price}');
@@ -812,6 +815,12 @@ const shownMonths = new InjectionToken('booking panel months', {
         }
       }
 
+      .clear-week {
+        display: flex;
+        width: fit-content;
+        margin: 0.5rem auto 0;
+      }
+
       .button.wide {
         justify-content: center;
         gap: 0.5rem;
@@ -999,9 +1008,7 @@ export class BookingPanel {
     const query = this.route.queryParamMap;
     const arrival = query.get('arrival') ?? '';
     // Also a week booked or passed since, which stays chosen as blocked.
-    const season = isDay(arrival)
-      ? this.weeks?.seasons.find(({ start, end }) => arrival >= start && arrival <= end)
-      : undefined;
+    const season = this.weeks && seasonOf(this.weeks, arrival);
     // A month browsed to before a change of language stays shown.
     if (season) {
       this.chosen.set({ season: season.name, arrival });
@@ -1168,9 +1175,12 @@ export class BookingPanel {
     afterNextRender(
       () =>
         (
-          this.host.querySelector<HTMLElement>(
-            `.booking-bar [data-for=${this.season.current()}] .button`,
-          ) ?? this.document.getElementById('booking-title')!
+          [
+            ...this.host.querySelectorAll<HTMLElement>(
+              `.booking-bar [data-for=${this.season.current()}] .button`,
+            ),
+          ].find((button) => button.checkVisibility()) ??
+          this.document.getElementById('booking-title')!
         ).focus(),
       { injector: this.injector },
     );

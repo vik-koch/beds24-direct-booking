@@ -1,7 +1,8 @@
 import { Location } from '@angular/common';
 import { provideLocationMocks, SpyLocation } from '@angular/common/testing';
 import { TestBed } from '@angular/core/testing';
-import { Choice } from './choice';
+import type { FreeWeeks } from '../beds24/weeks';
+import { Choice, seasonOf } from './choice';
 import { Season } from './season';
 
 const at = (url: string) => {
@@ -65,5 +66,30 @@ describe('Choice', () => {
     expect(choice.link('/de/a')).toBe(
       '/de/a?arrival=2027-01-02&departure=2027-01-09&season=summer',
     );
+  });
+
+  it('finds the season of a week the site offers or offered, and of no other day', () => {
+    const week = (arrival: string) => ({ arrival, departure: '', prices: [] });
+    const weeks = {
+      seasons: [
+        {
+          name: 'winter',
+          start: '2026-09-01',
+          end: '2027-03-31',
+          weeks: [week('2026-12-05'), week('2026-12-12')],
+        },
+        { name: 'summer', start: '2027-04-01', end: '2027-08-31', weeks: [] },
+      ],
+    } as unknown as FreeWeeks;
+    const of = (arrival: string) => seasonOf(weeks, arrival)?.name;
+    // Listed, or before the listed weeks on their weekday, a Saturday.
+    expect([of('2026-12-12'), of('2026-11-28'), of('2027-05-01')]).toEqual([
+      'winter',
+      'winter',
+      'summer',
+    ]);
+    // After the first listed week but listed nowhere, on another weekday, or outside the seasons.
+    for (const day of ['2026-12-19', '2026-11-24', '2027-05-04', '2025-12-06', '2027-02-30'])
+      expect(of(day)).toBeUndefined();
   });
 });
