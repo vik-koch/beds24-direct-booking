@@ -11,6 +11,7 @@ import {
 import type { Tax } from '../beds24/client';
 import type { Capacity } from '../beds24/weeks';
 import type { SeasonName } from '../content/names';
+import { Season } from './season';
 
 const usual = { adults: 2, children: 0 };
 
@@ -60,6 +61,7 @@ export interface ChosenWeek {
 export class Guests {
   private readonly location = inject(Location);
   private readonly injector = inject(Injector);
+  private readonly season = inject(Season);
   private readonly browser = isPlatformBrowser(inject(PLATFORM_ID));
   private readonly rooms = signal<Capacity[]>([]);
   readonly adults = signal(usual.adults);
@@ -97,14 +99,12 @@ export class Guests {
     const carried = { ...this.params() };
     if (this.view() === 'calendar') carried['view'] = 'calendar';
     const week = this.week();
+    // The week's season only while it is shown: a switch since then stays.
+    const season = week?.season === this.season.current() ? { season: week.season } : {};
     if (week && url.pathname === week.home)
-      Object.assign(carried, { apartment: week.slug, arrival: week.arrival, season: week.season });
+      Object.assign(carried, { apartment: week.slug, arrival: week.arrival }, season);
     if (week && url.pathname === week.page)
-      Object.assign(carried, {
-        arrival: week.arrival,
-        departure: week.departure,
-        season: week.season,
-      });
+      Object.assign(carried, { arrival: week.arrival, departure: week.departure }, season);
     // Guests left at the usual two adults are not carried, and a link's own may be stale.
     url.searchParams.delete('adults');
     url.searchParams.delete('children');
@@ -133,6 +133,7 @@ export class Guests {
       Math.floor(Number(query.get(name) ?? usual[name])) || 0;
     this.adults.set(Math.max(count('adults'), 1));
     this.children.set(Math.max(count('children'), 0));
+    this.view.set(query.get('view') === 'calendar' ? 'calendar' : 'list');
   }
 
   query(url = this.location.path()) {

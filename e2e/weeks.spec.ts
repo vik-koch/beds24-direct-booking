@@ -113,7 +113,7 @@ test('a chosen week leads to its apartment with the stay, also in a fresh browse
   const amount = Number(price.replace(/[^\d,]/g, '').replace(',', '.'));
   const money = new Intl.NumberFormat('de-AT', { style: 'currency', currency: 'EUR' });
   const shown = money.format(amount).replace(',00', '');
-  await expect(page.locator('.pick .bar-parts > span')).toHaveText([
+  await expect(page.locator('.pick .bar-parts > span, .pick output small')).toHaveText([
     apartment,
     shown,
     dates.replace(/\s+/g, ' ').trim(),

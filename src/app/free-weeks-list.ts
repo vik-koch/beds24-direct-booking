@@ -257,7 +257,7 @@ export class FreeWeeksList implements OnInit {
         before: '',
         amount: this.money(week.prices[pick.apartment]!),
         after: '',
-        detail: [this.stay(week)],
+        detail: this.stay(week),
         link: this.link(season, pick.apartment, pick.row),
         label: this.texts.panel.bar.book,
         chosen: true,
@@ -300,6 +300,9 @@ export class FreeWeeksList implements OnInit {
   constructor() {
     const destroyRef = inject(DestroyRef);
     destroyRef.onDestroy(this.season.watch((name) => this.move(name)));
+    // Back or Forward to an entry of this page, such as a section's fragment, restores its week.
+    const back = this.location.subscribe(({ url }) => this.read(url));
+    destroyRef.onDestroy(() => back.unsubscribe());
     // A week of an apartment that has become too small for the guests is no longer chosen.
     effect(() => {
       const pick = this.chosen();
@@ -329,18 +332,23 @@ export class FreeWeeksList implements OnInit {
   // The address's week: a free one of the named apartment, if it takes the guests. On a phone
   // its apartment's tab is shown.
   ngOnInit() {
-    const query = this.group.query();
+    this.read();
+  }
+
+  private read(url?: string) {
+    const query = this.group.query(url);
     const weeks = this.weeks();
     const apartment = weeks?.apartments.findIndex(({ slug }) => slug === query.get('apartment'));
-    if (apartment === undefined || apartment < 0 || !this.fitting()[apartment]) return;
-    for (const season of weeks!.seasons) {
-      const row = season.weeks.findIndex(
-        ({ arrival, prices }) => arrival === query.get('arrival') && prices[apartment] !== null,
-      );
-      if (row < 0) continue;
-      this.chosen.set({ season: season.name, apartment, row });
-      this.tab.set(apartment);
-    }
+    let pick: Week | null = null;
+    if (apartment !== undefined && apartment >= 0 && this.fitting()[apartment])
+      for (const season of weeks!.seasons) {
+        const row = season.weeks.findIndex(
+          ({ arrival, prices }) => arrival === query.get('arrival') && prices[apartment] !== null,
+        );
+        if (row >= 0) pick = { season: season.name, apartment, row };
+      }
+    this.chosen.set(pick);
+    if (pick) this.tab.set(pick.apartment);
   }
 
   // The address keeps the chosen week, with its season while that is shown, and the links to

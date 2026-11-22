@@ -143,7 +143,11 @@ test('the chosen week’s bar leaves the tourist tax to the apartment’s page a
   const shown = new Intl.NumberFormat('de-AT', { style: 'currency', currency: 'EUR' })
     .format(price)
     .replace(',00', '');
-  await expect(page.locator('.pick .bar-parts > span')).toHaveText(['Ahorn', shown, /Sa\./]);
+  await expect(page.locator('.pick .bar-parts > span, .pick output small')).toHaveText([
+    'Ahorn',
+    shown,
+    /Sa\./,
+  ]);
   await expect(page.locator('.pick a')).toHaveAttribute('href', /&adults=4&children=2$/);
 });
 

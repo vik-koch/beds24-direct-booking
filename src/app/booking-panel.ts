@@ -905,7 +905,7 @@ export class BookingPanel {
             before: '',
             amount: this.money(stay.price!),
             after: '',
-            detail: [this.fitting() ? this.stayText(stay) : this.small()],
+            detail: this.fitting() ? this.stayText(stay) : this.small(),
             link: null,
             label: this.fitting() ? this.texts.panel.bar.book : this.texts.panel.guests,
             chosen: true,
@@ -920,7 +920,7 @@ export class BookingPanel {
           before,
           amount: this.money(this.lowest(season)),
           after,
-          detail: [],
+          detail: '',
           link: null,
           label: this.texts.panel.bar.choose,
           chosen: false,
@@ -972,7 +972,6 @@ export class BookingPanel {
       if (!this.months()[season.name])
         this.months.update((months) => ({ ...months, [season.name]: arrival.slice(0, 7) }));
     }
-    this.view.set(query.get('view') === 'calendar' ? 'calendar' : 'list');
     this.carry();
     if (this.weeks) this.guests.limit(Object.values(this.weeks.capacities));
   }

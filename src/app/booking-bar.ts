@@ -5,7 +5,7 @@ import type { SeasonName } from '../content/names';
 import { TEXTS } from './texts';
 
 // What the bar says in one season: maybe an apartment's name, an amount with words around it,
-// maybe the parts of a line below, and a link on with its label, or without a link a button the
+// maybe a line below, and a link on with its label, or without a link a button the
 // page answers. A chosen week has a cross that clears it.
 export interface BarLine {
   season: SeasonName;
@@ -13,7 +13,7 @@ export interface BarLine {
   before: string;
   amount: string;
   after: string;
-  detail: string[];
+  detail: string;
   link: string | null;
   label: string;
   chosen: boolean;
@@ -41,12 +41,8 @@ export interface BarLine {
                 >{{ line.after }}</span
               >
             </span>
-            @if (line.detail.length) {
-              <small class="bar-parts">
-                @for (part of line.detail; track $index) {
-                  <span>{{ part }}</span>
-                }
-              </small>
+            @if (line.detail) {
+              <small>{{ line.detail }}</small>
             }
           </output>
           <div class="bar-actions">
@@ -117,6 +113,7 @@ export interface BarLine {
           }
 
           small {
+            display: block;
             font-size: 0.875rem;
           }
         }

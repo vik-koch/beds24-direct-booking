@@ -509,7 +509,9 @@ test('on a phone a bar leads to the panel while it is below the screen, with a w
   await expect(bar).toBeVisible();
   // The week's price, without the tax the panel's total adds.
   const price = await chosen(page).innerText();
-  await expect(bar.locator('.bar-parts > span:visible').nth(1)).toHaveText(price);
+  await expect(bar.locator('.bar-parts > span:visible, output small:visible').nth(1)).toHaveText(
+    price,
+  );
   await bar.getByRole('button', { name: 'Weiter' }).click();
   const book = panel(page).getByRole('link', { name: 'Weiter zur Buchung' });
   await expect(book).toBeFocused();
@@ -567,7 +569,8 @@ test('a week in the address is shown at the first paint, before the application 
 
 // A bar's shown line by its parts, and where it sits: its distance from the screen's sides and
 // foot, and whether its buttons stand to the right of its words.
-const parts = (bar: Locator) => bar.locator('.bar-parts > span:visible').allInnerTexts();
+const parts = (bar: Locator) =>
+  bar.locator('.bar-parts > span:visible, output small:visible').allInnerTexts();
 const place = (bar: Locator) =>
   bar.evaluate((box) => {
     const { left, right, bottom } = box.getBoundingClientRect();
@@ -590,7 +593,11 @@ for (const [path, book] of [
     await (await firstFree(page)).click();
     await page.evaluate(() => scrollTo({ top: 0, behavior: 'instant' }));
     const phone = page.locator('.booking-bar');
-    await expect(phone.locator('.bar-parts > span:visible')).toHaveText([/^Lärche$/, /€/, /./]);
+    await expect(phone.locator('.bar-parts > span:visible, output small:visible')).toHaveText([
+      /^Lärche$/,
+      /€/,
+      /./,
+    ]);
     await expect(phone.getByRole('button', { name: book })).toBeVisible();
     const said = await parts(phone);
     const sits = await place(phone);
@@ -606,7 +613,7 @@ for (const [path, book] of [
     await page
       .locator('.weeks')
       .evaluate((list) => scrollTo({ top: list.offsetTop, behavior: 'instant' }));
-    await expect(home.locator('.bar-parts > span:visible')).toHaveText(said);
+    await expect(home.locator('.bar-parts > span:visible, output small:visible')).toHaveText(said);
     await expect.poll(() => place(home)).toEqual(sits);
     await expect(home.getByRole('link', { name: book })).toBeVisible();
     // On a desktop too the buttons stand to the right.
@@ -633,6 +640,42 @@ test('a week from the address is chosen on the home page at the first paint', as
   }
 });
 
+test(
+  'a header link carries the week to its home section; Back and a season switch stay',
+  { tag: '@any-engine' },
+  async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await openNext(page, '/de/wohnungen/laerche');
+    await (await firstFree(page)).click();
+    const arrival = new URL(page.url()).searchParams.get('arrival');
+    const header = page.getByRole('navigation', { name: 'Hauptmenü' });
+    await header.getByRole('link', { name: 'Freie Wochen' }).click();
+    await expect(page).toHaveURL(
+      new RegExp(`/de\\?apartment=laerche&arrival=${arrival}&season=\\w+#freie-wochen$`),
+    );
+    const bar = page.locator('.pick .booking-bar');
+    await expect(bar).toContainText('Lärche');
+    const chosenWeek = await parts(bar);
+    // A section of the same page, another week there, and Back: the address's week again.
+    await header.getByRole('link', { name: 'Lage' }).click();
+    await expect(page).toHaveURL(/#lage$/);
+    await page.locator('[role=gridcell]:not([aria-selected=true]) .price:visible').last().click();
+    await expect(page).not.toHaveURL(new RegExp(`arrival=${arrival}`));
+    await page.goBack();
+    await expect(page).toHaveURL(new RegExp(`arrival=${arrival}&season=\\w+#freie-wochen$`));
+    await expect.poll(() => parts(bar)).toEqual(chosenWeek);
+    // A season switched since stays: the link no longer names the week's.
+    const before = await page.locator('html').getAttribute('data-season');
+    await page.locator('.other-season').first().click();
+    await expect(page.locator('html')).not.toHaveAttribute('data-season', before!);
+    const link = header.getByRole('link', { name: 'Freie Wochen' });
+    await expect(link).not.toHaveAttribute('href', /season=/);
+    await link.click();
+    await expect(page).toHaveURL(/#freie-wochen$/);
+    await expect(page.locator('html')).not.toHaveAttribute('data-season', before!);
+  },
+);
+
 test('the phone bar’s cross clears the week and leaves the focus on its button', async ({
   page,
 }) => {
@@ -648,7 +691,7 @@ test('the phone bar’s cross clears the week and leaves the focus on its button
 });
 
 test(
-  'the calendar view stays from one apartment page to the next',
+  'the calendar view stays from one apartment page to the next, also by way of the home page',
   { tag: '@any-engine' },
   async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
@@ -661,6 +704,12 @@ test(
       .getByRole('link', { name: 'Ahorn' })
       .click();
     await expect(page).toHaveURL(/\/en\/apartments\/ahorn\?view=calendar/);
+    await expect(page.getByRole('radio', { name: 'Calendar' })).toBeChecked();
+    // Also by way of the home page.
+    await page.locator('a.back').click();
+    await expect(page).toHaveURL(/\/en\?view=calendar/);
+    await page.locator('.teaser h3 a', { hasText: 'Zirbe' }).click();
+    await expect(page).toHaveURL(/\/en\/apartments\/zirbe\?view=calendar/);
     await expect(page.getByRole('radio', { name: 'Calendar' })).toBeChecked();
   },
 );
