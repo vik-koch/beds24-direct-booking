@@ -80,7 +80,7 @@ test("a pin or the panel chooses an apartment, whose routes' distances show", as
   await expect.poll(() => accentPixels(page)).toBeGreaterThan(500);
   await expect(panel(page).getByRole('radio', { name: 'Ahorn' })).toBeChecked();
   await expect(places(page).first()).toContainText('900 m');
-  await expect(page.locator('.map-place').first()).toHaveText('900 m');
+  await expect(page.locator('.map-label').filter({ hasText: /^900 m$/ })).toBeVisible();
   await panel(page).getByText('Zirbe').click();
   await expect(page.getByRole('button', { name: 'Zirbe' })).toHaveAttribute('aria-pressed', 'true');
   await expect(page.getByRole('button', { name: 'Ahorn' })).toHaveAttribute(
@@ -98,7 +98,8 @@ test('a second click on the chosen apartment clears the choice', async ({ page }
   await expect(radio).toBeChecked();
   await panel(page).getByText('Ahorn').click();
   await expect(radio).not.toBeChecked();
-  await expect(page.locator('.map-place').first()).toHaveText('');
+  // Only the apartments' names stand beside the pins.
+  await expect(page.locator('.map-label')).toHaveCount(3);
   await expect.poll(() => accentPixels(page)).toBeLessThan(50);
   const pin = page.getByRole('button', { name: 'Lärche' });
   await pin.click();
@@ -251,6 +252,100 @@ for (const [width, path] of [
   });
 }
 
+test('pins and labels at the first view: no pin lies under another or under a label', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await openMap(page);
+  await panel(page).locator('.map-unfold').click();
+  await panel(page).getByText('Ahorn').click();
+  await expect(page.locator('.map-label')).toHaveCount(7);
+  await folded(page);
+  await page.locator('.map-frame').evaluate((frame) => frame.scrollIntoView({ block: 'center' }));
+  // The middle of each pin's head is the pin's own, nothing else's.
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        [...document.querySelectorAll('.map-pin')]
+          .filter((pin) => {
+            const box = pin.getBoundingClientRect();
+            const hit = document.elementFromPoint(box.x + box.width / 2, box.y + box.width / 2);
+            return !pin.contains(hit);
+          })
+          .map((pin) => pin.getAttribute('aria-label')),
+      ),
+    )
+    .toEqual([]);
+});
+
+// How far apart two pins stand: it grows as the map zooms in.
+const spread = (page: Page, a: string, b: string) =>
+  page.evaluate(
+    ([a, b]) => {
+      const [p, q] = [a, b].map((name) =>
+        document.querySelector(`.map-pin[aria-label="${name}"]`)!.getBoundingClientRect(),
+      );
+      return Math.hypot(p!.x - q!.x, p!.y - q!.y);
+    },
+    [a, b],
+  );
+
+test("a place's pin chooses it and zooms to it; again clears it", async ({ page, isMobile }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await openMap(page);
+  const pin = page.getByRole('button', { name: 'Kohlmaisbahn', exact: true });
+  const line = places(page).nth(1).getByRole('button');
+  const before = await spread(page, 'Kohlmaisbahn', 'Schattberg X-press');
+  await (isMobile ? pin.tap() : pin.click());
+  await expect(pin).toHaveAttribute('aria-pressed', 'true');
+  await expect(line).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('.map-label').filter({ hasText: 'Kohlmaisbahn' })).toBeVisible();
+  await expect
+    .poll(() => spread(page, 'Kohlmaisbahn', 'Schattberg X-press'))
+    .toBeGreaterThan(before * 1.5);
+  await (isMobile ? pin.tap() : pin.click());
+  await expect(pin).toHaveAttribute('aria-pressed', 'false');
+  await expect(line).toHaveAttribute('aria-pressed', 'false');
+  await expect
+    .poll(() => spread(page, 'Kohlmaisbahn', 'Schattberg X-press'))
+    .toBeCloseTo(before, 0);
+});
+
+test("a place's line chooses it by keyboard, and with an apartment its route stands out", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await openMap(page);
+  await panel(page).getByText('Ahorn').click();
+  await expect.poll(() => accentPixels(page)).toBeGreaterThan(500);
+  const line = places(page).first().getByRole('button');
+  await expect(line).toHaveAccessibleName(/Schattberg X-press.*900 m/);
+  await line.focus();
+  await page.keyboard.press('Enter');
+  await expect(line).toHaveAttribute('aria-pressed', 'true');
+  await expect(
+    page.getByRole('button', { name: 'Schattberg X-press', exact: true }),
+  ).toHaveAttribute('aria-pressed', 'true');
+  // The other route fades out of the accent; the chosen one is drawn whole.
+  const dashed = await accentPixels(page);
+  // Counting the pixels hides the panel for a moment, which takes the focus away.
+  await line.focus();
+  await page.keyboard.press('Space');
+  await expect(line).toHaveAttribute('aria-pressed', 'false');
+  await expect.poll(() => accentPixels(page)).not.toBe(dashed);
+});
+
+test('a chosen place among the other places is cleared when they fold', async ({ page }) => {
+  await openMap(page);
+  await panel(page).locator('.map-unfold').click();
+  const line = places(page).filter({ hasText: 'Supermarket' }).getByRole('button');
+  await line.click();
+  await expect(line).toHaveAttribute('aria-pressed', 'true');
+  await panel(page).locator('.map-unfold').click();
+  await panel(page).locator('.map-unfold').click();
+  await expect(line).toHaveAttribute('aria-pressed', 'false');
+});
+
 test('a change of season keeps the choice and shows the places in that season', async ({
   page,
 }) => {
@@ -304,10 +399,13 @@ test('every tab stop in the map shows a focus ring', async ({ page, browserName 
       const element = document.activeElement as HTMLElement;
       if (!element.closest('app-location-map')) return null;
       const parts = [element, element.nextElementSibling].filter(Boolean) as Element[];
-      const ring = parts.some((part) => {
-        const style = getComputedStyle(part);
-        return style.outlineStyle !== 'none' && parseFloat(style.outlineWidth) >= 2;
-      });
+      // A pin draws its ring round its head, which is its ::before.
+      const ring = parts.some((part) =>
+        [undefined, '::before'].some((pseudo) => {
+          const style = getComputedStyle(part, pseudo);
+          return style.outlineStyle !== 'none' && parseFloat(style.outlineWidth) >= 2;
+        }),
+      );
       const name = `${element.tagName.toLowerCase()} ${element.getAttribute('aria-label') || element.textContent?.trim().slice(0, 30)}`;
       return { name, ring };
     });
@@ -317,7 +415,13 @@ test('every tab stop in the map shows a focus ring', async ({ page, browserName 
     await page.keyboard.press('Tab');
   }
   expect(seen).toEqual(
-    expect.arrayContaining(['button More places', 'button Zoom in', 'button Zoom out']),
+    expect.arrayContaining([
+      'button More places',
+      'button Zoom in',
+      'button Zoom out',
+      'button Ahorn',
+      'button Schattberg X-press',
+    ]),
   );
 });
 
