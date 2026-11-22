@@ -197,7 +197,7 @@ export class Season {
     if (!params.has('arrival')) return;
     params.delete('season');
     const { link } = seasonState(starts, params.toString(), null, new Date());
-    if (link !== this.current()) params.set('season', this.current());
+    if (link && link !== this.current()) params.set('season', this.current());
   }
 
   // Fetches the other season's hero photo before it is needed, on hover or focus: the file the
