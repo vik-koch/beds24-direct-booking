@@ -27,7 +27,8 @@ async function accentPixels(page: Page) {
 }
 
 const panel = (page: Page) => page.locator('.map-panel');
-const places = (page: Page) => panel(page).locator('.map-places li');
+// The places shown: folded ones are inert.
+const places = (page: Page) => panel(page).locator('.map-places:not([inert]) li');
 
 // The section's heading brings the map into view, which loads it.
 const scrollToMap = (page: Page) =>
@@ -69,7 +70,7 @@ test('the map draws from the site alone, and loads only once in view', async ({ 
 });
 
 test("a pin or the panel chooses an apartment, whose routes' distances show", async ({ page }) => {
-  // Wide enough that no pin lies under the panel, which on a phone covers the map's foot.
+  // Wide enough that no pin lies under the panel, which there lies over the map's left side.
   await page.setViewportSize({ width: 1280, height: 900 });
   await openMap(page);
   await expect(places(page)).toHaveCount(2);
@@ -133,11 +134,25 @@ test("the map's hint to hold Ctrl while scrolling stays under the panel", async 
   expect(Math.min(...data.subarray(at, at + 3))).toBeGreaterThan(240);
 });
 
-test('the switch adds the other places, with their pins', async ({ page }) => {
+test('the arrow unfolds the other places with their pins, and leaves the view', async ({
+  page,
+}) => {
   await openMap(page);
+  const more = panel(page).getByRole('button', { name: 'More places' });
+  // Where the pin stands in the map, whatever the page's scroll.
+  const spot = () =>
+    page
+      .getByRole('button', { name: 'Ahorn' })
+      .evaluate(
+        (pin) =>
+          pin.getBoundingClientRect().y - pin.closest('.map-frame')!.getBoundingClientRect().y,
+      );
+  const before = await spot();
   await expect(page.locator('.map-place')).toHaveCount(2);
-  await panel(page).getByText('More places').click();
-  await expect(panel(page).getByRole('switch', { name: 'More places' })).toBeChecked();
+  await expect(panel(page).locator('#map-more')).toHaveAttribute('inert');
+  await more.click();
+  await expect(more).toHaveAttribute('aria-expanded', 'true');
+  await expect(panel(page).locator('#map-more')).not.toHaveAttribute('inert');
   await expect(places(page)).toHaveText([
     /Schattberg/,
     /Kohlmais/,
@@ -145,7 +160,54 @@ test('the switch adds the other places, with their pins', async ({ page }) => {
     /Supermarket/,
   ]);
   await expect(page.locator('.map-place')).toHaveCount(4);
+  expect(await spot()).toBe(before);
+  await more.click();
+  await expect(page.locator('.map-place')).toHaveCount(2);
+  expect(await spot()).toBe(before);
 });
+
+test('the other places grow into the list, and appear at once with reduced motion', async ({
+  page,
+}) => {
+  await openMap(page);
+  const fold = panel(page).locator('.map-more');
+  await expect(fold).toHaveCSS('transition-duration', '0.3s');
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await expect(fold).toHaveCSS('transition-duration', '0s');
+});
+
+test('the zoom buttons zoom the map, and stop at its widest view', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await openMap(page);
+  const pin = page.getByRole('button', { name: 'Ahorn' });
+  const zoomOut = page.getByRole('button', { name: 'Zoom out' });
+  const before = (await pin.boundingBox())!;
+  await page.getByRole('button', { name: 'Zoom in' }).click();
+  await expect.poll(async () => (await pin.boundingBox())!.x).not.toBeCloseTo(before.x, 0);
+  await expect(async () => {
+    if (await zoomOut.isEnabled()) await zoomOut.click();
+    await expect(zoomOut).toBeDisabled({ timeout: 500 });
+  }).toPass({ timeout: 15000 });
+});
+
+for (const width of [320, 390]) {
+  test(`on a ${width} px phone the panel follows the map and needs no scroll of its own`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 800 });
+    await openMap(page);
+    await panel(page).getByRole('button', { name: 'More places' }).click();
+    await panel(page).getByText('Lärche').click();
+    const frame = (await page.locator('.map-frame').boundingBox())!;
+    const box = (await panel(page).boundingBox())!;
+    expect(box.y).toBeGreaterThanOrEqual(frame.y + frame.height);
+    expect(box.x).toBeGreaterThanOrEqual(16);
+    expect(box.x + box.width).toBeLessThanOrEqual(width - 16);
+    expect(await panel(page).evaluate((e) => e.scrollHeight - e.clientHeight)).toBe(0);
+    const { scrollWidth, clientWidth } = await page.evaluate(() => document.documentElement);
+    expect(scrollWidth).toBe(clientWidth);
+  });
+}
 
 test('a change of season keeps the choice and shows the places in that season', async ({
   page,
@@ -179,6 +241,7 @@ test('without WebGL the panel stands alone and works', async ({ page }) => {
   await expect(places(page).first()).toContainText('900 m');
   await expect(page.locator('.location-map')).not.toHaveAttribute('data-drawn');
   await expect(page.locator('.map-pin').first()).toBeHidden();
+  await expect(page.getByRole('button', { name: 'Zoom in' })).toBeHidden();
   expect(errors).toEqual([]);
 });
 
@@ -211,7 +274,9 @@ test('every tab stop in the map shows a focus ring', async ({ page, browserName 
     expect(stop.ring, stop.name).toBe(true);
     await page.keyboard.press('Tab');
   }
-  expect(seen.length).toBeGreaterThan(5);
+  expect(seen).toEqual(
+    expect.arrayContaining(['button More places', 'button Zoom in', 'button Zoom out']),
+  );
 });
 
 test('the map section passes axe', async ({ page }) => {
@@ -232,8 +297,8 @@ test('without JavaScript the panel names the places and their seasonal texts, an
     /Kohlmaisbahn.*Gondola to/,
   ]);
   await expect(panel(page)).toBeVisible();
-  // Its choice and switch need the application, so they are not offered.
+  // Its choice and its other places need the application, so they are not offered.
   await expect(panel(page).getByRole('radio')).toHaveCount(0);
-  await expect(panel(page).getByRole('switch')).toBeHidden();
+  await expect(panel(page).getByRole('button', { name: 'More places' })).toBeHidden();
   await context.close();
 });

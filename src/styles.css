@@ -203,6 +203,21 @@
     cursor: pointer;
   }
 
+  /* A step on a white ground: the booking panel's months, the map's zoom. */
+  :is(.month-head, .map-zoom) .icon-button {
+    font-size: 1.25rem;
+    transition: background-color 0.2s;
+
+    &:hover:not(:disabled) {
+      background: var(--color-ground);
+    }
+
+    &:disabled {
+      color: var(--color-line);
+      cursor: default;
+    }
+  }
+
   .skip {
     position: absolute;
     left: -100rem;

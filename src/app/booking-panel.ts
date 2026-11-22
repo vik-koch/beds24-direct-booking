@@ -550,17 +550,6 @@ const shownMonths = new InjectionToken('booking panel months', {
 
         .icon-button {
           pointer-events: auto;
-          font-size: 1.25rem;
-          transition: background-color 0.2s;
-
-          &:hover:not(:disabled) {
-            background: var(--color-ground);
-          }
-
-          &:disabled {
-            color: var(--color-line);
-            cursor: default;
-          }
         }
       }
 
