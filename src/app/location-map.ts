@@ -15,7 +15,40 @@ import {
   ViewEncapsulation,
 } from '@angular/core';
 import { NgIcon, provideIcons } from '@ng-icons/core';
-import { lucideChevronDown, lucideHouse, lucideMinus, lucidePlus } from '@ng-icons/lucide';
+import {
+  lucideBanknote,
+  lucideBeer,
+  lucideBike,
+  lucideBookOpen,
+  lucideBus,
+  lucideChevronDown,
+  lucideChurch,
+  lucideCoffee,
+  lucideCroissant,
+  lucideDroplet,
+  lucideDumbbell,
+  lucideFuel,
+  lucideGift,
+  lucideHouse,
+  lucideInfo,
+  lucideLandmark,
+  lucideMail,
+  lucideMinus,
+  lucideMountain,
+  lucidePill,
+  lucidePlus,
+  lucideSandwich,
+  lucideScissors,
+  lucideShirt,
+  lucideShoppingCart,
+  lucideSquareParking,
+  lucideStethoscope,
+  lucideStore,
+  lucideToilet,
+  lucideTrainFront,
+  lucideUtensils,
+  lucideWaves,
+} from '@ng-icons/lucide';
 import { layers, namedFlavor, type Flavor } from '@protomaps/basemaps';
 import type {
   FilterSpecification,
@@ -24,6 +57,7 @@ import type {
   StyleSpecification,
 } from 'maplibre-gl';
 import { icons } from '../content/generated/icons';
+import lifts from '../content/generated/lifts';
 import routes from '../content/generated/routes';
 import site from '../content/generated/site';
 import { lucideName } from '../content/names';
@@ -32,8 +66,43 @@ import { Season } from './season';
 import { LANGUAGE, TEXTS } from './texts';
 
 const map = site.map!;
-// Points of interest the map leaves out: the town's other places to stay.
-const lodging = ['hotel', 'guest_house', 'apartment', 'hostel', 'motel', 'chalet', 'camp_site'];
+// The points of interest the map shows, by their kind in the tiles, each with its Lucide icon. A
+// kind not listed, such as the town's other places to stay, is left out.
+const kinds: Record<string, string> = {
+  restaurant: lucideUtensils,
+  fast_food: lucideSandwich,
+  cafe: lucideCoffee,
+  bakery: lucideCroissant,
+  bar: lucideBeer,
+  pub: lucideBeer,
+  supermarket: lucideShoppingCart,
+  convenience: lucideStore,
+  kiosk: lucideStore,
+  clothes: lucideShirt,
+  gift: lucideGift,
+  books: lucideBookOpen,
+  hairdresser: lucideScissors,
+  pharmacy: lucidePill,
+  doctors: lucideStethoscope,
+  atm: lucideBanknote,
+  bank: lucideBanknote,
+  post_office: lucideMail,
+  information: lucideInfo,
+  toilets: lucideToilet,
+  drinking_water: lucideDroplet,
+  parking: lucideSquareParking,
+  fuel: lucideFuel,
+  bus_stop: lucideBus,
+  station: lucideTrainFront,
+  bicycle_rental: lucideBike,
+  place_of_worship: lucideChurch,
+  museum: lucideLandmark,
+  townhall: lucideLandmark,
+  swimming_pool: lucideWaves,
+  water_park: lucideWaves,
+  fitness_centre: lucideDumbbell,
+  peak: lucideMountain,
+};
 
 // The least zoom at which a view of this size stays inside the box: below it the map would show
 // where it has no tiles. Web Mercator's world is 512 px wide at zoom 0.
@@ -66,7 +135,9 @@ const mix = (a: string, b: string, t: number) => {
 function flavor(c: (name: string) => string): Flavor {
   const [ground, road] = [c('ground'), c('surface')];
   const green = c('accent-soft');
-  const casing = mix(ground, c('edge'), 0.35);
+  // At least 3:1 against the ground, as are the routes, the lifts and the pins' outlines.
+  const casing = mix(ground, c('ink-soft'), 0.75);
+  const water = mix(ground, c('accent'), 0.4);
   const poi = c('ink-soft');
   return {
     ...namedFlavor('light'),
@@ -79,8 +150,10 @@ function flavor(c: (name: string) => string): Flavor {
     scrub_a: green,
     scrub_b: green,
     pedestrian: mix(ground, c('oak'), 0.5),
-    water: mix(ground, c('accent'), 0.35),
-    buildings: c('oak'),
+    water,
+    // Rivers' and lakes' names, on a halo in the water's colour: at least 4.5:1.
+    ocean_label: mix(c('accent'), c('ink'), 0.65),
+    buildings: mix(c('oak'), c('edge'), 0.15),
     other: casing,
     minor_service: road,
     minor_a: road,
@@ -339,6 +412,8 @@ function flavor(c: (name: string) => string): Flavor {
         cursor: pointer;
         --ng-icon__size: 1.125rem;
         --pin: var(--color-surface);
+        /* A white pin's outline stands out from the map at 3:1; a filled one needs none. */
+        --outline: var(--color-edge);
 
         &::before {
           content: '';
@@ -348,7 +423,9 @@ function flavor(c: (name: string) => string): Flavor {
           height: 2.25rem;
           border-radius: 50% 50% 0;
           background: var(--pin);
-          box-shadow: 0.25rem 0.25rem 0.75rem -0.25rem rgb(39 50 58 / 0.45);
+          box-shadow:
+            0 0 0 1.5px var(--outline),
+            0.25rem 0.25rem 0.75rem -0.25rem rgb(39 50 58 / 0.45);
           rotate: 45deg;
           transition:
             background-color 0.2s,
@@ -356,7 +433,9 @@ function flavor(c: (name: string) => string): Flavor {
         }
 
         &:hover::before {
-          box-shadow: 0.375rem 0.375rem 1rem -0.25rem var(--color-ink);
+          box-shadow:
+            0 0 0 1.5px var(--outline),
+            0.375rem 0.375rem 1rem -0.25rem var(--color-ink);
         }
 
         &:focus-visible {
@@ -372,6 +451,7 @@ function flavor(c: (name: string) => string): Flavor {
           z-index: 2;
           color: var(--color-on-accent);
           --pin: var(--color-accent);
+          --outline: var(--pin);
         }
 
         [data-drawn] & {
@@ -618,6 +698,23 @@ export class LocationMap {
       };
       hold();
       drawn.on('resize', hold);
+      // A kind's icon in the soft ink, drawn at twice its 15 px when a tile first needs it. An SVG
+      // drawn on a canvas needs its size in its own attributes.
+      drawn.setMissingStyleImageResolver(async (kind) => {
+        if (!(kind in kinds)) return;
+        const ink = getComputedStyle(this.document.documentElement).getPropertyValue(
+          '--color-ink-soft',
+        );
+        const image = new Image();
+        image.src = `data:image/svg+xml,${encodeURIComponent(
+          kinds[kind]!.replace('<svg ', '<svg width="30" height="30" ').replace(
+            'currentColor',
+            ink.trim(),
+          ),
+        )}`;
+        await image.decode();
+        if (!drawn.hasImage(kind)) drawn.addImage(kind, image, { pixelRatio: 2 });
+      });
       drawn.on('zoom', () => this.zoom.set(drawn.getZoom()));
       drawn.touchZoomRotate.disableRotation();
       drawn.keyboard.disableRotation();
@@ -769,18 +866,50 @@ export class LocationMap {
         properties: { picked: route.place === this.picked() },
         geometry: { type: 'LineString' as const, coordinates: route.line },
       }));
-    const base = layers('town', flavor(c), { lang: this.language.code }).map(
-      (layer): LayerSpecification =>
+    // The points of interest are ours, each kind beside its icon; the tiles' least zoom for each
+    // stays. One-way arrows, which only drivers need, are left out.
+    const base = layers('town', flavor(c), { lang: this.language.code })
+      .filter((layer) => layer.id !== 'roads_oneway')
+      .map((layer): LayerSpecification =>
         layer.id === 'pois' && layer.type === 'symbol'
           ? {
               ...layer,
               filter: [
                 'all',
-                layer.filter!,
-                ['!', ['in', ['get', 'kind'], ['literal', lodging]]],
+                ['in', ['get', 'kind'], ['literal', Object.keys(kinds)]],
+                (layer.filter as unknown[])[2],
               ] as FilterSpecification,
+              layout: { ...layer.layout, 'icon-image': ['get', 'kind'], 'icon-size': 1 },
+              paint: { ...layer.paint, 'text-halo-color': c('ground'), 'text-halo-width': 1.5 },
             }
           : layer,
+      );
+    // The lifts lie over the roads and under every label, their names along them.
+    base.splice(
+      base.findIndex((layer) => layer.id === 'address_label'),
+      0,
+      {
+        id: 'lifts',
+        type: 'line',
+        source: 'lifts',
+        paint: {
+          'line-color': c('ink'),
+          'line-width': ['interpolate', ['linear'], ['zoom'], 12, 1, 16, 2],
+        },
+      },
+      {
+        id: 'lift-names',
+        type: 'symbol',
+        source: 'lifts',
+        minzoom: 14,
+        layout: {
+          'symbol-placement': 'line',
+          'text-field': ['get', 'name'],
+          'text-font': ['theme'],
+          'text-size': 12,
+        },
+        paint: { 'text-color': c('ink'), 'text-halo-color': c('ground'), 'text-halo-width': 1.5 },
+      },
     );
     return {
       version: 8,
@@ -798,6 +927,17 @@ export class LocationMap {
             '<a href="https://www.openstreetmap.org/copyright">© OpenStreetMap</a> · Protomaps',
         },
         routes: { type: 'geojson', data: { type: 'FeatureCollection', features: lines } },
+        lifts: {
+          type: 'geojson',
+          data: {
+            type: 'FeatureCollection',
+            features: lifts.map(({ name, line }) => ({
+              type: 'Feature',
+              properties: { name },
+              geometry: { type: 'LineString', coordinates: line },
+            })),
+          },
+        },
       },
       layers: [
         ...base,
@@ -816,7 +956,8 @@ export class LocationMap {
           layout: { 'line-cap': 'round', 'line-join': 'round' },
           paint: {
             // Beside a chosen place's route the others fade.
-            'line-color': this.picked() ? mix(c('accent'), c('surface'), 0.6) : c('accent'),
+            // Faded no further than 3:1 against the ground.
+            'line-color': this.picked() ? mix(c('accent'), c('surface'), 0.25) : c('accent'),
             'line-width': 3.5,
             'line-dasharray': [1, 1.6],
           },
