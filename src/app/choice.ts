@@ -39,9 +39,9 @@ export interface ChosenWeek {
 
 // The visitor's choice, made once for every apartment and page: the group, the booking panel's
 // view and a chosen week. The address carries the group where it differs from two adults without
-// children, and the view, so a reload, a shared link and every internal link keep them. Only a
-// page that knows the rooms holds the group to what one of them takes. Links carry the week to
-// the home page and to its apartment's page.
+// children, and the view, so a reload and a shared link keep them. link() adds the group and the
+// view to a site link, and the week to the home page's and its apartment's; params() is the group
+// alone. Only a page that knows the rooms holds the group to what one of them takes.
 @Injectable({ providedIn: 'root' })
 export class Choice {
   private readonly location = inject(Location);
