@@ -127,6 +127,8 @@ describe('freeWeeks', () => {
     expect(list.seasons[0]).toEqual({
       name: 'winter',
       years: '2026/27',
+      start: '2026-09-01',
+      end: '2027-01-15',
       state: 'open',
       states: ['open', 'open'],
       weeks: [

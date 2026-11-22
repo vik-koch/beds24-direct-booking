@@ -10,9 +10,9 @@ import {
   signal,
 } from '@angular/core';
 import type { Tax } from '../beds24/client';
-import type { Capacity } from '../beds24/weeks';
+import type { Capacity, FreeWeeks } from '../beds24/weeks';
 import { Season } from './season';
-import { replaceQuery } from './texts';
+import { isDay, replaceQuery } from './texts';
 
 const usual = { adults: 2, children: 0 };
 
@@ -30,6 +30,14 @@ export const taxed = (room: Capacity, adults: number, children: number) =>
 
 export const taxFor = (tax: Tax, count: number) =>
   Math.round(tax.amount * count * (tax.per === 'night' ? 7 : 1) * 100) / 100;
+
+// The season of a link's week: a day of the calendar within one of the seasons. The site writes
+// only weeks it offered; a link edited by hand must not break the page, and how it shows is not
+// defined (working agreements, What the site supports).
+export function seasonOf({ seasons }: FreeWeeks, arrival: string) {
+  if (!isDay(arrival)) return undefined;
+  return seasons.find(({ start, end }) => arrival >= start && arrival <= end);
+}
 
 // A chosen week, with the home page's address and its apartment's page.
 export interface ChosenWeek {

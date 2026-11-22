@@ -43,6 +43,9 @@ export interface FreeWeeks {
   seasons: {
     name: SeasonName;
     years: string | null;
+    // Its first and last day: a week arriving in between belongs to it, also one no longer offered.
+    start: string;
+    end: string;
     state: State;
     // Per apartment, from its own weeks, as its page's panel counts it.
     states: State[];
@@ -139,7 +142,7 @@ export function freeWeeks(
           own.length,
         );
       });
-      return { name, years, state, states, weeks: state === 'open' ? rows : [] };
+      return { name, years, start, end, state, states, weeks: state === 'open' ? rows : [] };
     }),
   };
 }

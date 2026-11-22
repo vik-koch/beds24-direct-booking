@@ -1,5 +1,5 @@
 import { Grid, GridCell, GridRow } from '@angular/aria/grid';
-import { DOCUMENT, isPlatformServer, Location } from '@angular/common';
+import { DOCUMENT, isPlatformBrowser, Location } from '@angular/common';
 import {
   afterNextRender,
   Component,
@@ -29,11 +29,20 @@ import type { FreeWeeks } from '../beds24/weeks';
 import site from '../content/generated/site';
 import type { SeasonName } from '../content/names';
 import { BookingBar, type BarLine } from './booking-bar';
-import { Choice, fits, taxed, taxFor, type View } from './choice';
+import { Choice, fits, seasonOf, taxed, taxFor, type View } from './choice';
 import { GuestCounts } from './guest-counts';
 import { Season } from './season';
 import { swapper } from './swap';
-import { address, fill, formatMoney, formatStay, LANGUAGE, replaceQuery, TEXTS } from './texts';
+import {
+  addDays,
+  address,
+  fill,
+  formatMoney,
+  formatStay,
+  LANGUAGE,
+  replaceQuery,
+  TEXTS,
+} from './texts';
 
 type SeasonWeeks = FreeWeeks['seasons'][number];
 interface Stay {
@@ -64,10 +73,6 @@ const shownMonths = new InjectionToken('booking panel months', {
   factory: () => signal<Partial<Record<SeasonName, string>>>({}),
 });
 
-const day = 864e5;
-const addDays = (date: string, days: number) =>
-  new Date(Date.parse(date) + days * day).toISOString().slice(0, 10);
-
 // The apartment page's booking panel: a week of the shown season, one month at a time as a list
 // or a calendar, the guests within Beds24's limits, the total and the way on to booking. As in
 // the free-weeks list, both seasons are in the page and the page's season attribute shows one.
@@ -89,7 +94,12 @@ const addDays = (date: string, days: number) =>
   ],
   template: `
     <!-- The section's name is the title's and the season's. -->
-    <section id="booking" class="panel" aria-labelledby="booking-title booking-season">
+    <section
+      id="booking"
+      class="panel"
+      aria-labelledby="booking-title booking-season"
+      [attr.data-blocked]="blocked() ? '' : null"
+    >
       <div class="panel-line">
         <h2 id="booking-title" class="panel-title" tabindex="-1">{{ texts.panel.title }}</h2>
         @if (weeks && limits) {
@@ -210,13 +220,13 @@ const addDays = (date: string, days: number) =>
                                 ngGridCell
                                 class="week-cell"
                                 [colIndex]="2"
-                                [selectable]="stay.price !== null"
+                                [selectable]="stay.price !== null || isChosen(season.name, stay)"
                                 [selected]="isChosen(season.name, stay)"
                                 (selectedChange)="select($event, season, stay)"
                                 [tabindex]="stop ? (stop === stay.arrival ? 0 : -1) : undefined"
                                 [attr.data-date]="stay.arrival"
-                                (click)="guard($event, stay.price !== null)"
-                                (keydown)="keys($event, season, stay.price !== null)"
+                                (click)="guard($event, open(season.name, stay))"
+                                (keydown)="keys($event, season, open(season.name, stay))"
                                 >{{
                                   stay.price === null ? texts.weeks.taken : money(stay.price)
                                 }}</span
@@ -255,16 +265,24 @@ const addDays = (date: string, days: number) =>
                                   [class.in-band]="band.in"
                                   [class.band-start]="band.start"
                                   [class.band-end]="band.end"
-                                  [selectable]="!!cell.start"
-                                  [selected]="!!cell.start && isChosen(season.name, cell.start)"
+                                  [selectable]="!!cell.start || band.start"
+                                  [selected]="band.start"
                                   (selectedChange)="
                                     cell.start && select($event, season, cell.start)
                                   "
                                   [attr.aria-label]="cell.label"
                                   [tabindex]="stop ? (stop === cell.date ? 0 : -1) : undefined"
                                   [attr.data-date]="cell.date"
-                                  (click)="guard($event, !!cell.start)"
-                                  (keydown)="keys($event, season, !!cell.start)"
+                                  (click)="
+                                    guard($event, !!cell.start && open(season.name, cell.start))
+                                  "
+                                  (keydown)="
+                                    keys(
+                                      $event,
+                                      season,
+                                      !!cell.start && open(season.name, cell.start)
+                                    )
+                                  "
                                   ><span [class.start]="cell.start" [class.booked]="cell.booked">{{
                                     cell.day
                                   }}</span></span
@@ -297,33 +315,41 @@ const addDays = (date: string, days: number) =>
             }
           </p>
         </div>
-        <!-- A season with no week to choose has no total and no button. -->
+        <!-- A season with no week to choose has no total and no button, unless a link's week
+             of it is chosen, which shows as blocked. -->
         @for (season of weeks.seasons; track season.name) {
-          @if (season.state === 'open') {
+          @if (season.state === 'open' || pickIn(season.name)) {
             <div class="outcome" [attr.data-for]="season.name">
               @if (pickIn(season.name); as stay) {
                 <dl class="total">
                   <div>
                     <dt>{{ fill(texts.panel.week, { stay: stayText(stay) }) }}</dt>
-                    <dd>{{ money(stay.price!) }}</dd>
+                    <dd>{{ stay.price === null ? texts.weeks.taken : money(stay.price) }}</dd>
                   </div>
-                  @if (taxLine(); as tax) {
-                    <div>
-                      <dt>{{ tax.text }}</dt>
-                      <dd>{{ money(tax.amount) }}</dd>
+                  <!-- A week booked or passed since has no price, and so no total. -->
+                  @if (stay.price !== null) {
+                    @if (taxLine(); as tax) {
+                      <div>
+                        <dt>{{ tax.text }}</dt>
+                        <dd>{{ money(tax.amount) }}</dd>
+                      </div>
+                    }
+                    <div class="sum">
+                      <dt>{{ texts.panel.total }}</dt>
+                      <dd>{{ money(stay.price + (taxLine()?.amount ?? 0)) }}</dd>
                     </div>
                   }
-                  <div class="sum">
-                    <dt>{{ texts.panel.total }}</dt>
-                    <dd>{{ money(stay.price! + (taxLine()?.amount ?? 0)) }}</dd>
-                  </div>
                 </dl>
-                @if (fitting()) {
+                @if (!blocked()) {
                   <a class="button wide" [href]="bookingLink(stay)"
                     >{{ texts.panel.book }}<ng-icon name="lucideArrowRight" aria-hidden="true"
                   /></a>
                 } @else {
                   <button type="button" class="button wide" disabled>{{ texts.panel.book }}</button>
+                  <!-- The bar and its cross are not there on a desktop. -->
+                  <button type="button" class="text-button clear-week" (click)="clear()">
+                    {{ texts.weeks.clear }}
+                  </button>
                 }
               } @else {
                 @let from = texts.panel.from.split('{price}');
@@ -375,10 +401,20 @@ const addDays = (date: string, days: number) =>
       }
 
       .panel {
+        /* The chosen week's colours; a week that cannot be booked takes a disabled button's. */
+        --pill: var(--color-accent);
+        --on-pill: var(--color-on-accent);
+        --band: var(--color-accent-soft);
         --inset: 1.25rem;
         padding: 1.5rem var(--inset);
         /* The phone bar brings the panel's foot as far from the screen's foot as from its sides. */
         scroll-margin-bottom: 1rem;
+
+        &[data-blocked] {
+          --pill: var(--color-line);
+          --on-pill: var(--color-ink-soft);
+          --band: color-mix(in srgb, var(--color-line) 50%, transparent);
+        }
 
         @media (min-width: 48rem) {
           --inset: 2rem;
@@ -592,8 +628,8 @@ const addDays = (date: string, days: number) =>
         }
 
         &.chosen {
-          background: var(--color-accent);
-          color: var(--color-on-accent);
+          background: var(--pill);
+          color: var(--on-pill);
         }
 
         &:has(:focus-visible) {
@@ -680,7 +716,7 @@ const addDays = (date: string, days: number) =>
         }
 
         &.in-band {
-          background: var(--color-accent-soft);
+          background: var(--band);
 
           &:first-child {
             border-radius: var(--radius-control) 0 0 var(--radius-control);
@@ -693,17 +729,17 @@ const addDays = (date: string, days: number) =>
 
         /* The band starts and ends under the middle of its pills, not at the cell's edge. */
         &.band-start {
-          background: linear-gradient(to right, transparent 50%, var(--color-accent-soft) 50%);
+          background: linear-gradient(to right, transparent 50%, var(--band) 50%);
         }
 
         &.band-end {
-          background: linear-gradient(to left, transparent 50%, var(--color-accent-soft) 50%);
+          background: linear-gradient(to left, transparent 50%, var(--band) 50%);
         }
 
         &.band-start > *,
         &.band-end > * {
-          background: var(--color-accent);
-          color: var(--color-on-accent);
+          background: var(--pill);
+          color: var(--on-pill);
           text-decoration: none;
         }
       }
@@ -779,6 +815,12 @@ const addDays = (date: string, days: number) =>
         }
       }
 
+      .clear-week {
+        display: flex;
+        width: fit-content;
+        margin: 0.5rem auto 0;
+      }
+
       .button.wide {
         justify-content: center;
         gap: 0.5rem;
@@ -800,6 +842,7 @@ export class BookingPanel {
   private readonly language = inject(LANGUAGE);
   private readonly season = inject(Season);
   private readonly location = inject(Location);
+  private readonly browser = isPlatformBrowser(inject(PLATFORM_ID));
   private readonly injector = inject(Injector);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
   private readonly route = inject(ActivatedRoute).snapshot;
@@ -902,12 +945,13 @@ export class BookingPanel {
             season: season.name,
             name: this.name,
             before: '',
-            amount: this.money(stay.price!),
+            amount: this.blocked() ?? this.money(stay.price!),
             after: '',
-            detail: this.fitting() ? this.stayText(stay) : this.small(),
+            detail: this.stayText(stay),
             link: null,
-            label: this.fitting() ? this.texts.panel.bar.book : this.texts.panel.guests,
+            label: this.texts.panel.bar.book,
             chosen: true,
+            blocked: !!this.blocked(),
           },
         ];
       if (season.state !== 'open') return [];
@@ -923,6 +967,7 @@ export class BookingPanel {
           link: null,
           label: this.texts.panel.bar.choose,
           chosen: false,
+          blocked: false,
         },
       ];
     }),
@@ -931,7 +976,7 @@ export class BookingPanel {
   constructor() {
     this.read();
     // At the first paint the bar shows unless the panel is already in view, as on a tall tablet.
-    if (isPlatformServer(inject(PLATFORM_ID))) {
+    if (!this.browser) {
       const script = this.document.createElement('script');
       script.textContent =
         '{let b=document.querySelector(".booking-bar");' +
@@ -961,16 +1006,21 @@ export class BookingPanel {
   // The address's choice: a free week of either season, and the guests within the limits.
   private read() {
     const query = this.route.queryParamMap;
-    const arrival = query.get('arrival');
-    const season = this.weeks?.seasons.find((one) =>
-      one.weeks.some((week) => week.arrival === arrival && week.prices[0] !== null),
-    );
+    const arrival = query.get('arrival') ?? '';
+    // Also a week booked or passed since, which stays chosen as blocked.
+    const season = this.weeks && seasonOf(this.weeks, arrival);
     // A month browsed to before a change of language stays shown.
-    if (season && arrival) {
+    if (season) {
       this.chosen.set({ season: season.name, arrival });
       if (!this.months()[season.name])
         this.months.update((months) => ({ ...months, [season.name]: arrival.slice(0, 7) }));
-    }
+    } else if (arrival && this.weeks && this.browser)
+      // A week outside the seasons, such as last year's, leaves the address too; without the
+      // weeks, while Beds24 cannot be reached, the address keeps it for a later visit.
+      replaceQuery(this.location, (params) => {
+        params.delete('arrival');
+        params.delete('departure');
+      });
     this.carry();
     if (this.weeks) this.choice.limit(Object.values(this.weeks.capacities));
   }
@@ -1071,14 +1121,24 @@ export class BookingPanel {
     return pick?.season === season && pick.arrival === stay.arrival;
   }
 
+  // The chosen week, or its days alone once it is no longer offered.
   protected pickIn(season: SeasonName): Stay | null {
     const pick = this.chosen();
     if (pick?.season !== season) return null;
     const seasonWeeks = this.weeks!.seasons.find(({ name }) => name === season)!;
-    return this.monthsOf(seasonWeeks)
+    const stay = this.monthsOf(seasonWeeks)
       .flatMap(({ stays }) => stays)
-      .find(({ arrival }) => arrival === pick.arrival)!;
+      .find(({ arrival }) => arrival === pick.arrival);
+    return stay ?? { arrival: pick.arrival, departure: addDays(pick.arrival, 7), price: null };
   }
+
+  // Why the chosen week cannot be booked, if it cannot.
+  protected readonly blocked = computed(() => {
+    const pick = this.chosen();
+    if (!pick) return null;
+    if (this.pickIn(pick.season)!.price === null) return this.texts.weeks.gone;
+    return this.fitting() ? null : this.texts.weeks.small;
+  });
 
   // The chosen week's days in a calendar: from its first day to its last.
   protected bandOf(season: SeasonName, date: string) {
@@ -1114,9 +1174,14 @@ export class BookingPanel {
     this.keep();
     afterNextRender(
       () =>
-        this.host
-          .querySelector<HTMLElement>(`.booking-bar [data-for=${this.season.current()}] .button`)
-          ?.focus(),
+        (
+          [
+            ...this.host.querySelectorAll<HTMLElement>(
+              `.booking-bar [data-for=${this.season.current()}] .button`,
+            ),
+          ].find((button) => button.checkVisibility()) ??
+          this.document.getElementById('booking-title')!
+        ).focus(),
       { injector: this.injector },
     );
   }
@@ -1136,6 +1201,12 @@ export class BookingPanel {
   // week; so would Enter or Space on it. Page Up and Page Down show the month before or after.
   protected guard(event: Event, free: boolean) {
     if (!free) event.stopPropagation();
+  }
+
+  // Whether a week can be chosen or cleared here: a free one, but not the chosen week while it
+  // is blocked, which only the bar's cross clears.
+  protected open(season: SeasonName, stay: Stay) {
+    return stay.price !== null && !(this.blocked() && this.isChosen(season, stay));
   }
 
   protected keys(event: KeyboardEvent, season: SeasonWeeks, free: boolean) {

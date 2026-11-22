@@ -84,6 +84,9 @@ nothing is built or tested for it.
   2026). The rules are under [Accessibility](#accessibility).
 - **JavaScript is required to choose a week and to book.** Without JavaScript, pages can be read and
   their links work.
+- **Links:** an address takes what the site itself writes into it: a week it offered, the guests,
+  the view. A link edited by hand, such as a week starting on another weekday or a date the site
+  never offered, must not break the page; how it shows is not defined.
 - **Outside the boundary:** an outdated system or browser, a stalled or very slow connection,
   controls used before the application has started. A first paint that looks wrong is inside it,
   since every visitor sees it.

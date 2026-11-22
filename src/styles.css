@@ -753,6 +753,47 @@
     }
   }
 
+  /* A text that acts: the back link, a text with an arrow that opens more, the panel's clearing of
+     a blocked week. The focus ring is a pill with air at its sides. */
+  :is(.back, .text-button) {
+    --air: 0.875rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    min-height: var(--size-control);
+    margin-inline: calc(-1 * var(--air));
+    padding-inline: var(--air);
+    border-radius: var(--radius-control);
+    color: var(--color-accent);
+    font-weight: 500;
+    text-decoration: underline transparent;
+    text-underline-offset: 0.3em;
+    transition: text-decoration-color 0.2s;
+    cursor: pointer;
+
+    &:hover {
+      text-decoration-color: currentColor;
+    }
+
+    &:focus-visible {
+      outline-offset: var(--focus-offset-text);
+    }
+
+    ng-icon {
+      @media (prefers-reduced-motion: no-preference) {
+        transition: rotate 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+    }
+
+    &[aria-expanded='true'] ng-icon {
+      rotate: 180deg;
+    }
+
+    &[hidden] {
+      display: none;
+    }
+  }
+
   /* The way to the other season: a sentence with an arrow, not a second switch. Underlined on
      hover like a link; the line is drawn on the label, since a flex box does not take its
      parent's. The focus ring is drawn round the shown label as a pill with air at its sides;
@@ -1120,6 +1161,11 @@
 
   .taken {
     color: var(--color-ink-soft);
+
+    /* A chosen week that cannot be booked, in the colours of a disabled button. */
+    .booked.chosen & {
+      background: var(--color-line);
+    }
   }
 
   /* Too small for the guests: the hint's icon tells it from a booked week. */
