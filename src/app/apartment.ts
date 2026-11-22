@@ -343,47 +343,6 @@ type Fold = ReturnType<typeof fold>;
         }
       }
 
-      /* The back link, and a text with an arrow that opens more; the focus ring is a pill with air
-         at its sides. */
-      :is(.back, .text-button) {
-        --air: 0.875rem;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.375rem;
-        min-height: var(--size-control);
-        margin-inline: calc(-1 * var(--air));
-        padding-inline: var(--air);
-        border-radius: var(--radius-control);
-        color: var(--color-accent);
-        font-weight: 500;
-        text-decoration: underline transparent;
-        text-underline-offset: 0.3em;
-        transition: text-decoration-color 0.2s;
-        cursor: pointer;
-
-        &:hover {
-          text-decoration-color: currentColor;
-        }
-
-        &:focus-visible {
-          outline-offset: var(--focus-offset-text);
-        }
-
-        ng-icon {
-          @media (prefers-reduced-motion: no-preference) {
-            transition: rotate 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-          }
-        }
-
-        &[aria-expanded='true'] ng-icon {
-          rotate: 180deg;
-        }
-
-        &[hidden] {
-          display: none;
-        }
-      }
-
       /* A block cut to a height with a fade until its button opens it; the height moves to the
          content's measured one (--full). Without scripts there is no button, so nothing is cut. */
       .fold {
