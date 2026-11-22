@@ -176,6 +176,7 @@ test(
     const week = await firstFree(page);
     const name = await monthName(page).innerText();
     await week.click();
+    await expect(page).toHaveURL(/arrival=\d{4}-\d\d-\d\d/);
     const arrival = new URL(page.url()).searchParams.get('arrival')!;
     await open(page, `/de/wohnungen/laerche?arrival=${arrival}`);
     await expect(monthName(page)).toHaveText(name);
@@ -208,6 +209,7 @@ test('the calendar shows the list’s month and week, at the same height', async
     .locator('..')
     .evaluate((box) => box.offsetHeight);
   await week.click();
+  await expect(page).toHaveURL(/arrival=\d{4}-\d\d-\d\d/);
   const arrival = new URL(page.url()).searchParams.get('arrival')!;
   await page.locator('.views').getByTitle('Kalender').click();
   await expect(monthName(page)).toHaveText(name);
@@ -699,6 +701,7 @@ test(
     await page.setViewportSize({ width: 1280, height: 800 });
     await openNext(page, '/de/wohnungen/laerche');
     await (await firstFree(page)).click();
+    await expect(page).toHaveURL(/arrival=\d{4}-\d\d-\d\d/);
     const arrival = new URL(page.url()).searchParams.get('arrival');
     const header = page.getByRole('navigation', { name: 'Hauptmenü' });
     await header.getByRole('link', { name: 'Freie Wochen' }).click();
