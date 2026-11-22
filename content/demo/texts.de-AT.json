@@ -95,8 +95,6 @@
       "night": "Zuzüglich Ortstaxe von {amount} pro Erwachsenem und Nacht.",
       "stay": "Zuzüglich Ortstaxe von {amount} pro Erwachsenem und Aufenthalt."
     },
-    "withTax": "{price} mit Ortstaxe",
-    "continue": "Weiter zur Buchung",
     "clear": "Gewählte Woche aufheben"
   },
   "apartment": {

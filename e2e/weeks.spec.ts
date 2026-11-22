@@ -40,7 +40,7 @@ test('the next season lists its weeks with a price or "booked" per apartment', a
   expect(dates.replace(/\s+/g, ' ').trim()).toMatch(/^Sat,? \d\d\/\d\d – Sat,? \d\d\/\d\d$/);
   // The headers say the week and the apartment, so a cell says only its own price or "booked".
   await expect(panel(page).getByRole('rowheader').first()).toHaveAccessibleName(
-    /^Saturday,? \d+ \w+ – Saturday,? \d+ \w+$/,
+    /^Saturday,?\s\d+\s\w+\s–\sSaturday,?\s\d+\s\w+$/,
   );
   await expect(panel(page).locator('.stay').first()).toHaveAccessibleName(/^€[\d,.]+$/);
   await expect(panel(page).locator('.booked').first()).toHaveAccessibleName('booked');
@@ -109,14 +109,16 @@ test('a chosen week leads to its apartment with the stay, also in a fresh browse
   const price = await first.innerText();
   await first.locator('.price').click();
   await expect(first).toHaveAttribute('aria-selected', 'true');
-  // With the tourist tax of two adults for seven nights at € 3.50.
-  const total = Number(price.replace(/[^\d,]/g, '').replace(',', '.')) + 49;
+  // The week's price as the list shows it: the tax is added on the apartment's page.
+  const amount = Number(price.replace(/[^\d,]/g, '').replace(',', '.'));
   const money = new Intl.NumberFormat('de-AT', { style: 'currency', currency: 'EUR' });
-  const shown = money.format(total).replace(',00', '');
-  await expect(page.locator('.pick output')).toHaveText(
-    `${apartment} · ${dates.replace(/\s+/g, ' ').trim()} · ${shown} mit Ortstaxe`,
-  );
-  await page.getByRole('link', { name: 'Weiter zur Buchung' }).click();
+  const shown = money.format(amount).replace(',00', '');
+  await expect(page.locator('.pick .bar-parts > span, .pick output small')).toHaveText([
+    apartment,
+    shown,
+    dates.replace(/\s+/g, ' ').trim(),
+  ]);
+  await page.locator('.pick').getByRole('link', { name: 'Weiter' }).click();
   await expect(page).toHaveURL(
     /\/de\/wohnungen\/(zirbe|laerche|ahorn)\?arrival=\d{4}-\d\d-\d\d&departure=\d{4}-\d\d-\d\d&season=(winter|summer)$/,
   );

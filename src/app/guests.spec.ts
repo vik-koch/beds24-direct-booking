@@ -2,6 +2,7 @@ import { Location } from '@angular/common';
 import { provideLocationMocks, SpyLocation } from '@angular/common/testing';
 import { TestBed } from '@angular/core/testing';
 import { Guests } from './guests';
+import { Season } from './season';
 
 const at = (url: string) => {
   TestBed.configureTestingModule({ providers: [provideLocationMocks()] });
@@ -40,5 +41,23 @@ describe('Guests', () => {
     guests.limit([family]);
     (TestBed.inject(Location) as SpyLocation).simulateUrlPop('/de?adults=1&children=4');
     expect([guests.adults(), guests.children()]).toEqual([1, 4]);
+  });
+
+  it('carries the view of its address, also after Back', () => {
+    const guests = at('/de?view=calendar');
+    expect(guests.link('/de/a')).toBe('/de/a?view=calendar');
+    (TestBed.inject(Location) as SpyLocation).simulateUrlPop('/de');
+    expect(guests.link('/de/a')).toBe('/de/a');
+  });
+
+  it('carries a week to its home and its page, with its season only while that is shown', () => {
+    const guests = at('/de/a');
+    TestBed.inject(Season).current.set('winter');
+    const week = { home: '/de', page: '/de/a', slug: 'a', arrival: '2027-01-02' };
+    guests.week.set({ ...week, departure: '2027-01-09', season: 'winter' });
+    expect(guests.link('/de#weeks')).toBe('/de?apartment=a&arrival=2027-01-02&season=winter#weeks');
+    expect(guests.link('/de/b')).toBe('/de/b');
+    guests.week.set({ ...week, departure: '2027-01-09', season: 'summer' });
+    expect(guests.link('/de/a')).toBe('/de/a?arrival=2027-01-02&departure=2027-01-09');
   });
 });

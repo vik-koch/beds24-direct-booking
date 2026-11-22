@@ -10,6 +10,9 @@ import {
 } from '@angular/core';
 import type { Tax } from '../beds24/client';
 import type { Capacity } from '../beds24/weeks';
+import type { SeasonName } from '../content/names';
+import { Season } from './season';
+import { replaceQuery } from './texts';
 
 const usual = { adults: 2, children: 0 };
 
@@ -24,13 +27,26 @@ export const taxed = (room: Capacity, adults: number, children: number) =>
 export const taxFor = (tax: Tax, count: number) =>
   Math.round(tax.amount * count * (tax.per === 'night' ? 7 : 1) * 100) / 100;
 
+// A chosen week, with the home page's address and its apartment's page.
+export interface ChosenWeek {
+  home: string;
+  page: string;
+  slug: string;
+  arrival: string;
+  departure: string;
+  season: SeasonName;
+}
+
 // The visitor's group, chosen once for every apartment and page. The address carries what
 // differs from two adults without children, so a reload, a shared link and every internal link
-// keep it. Only a page that knows the rooms holds the choice to what one of them takes.
+// keep it. Only a page that knows the rooms holds the choice to what one of them takes. Links
+// also carry the booking panel's view, and a chosen week to the home page and to its
+// apartment's page.
 @Injectable({ providedIn: 'root' })
 export class Guests {
   private readonly location = inject(Location);
   private readonly injector = inject(Injector);
+  private readonly season = inject(Season);
   private readonly browser = isPlatformBrowser(inject(PLATFORM_ID));
   private readonly rooms = signal<Capacity[]>([]);
   readonly adults = signal(usual.adults);
@@ -41,6 +57,8 @@ export class Guests {
   readonly maxChildren = computed(() =>
     this.asksChildren() ? this.maxAdults() - this.adults() : 0,
   );
+  readonly week = signal<ChosenWeek | null>(null);
+  readonly view = signal<'list' | 'calendar'>('list');
   readonly params = computed(() => {
     const params: Record<string, string> = {};
     if (this.adults() !== usual.adults) params['adults'] = String(this.adults());
@@ -63,9 +81,19 @@ export class Guests {
   link(href: string) {
     if (!href.startsWith('/') || href.startsWith('//')) return href;
     const url = new URL(href, 'https://site');
+    const carried = { ...this.params() };
+    if (this.view() === 'calendar') carried['view'] = 'calendar';
+    const week = this.week();
+    // The week's season only while it is shown: a switch since then stays.
+    const season = week?.season === this.season.current() ? { season: week.season } : {};
+    if (week && url.pathname === week.home)
+      Object.assign(carried, { apartment: week.slug, arrival: week.arrival }, season);
+    if (week && url.pathname === week.page)
+      Object.assign(carried, { arrival: week.arrival, departure: week.departure }, season);
+    // Guests left at the usual two adults are not carried, and a link's own may be stale.
     url.searchParams.delete('adults');
     url.searchParams.delete('children');
-    for (const [name, value] of Object.entries(this.params())) url.searchParams.set(name, value);
+    for (const [name, value] of Object.entries(carried)) url.searchParams.set(name, value);
     return `${url.pathname}${url.search}${url.hash}`;
   }
 
@@ -90,24 +118,20 @@ export class Guests {
       Math.floor(Number(query.get(name) ?? usual[name])) || 0;
     this.adults.set(Math.max(count('adults'), 1));
     this.children.set(Math.max(count('children'), 0));
+    this.view.set(query.get('view') === 'calendar' ? 'calendar' : 'list');
   }
 
-  private query(url = this.location.path()) {
+  query(url = this.location.path()) {
     return new URLSearchParams(url.split('#')[0].split('?')[1] ?? '');
   }
 
   private keep() {
-    const params = this.query();
-    const before = params.toString();
-    for (const name of ['adults', 'children'] as const) {
-      const value = this.params()[name];
-      if (value) params.set(name, value);
-      else params.delete(name);
-    }
-    if (params.toString() === before) return;
-    const [path, hash] = this.location.path(true).split('#');
-    const query = params.size ? `?${params}` : '';
-    const url = `${path.split('?')[0]}${query}${hash === undefined ? '' : `#${hash}`}`;
-    this.location.replaceState(url, '', this.location.getState());
+    replaceQuery(this.location, (params) => {
+      for (const name of ['adults', 'children'] as const) {
+        const value = this.params()[name];
+        if (value) params.set(name, value);
+        else params.delete(name);
+      }
+    });
   }
 }

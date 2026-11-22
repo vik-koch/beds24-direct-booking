@@ -2,6 +2,7 @@ import { DOCUMENT, isPlatformServer, Location } from '@angular/common';
 import { inject, Injectable, PLATFORM_ID, signal } from '@angular/core';
 import site from '../content/generated/site';
 import { heroPortrait, heroSizes, seasonNames, srcset, type SeasonName } from '../content/names';
+import { replaceQuery } from './texts';
 
 // Each listed season and the day it starts as MM-DD; a single season has none.
 export type Starts = Partial<Record<SeasonName, string | null>>;
@@ -138,7 +139,12 @@ export class Season {
       const script = this.document.createElement('script');
       script.textContent = seasonScript(starts);
       this.document.head.appendChild(script);
-    }
+    } else
+      // Back or Forward to an entry of this page that names a season shows it, as a reload would.
+      this.location.subscribe(({ url = '' }) => {
+        const name = new URLSearchParams(url.split('#')[0].split('?')[1]).get('season');
+        if (name && name in starts) this.switch(name as SeasonName);
+      });
   }
 
   // A watcher is called before a change, to measure the page as it is, and returns what to do
@@ -160,12 +166,7 @@ export class Season {
     this.remember(name);
     // The link's ?season= would win over the switch on the next reload. Before the watchers'
     // second part, which may write the address again.
-    const [path, query = ''] = this.location.path().split('?');
-    const params = new URLSearchParams(query.split('#')[0]);
-    if (params.has('season')) {
-      params.delete('season');
-      this.location.replaceState(path, params.toString(), this.location.getState());
-    }
+    replaceQuery(this.location, (params) => params.delete('season'));
     after.forEach((then) => then());
   }
 

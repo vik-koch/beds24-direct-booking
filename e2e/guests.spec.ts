@@ -131,18 +131,23 @@ test('a week chosen in an apartment that becomes too small is no longer chosen',
   await expect(column(page, 1, '[role=gridcell][aria-selected=true]')).toHaveCount(0);
 });
 
-test('the chosen week’s bar counts the tourist tax of the chosen adults', async ({ page }) => {
+test('the chosen week’s bar leaves the tourist tax to the apartment’s page and carries the guests', async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await open(page, '/de?adults=4&children=2');
   await toOtherSeason(page);
   const stay = column(page, 2, '.stay').first();
   const price = Number((await stay.innerText()).replace(/[^\d,]/g, '').replace(',', '.'));
   await stay.locator('.price').click();
-  // Four adults, seven nights at € 3.50; the children pay none.
-  const total = new Intl.NumberFormat('de-AT', { style: 'currency', currency: 'EUR' })
-    .format(price + 98)
+  const shown = new Intl.NumberFormat('de-AT', { style: 'currency', currency: 'EUR' })
+    .format(price)
     .replace(',00', '');
-  await expect(page.locator('.pick output')).toContainText(`${total} mit Ortstaxe`);
+  await expect(page.locator('.pick .bar-parts > span, .pick output small')).toHaveText([
+    'Ahorn',
+    shown,
+    /Sa\./,
+  ]);
   await expect(page.locator('.pick a')).toHaveAttribute('href', /&adults=4&children=2$/);
 });
 

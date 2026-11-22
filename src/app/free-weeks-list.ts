@@ -1,4 +1,5 @@
 import { Grid, GridCell, GridRow } from '@angular/aria/grid';
+import { isPlatformBrowser, Location } from '@angular/common';
 import {
   afterNextRender,
   Component,
@@ -10,18 +11,21 @@ import {
   InjectionToken,
   Injector,
   input,
+  OnInit,
+  PLATFORM_ID,
   signal,
   viewChild,
 } from '@angular/core';
 import { NgIcon, provideIcons } from '@ng-icons/core';
-import { lucideArrowLeft, lucideArrowRight, lucideInfo, lucideX } from '@ng-icons/lucide';
+import { lucideArrowLeft, lucideArrowRight, lucideInfo } from '@ng-icons/lucide';
 import type { FreeWeeks } from '../beds24/weeks';
 import type { SeasonName } from '../content/names';
+import { BookingBar, type BarLine } from './booking-bar';
 import { GuestCounts } from './guest-counts';
-import { fits, Guests, taxed, taxFor } from './guests';
+import { fits, Guests } from './guests';
 import { Season } from './season';
 import { swapper } from './swap';
-import { address, fill, formatMoney, LANGUAGE, TEXTS } from './texts';
+import { address, fill, formatMoney, formatStay, LANGUAGE, replaceQuery, TEXTS } from './texts';
 
 type SeasonWeeks = FreeWeeks['seasons'][number];
 interface Week {
@@ -43,8 +47,8 @@ const shownTab = new InjectionToken('shown tab', { providedIn: 'root', factory: 
 // comes from the list's own button and cross-fades them when it comes from the header.
 @Component({
   selector: 'app-free-weeks',
-  imports: [NgIcon, Grid, GridRow, GridCell, GuestCounts],
-  providers: [provideIcons({ lucideArrowLeft, lucideArrowRight, lucideInfo, lucideX })],
+  imports: [NgIcon, Grid, GridRow, GridCell, GuestCounts, BookingBar],
+  providers: [provideIcons({ lucideArrowLeft, lucideArrowRight, lucideInfo })],
   template: `
     <div class="weeks-head">
       <!-- The seasons' names, and the button's labels, lie over each other: the heading and the
@@ -159,6 +163,7 @@ const shownTab = new InjectionToken('shown tab', { providedIn: 'root', factory: 
                                 role="gridcell"
                                 [class]="free ? 'stay' : 'booked'"
                                 [class.elsewhere]="$index !== tab()"
+                                [class.chosen]="isChosen(season.name, $index, week.row)"
                                 [colIndex]="$index + 2"
                                 [disabled]="!shown(season.name, $index)"
                                 [selectable]="free"
@@ -205,27 +210,8 @@ const shownTab = new InjectionToken('shown tab', { providedIn: 'root', factory: 
         <p class="weeks-note">{{ note }}</p>
         <!-- One week at a time, in either season. The bar belongs to its season and is hidden
              while the other one is shown, so a change of season does not rebuild it. -->
-        @if (picked(); as pick) {
-          <div class="pick" [attr.data-for]="pick.season.name">
-            <output>
-              <span class="pick-name">{{ pick.name }}</span>
-              <span class="pick-dot" aria-hidden="true"> · </span>
-              <span>{{ pick.stay }} · {{ pick.price }}</span>
-            </output>
-            <div class="pick-actions">
-              <button
-                type="button"
-                class="icon-button pick-clear"
-                [attr.aria-label]="texts.weeks.clear"
-                (click)="clear($event)"
-              >
-                <ng-icon name="lucideX" aria-hidden="true" />
-              </button>
-              <a class="button" [href]="pick.link">
-                {{ texts.weeks.continue }}
-              </a>
-            </div>
-          </div>
+        @if (bar().length) {
+          <app-booking-bar class="pick" [lines]="bar()" [shown]="true" (cleared)="clear($event)" />
         }
       </div>
     } @else {
@@ -234,7 +220,7 @@ const shownTab = new InjectionToken('shown tab', { providedIn: 'root', factory: 
   `,
   host: { class: 'weeks' },
 })
-export class FreeWeeksList {
+export class FreeWeeksList implements OnInit {
   readonly weeks = input.required<FreeWeeks | null>();
 
   protected readonly texts = inject(TEXTS);
@@ -247,6 +233,8 @@ export class FreeWeeksList {
   protected readonly tab = inject(shownTab);
   protected readonly chosen = inject(chosenWeek);
   private readonly group = inject(Guests);
+  private readonly location = inject(Location);
+  private readonly browser = isPlatformBrowser(inject(PLATFORM_ID));
   // Per apartment, whether it takes the chosen guests.
   protected readonly fitting = computed(() => {
     const { adults, children } = this.group;
@@ -255,24 +243,26 @@ export class FreeWeeksList {
       fits(weeks!.capacities[slug], adults(), children()),
     );
   });
-  protected readonly picked = computed(() => {
+  protected readonly bar = computed((): BarLine[] => {
     const pick = this.chosen();
     const weeks = this.weeks();
     const season = pick && weeks?.seasons.find(({ name }) => name === pick.season);
-    if (!pick || !season) return null;
+    if (!pick || !season) return [];
     const week = season.weeks[pick.row];
-    const { slug, name, tax } = weeks!.apartments[pick.apartment];
-    const price = week.prices[pick.apartment]!;
-    const count = taxed(weeks!.capacities[slug], this.group.adults(), this.group.children());
-    return {
-      season,
-      name,
-      stay: this.stay(week),
-      price: tax
-        ? fill(this.texts.weeks.withTax, { price: this.money(price + taxFor(tax, count)) })
-        : this.money(price),
-      link: this.link(season, pick.apartment, pick.row),
-    };
+    const { name } = weeks!.apartments[pick.apartment];
+    return [
+      {
+        season: season.name,
+        name,
+        before: '',
+        amount: this.money(week.prices[pick.apartment]!),
+        after: '',
+        detail: this.stay(week),
+        link: this.link(season, pick.apartment, pick.row),
+        label: this.texts.panel.bar.book,
+        chosen: true,
+      },
+    ];
   });
   protected readonly announced = signal('');
   // From 48rem up every apartment has its column; below, only the chosen tab's is shown.
@@ -310,11 +300,15 @@ export class FreeWeeksList {
   constructor() {
     const destroyRef = inject(DestroyRef);
     destroyRef.onDestroy(this.season.watch((name) => this.move(name)));
+    // Back or Forward to an entry of this page, such as a section's fragment, restores its week.
+    const back = this.location.subscribe(({ url }) => this.read(url));
+    destroyRef.onDestroy(() => back.unsubscribe());
     // A week of an apartment that has become too small for the guests is no longer chosen.
     effect(() => {
       const pick = this.chosen();
       if (pick && !this.fitting()[pick.apartment]) this.chosen.set(null);
     });
+    effect(() => this.keep(this.chosen()));
     afterNextRender(() => {
       const query = matchMedia('(min-width: 48rem)');
       // A narrow screen shows only the tab's apartment, so it shows the chosen week's.
@@ -332,6 +326,57 @@ export class FreeWeeksList {
         query.removeEventListener('change', update);
         host.removeEventListener('focusin', this.enter, { capture: true });
       });
+    });
+  }
+
+  // The address's week: a free one of the named apartment, if it takes the guests. On a phone
+  // its apartment's tab is shown.
+  ngOnInit() {
+    this.read();
+  }
+
+  private read(url?: string) {
+    const query = this.group.query(url);
+    const weeks = this.weeks();
+    const apartment = weeks?.apartments.findIndex(({ slug }) => slug === query.get('apartment'));
+    let pick: Week | null = null;
+    if (apartment !== undefined && apartment >= 0 && this.fitting()[apartment])
+      for (const season of weeks!.seasons) {
+        const row = season.weeks.findIndex(
+          ({ arrival, prices }) => arrival === query.get('arrival') && prices[apartment] !== null,
+        );
+        if (row >= 0) pick = { season: season.name, apartment, row };
+      }
+    this.chosen.set(pick);
+    if (pick) this.tab.set(pick.apartment);
+  }
+
+  // The address keeps the chosen week, with its season while that is shown, and the links to
+  // the home page and the week's apartment carry it.
+  private keep(pick: Week | null) {
+    const season = pick && this.weeks()?.seasons.find(({ name }) => name === pick.season);
+    const week = season && season.weeks[pick.row];
+    const { slug } = (pick && this.weeks()?.apartments[pick.apartment]) || {};
+    this.group.week.set(
+      week && slug
+        ? {
+            home: address(this.language, 'home'),
+            page: address(this.language, 'apartment', slug),
+            slug,
+            arrival: week.arrival,
+            departure: week.departure,
+            season: pick.season,
+          }
+        : null,
+    );
+    if (!this.browser) return;
+    replaceQuery(this.location, (params) => {
+      if (week && slug) {
+        params.set('apartment', slug);
+        params.set('arrival', week.arrival);
+        if (pick.season === this.season.current()) params.set('season', pick.season);
+      } else if (params.has('apartment'))
+        ['apartment', 'arrival', 'season'].forEach((name) => params.delete(name));
     });
   }
 
@@ -398,12 +443,8 @@ export class FreeWeeksList {
     });
   }
 
-  // Not formatRange: across the turn of the year it adds both years.
-  protected stay(
-    { arrival, departure }: { arrival: string; departure: string },
-    dates = this.dates,
-  ) {
-    return `${dates.format(new Date(arrival))} – ${dates.format(new Date(departure))}`;
+  protected stay(week: { arrival: string; departure: string }, dates = this.dates) {
+    return formatStay(dates, week);
   }
 
   protected money(amount: number) {
@@ -415,13 +456,8 @@ export class FreeWeeksList {
   protected link(season: SeasonWeeks, apartment: number, row: number) {
     const { arrival, departure } = season.weeks[row];
     const { slug } = this.weeks()!.apartments[apartment];
-    const query = new URLSearchParams({
-      arrival,
-      departure,
-      season: season.name,
-      ...this.group.params(),
-    });
-    return `${address(this.language, 'apartment', slug)}?${query}`;
+    const query = new URLSearchParams({ arrival, departure, season: season.name });
+    return this.group.link(`${address(this.language, 'apartment', slug)}?${query}`);
   }
 
   protected isChosen(season: SeasonName, apartment: number, row: number) {
@@ -544,7 +580,7 @@ export class FreeWeeksList {
       if (!box || !old || !next || !this.swap(box, old, next, direction, height!)) return;
       // A chosen week's bar returns with its season once the colours have changed: shown during
       // the change, Edge drew its button's label in white.
-      const bar = this.host.nativeElement.querySelector<HTMLElement>(`.pick[data-for=${to}]`);
+      const bar = this.host.nativeElement.querySelector<HTMLElement>(`.pick:has([data-for=${to}])`);
       bar?.animate({ opacity: [0, 1] }, { duration: 250, delay: 450, fill: 'backwards' });
     };
   }

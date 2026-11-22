@@ -86,8 +86,6 @@
       "night": "Plus een toeristenbelasting van {amount} per volwassene en nacht.",
       "stay": "Plus een toeristenbelasting van {amount} per volwassene en verblijf."
     },
-    "withTax": "{price} met toeristenbelasting",
-    "continue": "Verder naar de boeking",
     "clear": "Gekozen week wissen"
   },
   "apartment": {
