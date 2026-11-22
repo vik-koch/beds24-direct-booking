@@ -87,6 +87,8 @@ nothing is built or tested for it.
 - **Links:** an address takes what the site itself writes into it: a week it offered, the guests,
   the view. A link edited by hand, such as a week starting on another weekday or a date the site
   never offered, must not break the page; how it shows is not defined.
+- **Content:** what the content schema accepts must work. A value that would break a page is refused
+  by the schema, with its limit in `docs/content.md`, rather than handled in code.
 - **Outside the boundary:** an outdated system or browser, a stalled or very slow connection,
   controls used before the application has started. A first paint that looks wrong is inside it,
   since every visitor sees it.
