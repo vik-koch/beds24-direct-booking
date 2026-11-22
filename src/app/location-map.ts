@@ -173,23 +173,34 @@ function flavor(c: (name: string) => string): Flavor {
             class="text-button map-unfold"
             aria-controls="map-more"
             [attr.aria-expanded]="all()"
-            (click)="all.set(!all())"
+            (click)="fold()"
           >
             {{ texts.more }}<ng-icon name="lucideChevronDown" aria-hidden="true" />
           </button>
         }
         <ng-template #line let-place>
           <li>
-            <ng-icon [name]="lucideName(place.icon)" aria-hidden="true" />
-            <div class="map-place-name">
-              <p class="min-w-0 font-medium hyphens-auto">{{ texts.places[place.key]!.name }}</p>
-              @if (route(place.key); as route) {
-                <p class="text-ink-soft whitespace-nowrap tabular-nums">{{ distance(route) }}</p>
+            <button
+              type="button"
+              class="map-line"
+              [attr.aria-pressed]="place.key === picked()"
+              (click)="pick(place.key)"
+            >
+              <ng-icon [name]="lucideName(place.icon)" aria-hidden="true" />
+              <span class="map-place-name">
+                <span class="min-w-0 font-medium hyphens-auto">{{
+                  texts.places[place.key]!.name
+                }}</span>
+                @if (route(place.key); as route) {
+                  <span class="text-ink-soft whitespace-nowrap tabular-nums">{{
+                    distance(route)
+                  }}</span>
+                }
+              </span>
+              @if (texts.places[place.key]![season.current()]; as note) {
+                <span class="text-ink-soft">{{ note }}</span>
               }
-            </div>
-            @if (texts.places[place.key]![season.current()]; as note) {
-              <p class="text-ink-soft">{{ note }}</p>
-            }
+            </button>
           </li>
         </ng-template>
       </div>
@@ -220,32 +231,58 @@ function flavor(c: (name: string) => string): Flavor {
       </div>
       <!-- The map takes these as its markers; until it is drawn they stay out of sight. -->
       @for (apartment of apartments; track apartment.slug) {
+        <span
+          #marker
+          class="map-label"
+          aria-hidden="true"
+          data-anchor="left"
+          [attr.data-lat]="apartment.lat"
+          [attr.data-lon]="apartment.lon"
+          (click)="choose(apartment.slug)"
+          >{{ apartment.name }}</span
+        >
+      }
+      @for (place of shown(); track place.key) {
+        @if (label(place.key); as label) {
+          <span
+            #marker
+            class="map-label"
+            aria-hidden="true"
+            data-anchor="left"
+            [attr.data-lat]="place.lat"
+            [attr.data-lon]="place.lon"
+            (click)="pick(place.key)"
+            >{{ label }}</span
+          >
+        }
+      }
+      @for (apartment of apartments; track apartment.slug) {
         <button
-          #pin
+          #marker
           type="button"
           class="map-pin"
+          [attr.aria-label]="apartment.name"
           [attr.data-lat]="apartment.lat"
           [attr.data-lon]="apartment.lon"
           [attr.aria-pressed]="chosen() === apartment.slug"
           (click)="choose(apartment.slug)"
         >
-          <ng-icon name="lucideHouse" aria-hidden="true" />{{ apartment.name }}
+          <ng-icon name="lucideHouse" aria-hidden="true" />
         </button>
       }
       @for (place of shown(); track place.key) {
-        <span
-          #pin
+        <button
+          #marker
+          type="button"
           class="map-pin map-place"
-          aria-hidden="true"
+          [attr.aria-label]="texts.places[place.key]!.name"
           [attr.data-lat]="place.lat"
           [attr.data-lon]="place.lon"
-          [title]="texts.places[place.key]!.name"
+          [attr.aria-pressed]="place.key === picked()"
+          (click)="pick(place.key)"
         >
-          <ng-icon [name]="lucideName(place.icon)" />
-          @if (route(place.key); as route) {
-            {{ distance(route) }}
-          }
-        </span>
+          <ng-icon [name]="lucideName(place.icon)" aria-hidden="true" />
+        </button>
       }
     </div>
   `,
@@ -288,57 +325,88 @@ function flavor(c: (name: string) => string): Flavor {
         height: 100%;
       }
 
+      /* A teardrop with its icon in the head, its tip on the place: the element is as tall as the
+         head turned on its corner, 2.25rem times (1 + sqrt 2) / 2. */
       .map-pin {
         display: none;
-        align-items: center;
-        gap: 0.375rem;
-        min-height: var(--size-control-small);
-        padding: 0 0.875rem 0 0.625rem;
+        justify-items: center;
+        width: 2.25rem;
+        height: 2.75rem;
+        padding-top: 0.5625rem;
+        /* Over every label; a chosen pin over the others. */
+        z-index: 1;
+        color: var(--color-accent);
+        cursor: pointer;
+        --ng-icon__size: 1.125rem;
+        --pin: var(--color-surface);
+
+        &::before {
+          content: '';
+          position: absolute;
+          inset: 0 0 auto;
+          z-index: -1;
+          height: 2.25rem;
+          border-radius: 50% 50% 0;
+          background: var(--pin);
+          box-shadow: 0.25rem 0.25rem 0.75rem -0.25rem rgb(39 50 58 / 0.45);
+          rotate: 45deg;
+          transition:
+            background-color 0.2s,
+            box-shadow 0.2s;
+        }
+
+        &:hover::before {
+          box-shadow: 0.375rem 0.375rem 1rem -0.25rem var(--color-ink);
+        }
+
+        &:focus-visible {
+          outline: none;
+
+          &::before {
+            outline: var(--focus-ring);
+            outline-offset: 3px;
+          }
+        }
+
+        &[aria-pressed='true'] {
+          z-index: 2;
+          color: var(--color-on-accent);
+          --pin: var(--color-accent);
+        }
+
+        [data-drawn] & {
+          display: grid;
+        }
+      }
+
+      /* The apartments in the accent, the places in ink. */
+      .map-place {
+        color: var(--color-ink);
+
+        &[aria-pressed='true'] {
+          color: var(--color-surface);
+          --pin: var(--color-ink);
+        }
+      }
+
+      /* Beside a pin's head: an apartment's name, the way to a place, a chosen place's name. */
+      .map-label {
+        display: none;
+        padding: 0.125rem 0.5rem;
         border-radius: var(--radius-control);
         background: var(--color-surface);
         box-shadow: 0 0.25rem 0.75rem -0.25rem rgb(39 50 58 / 0.35);
         color: var(--color-ink);
-        /* MapLibre sets its own font on the map; a pin takes the theme's. */
+        /* MapLibre sets its own font on the map; a label takes the theme's. */
         font-family: var(--font-sans);
-        font-size: 0.875rem;
+        font-size: 0.8125rem;
         font-weight: 500;
         white-space: nowrap;
-        --ng-icon__size: 1.125rem;
-        transition:
-          background-color 0.2s,
-          color 0.2s,
-          box-shadow 0.2s;
-
-        [data-drawn] & {
-          display: inline-flex;
-        }
-      }
-
-      button.map-pin {
         cursor: pointer;
 
-        &:hover {
-          box-shadow: 0 0.5rem 1.25rem -0.5rem var(--color-ink);
+        [data-drawn] & {
+          display: block;
         }
-
-        &:focus-visible {
-          outline: var(--focus-ring);
-          outline-offset: 3px;
-        }
-
-        &[aria-pressed='true'] {
-          background: var(--color-ink);
-          color: var(--color-surface);
-        }
-      }
-
-      /* A place is its icon and, from a chosen apartment, the way there; the panel names it. */
-      .map-place {
-        justify-content: center;
-        min-width: var(--size-control-small);
-        padding: 0 0.5rem;
-        background: var(--color-accent);
-        color: var(--color-on-accent);
       }
 
       .map-panel {
@@ -372,14 +440,16 @@ function flavor(c: (name: string) => string): Flavor {
       .map-choices {
         display: flex;
         flex-wrap: wrap;
-        gap: 0.5rem;
-        margin-top: 0.5rem;
+        gap: 0.25rem;
+        /* The first name stands in line with the legend; its pill reaches into the padding. */
+        margin: 0.5rem -0.75rem 0;
 
         span {
           display: grid;
           place-items: center;
           min-height: var(--size-control-small);
-          padding: 0 1rem;
+          padding: 0 0.75rem;
+          border-radius: var(--radius-control);
         }
       }
 
@@ -403,7 +473,7 @@ function flavor(c: (name: string) => string): Flavor {
           overflow: hidden;
 
           > :first-child {
-            margin-top: 0.875rem;
+            margin-top: 0.25rem;
           }
         }
       }
@@ -440,18 +510,40 @@ function flavor(c: (name: string) => string): Flavor {
 
       .map-places {
         display: grid;
-        gap: 0.875rem;
+        gap: 0.25rem;
+        /* The lines' hover reaches past the panel's padding less than it. */
+        margin-inline: -0.75rem;
+      }
 
-        li {
-          display: grid;
-          grid-template-columns: auto 1fr;
-          column-gap: 0.75rem;
+      .map-line {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        column-gap: 0.75rem;
+        width: 100%;
+        padding: 0.5rem 0.75rem;
+        border-radius: var(--radius-card);
+        text-align: start;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        --ng-icon__color: var(--color-ink-soft);
+        --ng-icon__size: 1.375rem;
 
-          > p {
-            grid-column: 2;
+        > :last-child:not(.map-place-name) {
+          grid-column: 2;
+        }
+
+        @media (hover: hover) {
+          &:hover {
+            background: var(--color-ground);
           }
-          --ng-icon__color: var(--color-ink-soft);
-          --ng-icon__size: 1.375rem;
+        }
+
+        &[aria-pressed='true'] {
+          background: var(--color-ground);
+        }
+
+        &:focus-visible {
+          outline-offset: -2px;
         }
       }
     }
@@ -463,7 +555,7 @@ export class LocationMap {
   private readonly language = inject(LANGUAGE);
   private readonly document = inject(DOCUMENT);
   private readonly canvas = viewChild.required<ElementRef<HTMLElement>>('canvas');
-  private readonly pins = viewChildren<ElementRef<HTMLElement>>('pin');
+  private readonly markers = viewChildren<ElementRef<HTMLElement>>('marker');
   private readonly panel = viewChild.required<ElementRef<HTMLElement>>('panel');
   protected readonly map = map;
   protected readonly apartments = site.apartments;
@@ -474,6 +566,7 @@ export class LocationMap {
   protected readonly zoom = signal(0);
   protected readonly lucideName = lucideName;
   protected readonly chosen = signal<string | undefined>(undefined);
+  protected readonly picked = signal<string | undefined>(undefined);
   protected readonly all = signal(false);
   protected readonly shown = computed(() => map.places.filter((p) => this.all() || !p.more));
   protected readonly drawn = signal<MapLibre | undefined>(undefined);
@@ -528,32 +621,47 @@ export class LocationMap {
       drawn.on('zoom', () => this.zoom.set(drawn.getZoom()));
       drawn.touchZoomRotate.disableRotation();
       drawn.keyboard.disableRotation();
-      const markers = new Set<InstanceType<typeof Marker>>();
-      // The pins in the template become the markers, again whenever the places shown change.
+      const markers = new globalThis.Map<HTMLElement, InstanceType<typeof Marker>>();
+      // The pins and labels in the template become the markers. One that stays is kept: removing a
+      // focused pin would take the keyboard's focus with it. A pin's tip stands on its place; a
+      // label starts beside the pin's head.
       effect(
         () => {
-          for (const marker of markers) marker.remove();
-          markers.clear();
-          for (const { nativeElement: element } of this.pins())
-            markers.add(
-              new Marker({ element })
+          const elements = new Set(this.markers().map((marker) => marker.nativeElement));
+          for (const [element, marker] of markers)
+            if (!elements.has(element)) {
+              marker.remove();
+              markers.delete(element);
+            }
+          for (const element of elements) {
+            if (markers.has(element)) continue;
+            const label = element.dataset['anchor'] === 'left';
+            markers.set(
+              element,
+              new Marker({
+                element,
+                anchor: label ? 'left' : 'bottom',
+                offset: label ? [24, -26] : [0, 0],
+              })
                 .setLngLat([+element.dataset['lon']!, +element.dataset['lat']!])
                 .addTo(drawn),
             );
+          }
         },
         { injector: this.injector },
       );
-      // The apartments and the places shown, or the chosen apartment's routes, beside the panel.
-      // Folding the places leaves the view as it is.
+      // The apartments and the places shown, or the chosen apartment's routes, beside the panel; a
+      // chosen place alone, or its route. Folding the places leaves the view as it is.
       effect(
         () => {
-          const shown = untracked(this.shown);
+          const picked = this.picked();
+          const shown = untracked(this.shown).filter((p) => !picked || p.key === picked);
           const lines = routes.filter(
             (r) => r.apartment === this.chosen() && shown.some((p) => p.key === r.place),
           );
           const points: [number, number][] = lines.length
             ? lines.flatMap((route) => route.line)
-            : [...this.apartments, ...shown].map(({ lon, lat }) => [lon!, lat!]);
+            : [...(picked ? [] : this.apartments), ...shown].map(({ lon, lat }) => [lon!, lat!]);
           const bounds = points.reduce(
             (box, point) => box.extend(point),
             new LngLatBounds(points[0], points[0]),
@@ -569,7 +677,8 @@ export class LocationMap {
               bottom: 48,
               left: over ? panel.right - frame.left + 48 : 48,
             },
-            maxZoom: 16,
+            // A lone place keeps a closer zoom the visitor has chosen.
+            maxZoom: picked && !lines.length ? Math.max(16, untracked(this.zoom)) : 16,
             animate: !matchMedia('(prefers-reduced-motion: reduce)').matches && !!this.drawn(),
           });
         },
@@ -583,6 +692,7 @@ export class LocationMap {
     });
     effect(() => {
       this.chosen();
+      this.picked();
       this.all();
       this.season.current();
       this.drawn()?.setStyle(this.style());
@@ -593,9 +703,27 @@ export class LocationMap {
     return routes.find((r) => r.apartment === this.chosen() && r.place === place);
   }
 
-  // A second click on the chosen apartment clears the choice.
+  // A second click on the chosen apartment or place clears the choice.
   protected choose(slug: string) {
     this.chosen.set(this.chosen() === slug ? undefined : slug);
+  }
+
+  protected pick(place: string) {
+    this.picked.set(this.picked() === place ? undefined : place);
+  }
+
+  // A chosen place that folds away is chosen no more.
+  protected fold() {
+    if (this.all() && this.more.some((place) => place.key === this.picked()))
+      this.picked.set(undefined);
+    this.all.set(!this.all());
+  }
+
+  // Beside a place's pin: the way there, or its name once chosen.
+  protected label(place: string) {
+    const route = this.route(place);
+    if (route) return this.distance(route);
+    return place === this.picked() ? this.texts.places[place]!.name : undefined;
   }
 
   protected distance({ meters }: Route) {
@@ -638,7 +766,7 @@ export class LocationMap {
       .filter((r) => r.apartment === this.chosen() && shown.includes(r.place))
       .map((route) => ({
         type: 'Feature' as const,
-        properties: {},
+        properties: { picked: route.place === this.picked() },
         geometry: { type: 'LineString' as const, coordinates: route.line },
       }));
     const base = layers('town', flavor(c), { lang: this.language.code }).map(
@@ -684,8 +812,22 @@ export class LocationMap {
           id: 'route',
           type: 'line',
           source: 'routes',
+          filter: ['!', ['get', 'picked']],
           layout: { 'line-cap': 'round', 'line-join': 'round' },
-          paint: { 'line-color': c('accent'), 'line-width': 3.5, 'line-dasharray': [1, 1.6] },
+          paint: {
+            // Beside a chosen place's route the others fade.
+            'line-color': this.picked() ? mix(c('accent'), c('surface'), 0.6) : c('accent'),
+            'line-width': 3.5,
+            'line-dasharray': [1, 1.6],
+          },
+        },
+        {
+          id: 'route-picked',
+          type: 'line',
+          source: 'routes',
+          filter: ['get', 'picked'],
+          layout: { 'line-cap': 'round', 'line-join': 'round' },
+          paint: { 'line-color': c('accent'), 'line-width': 4.5 },
         },
       ],
     };

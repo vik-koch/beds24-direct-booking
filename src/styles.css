@@ -924,6 +924,13 @@
       opacity: 0;
     }
 
+    :focus-visible + span {
+      outline: var(--focus-ring);
+      outline-offset: 3px;
+    }
+  }
+
+  .room-tabs {
     span {
       border: 1px solid var(--color-edge);
       border-radius: var(--radius-control);
@@ -945,11 +952,6 @@
       border-color: var(--color-ink);
       background: var(--color-ink);
       color: var(--color-surface);
-    }
-
-    :focus-visible + span {
-      outline: var(--focus-ring);
-      outline-offset: 3px;
     }
   }
 
@@ -1157,20 +1159,24 @@
     border-radius: var(--radius-control);
   }
 
-  .price {
+  /* Accent text that a click chooses, an accent pill once chosen: a week's price, an apartment
+     on the map. */
+  :is(.price, .map-choices span) {
     color: var(--color-accent);
     font-weight: 500;
     cursor: pointer;
-    transition: background-color 0.2s;
+    transition:
+      background-color 0.2s,
+      color 0.2s;
 
     &:hover {
       background: var(--color-accent-soft);
     }
+  }
 
-    .stay.chosen & {
-      background: var(--color-accent);
-      color: var(--color-on-accent);
-    }
+  :is(.stay.chosen .price, .map-choices :checked + span) {
+    background: var(--color-accent);
+    color: var(--color-on-accent);
   }
 
   /* The ring goes round the price's or the word's pill, not the whole cell, and over the next
