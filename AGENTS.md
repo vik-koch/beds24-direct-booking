@@ -42,10 +42,11 @@ Leave out what the formatter and the linter decide, and leave out praise.
 ## Form
 
 - **The verdict** is the state of your review. Request changes when a finding has to be dealt with
-  before merging; approve when none has. A finding blocks unless it says that it does not, and one
-  that is both rare and cosmetic says that it does not: it is the maintainer's call. Your verdict is
-  a signal to the maintainer: GitHub does not count it, and merging waits for the maintainer's own
-  approval.
+  before merging; approve when none has. A finding blocks only when a supported visitor meets it in
+  normal use, when it breaks one of the project's rules, or when a line of the issue's "Done when"
+  is not met. Every other finding says that it does not block: it is the maintainer's call. Your
+  verdict is a signal to the maintainer: GitHub does not count it, and merging waits for the
+  maintainer's own approval.
 - **The summary** carries what belongs to no single line, and does not repeat the verdict. If you
   found nothing, say so in one sentence.
 - **One finding per problem,** at the path and line of the changed line it is about: what goes
@@ -53,14 +54,18 @@ Leave out what the formatter and the linter decide, and leave out praise.
   process), what they see, and what you would do instead. The visitors are the ones
   `docs/working-agreements.md` supports ("What the site supports"), in normal use: a condition
   outside it, such as choosing a week or booking without JavaScript, an outdated browser or a
-  stalled connection, is not a finding.
+  stalled connection, is not a finding. Nor is a link the site does not write. Content the schema
+  accepts must work: when a value would break a page, the finding is to narrow the schema, not to
+  handle the value.
 - **Say how sure you are.** "Verified" means you read the code path to its end, or a check in CI or
   a command you could run shows it; otherwise say that you suspect it.
 - **On a first round,** report every finding you can verify, not only the most important ones.
   Findings that arrive one round at a time each cost a fix and another review.
 - **On a later round,** read the earlier reviews and the replies first. Do not repeat a finding that
-  was fixed or answered; say so when an answer does not hold. Look at what changed since, and at
-  what an earlier round could not verify.
+  was fixed or answered; say so when an answer does not hold. Check the fixes and what they changed,
+  and what an earlier round could not verify. A problem in code an earlier round could already read
+  does not block. Leave out a rarer form of a case that was fixed, answered or bounded: each one
+  costs another round, and the boundary is the maintainer's call.
 - **A question instead of a review:** answer that question in the summary and nothing else. Use
   findings only for lines the answer points to. An answer has no verdict.
 - Short, in British English.
