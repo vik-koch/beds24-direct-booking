@@ -8,13 +8,14 @@ import { heroPortrait, heroSizes, lucideName, srcset } from '../content/names';
 import { Choice } from './choice';
 import { Files } from './files';
 import { FreeWeeksList } from './free-weeks-list';
+import { LocationMap } from './location-map';
 import { Season } from './season';
 import { Teasers } from './teasers';
 import { address, LANGUAGE, TEXTS } from './texts';
 
 @Component({
   selector: 'app-home',
-  imports: [Files, FreeWeeksList, NgIcon, Teasers],
+  imports: [Files, FreeWeeksList, LocationMap, NgIcon, Teasers],
   providers: [provideIcons(icons)],
   template: `
     <!-- Every season's photo is in the page; only the shown one is displayed and fetched. -->
@@ -67,15 +68,29 @@ import { address, LANGUAGE, TEXTS } from './texts';
       <app-free-weeks [weeks]="weeks" />
     </section>
     @for (section of sections; track section) {
-      <!-- The anchor is the heading: a jump places it below the header. -->
-      <section class="column pt-(--space-section)">
-        <h2 class="headline" [id]="anchors[section]">{{ texts.nav[section] }}</h2>
-        @if (section === 'apartments') {
-          <app-teasers [weeks]="weeks" />
-        } @else {
-          <p class="text-ink-soft mt-6">{{ texts.placeholder }}</p>
-        }
-      </section>
+      <!-- The anchor is the heading: a jump places it below the header. The map runs edge to
+           edge, its heading stays in the column. -->
+      @if (section === 'location' && hasMap) {
+        <section class="pt-(--space-section)">
+          <h2 class="headline column mb-6" [id]="anchors[section]">{{ texts.nav[section] }}</h2>
+          <!-- The server renders the panel, which a page without JavaScript shows; the map's code
+               loads when the section comes into view. -->
+          @defer (on viewport; hydrate on viewport) {
+            <app-location-map />
+          } @placeholder {
+            <div class="h-[clamp(28rem,70svh,48rem)]"></div>
+          }
+        </section>
+      } @else {
+        <section class="column pt-(--space-section)">
+          <h2 class="headline" [id]="anchors[section]">{{ texts.nav[section] }}</h2>
+          @if (section === 'apartments') {
+            <app-teasers [weeks]="weeks" />
+          } @else {
+            <p class="text-ink-soft mt-6">{{ texts.placeholder }}</p>
+          }
+        </section>
+      }
     }
   `,
 })
@@ -86,6 +101,7 @@ export class Home {
   protected readonly lucideName = lucideName;
   protected readonly features = site.features;
   protected readonly sections = ['apartments', 'location', 'about'] as const;
+  protected readonly hasMap = !!site.map;
   protected readonly weeksLink = `${address(this.language, 'home')}#${this.anchors.weeks}`;
   protected readonly photos = inject(Season).names.map((name) => ({
     name,

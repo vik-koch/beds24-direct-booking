@@ -196,6 +196,17 @@
     }
   },
   "map": {
+    "label": "Karte von Saalbach",
+    "from": "Wege ab",
+    "more": "Weitere Orte",
+    "zoomIn": "Vergrößern",
+    "zoomOut": "Verkleinern",
+    "attribution": "Quellen der Karte",
+    "gestures": {
+      "windows": "Zum Zoomen Strg gedrückt halten und scrollen",
+      "mac": "Zum Zoomen ⌘ gedrückt halten und scrollen",
+      "touch": "Die Karte mit zwei Fingern bewegen"
+    },
     "places": {
       "schattberg": {
         "name": "Schattberg X-press",

@@ -196,6 +196,17 @@
     }
   },
   "map": {
+    "label": "Map of Saalbach",
+    "from": "Routes from",
+    "more": "More places",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "attribution": "Map sources",
+    "gestures": {
+      "windows": "Hold Ctrl and scroll to zoom the map",
+      "mac": "Hold ⌘ and scroll to zoom the map",
+      "touch": "Use two fingers to move the map"
+    },
     "places": {
       "schattberg": {
         "name": "Schattberg X-press",

@@ -393,9 +393,18 @@ export const textsSchema = z.strictObject({
     codes: z.record(text, text),
     rooms: z.record(text, text),
   }),
-  // Each place of the map by its key: its name, and a text for each season the site lists.
+  // The map's wording: the panel's, MapLibre's own (its title, controls and the hints shown when
+  // a scroll or one finger would move the map), and each place by its key with its name and a
+  // text for each season the site lists.
   map: z
     .strictObject({
+      label: text,
+      from: text,
+      more: text,
+      zoomIn: text,
+      zoomOut: text,
+      attribution: text,
+      gestures: z.strictObject({ windows: text, mac: text, touch: text }),
       places: z.record(
         segment,
         z.strictObject({ name: text, winter: text.optional(), summer: text.optional() }),
@@ -438,12 +447,20 @@ export type Apartment = { slug: string; pictures: Picture[] } & Omit<
   'pictures'
 >;
 type Map = NonNullable<z.infer<typeof siteSchema>['map']>;
+// A walking route as the map draws it: its line as [longitude, latitude] pairs.
+export interface Route {
+  apartment: string;
+  place: string;
+  meters: number;
+  line: [number, number][];
+}
 export type Site = Omit<
   z.infer<typeof siteSchema>,
   'languages' | 'apartments' | 'seasons' | 'map'
 > & {
-  // The tiles' address, /map/tiles/<build>, by the Protomaps build they were cut from.
-  map?: Map & { tiles: string };
+  // The tiles' address, /map/tiles/<build>, by the Protomaps build they were cut from, and the
+  // theme's font file, in which the map writes its labels.
+  map?: Map & { tiles: string; font: string };
   languages: Language[];
   apartments: Apartment[];
   seasons: { [name in keyof Seasons]: Omit<NonNullable<Seasons[name]>, 'hero'> & { hero: Hero } };
