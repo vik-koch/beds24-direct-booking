@@ -11,3 +11,4 @@ skills-lock.json
 /.impeccable/questions
 /src/content/generated
 /src/ui/*/
+/content/*/map/

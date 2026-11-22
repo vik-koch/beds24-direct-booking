@@ -13,6 +13,7 @@ import * as lucide from '@ng-icons/lucide';
 import { JSDOM } from 'jsdom';
 import {
   apartmentSchema,
+  inBox,
   lucideName,
   prefix,
   seasonNames,
@@ -149,6 +150,41 @@ export function readContent(dir) {
       if (!Object.hasOwn(amenities.codes, code))
         throw new Error(`${join(dir, `texts.${tag}.json`)}\n  amenities.codes.${code}: missing`);
   }
+  // With a map every apartment has its point inside the box; without one none has a point.
+  for (const { slug, lat, lon } of apartments) {
+    const file = join(dir, 'apartments', `${slug}.json`);
+    const given = [lat, lon].filter((value) => value !== undefined).length;
+    if (given !== (site.map ? 2 : 0))
+      throw new Error(
+        `${file}\n  lat, lon: ${site.map ? 'both needed with a map' : 'no map in site.json'}`,
+      );
+    if (site.map && !inBox(site.map.box, { lat, lon }))
+      throw new Error(`${file}\n  lat, lon: outside the map's box`);
+  }
+  const map = site.map && readMap(dir, site.map, apartments);
+  // Each place is named in every language, with a text only for a season the site lists.
+  const places = site.map?.places.map((place) => place.key) ?? [];
+  for (const tag of site.languages) {
+    const file = join(dir, `texts.${tag}.json`);
+    const named = texts[prefix(tag)].map?.places;
+    if (!site.map !== !named)
+      throw new Error(`${file}\n  map: ${site.map ? 'missing' : 'no map in site.json'}`);
+    for (const key of new Set([...places, ...Object.keys(named ?? {})])) {
+      if (!places.includes(key) || !Object.hasOwn(named, key))
+        throw new Error(
+          `${file}\n  map.places.${key}: ${places.includes(key) ? 'missing' : 'a place site.json does not list'}`,
+        );
+      for (const name of seasonNames)
+        if (named[key][name] !== undefined && !listed.includes(name))
+          throw new Error(`${file}\n  map.places.${key}.${name}: a season site.json does not list`);
+    }
+  }
+  site.map?.places.forEach(({ icon }, index) => {
+    if (!(lucideName(icon) in lucide))
+      throw new Error(
+        `${join(dir, 'site.json')}\n  map.places.${index}.icon: ${icon} is not a Lucide icon`,
+      );
+  });
   // Every language renders the same elements, so a change of language finds the reader's place.
   const [first, ...others] = site.languages;
   for (const tag of others) {
@@ -190,7 +226,43 @@ export function readContent(dir) {
     const { paths, anchors } = texts[code];
     return { tag, code, name: name[0].toLocaleUpperCase(tag) + name.slice(1), paths, anchors };
   });
-  return { site: { ...site, languages, apartments }, texts };
+  return { site: { ...site, languages, apartments, ...(map && { map }) }, texts };
+}
+
+// The tiles and the routes the map scripts wrote, checked against the content they came from;
+// the map with its tiles' address.
+function readMap(dir, map, apartments) {
+  const stale = (file, key, reason, script) =>
+    new Error(`${join(dir, 'map', file)}\n  ${key}: ${reason}; run scripts/${script}`);
+  const json = (file, script) => {
+    if (!existsSync(join(dir, 'map', file))) throw stale(file, '(file)', 'missing', script);
+    return JSON.parse(readFileSync(join(dir, 'map', file), 'utf8'));
+  };
+  const tiles = json('tiles.json', 'map-tiles.mjs');
+  if (JSON.stringify(tiles.box) !== JSON.stringify(map.box))
+    throw stale('tiles.json', 'box', "cut for another box than site.json's", 'map-tiles.mjs');
+  if (!existsSync(join(dir, 'map', 'tiles', tiles.build)))
+    throw stale(`tiles/${tiles.build}`, '(folder)', 'missing', 'map-tiles.mjs');
+  // One route for each apartment and place, from the points they have now.
+  const routes = json('routes.json', 'map-routes.mjs').features.map((f) => f.properties);
+  const same = (a, b) => a.lat === b.lat && a.lon === b.lon;
+  for (const apartment of apartments)
+    for (const place of map.places) {
+      const pair = `${apartment.slug} to ${place.key}`;
+      const route = routes.find((r) => r.apartment === apartment.slug && r.place === place.key);
+      if (!route) throw stale('routes.json', pair, 'missing', 'map-routes.mjs');
+      if (!same(route.from, apartment) || !same(route.to, place))
+        throw stale('routes.json', pair, 'computed before a point moved', 'map-routes.mjs');
+    }
+  for (const { apartment, place } of routes)
+    if (!apartments.some((a) => a.slug === apartment) || !map.places.some((p) => p.key === place))
+      throw stale(
+        'routes.json',
+        `${apartment} to ${place}`,
+        'not a pair of the content',
+        'map-routes.mjs',
+      );
+  return { ...map, tiles: `/map/tiles/${tiles.build}` };
 }
 
 export async function writeContent(dir, out, cache) {
@@ -257,8 +329,18 @@ export async function writeContent(dir, out, cache) {
   // Only the icons site.json names are imported, so the bundle holds no others. Two names can
   // be one icon: heading-1 and heading1 are both lucideHeading1.
   const icons = [
-    ...new Set([...site.features, ...site.amenities, ...site.rooms].map((f) => lucideName(f.icon))),
+    ...new Set(
+      [...site.features, ...site.amenities, ...site.rooms, ...(site.map?.places ?? [])].map((f) =>
+        lucideName(f.icon),
+      ),
+    ),
   ];
+  // The tiles are served by their build's path, which changes when they are cut again.
+  mkdirSync(join(out, 'map'));
+  if (site.map)
+    cpSync(join(dir, site.map.tiles.slice(1)), join(out, site.map.tiles.slice(1)), {
+      recursive: true,
+    });
   writeFileSync(
     join(out, 'icons.ts'),
     (icons.length ? `import { ${icons.join(', ')} } from '@ng-icons/lucide';\n\n` : '') +

@@ -141,6 +141,14 @@ test('a content folder beyond a limit fails, and the message names the limit', (
     [(site) => (site.languages = ['de-AT', 'en-GB', 'it']), /languages: exactly two languages/],
     [(site) => (site.apartments = []), /apartments: at least one apartment/],
     [(site) => site.apartments.push('d', 'e'), /apartments: at most four apartments/],
+    [
+      (site) =>
+        (site.map.places = Array.from({ length: 11 }, (_, i) => ({
+          ...site.map.places[0],
+          key: `p${i}`,
+        }))),
+      /map\.places: at most ten places/,
+    ],
   ];
   for (const [change, message] of cases)
     assert.throws(() => readContent(changed('site.json', change)), message);
@@ -156,6 +164,14 @@ test('a content folder beyond a limit fails, and the message names the limit', (
     },
     'apartments/zirbe.json',
     (apartment) => (apartment.name = 'x'.repeat(20)),
+    // d is a copy of zirbe, so it walks zirbe's routes.
+    'map/routes.json',
+    (routes) =>
+      routes.features.push(
+        ...routes.features
+          .filter((f) => f.properties.apartment === 'zirbe')
+          .map((f) => ({ ...f, properties: { ...f.properties, apartment: 'd' } })),
+      ),
   );
   writeFileSync(
     join(at, 'apartments/d.json'),
@@ -500,5 +516,146 @@ test('a change without its text in one language is named', () => {
   assert.throws(
     () => readContent(dir),
     /texts\.en-GB\.json\n {2}credits\.changes\.scaled: missing/,
+  );
+});
+
+const withoutMap = (texts) => delete texts.map;
+const noPoint = (apartment) => {
+  delete apartment.lat;
+  delete apartment.lon;
+};
+
+test('the map is optional, and without it no apartment has a point', () => {
+  const edits = ['site.json', (site) => delete site.map, 'texts.de-AT.json', withoutMap];
+  const withPoints = changed(...edits, 'texts.en-GB.json', withoutMap);
+  assert.throws(() => readContent(withPoints), /zirbe\.json\n {2}lat, lon: no map in site\.json/);
+  const apartments = ['zirbe', 'laerche', 'ahorn'].flatMap((slug) => [
+    `apartments/${slug}.json`,
+    noPoint,
+  ]);
+  const without = changed(...edits, 'texts.en-GB.json', withoutMap, ...apartments);
+  assert.equal(readContent(without).site.map, undefined);
+  assert.throws(
+    () => readContent(changed(...edits, ...apartments)),
+    /texts\.en-GB\.json\n {2}map: no map in site\.json/,
+  );
+});
+
+test('with a map every apartment has its point inside the box', () => {
+  const missing = changed('apartments/laerche.json', (apartment) => delete apartment.lon);
+  assert.throws(() => readContent(missing), /laerche\.json\n {2}lat, lon: both needed with a map/);
+  const outside = changed('apartments/laerche.json', (apartment) => (apartment.lat = 47.5));
+  assert.throws(() => readContent(outside), /laerche\.json\n {2}lat, lon: outside the map's box/);
+});
+
+test('the box is at most 0.1° each way, and each place inside it', () => {
+  const wide = changed('site.json', (site) => (site.map.box.east = 12.71));
+  assert.throws(() => readContent(wide), /site\.json\n {2}map\.box: at most 0\.1° each way/);
+  const turned = changed('site.json', (site) => (site.map.box.west = 12.68));
+  assert.throws(() => readContent(turned), /map\.box: west and south below east and north/);
+  const outside = changed('site.json', (site) => (site.map.places[1].lon = 12.7));
+  assert.throws(() => readContent(outside), /site\.json\n {2}map\.places\.1: outside the box/);
+});
+
+test('a place names a Lucide icon, and its icon is imported', async () => {
+  const wrong = changed('site.json', (site) => (site.map.places[0].icon = 'gondola'));
+  assert.throws(
+    () => readContent(wrong),
+    /site\.json\n {2}map\.places\.0\.icon: gondola is not a Lucide icon/,
+  );
+  const out = mkdtempSync(join(root, 'generated-'));
+  await writeContent('content/demo', out, cache);
+  assert.match(readFileSync(join(out, 'icons.ts'), 'utf8'), /lucideCableCar/);
+});
+
+test('every language names exactly the listed places, with texts for listed seasons only', () => {
+  const missing = changed('texts.en-GB.json', (texts) => delete texts.map.places.kohlmais);
+  assert.throws(
+    () => readContent(missing),
+    /texts\.en-GB\.json\n {2}map\.places\.kohlmais: missing/,
+  );
+  const extra = bothTexts((texts) => (texts.map.places.lake = { name: 'Lake' }));
+  assert.throws(
+    () => readContent(extra),
+    /texts\.de-AT\.json\n {2}map\.places\.lake: a place site\.json does not list/,
+  );
+  const withoutWinter = (texts) => {
+    delete texts.seasons.winter;
+    delete texts.hero.winter;
+  };
+  const single = changed(
+    'site.json',
+    (site) => {
+      delete site.seasons.winter;
+      delete site.seasons.summer.start;
+    },
+    'texts.de-AT.json',
+    withoutWinter,
+    'texts.en-GB.json',
+    withoutWinter,
+    ...['zirbe', 'laerche', 'ahorn'].flatMap((slug) => [
+      `apartments/${slug}.json`,
+      (apartment) =>
+        (apartment.pictures = apartment.pictures.filter(({ season }) => season !== 'winter')),
+    ]),
+  );
+  assert.throws(
+    () => readContent(single),
+    /texts\.de-AT\.json\n {2}map\.places\.schattberg\.winter: a season site\.json does not list/,
+  );
+});
+
+test('the tiles were cut for the box, and are there', () => {
+  const moved = changed('site.json', (site) => (site.map.box.west = 12.601));
+  assert.throws(
+    () => readContent(moved),
+    /map\/tiles\.json\n {2}box: cut for another box than site\.json's; run scripts\/map-tiles\.mjs/,
+  );
+  const gone = changed('site.json', () => undefined);
+  rmSync(join(gone, 'map', 'tiles'), { recursive: true });
+  assert.throws(
+    () => readContent(gone),
+    /map\/tiles\/\d+\n {2}\(folder\): missing; run scripts\/map-tiles\.mjs/,
+  );
+  rmSync(join(gone, 'map', 'tiles.json'));
+  assert.throws(() => readContent(gone), /map\/tiles\.json\n {2}\(file\): missing; run/);
+});
+
+test('one route for each apartment and place, from the points they have now', () => {
+  const missing = changed('map/routes.json', (routes) => routes.features.pop());
+  assert.throws(
+    () => readContent(missing),
+    /map\/routes\.json\n {2}ahorn to supermarket: missing; run scripts\/map-routes\.mjs/,
+  );
+  const moved = changed('apartments/zirbe.json', (apartment) => (apartment.lat += 0.0001));
+  assert.throws(
+    () => readContent(moved),
+    /map\/routes\.json\n {2}zirbe to schattberg: computed before a point moved; run/,
+  );
+  const placeMoved = changed('site.json', (site) => (site.map.places[2].lon += 0.0001));
+  assert.throws(() => readContent(placeMoved), /zirbe to tourist-office: computed before a point/);
+  const withoutShop = (texts) => delete texts.map.places.supermarket;
+  const fewer = changed(
+    'site.json',
+    (site) => site.map.places.pop(),
+    'texts.de-AT.json',
+    withoutShop,
+    'texts.en-GB.json',
+    withoutShop,
+  );
+  assert.throws(
+    () => readContent(fewer),
+    /map\/routes\.json\n {2}zirbe to supermarket: not a pair of the content; run/,
+  );
+});
+
+test('the tiles are served by their build, and the site module names their address', async () => {
+  const out = mkdtempSync(join(root, 'generated-'));
+  await writeContent('content/demo', out, cache);
+  const { build } = JSON.parse(readFileSync('content/demo/map/tiles.json', 'utf8'));
+  assert.ok(existsSync(join(out, 'map', 'tiles', build, '15')));
+  assert.match(
+    readFileSync(join(out, 'site.ts'), 'utf8'),
+    new RegExp(`"tiles": "/map/tiles/${build}"`),
   );
 });

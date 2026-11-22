@@ -195,6 +195,22 @@
       "BEDROOM_OTHER_SLEEPING_AREA": "Wohnzimmer"
     }
   },
+  "map": {
+    "places": {
+      "schattberg": {
+        "name": "Schattberg X-press",
+        "winter": "Gondel ins Skigebiet",
+        "summer": "Gondel zu Wander- und Bikewegen"
+      },
+      "kohlmais": {
+        "name": "Kohlmaisbahn",
+        "winter": "Gondel ins Skigebiet",
+        "summer": "Gondel zu Wander- und Bikewegen"
+      },
+      "tourist-office": { "name": "Tourismusverband" },
+      "supermarket": { "name": "Supermarkt" }
+    }
+  },
   "placeholder": "Diese Seite entsteht noch.",
   "notFound": {
     "title": "Seite nicht gefunden",

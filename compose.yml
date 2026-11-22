@@ -30,7 +30,7 @@ services:
       - traefik.http.middlewares.${STACK_NAME:?}-headers.headers.customResponseHeaders.X-Robots-Tag=${ROBOTS_TAG-noindex, nofollow}
       # The proxy compresses, so rendered pages and static files are covered with no code in the app.
       # WebP and WOFF2 are compressed already and pass as they are.
-      - traefik.http.middlewares.${STACK_NAME:?}-compress.compress.includedContentTypes=text/html,text/css,text/javascript,application/json,image/svg+xml
+      - traefik.http.middlewares.${STACK_NAME:?}-compress.compress.includedContentTypes=text/html,text/css,text/javascript,application/json,image/svg+xml,application/vnd.mapbox-vector-tile
       # Brotli is the smallest; it wins the tie when a browser lists the encodings at equal weight.
       - traefik.http.middlewares.${STACK_NAME:?}-compress.compress.encodings=br,zstd,gzip
 
