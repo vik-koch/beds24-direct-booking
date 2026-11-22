@@ -28,7 +28,7 @@ const inventory = cached(
 
 // The two dated seasons, or a year from today for a site with a single season.
 const periods = (now: Date): Period[] => {
-  const { season, shown } = seasonState(starts, null, null, now);
+  const { season, shown } = seasonState(starts, '', null, now);
   const today = dayOf(now);
   return shown.length
     ? shown.map(({ name, years, start, end }) => ({ name, years, start, end }))

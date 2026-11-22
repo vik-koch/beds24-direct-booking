@@ -4,8 +4,8 @@ import { dayOf, Season, seasonScript, seasonState, type Starts } from './season'
 describe('seasonState', () => {
   const demo: Starts = { winter: '09-01', summer: '04-01' };
   const on = (year: number, month: number, date: number) => new Date(year, month - 1, date, 12);
-  const state = (now: Date, wanted: string | null = null, stored: string | null = null) =>
-    seasonState(demo, wanted, stored, now);
+  const state = (now: Date, search = '', stored: string | null = null) =>
+    seasonState(demo, search, stored, now);
   const stored = (season: string, day: string) => JSON.stringify({ season, on: day });
 
   it('follows the date on both boundary days', () => {
@@ -30,8 +30,8 @@ describe('seasonState', () => {
     });
     // A season that starts on 1 March ends on 28 or 29 February.
     const march: Starts = { winter: '10-01', summer: '03-01' };
-    expect(seasonState(march, null, null, on(2028, 2, 29)).shown[0].end).toBe('2028-02-29');
-    expect(seasonState(march, null, null, on(2027, 2, 28)).shown[0].end).toBe('2027-02-28');
+    expect(seasonState(march, '', null, on(2028, 2, 29)).shown[0].end).toBe('2028-02-29');
+    expect(seasonState(march, '', null, on(2027, 2, 28)).shown[0].end).toBe('2027-02-28');
   });
 
   it('shows the current season and the next one, with their dated names', () => {
@@ -44,31 +44,48 @@ describe('seasonState', () => {
 
   it('lets a link win over a stored choice, and a stored choice over the date', () => {
     const summer = stored('summer-2027', '2026-11-10');
-    expect(state(on(2026, 11, 16), null, summer).season).toBe('summer');
-    expect(state(on(2026, 11, 16), 'winter', summer).season).toBe('winter');
-    expect(state(on(2026, 11, 16), 'autumn').season).toBe('winter');
+    expect(state(on(2026, 11, 16), '', summer).season).toBe('summer');
+    expect(state(on(2026, 11, 16), '?season=winter', summer).season).toBe('winter');
+    expect(state(on(2026, 11, 16), '?season=autumn').season).toBe('winter');
+  });
+
+  it('opens at the season of the week’s arrival day, after a link’s season', () => {
+    const winter = stored('winter-2026', '2026-11-10');
+    const now = on(2026, 11, 16);
+    expect(state(now, '?arrival=2027-04-03&departure=2027-04-10', winter)).toMatchObject({
+      season: 'summer',
+      link: 'summer',
+    });
+    expect(state(now, '?apartment=ahorn&arrival=2027-04-03').season).toBe('summer');
+    expect(state(now, '?arrival=2027-04-03&season=winter').season).toBe('winter');
+    // A day in neither shown season, or no day at all, leaves the choice to the rest.
+    for (const arrival of ['2026-08-29', '2027-09-04', '2027-4-3', 'soon'])
+      expect(state(now, `?arrival=${arrival}`, winter)).toMatchObject({
+        season: 'winter',
+        link: undefined,
+      });
   });
 
   it('drops a stored choice after 30 days', () => {
     const summer = stored('summer-2027', '2026-11-01');
-    expect(state(on(2026, 12, 1), null, summer)).toMatchObject({ season: 'summer', drop: false });
-    expect(state(on(2026, 12, 2), null, summer)).toMatchObject({ season: 'winter', drop: true });
+    expect(state(on(2026, 12, 1), '', summer)).toMatchObject({ season: 'summer', drop: false });
+    expect(state(on(2026, 12, 2), '', summer)).toMatchObject({ season: 'winter', drop: true });
   });
 
   it('drops a stored choice whose season is no longer shown', () => {
     // Chosen at the end of a summer; a month later that summer is over.
     const summer = stored('summer-2026', '2026-08-20');
-    expect(state(on(2026, 8, 31), null, summer).season).toBe('summer');
-    expect(state(on(2026, 9, 1), null, summer)).toMatchObject({ season: 'winter', drop: true });
+    expect(state(on(2026, 8, 31), '', summer).season).toBe('summer');
+    expect(state(on(2026, 9, 1), '', summer)).toMatchObject({ season: 'winter', drop: true });
   });
 
   it('drops what it cannot read', () => {
-    expect(state(on(2026, 11, 16), null, 'summer')).toMatchObject({ season: 'winter', drop: true });
-    expect(state(on(2026, 11, 16), null, stored('summer-2027', 'soon')).drop).toBe(true);
+    expect(state(on(2026, 11, 16), '', 'summer')).toMatchObject({ season: 'winter', drop: true });
+    expect(state(on(2026, 11, 16), '', stored('summer-2027', 'soon')).drop).toBe(true);
   });
 
   it('has nothing to choose with a single season', () => {
-    const one = seasonState({ summer: null }, 'winter', null, on(2026, 11, 16));
+    const one = seasonState({ summer: null }, '?season=winter', null, on(2026, 11, 16));
     expect(one).toEqual({ season: 'summer', shown: [], drop: false });
   });
 });
