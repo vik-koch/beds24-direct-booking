@@ -4,6 +4,8 @@ import { letters, seasonNames, type SeasonName } from './names.ts';
 export { lucideName, seasonNames, type SeasonName } from './names.ts';
 
 const segment = z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/);
+// `#top` is the page's top, where the site name leads on the home page.
+const anchor = segment.refine((value) => value !== 'top', 'top is the page’s top');
 const text = z.string().refine((value) => value.trim() !== '', 'empty or only spaces');
 
 const unique = <T>(list: T[], key: (item: T) => unknown) =>
@@ -192,10 +194,10 @@ export const textsSchema = z.strictObject({
     credits: segment,
   }),
   anchors: z.strictObject({
-    weeks: segment,
-    apartments: segment,
-    location: segment,
-    about: segment,
+    weeks: anchor,
+    apartments: anchor,
+    location: anchor,
+    about: anchor,
   }),
   skip: text,
   // A link within the site is a path from its root, which carries the visitor's choices; any

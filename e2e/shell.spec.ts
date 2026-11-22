@@ -588,6 +588,35 @@ test('an address with an anchor opens at its section under a frosted header; smo
   await expect.poll(behavior).toBe('auto');
 });
 
+test('on the home page the site name scrolls to its top without a load, and Back returns', async ({
+  page,
+}) => {
+  await page.goto('/en#free-weeks');
+  await expect(page.locator('html')).toHaveAttribute('data-started');
+  await expect.poll(() => page.evaluate(() => scrollY)).toBeGreaterThan(0);
+  await page.evaluate(() => Object.assign(window, { kept: true }));
+  await page.locator('.wordmark a').click();
+  await expect(page).toHaveURL('/en#top');
+  await expect.poll(() => page.evaluate(() => scrollY)).toBe(0);
+  expect(await page.evaluate(() => 'kept' in window)).toBe(true);
+  await page.goBack();
+  await expect(page).toHaveURL('/en#free-weeks');
+  await expect(page.locator('.weeks h2')).toBeInViewport();
+  // Guests changed after a week keep their place in the address, and so do its links. The next
+  // season has free weeks whatever the date.
+  await toNextSeason(page);
+  await page.locator('.weeks .stay:visible .price').first().click();
+  await page.locator('#adults').click();
+  await page.getByRole('option', { name: '3', exact: true }).click();
+  await expect(page).toHaveURL(/\?apartment=.+&adults=3#free-weeks$/);
+  await page.locator('.wordmark a').click();
+  await expect(page).toHaveURL(/&adults=3#top$/);
+  // The hero's link, which every layout shows; the header's are in a menu on a phone.
+  await page.getByRole('link', { name: 'See the free weeks' }).click();
+  await expect(page).toHaveURL(/&adults=3#free-weeks$/);
+  expect(await page.evaluate(() => 'kept' in window)).toBe(true);
+});
+
 test('a page whose end never arrives is still shown', async ({ page }) => {
   await page.route('**/en', async (route) => {
     const response = await route.fetch();

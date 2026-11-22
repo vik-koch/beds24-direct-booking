@@ -22,7 +22,7 @@ import { address, LANGUAGE, TEXTS } from './texts';
       <div class="wordmark" [style.--letters]="letters">
         <a
           class="-ml-3.5 inline-flex h-(--size-control) items-center rounded-full px-3.5 font-medium tracking-[-0.01em] whitespace-nowrap no-underline"
-          [href]="choice.link(home)"
+          [href]="choice.link(onHome() ? home + '#top' : home)"
           >{{ site.name }}</a
         >
       </div>
@@ -163,15 +163,16 @@ import { address, LANGUAGE, TEXTS } from './texts';
   `,
   host: {
     class: 'site-header',
-    '[attr.data-over]': 'overHero() && !scrolled() && !menuOpen() ? "" : null',
+    '[attr.data-over]': 'onHome() && !scrolled() && !menuOpen() ? "" : null',
   },
 })
 export class Header {
   // The same page in every language, by address prefix.
   readonly alternates = input.required<Record<string, string>>();
   // On the home page the header lies over the hero photo, without its own ground, until the
-  // page is scrolled or the menu is open.
-  readonly overHero = input(false);
+  // page is scrolled or the menu is open, and the site name scrolls to the top: a fragment `top`
+  // that no element has is the document's top (HTML), so the browser does it without a load.
+  readonly onHome = input(false);
   // A 404's language links lead to the home page, whose free weeks only a full load brings.
   readonly keepPlace = input(true);
   // From the start where the page opened lower, at an address's anchor (index.html).

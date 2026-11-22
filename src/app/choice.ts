@@ -100,6 +100,11 @@ export class Choice {
   link(href: string) {
     if (!href.startsWith('/') || href.startsWith('//')) return href;
     const url = new URL(href, 'https://site');
+    // The browser scrolls to a fragment of this page without a load only where the query is the
+    // address's own, in its order; the address already holds the choice. A link's own query, such
+    // as a notice's season, is a destination of its own.
+    const here = this.location.path();
+    if (url.hash && !url.search && url.pathname === here.split('?')[0]) return `${here}${url.hash}`;
     const carried = { ...this.params() };
     const week = this.week();
     if (week && url.pathname === week.home)
