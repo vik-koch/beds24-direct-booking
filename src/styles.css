@@ -79,6 +79,11 @@
     font-variant-numeric: tabular-nums;
   }
 
+  /* Firefox writes a picture's alternative text over it while it loads; a failed one shows it. */
+  img:not([data-broken]) {
+    color: transparent;
+  }
+
   a {
     text-decoration: underline;
     text-underline-offset: 0.2em;

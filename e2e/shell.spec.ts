@@ -917,3 +917,20 @@ test('the started application keeps the pictures the server rendered, loaded onc
     await page.unrouteAll();
   }
 });
+
+// Firefox writes a picture's alternative text over it while it loads (#235).
+test('a loading picture hides its alternative text, a failed one shows it', async ({ page }) => {
+  await page.route(/\.webp$/, (route) =>
+    /zirbe-2-/.test(route.request().url()) ? route.fulfill({ status: 404 }) : undefined,
+  );
+  // The held pictures keep the page from its load event.
+  await page.goto('/en/apartments/zirbe', { waitUntil: 'domcontentloaded' });
+  const [failed, loading] = [0, 1].map((at) =>
+    page.locator('.tile').nth(at).locator('img:visible'),
+  );
+  await expect(failed).toHaveAttribute('data-broken', '');
+  await expect(failed).not.toHaveCSS('color', 'rgba(0, 0, 0, 0)');
+  await expect(loading).not.toHaveAttribute('data-broken');
+  await expect(loading).toHaveCSS('color', 'rgba(0, 0, 0, 0)');
+  await expect(failed).toHaveAttribute('alt', /\w/);
+});

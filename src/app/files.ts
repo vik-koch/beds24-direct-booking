@@ -1,4 +1,4 @@
-import { Directive, effect, ElementRef, inject, input } from '@angular/core';
+import { afterNextRender, Directive, effect, ElementRef, inject, input } from '@angular/core';
 
 const names = ['media', 'sizes', 'srcset', 'src'] as const;
 
@@ -16,6 +16,16 @@ export class Files {
       for (const name of names)
         if (files[name] !== undefined && element.getAttribute(name) !== files[name])
           element.setAttribute(name, files[name]);
+    });
+    // Marks a failed picture, which shows its alternative text (styles.css); it may have failed
+    // before the application started.
+    afterNextRender(() => {
+      if (!(element instanceof HTMLImageElement)) return;
+      const mark = () =>
+        element.toggleAttribute('data-broken', element.complete && !element.naturalWidth);
+      mark();
+      element.addEventListener('load', mark);
+      element.addEventListener('error', mark);
     });
   }
 }
