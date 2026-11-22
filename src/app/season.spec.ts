@@ -1,3 +1,5 @@
+import { Location } from '@angular/common';
+import { provideLocationMocks, SpyLocation } from '@angular/common/testing';
 import { TestBed } from '@angular/core/testing';
 import { dayOf, Season, seasonScript, seasonState, type Starts } from './season';
 
@@ -58,8 +60,11 @@ describe('seasonState', () => {
     });
     expect(state(now, '?apartment=ahorn&arrival=2027-04-03').season).toBe('summer');
     expect(state(now, '?arrival=2027-04-03&season=winter').season).toBe('winter');
-    // A day in neither shown season, or no day at all, leaves the choice to the rest.
-    for (const arrival of ['2026-08-29', '2027-09-04', '2027-4-3', 'soon'])
+    // By its season's name in any year, as the server's panels may be dated by another day.
+    expect(state(now, '?arrival=2026-08-29', winter).season).toBe('summer');
+    expect(state(now, '?arrival=2029-03-31').season).toBe('winter');
+    // A day that does not exist, or no day at all, leaves the choice to the rest.
+    for (const arrival of ['2027-04-31', '2027-4-3', 'soon', ''])
       expect(state(now, `?arrival=${arrival}`, winter)).toMatchObject({
         season: 'winter',
         link: undefined,
@@ -114,6 +119,23 @@ describe('seasonScript', () => {
 });
 
 describe('Season', () => {
+  it('names the season beside a week only after a switch away from the week’s', () => {
+    TestBed.configureTestingModule({ providers: [provideLocationMocks()] });
+    const location = TestBed.inject(Location) as SpyLocation;
+    // A page whose address keeps a summer week without a panel to write it, as the booking page.
+    location.go('/de/a/buchen?arrival=2027-04-03&departure=2027-04-10');
+    const season = TestBed.inject(Season);
+    const named = () => new URLSearchParams(location.path().split('?')[1]).get('season');
+    season.switch('winter');
+    season.switch('summer');
+    expect(named()).toBeNull();
+    season.switch('winter');
+    expect(named()).toBe('winter');
+    const other = new URLSearchParams('season=summer');
+    season.mark(other);
+    expect(other.toString()).toBe('season=summer');
+  });
+
   it('lets a watcher measure before a switch and act once the page shows it', () => {
     const season = TestBed.inject(Season);
     const html = document.documentElement;

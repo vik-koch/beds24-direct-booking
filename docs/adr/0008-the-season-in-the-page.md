@@ -26,9 +26,10 @@ flash, and whether both seasons' content is in the HTML. What weighs on it:
    The other season's photo is not displayed, so it is not fetched either.
 3. **An inline script in the head sets the attribute before the body is parsed.** Its order of
    precedence: a link's `?season=`, then the season of the arrival day of a week the address names
-   (`?arrival=`, if that day lies in one of the two shown seasons), then a stored choice, then
-   today's date in the visitor's time zone. The server sets the attribute by its own date first,
-   which is what a visitor without JavaScript sees; for them the switch is not shown.
+   (`?arrival=`, a real calendar day, by its season's name in any year: the server dates its panels
+   by its own day, which may differ from the visitor's), then a stored choice, then today's date in
+   the visitor's time zone. The server sets the attribute by its own date first, which is what a
+   visitor without JavaScript sees; for them the switch is not shown.
 4. **The script is the same function the application and the unit tests use,** written into the page
    with `Function.prototype.toString()`. It must therefore use nothing from outside its own body.
 5. **The choice is stored in local storage** as the dated season and the day it was made, such as
@@ -36,8 +37,9 @@ flash, and whether both seasons' content is in the HTML. What weighs on it:
    season is no longer one of the two shown. A switch stores it, and so does a link that names a
    season or a week, so that the site's own links keep the season for the visit.
 6. **A switch removes `?season=` from the address,** or a reload would bring the link's season back.
-   Beside a chosen week the address, and the site's links that carry the week, name a season only
-   once the visitor has switched away from the week's, so that this switch stays too.
+   An address with a week's `?arrival=`, and the site's links that carry one, name a season only
+   once the visitor has switched away from the week's, so that this switch stays too, also on a page
+   that keeps the week without showing it.
 
 ## Options
 

@@ -57,7 +57,7 @@ describe('Choice', () => {
     const season = TestBed.inject(Season);
     season.current.set('winter');
     const week = { home: '/de', page: '/de/a', slug: 'a', arrival: '2027-01-02' };
-    choice.week.set({ ...week, departure: '2027-01-09', season: 'winter' });
+    choice.week.set({ ...week, departure: '2027-01-09' });
     expect(choice.link('/de#weeks')).toBe('/de?apartment=a&arrival=2027-01-02#weeks');
     expect(choice.link('/de/a')).toBe('/de/a?arrival=2027-01-02&departure=2027-01-09');
     expect(choice.link('/de/b')).toBe('/de/b');

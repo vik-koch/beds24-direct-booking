@@ -92,11 +92,16 @@ export function seasonState(
   const drop = stored !== null && !kept;
   const query = new URLSearchParams(search);
   const arrival = query.get('arrival') ?? '';
-  const link =
-    names.find((name) => name === query.get('season')) ??
-    (/^\d{4}-\d\d-\d\d$/.test(arrival)
-      ? shown.find(({ start, end }) => start <= arrival && arrival <= end)?.name
-      : undefined);
+  // A day of any year lies in the season whose start it passed last. Only by name: the server's
+  // panels are dated by its own day, which may differ from the visitor's.
+  const byStart = [...names].sort((a, b) =>
+    (starts[a] as string) < (starts[b] as string) ? -1 : 1,
+  );
+  const week =
+    iso(Date.parse(arrival)) === arrival
+      ? (byStart.filter((name) => (starts[name] as string) <= arrival.slice(5)).pop() ?? byStart[1])
+      : undefined;
+  const link = names.find((name) => name === query.get('season')) ?? week;
   return { season: link ?? kept ?? shown[0].name, shown, drop, link };
 }
 
@@ -177,10 +182,22 @@ export class Season {
     const icon = this.document.head.querySelector('link[rel=icon]');
     icon?.setAttribute('href', icon.getAttribute(`data-${name}`)!);
     this.remember(name);
-    // The link's ?season= would win over the switch on the next reload. Before the watchers'
-    // second part, which may write the address again.
-    replaceQuery(this.location, (params) => params.delete('season'));
+    // The link's ?season=, or its week's arrival day, would win over the switch on the next
+    // reload. Before the watchers' second part, which may write the address again.
+    replaceQuery(this.location, (params) => {
+      params.delete('season');
+      this.mark(params);
+    });
     after.forEach((then) => then());
+  }
+
+  // Beside a week the address names the shown season only where the week's arrival day would give
+  // the other one, as after a switch away from it.
+  mark(params: URLSearchParams) {
+    if (!params.has('arrival')) return;
+    params.delete('season');
+    const { link } = seasonState(starts, params.toString(), null, new Date());
+    if (link !== this.current()) params.set('season', this.current());
   }
 
   // Fetches the other season's hero photo before it is needed, on hover or focus: the file the

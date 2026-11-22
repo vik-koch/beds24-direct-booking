@@ -365,7 +365,6 @@ export class FreeWeeksList implements OnInit {
             slug,
             arrival: week.arrival,
             departure: week.departure,
-            season: pick.season,
           }
         : null,
     );
@@ -374,9 +373,7 @@ export class FreeWeeksList implements OnInit {
       if (week && slug) {
         params.set('apartment', slug);
         params.set('arrival', week.arrival);
-        const shown = this.season.current();
-        if (pick.season === shown) params.delete('season');
-        else params.set('season', shown);
+        this.season.mark(params);
       } else if (params.has('apartment'))
         ['apartment', 'arrival', 'season'].forEach((name) => params.delete(name));
     });

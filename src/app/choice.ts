@@ -11,7 +11,6 @@ import {
 } from '@angular/core';
 import type { Tax } from '../beds24/client';
 import type { Capacity } from '../beds24/weeks';
-import type { SeasonName } from '../content/names';
 import { Season } from './season';
 import { replaceQuery } from './texts';
 
@@ -39,7 +38,6 @@ export interface ChosenWeek {
   slug: string;
   arrival: string;
   departure: string;
-  season: SeasonName;
 }
 
 // The visitor's choice, made once for every apartment and page: the group, the booking panel's
@@ -97,17 +95,15 @@ export class Choice {
     const url = new URL(href, 'https://site');
     const carried = { ...this.params() };
     const week = this.week();
-    // The week's arrival day gives the page its season; a switch away from it since then stays.
-    const shown = this.season.current();
-    const season = week && week.season !== shown ? { season: shown } : {};
     if (week && url.pathname === week.home)
-      Object.assign(carried, { apartment: week.slug, arrival: week.arrival }, season);
+      Object.assign(carried, { apartment: week.slug, arrival: week.arrival });
     if (week && url.pathname === week.page)
-      Object.assign(carried, { arrival: week.arrival, departure: week.departure }, season);
+      Object.assign(carried, { arrival: week.arrival, departure: week.departure });
     // Guests left at the usual two adults are not carried, and a link's own may be stale.
     url.searchParams.delete('adults');
     url.searchParams.delete('children');
     for (const [name, value] of Object.entries(carried)) url.searchParams.set(name, value);
+    this.season.mark(url.searchParams);
     return `${url.pathname}${url.search}${url.hash}`;
   }
 

@@ -1159,9 +1159,7 @@ export class BookingPanel {
       if (stay) {
         params.set('arrival', stay.arrival);
         params.set('departure', stay.departure);
-        const shown = this.season.current();
-        if (pick.season === shown) params.delete('season');
-        else params.set('season', shown);
+        this.season.mark(params);
       } else ['arrival', 'departure', 'season'].forEach((name) => params.delete(name));
     });
     this.carry();
@@ -1178,7 +1176,6 @@ export class BookingPanel {
         slug: this.slug,
         arrival: stay.arrival,
         departure: stay.departure,
-        season: pick.season,
       },
     );
   }
@@ -1253,8 +1250,6 @@ export class BookingPanel {
     return () => {
       const next = box?.querySelector<HTMLElement>(`[data-for=${to}]`);
       if (box && old && next) this.swapSeason(box, old, next, direction, height!);
-      // The switch took the season out of the address.
-      if (this.chosen()) this.keep();
     };
   }
 }
