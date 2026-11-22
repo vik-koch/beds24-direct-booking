@@ -23,7 +23,6 @@ export function address(language: Language, page: Page, slug?: string): string {
   return `/${language.code}${rest}`;
 }
 
-// Puts values into a text's {placeholders}.
 // Changes the address's query in place, keeping its fragment and the history entry's state.
 export function replaceQuery(location: Location, change: (params: URLSearchParams) => void) {
   const [rest, hash] = location.path(true).split('#');
@@ -40,6 +39,7 @@ export function replaceQuery(location: Location, change: (params: URLSearchParam
   );
 }
 
+// Puts values into a text's {placeholders}.
 export const fill = (text: string, values: Record<string, string | number>) =>
   text.replace(/\{(\w+)\}/g, (_, key: string) => String(values[key] ?? ''));
 
