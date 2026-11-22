@@ -27,7 +27,8 @@ async function accentPixels(page: Page) {
 }
 
 const panel = (page: Page) => page.locator('.map-panel');
-const places = (page: Page) => panel(page).locator('.map-places li');
+// The places shown: folded ones are inert.
+const places = (page: Page) => panel(page).locator('.map-places:not([inert]) li');
 
 // The section's heading brings the map into view, which loads it.
 const scrollToMap = (page: Page) =>
@@ -69,7 +70,7 @@ test('the map draws from the site alone, and loads only once in view', async ({ 
 });
 
 test("a pin or the panel chooses an apartment, whose routes' distances show", async ({ page }) => {
-  // Wide enough that no pin lies under the panel, which on a phone covers the map's foot.
+  // Wide enough that no pin lies under the panel, which there lies over the map's left side.
   await page.setViewportSize({ width: 1280, height: 900 });
   await openMap(page);
   await expect(places(page)).toHaveCount(2);
@@ -133,11 +134,32 @@ test("the map's hint to hold Ctrl while scrolling stays under the panel", async 
   expect(Math.min(...data.subarray(at, at + 3))).toBeGreaterThan(240);
 });
 
-test('the switch adds the other places, with their pins', async ({ page }) => {
+// Once the fold has finished: a view the fold moved would be moving by then.
+const folded = (page: Page) =>
+  page.waitForFunction(() => !document.querySelector('.map-more')!.getAnimations().length);
+
+test('the arrow unfolds the other places with their pins, and leaves the view', async ({
+  page,
+}) => {
   await openMap(page);
+  const more = panel(page).locator('.map-unfold');
+  // Where two apartments stand in the map, whatever the page's scroll.
+  const spots = () =>
+    page.locator('.map-frame').evaluate((frame) => {
+      const { x, y } = frame.getBoundingClientRect();
+      return [...frame.querySelectorAll('button.map-pin')].slice(0, 2).map((pin) => {
+        const box = pin.getBoundingClientRect();
+        return [box.x - x, box.y - y];
+      });
+    });
+  const near = (a: number[][], b: number[][]) =>
+    a.flat().every((value, i) => Math.abs(value - b.flat()[i]!) < 1);
+  const before = await spots();
   await expect(page.locator('.map-place')).toHaveCount(2);
-  await panel(page).getByText('More places').click();
-  await expect(panel(page).getByRole('switch', { name: 'More places' })).toBeChecked();
+  await expect(panel(page).locator('#map-more')).toHaveAttribute('inert');
+  await more.click();
+  await expect(more).toHaveAttribute('aria-expanded', 'true');
+  await expect(panel(page).locator('#map-more')).not.toHaveAttribute('inert');
   await expect(places(page)).toHaveText([
     /Schattberg/,
     /Kohlmais/,
@@ -145,7 +167,88 @@ test('the switch adds the other places, with their pins', async ({ page }) => {
     /Supermarket/,
   ]);
   await expect(page.locator('.map-place')).toHaveCount(4);
+  await folded(page);
+  expect(near(await spots(), before)).toBe(true);
+  await more.click();
+  await expect(page.locator('.map-place')).toHaveCount(2);
+  await folded(page);
+  expect(near(await spots(), before)).toBe(true);
 });
+
+// The heights of the other places' list over the frames after the arrow is pressed.
+const unfolding = (page: Page) =>
+  page.evaluate(async () => {
+    document.querySelector<HTMLElement>('.map-unfold')!.click();
+    const list = document.querySelector('#map-more')!;
+    const heights: number[] = [];
+    for (let i = 0; i < 40; i++) {
+      await new Promise(requestAnimationFrame);
+      heights.push(list.getBoundingClientRect().height);
+    }
+    return heights;
+  });
+
+test('the other places grow into the list, and appear at once with reduced motion', async ({
+  page,
+}) => {
+  await openMap(page);
+  const grown = await unfolding(page);
+  const full = grown.at(-1)!;
+  expect(full).toBeGreaterThan(50);
+  expect(grown.some((height) => height > 1 && height < full - 1)).toBe(true);
+  await page.locator('.map-unfold').click();
+  await folded(page);
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  const sudden = await unfolding(page);
+  expect(sudden.some((height) => height > 1 && height < full - 1)).toBe(false);
+  expect(sudden.at(-1)).toBe(full);
+});
+
+test('the zoom buttons zoom the map, and stop at its widest view', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await openMap(page);
+  const pin = page.getByRole('button', { name: 'Ahorn' });
+  const zoomOut = page.getByRole('button', { name: 'Zoom out' });
+  const before = (await pin.boundingBox())!;
+  await page.getByRole('button', { name: 'Zoom in' }).click();
+  await expect.poll(async () => (await pin.boundingBox())!.x).not.toBeCloseTo(before.x, 0);
+  await expect(async () => {
+    if (await zoomOut.isEnabled()) await zoomOut.click();
+    await expect(zoomOut).toBeDisabled({ timeout: 500 });
+  }).toPass({ timeout: 15000 });
+});
+
+for (const [width, path] of [
+  [320, '/de'],
+  [390, '/en'],
+] as const) {
+  test(`on a ${width} px phone the map is square, the panel below it without a scroll`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 800 });
+    await openMap(page, path);
+    await panel(page).locator('.map-unfold').click();
+    await panel(page).locator('.map-choices label').nth(1).click();
+    await folded(page);
+    const layout = () =>
+      page.evaluate(() => {
+        const frame = document.querySelector('.map-frame')!.getBoundingClientRect();
+        const box = document.querySelector('.map-panel')!.getBoundingClientRect();
+        const panel = document.querySelector('.map-panel')!;
+        const root = document.documentElement;
+        return {
+          square: Math.round(frame.height) === Math.round(frame.width),
+          below: box.top >= frame.bottom,
+          gutters: box.left >= 16 && box.right <= root.clientWidth - 16,
+          innerScroll: panel.scrollHeight - panel.clientHeight,
+          sideways: root.scrollWidth > root.clientWidth,
+        };
+      });
+    await expect
+      .poll(layout)
+      .toEqual({ square: true, below: true, gutters: true, innerScroll: 0, sideways: false });
+  });
+}
 
 test('a change of season keeps the choice and shows the places in that season', async ({
   page,
@@ -179,6 +282,7 @@ test('without WebGL the panel stands alone and works', async ({ page }) => {
   await expect(places(page).first()).toContainText('900 m');
   await expect(page.locator('.location-map')).not.toHaveAttribute('data-drawn');
   await expect(page.locator('.map-pin').first()).toBeHidden();
+  await expect(page.getByRole('button', { name: 'Zoom in' })).toBeHidden();
   expect(errors).toEqual([]);
 });
 
@@ -211,7 +315,9 @@ test('every tab stop in the map shows a focus ring', async ({ page, browserName 
     expect(stop.ring, stop.name).toBe(true);
     await page.keyboard.press('Tab');
   }
-  expect(seen.length).toBeGreaterThan(5);
+  expect(seen).toEqual(
+    expect.arrayContaining(['button More places', 'button Zoom in', 'button Zoom out']),
+  );
 });
 
 test('the map section passes axe', async ({ page }) => {
@@ -232,8 +338,8 @@ test('without JavaScript the panel names the places and their seasonal texts, an
     /Kohlmaisbahn.*Gondola to/,
   ]);
   await expect(panel(page)).toBeVisible();
-  // Its choice and switch need the application, so they are not offered.
+  // Its choice and its other places need the application, so they are not offered.
   await expect(panel(page).getByRole('radio')).toHaveCount(0);
-  await expect(panel(page).getByRole('switch')).toBeHidden();
+  await expect(panel(page).getByRole('button', { name: 'More places' })).toBeHidden();
   await context.close();
 });

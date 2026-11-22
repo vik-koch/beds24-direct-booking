@@ -1,4 +1,4 @@
-import { DOCUMENT } from '@angular/common';
+import { DOCUMENT, NgTemplateOutlet } from '@angular/common';
 import {
   afterNextRender,
   Component,
@@ -9,12 +9,13 @@ import {
   inject,
   Injector,
   signal,
+  untracked,
   viewChild,
   viewChildren,
   ViewEncapsulation,
 } from '@angular/core';
 import { NgIcon, provideIcons } from '@ng-icons/core';
-import { lucideHouse } from '@ng-icons/lucide';
+import { lucideChevronDown, lucideHouse, lucideMinus, lucidePlus } from '@ng-icons/lucide';
 import { layers, namedFlavor, type Flavor } from '@protomaps/basemaps';
 import type {
   FilterSpecification,
@@ -130,10 +131,10 @@ function flavor(c: (name: string) => string): Flavor {
 
 @Component({
   selector: 'app-location-map',
-  // Its styles reach the elements MapLibre adds, such as its zoom buttons.
+  // Its styles reach the elements MapLibre adds, such as its attribution.
   encapsulation: ViewEncapsulation.None,
-  imports: [NgIcon],
-  providers: [provideIcons({ ...icons, lucideHouse })],
+  imports: [NgIcon, NgTemplateOutlet],
+  providers: [provideIcons({ ...icons, lucideChevronDown, lucideHouse, lucideMinus, lucidePlus })],
   template: `
     <div class="location-map" [attr.data-drawn]="drawn() ? '' : null">
       <div #panel class="map-panel">
@@ -153,32 +154,70 @@ function flavor(c: (name: string) => string): Flavor {
             }
           </div>
         </fieldset>
-        @if (map.places.length > defaults) {
-          <label class="map-switch">
-            <input type="checkbox" role="switch" [checked]="all()" (change)="all.set(!all())" />
-            <span class="map-switch-track" aria-hidden="true"></span>
-            {{ texts.more }}
-          </label>
-        }
         <ul class="map-places">
-          @for (place of shown(); track place.key) {
-            <li>
-              <ng-icon [name]="lucideName(place.icon)" aria-hidden="true" />
-              <div class="map-place-name">
-                <p class="font-medium">{{ texts.places[place.key]!.name }}</p>
-                @if (route(place.key); as route) {
-                  <p class="text-ink-soft tabular-nums">{{ distance(route) }}</p>
-                }
-              </div>
-              @if (texts.places[place.key]![season.current()]; as note) {
-                <p class="text-ink-soft">{{ note }}</p>
-              }
-            </li>
+          @for (place of defaults; track place.key) {
+            <ng-container *ngTemplateOutlet="line; context: { $implicit: place }" />
           }
         </ul>
+        @if (more.length) {
+          <!-- Folded, the other places stay in the page, so that the list can grow to them. -->
+          <div class="map-more" [attr.data-open]="all() ? '' : null">
+            <ul id="map-more" class="map-places" [attr.inert]="all() ? null : ''">
+              @for (place of more; track place.key) {
+                <ng-container *ngTemplateOutlet="line; context: { $implicit: place }" />
+              }
+            </ul>
+          </div>
+          <button
+            type="button"
+            class="text-button map-unfold"
+            aria-controls="map-more"
+            [attr.aria-expanded]="all()"
+            (click)="all.set(!all())"
+          >
+            {{ texts.more }}<ng-icon name="lucideChevronDown" aria-hidden="true" />
+          </button>
+        }
+        <ng-template #line let-place>
+          <li>
+            <ng-icon [name]="lucideName(place.icon)" aria-hidden="true" />
+            <div class="map-place-name">
+              <p class="min-w-0 font-medium hyphens-auto">{{ texts.places[place.key]!.name }}</p>
+              @if (route(place.key); as route) {
+                <p class="text-ink-soft whitespace-nowrap tabular-nums">{{ distance(route) }}</p>
+              }
+            </div>
+            @if (texts.places[place.key]![season.current()]; as note) {
+              <p class="text-ink-soft">{{ note }}</p>
+            }
+          </li>
+        </ng-template>
       </div>
-      <!-- After the panel, so that the keyboard reaches the choices first. -->
-      <div #canvas class="map-canvas"></div>
+      <!-- After the panel, so that the keyboard reaches the choices first, also on a phone, where
+           the panel shows below the map. -->
+      <div class="map-frame">
+        <div #canvas class="map-canvas"></div>
+        <div class="map-zoom">
+          <button
+            type="button"
+            class="icon-button"
+            [attr.aria-label]="texts.zoomIn"
+            [disabled]="zoom() >= maxZoom"
+            (click)="drawn()?.zoomIn()"
+          >
+            <ng-icon name="lucidePlus" aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            class="icon-button"
+            [attr.aria-label]="texts.zoomOut"
+            [disabled]="zoom() <= minZoom()"
+            (click)="drawn()?.zoomOut()"
+          >
+            <ng-icon name="lucideMinus" aria-hidden="true" />
+          </button>
+        </div>
+      </div>
       <!-- The map takes these as its markers; until it is drawn they stay out of sight. -->
       @for (apartment of apartments; track apartment.slug) {
         <button
@@ -212,24 +251,31 @@ function flavor(c: (name: string) => string): Flavor {
   `,
   styles: `
     /* Outside the layers: MapLibre's own stylesheet, which is unlayered, takes the outline away. */
-    .location-map
-      :is(
-        .maplibregl-ctrl button,
-        .maplibregl-ctrl-attrib-button,
-        .maplibregl-canvas
-      ):focus-visible {
+    .location-map :is(.maplibregl-ctrl-attrib-button, .maplibregl-canvas):focus-visible {
       outline: var(--focus-ring);
       outline-offset: -3px;
     }
 
     @layer components {
+      /* On a phone the panel follows the map; from 48rem it lies over the map's left side. */
       .location-map {
         position: relative;
-        display: block;
-        height: clamp(28rem, 70svh, 48rem);
+        display: flex;
+        flex-direction: column;
         max-width: 120rem;
         margin-inline: auto;
+      }
+
+      /* On a phone a square, so that the panel below it starts within the screen. */
+      .map-frame {
+        position: relative;
+        aspect-ratio: 1;
         background: var(--color-ground);
+
+        @media (min-width: 48rem) {
+          aspect-ratio: auto;
+          height: clamp(28rem, 70svh, 48rem);
+        }
       }
 
       /* Its own layers, such as the hint to zoom with Ctrl, stay under the panel. */
@@ -296,30 +342,30 @@ function flavor(c: (name: string) => string): Flavor {
       }
 
       .map-panel {
-        position: absolute;
-        /* Over the map and its controls. */
-        z-index: 3;
-        /* Above the attribution's line. */
-        inset: auto 0.75rem 2.5rem;
+        order: 1;
         display: grid;
         gap: 1rem;
-        max-height: 45%;
-        overflow-y: auto;
+        margin: 1rem 1rem 0;
         padding: 1.25rem;
         border-radius: var(--radius-card);
         background: var(--color-surface);
         box-shadow: var(--shadow-card);
 
         @media (min-width: 48rem) {
+          position: absolute;
+          /* Over the map and its controls. */
+          z-index: 3;
           inset: 1.5rem auto auto 2rem;
           width: 21rem;
           max-height: calc(100% - 3rem);
+          overflow-y: auto;
+          margin: 0;
           padding: 1.5rem;
         }
       }
 
       /* Without the application the choice and the switch cannot work, so only the places show. */
-      html:not([data-script]) .map-panel :is(fieldset, .map-switch) {
+      html:not([data-script]) .map-panel :is(fieldset, .map-unfold) {
         display: none;
       }
 
@@ -329,83 +375,59 @@ function flavor(c: (name: string) => string): Flavor {
         gap: 0.5rem;
         margin-top: 0.5rem;
 
-        input {
-          position: absolute;
-          opacity: 0;
-        }
-
         span {
           display: grid;
           place-items: center;
           min-height: var(--size-control-small);
           padding: 0 1rem;
-          border: 1px solid var(--color-edge);
-          border-radius: var(--radius-control);
-          font-weight: 500;
-          cursor: pointer;
-          transition:
-            background-color 0.2s,
-            border-color 0.2s,
-            color 0.2s;
-        }
-
-        :checked + span {
-          border-color: var(--color-ink);
-          background: var(--color-ink);
-          color: var(--color-surface);
-        }
-
-        :focus-visible + span {
-          outline: var(--focus-ring);
-          outline-offset: 3px;
         }
       }
 
-      .map-switch {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        min-height: var(--size-control-small);
-        font-weight: 500;
-        cursor: pointer;
+      /* Folded, the other places take no room and the panel's gap above them is taken back. */
+      .map-more {
+        display: grid;
+        grid-template-rows: 0fr;
+        margin-top: -1rem;
 
-        input {
-          position: absolute;
-          opacity: 0;
-        }
-      }
-
-      .map-switch-track {
-        position: relative;
-        flex: none;
-        width: 2.75rem;
-        height: 1.5rem;
-        border-radius: var(--radius-control);
-        background: var(--color-edge);
-        transition: background-color 0.2s;
-
-        &::after {
-          content: '';
-          position: absolute;
-          inset: 0.1875rem auto auto 0.1875rem;
-          width: 1.125rem;
-          height: 1.125rem;
-          border-radius: 50%;
-          background: var(--color-surface);
-          transition: translate 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        @media (prefers-reduced-motion: no-preference) {
+          transition: grid-template-rows 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        :checked + & {
-          background: var(--color-accent);
+        &[data-open] {
+          grid-template-rows: 1fr;
+        }
 
-          &::after {
-            translate: 1.25rem 0;
+        /* Its first line's margin, not a padding, so that folded it takes no room at all. */
+        > ul {
+          min-height: 0;
+          overflow: hidden;
+
+          > :first-child {
+            margin-top: 0.875rem;
           }
         }
+      }
 
-        :focus-visible + & {
-          outline: var(--focus-ring);
-          outline-offset: 3px;
+      /* The button's height leaves room above its text, so the panel's gap need not be whole. */
+      .map-unfold {
+        justify-self: center;
+        margin-top: -0.625rem;
+      }
+
+      .map-zoom {
+        position: absolute;
+        /* Over the map's own layers. */
+        z-index: 1;
+        /* Level with the panel's top. */
+        inset: 1.5rem 0.75rem auto auto;
+        display: none;
+        flex-direction: column;
+        border-radius: var(--radius-control);
+        background: var(--color-surface);
+        box-shadow: 0 0.25rem 0.75rem -0.25rem rgb(39 50 58 / 0.35);
+
+        [data-drawn] & {
+          display: flex;
         }
       }
 
@@ -445,7 +467,11 @@ export class LocationMap {
   private readonly panel = viewChild.required<ElementRef<HTMLElement>>('panel');
   protected readonly map = map;
   protected readonly apartments = site.apartments;
-  protected readonly defaults = map.places.filter((place) => !place.more).length;
+  protected readonly defaults = map.places.filter((place) => !place.more);
+  protected readonly more = map.places.filter((place) => place.more);
+  protected readonly maxZoom = 18;
+  protected readonly minZoom = signal(0);
+  protected readonly zoom = signal(0);
   protected readonly lucideName = lucideName;
   protected readonly chosen = signal<string | undefined>(undefined);
   protected readonly all = signal(false);
@@ -456,8 +482,7 @@ export class LocationMap {
   constructor() {
     const destroyed = inject(DestroyRef);
     afterNextRender(async () => {
-      const { LngLatBounds, Map, Marker, NavigationControl, getVersion, setWorkerUrl } =
-        await import('maplibre-gl');
+      const { LngLatBounds, Map, Marker, getVersion, setWorkerUrl } = await import('maplibre-gl');
       // Served beside the page's files; the version gives a new one a new address.
       setWorkerUrl(`/map/maplibre-gl-worker.mjs?v=${getVersion()}`);
       await new Promise((loaded) => {
@@ -474,7 +499,7 @@ export class LocationMap {
           container: this.canvas().nativeElement,
           style: this.style(),
           maxBounds: [map.box.west, map.box.south, map.box.east, map.box.north],
-          maxZoom: 18,
+          maxZoom: this.maxZoom,
           maxPitch: 0,
           dragRotate: false,
           pitchWithRotate: false,
@@ -483,8 +508,6 @@ export class LocationMap {
           attributionControl: { compact: true },
           locale: {
             'Map.Title': this.texts.label,
-            'NavigationControl.ZoomIn': this.texts.zoomIn,
-            'NavigationControl.ZoomOut': this.texts.zoomOut,
             'AttributionControl.ToggleAttribution': this.texts.attribution,
             'CooperativeGesturesHandler.WindowsHelpText': this.texts.gestures.windows,
             'CooperativeGesturesHandler.MacHelpText': this.texts.gestures.mac,
@@ -498,12 +521,13 @@ export class LocationMap {
       const hold = () => {
         const { width, height } = this.canvas().nativeElement.getBoundingClientRect();
         drawn.setMinZoom(Math.min(fitting(width, height), 16));
+        this.minZoom.set(drawn.getMinZoom());
       };
       hold();
       drawn.on('resize', hold);
+      drawn.on('zoom', () => this.zoom.set(drawn.getZoom()));
       drawn.touchZoomRotate.disableRotation();
       drawn.keyboard.disableRotation();
-      drawn.addControl(new NavigationControl({ showCompass: false }), 'top-right');
       const markers = new Set<InstanceType<typeof Marker>>();
       // The pins in the template become the markers, again whenever the places shown change.
       effect(
@@ -520,28 +544,30 @@ export class LocationMap {
         { injector: this.injector },
       );
       // The apartments and the places shown, or the chosen apartment's routes, beside the panel.
+      // Folding the places leaves the view as it is.
       effect(
         () => {
+          const shown = untracked(this.shown);
           const lines = routes.filter(
-            (r) => r.apartment === this.chosen() && this.shown().some((p) => p.key === r.place),
+            (r) => r.apartment === this.chosen() && shown.some((p) => p.key === r.place),
           );
           const points: [number, number][] = lines.length
             ? lines.flatMap((route) => route.line)
-            : [...this.apartments, ...this.shown()].map(({ lon, lat }) => [lon!, lat!]);
+            : [...this.apartments, ...shown].map(({ lon, lat }) => [lon!, lat!]);
           const bounds = points.reduce(
             (box, point) => box.extend(point),
             new LngLatBounds(points[0], points[0]),
           );
           const frame = this.canvas().nativeElement.getBoundingClientRect();
           const panel = this.panel().nativeElement.getBoundingClientRect();
-          // From 48rem the panel stands at the side, on a phone at the foot.
-          const beside = panel.width < frame.width / 2;
+          // From 48rem the panel lies over the map's left side, on a phone below it.
+          const over = panel.top < frame.bottom;
           drawn.fitBounds(bounds, {
             padding: {
               top: 64,
               right: 96,
-              bottom: beside ? 48 : frame.bottom - panel.top + 48,
-              left: beside ? panel.right - frame.left + 48 : 48,
+              bottom: 48,
+              left: over ? panel.right - frame.left + 48 : 48,
             },
             maxZoom: 16,
             animate: !matchMedia('(prefers-reduced-motion: reduce)').matches && !!this.drawn(),
@@ -549,7 +575,10 @@ export class LocationMap {
         },
         { injector: this.injector },
       );
-      drawn.on('load', () => this.drawn.set(drawn));
+      drawn.on('load', () => {
+        this.zoom.set(drawn.getZoom());
+        this.drawn.set(drawn);
+      });
       destroyed.onDestroy(() => drawn.remove());
     });
     effect(() => {
