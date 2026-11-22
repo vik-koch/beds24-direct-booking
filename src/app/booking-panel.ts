@@ -1227,10 +1227,9 @@ export class BookingPanel {
   // address names a season only once the visitor has switched away from the week's.
   private keep() {
     const pick = this.chosen();
-    const stay = pick && this.pickIn(pick.season);
     replaceQuery(this.location, (params) => {
-      if (stay) {
-        params.set('arrival', stay.arrival);
+      if (pick) {
+        params.set('arrival', pick.arrival);
         this.season.mark(params);
       } else ['arrival', 'season'].forEach((name) => params.delete(name));
     });
@@ -1240,13 +1239,12 @@ export class BookingPanel {
   // The chosen week for the links to the home page and to this page.
   private carry() {
     const pick = this.chosen();
-    const stay = pick && this.pickIn(pick.season);
     this.choice.week.set(
-      stay && {
+      pick && {
         home: address(this.language, 'home'),
         page: address(this.language, 'apartment', this.slug),
         slug: this.slug,
-        arrival: stay.arrival,
+        arrival: pick.arrival,
       },
     );
   }
