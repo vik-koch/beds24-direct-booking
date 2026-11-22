@@ -31,21 +31,13 @@ export const taxed = (room: Capacity, adults: number, children: number) =>
 export const taxFor = (tax: Tax, count: number) =>
   Math.round(tax.amount * count * (tax.per === 'night' ? 7 : 1) * 100) / 100;
 
-// The season of a link's week of an apartment, if it is a week the site offers or offered: one on
-// the apartment's changeover weekday, and once the season lists weeks, one of them or one before
-// them, booked or passed since. Another weekday, a day after the first listed week that starts
-// none, or a day outside both seasons, as last year's, belongs to none.
+// The season of a link's week of an apartment, if a week of it may start that day: one of the
+// apartment's changeover weekdays within a season, booked or passed since or not. Another
+// weekday, or a day outside both seasons, as last year's, belongs to none.
 export function seasonOf({ apartments, seasons }: FreeWeeks, apartment: number, arrival: string) {
-  if (!isDay(arrival)) return undefined;
-  const { changeover } = apartments[apartment];
-  if (changeover.length && !changeover.includes(new Date(arrival).getUTCDay())) return undefined;
-  const season = seasons.find(({ start, end }) => arrival >= start && arrival <= end);
-  const listed = season?.weeks ?? [];
-  return !listed.length ||
-    arrival < listed[0].arrival ||
-    listed.some((week) => week.arrival === arrival)
-    ? season
-    : undefined;
+  if (!isDay(arrival) || !apartments[apartment].changeover.includes(new Date(arrival).getUTCDay()))
+    return undefined;
+  return seasons.find(({ start, end }) => arrival >= start && arrival <= end);
 }
 
 // A chosen week, with the home page's address and its apartment's page.

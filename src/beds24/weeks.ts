@@ -33,8 +33,7 @@ export interface FreeWeeks {
     tax: Tax | null;
     // Per Beds24 language code of the site, empty where nothing is written.
     headline: Record<string, string>;
-    // The weekdays (0 is Sunday) of its changeover days, on which a week of it may start; also
-    // where no week has a price.
+    // The weekdays (0 is Sunday) on which a week of it may start, also where no week has a price.
     changeover: number[];
   }[];
   // Per slug, of every listed apartment, also where the weeks are of one apartment alone.
@@ -54,6 +53,21 @@ export interface FreeWeeks {
     states: State[];
     weeks: { arrival: string; departure: string; prices: (number | null)[] }[];
   }[];
+}
+
+// The weekdays a room's weeks start on, by its offered weeks and by its weekly rule: a changeover
+// day with a closed day within a week of it, whose weekday a week before and after is one too.
+// An unpriced stretch comes back open on every day (findings, Bookable weeks), so its days, and
+// those at its edge, show no rule. The days run one after another.
+function changeoverDays(days: Day[], offered: Week[]) {
+  const ruled = days.filter(
+    (day, i) =>
+      day.changeover &&
+      [days[i - 7], days[i + 7]].every((one) => !one || one.changeover) &&
+      days.slice(Math.max(i - 6, 0), i + 7).some((one) => !one.changeover),
+  );
+  const dates = [...offered.map((week) => week.arrival), ...ruled.map((day) => day.date)];
+  return [...new Set(dates.map((date) => new Date(date).getUTCDay()))].sort();
 }
 
 // The weeks of one room that arrive on or after the earliest day: both ends allow a
@@ -98,7 +112,7 @@ export function freeWeeks(
   );
   const taxes = new Set(listed.map(({ room }) => JSON.stringify(room.tax)));
   return {
-    apartments: listed.map(({ apartment, room }) => ({
+    apartments: listed.map(({ apartment, room }, i) => ({
       slug: apartment.slug,
       name: apartment.name,
       guests: room.maxPeople,
@@ -106,13 +120,7 @@ export function freeWeeks(
       bedrooms: room.bedrooms,
       tax: room.tax,
       headline: Object.fromEntries(languages.map((code) => [code, room.headlines[code] ?? ''])),
-      changeover: [
-        ...new Set(
-          (inventory.days[room.id] ?? [])
-            .filter((day) => day.changeover)
-            .map((day) => new Date(day.date).getUTCDay()),
-        ),
-      ].sort(),
+      changeover: changeoverDays(inventory.days[room.id] ?? [], weeks[i]),
     })),
     capacities: Object.fromEntries(
       all.map(({ apartment, room: { maxPeople, asksChildren } }) => [
