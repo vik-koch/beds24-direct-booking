@@ -1017,11 +1017,11 @@ export class BookingPanel {
     }
     // The week's departure comes from its arrival, and a week outside the seasons, such as last
     // year's, leaves the address; without the weeks, while Beds24 cannot be reached, the address
-    // keeps them for a later visit.
-    if (this.weeks && this.browser)
+    // keeps its arrival for a later visit.
+    if (this.browser)
       replaceQuery(this.location, (params) => {
         params.delete('departure');
-        if (!season) params.delete('arrival');
+        if (this.weeks && !season) params.delete('arrival');
       });
     this.carry();
     if (this.weeks) this.choice.limit(Object.values(this.weeks.capacities));

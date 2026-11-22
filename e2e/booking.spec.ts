@@ -176,15 +176,13 @@ test(
     const week = await firstFree(page);
     const name = await monthName(page).innerText();
     await week.click();
-    const url = new URL(page.url());
-    const stay = ['arrival', 'season'].map((name) => `${name}=${url.searchParams.get(name)}`);
-    await open(page, `/de/wohnungen/laerche?${stay.join('&')}`);
+    const arrival = new URL(page.url()).searchParams.get('arrival')!;
+    await open(page, `/de/wohnungen/laerche?arrival=${arrival}`);
     await expect(monthName(page)).toHaveText(name);
     await expect(chosen(page)).toHaveCount(1);
     await expect(panel(page).getByRole('link', { name: 'Weiter zur Buchung' })).toBeVisible();
     // A link's departure is not read: a mismatched one shows the week from its arrival, and leaves
     // the address.
-    const arrival = url.searchParams.get('arrival')!;
     await open(page, `/de/wohnungen/laerche?arrival=${arrival}&departure=${plus(arrival, 1)}`);
     await expect(page).not.toHaveURL(/departure=/);
     await expect(monthName(page)).toHaveText(name);
@@ -466,6 +464,12 @@ test(
     expect(response!.status()).toBe(503);
     await expect(panel(page)).toContainText('The free weeks cannot be shown just now.');
     await expect(panel(page).locator('button, a, input')).toHaveCount(0);
+    // A linked week's arrival stays for a later visit; its departure, never read, leaves.
+    await open(
+      page,
+      'http://localhost:4001/en/apartments/laerche?arrival=2027-01-02&departure=2027-01-03',
+    );
+    await expect(page).toHaveURL(/\/laerche\?arrival=2027-01-02$/);
   },
 );
 
