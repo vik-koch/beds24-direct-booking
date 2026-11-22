@@ -43,11 +43,13 @@ describe('Choice', () => {
     expect([choice.adults(), choice.children()]).toEqual([1, 4]);
   });
 
-  it('carries the view of its address, also after Back', () => {
-    const choice = at('/de?view=calendar');
-    expect(choice.link('/de/a')).toBe('/de/a?view=calendar');
-    (TestBed.inject(Location) as SpyLocation).simulateUrlPop('/de');
+  it('takes the view from its cookie, and carries it in no address', () => {
+    document.cookie = 'view=calendar; Path=/';
+    const choice = at('/de?view=list');
+    expect(choice.view()).toBe('calendar');
     expect(choice.link('/de/a')).toBe('/de/a');
+    choice.show('list');
+    expect(document.cookie).not.toContain('view=');
   });
 
   it('carries a week to its home and its page, with its season only while that is shown', () => {

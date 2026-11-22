@@ -1,4 +1,4 @@
-import { isPlatformBrowser, Location } from '@angular/common';
+import { DOCUMENT, isPlatformBrowser, Location } from '@angular/common';
 import {
   afterNextRender,
   computed,
@@ -6,6 +6,7 @@ import {
   Injectable,
   Injector,
   PLATFORM_ID,
+  REQUEST,
   signal,
 } from '@angular/core';
 import type { Tax } from '../beds24/client';
@@ -15,6 +16,10 @@ import { Season } from './season';
 import { replaceQuery } from './texts';
 
 const usual = { adults: 2, children: 0 };
+
+export type View = 'list' | 'calendar';
+const viewIn = (cookies: string): View =>
+  /(^|;\s*)view=calendar(;|$)/.test(cookies) ? 'calendar' : 'list';
 
 // A room takes any group up to its total.
 export const fits = (room: Capacity, adults: number, children: number) =>
@@ -39,15 +44,17 @@ export interface ChosenWeek {
 
 // The visitor's choice, made once for every apartment and page: the group, the booking panel's
 // view and a chosen week. The address carries the group where it differs from two adults without
-// children, and the view, so a reload and a shared link keep them. link() adds the group and the
-// view to a site link, and the week to the home page's and its apartment's; params() is the group
-// alone. Only a page that knows the rooms holds the group to what one of them takes.
+// children, so a reload and a shared link keep it. link() adds the group to a site link, and the
+// week to the home page's and its apartment's; params() is the group alone. Only a page that
+// knows the rooms holds the group to what one of them takes. The view is the visitor's own and
+// lives in a cookie, which the server reads to render it (ADR 13).
 @Injectable({ providedIn: 'root' })
 export class Choice {
   private readonly location = inject(Location);
   private readonly injector = inject(Injector);
   private readonly season = inject(Season);
   private readonly browser = isPlatformBrowser(inject(PLATFORM_ID));
+  private readonly document = inject(DOCUMENT);
   private readonly rooms = signal<Capacity[]>([]);
   readonly adults = signal(usual.adults);
   readonly children = signal(usual.children);
@@ -58,7 +65,9 @@ export class Choice {
     this.asksChildren() ? this.maxAdults() - this.adults() : 0,
   );
   readonly week = signal<ChosenWeek | null>(null);
-  readonly view = signal<'list' | 'calendar'>('list');
+  readonly view = signal(
+    viewIn((this.browser ? this.document.cookie : inject(REQUEST)?.headers.get('cookie')) ?? ''),
+  );
   readonly params = computed(() => {
     const params: Record<string, string> = {};
     if (this.adults() !== usual.adults) params['adults'] = String(this.adults());
@@ -68,6 +77,11 @@ export class Choice {
 
   constructor() {
     this.read();
+    // A page the browser restores from its back/forward cache missed a choice made since.
+    if (this.browser)
+      this.document.defaultView!.addEventListener('pageshow', (event) => {
+        if (event.persisted) this.view.set(viewIn(this.document.cookie));
+      });
     // Back or Forward to an entry of this page, such as a section's fragment, restores its
     // address and with it the choice it had.
     this.location.subscribe(({ url }) => {
@@ -82,7 +96,6 @@ export class Choice {
     if (!href.startsWith('/') || href.startsWith('//')) return href;
     const url = new URL(href, 'https://site');
     const carried = { ...this.params() };
-    if (this.view() === 'calendar') carried['view'] = 'calendar';
     const week = this.week();
     // The week's season only while it is shown: a switch since then stays.
     const season = week?.season === this.season.current() ? { season: week.season } : {};
@@ -112,13 +125,20 @@ export class Choice {
     if (this.browser) this.keep();
   }
 
+  // The list is the default and needs nothing stored; the calendar is kept for 30 days, as the
+  // season is.
+  show(view: View) {
+    this.view.set(view);
+    const days = view === 'calendar' ? 30 : 0;
+    this.document.cookie = `view=${view}; Path=/; SameSite=Lax; Max-Age=${days * 86400}`;
+  }
+
   private read(url = this.location.path()) {
     const query = this.query(url);
     const count = (name: 'adults' | 'children') =>
       Math.floor(Number(query.get(name) ?? usual[name])) || 0;
     this.adults.set(Math.max(count('adults'), 1));
     this.children.set(Math.max(count('children'), 0));
-    this.view.set(query.get('view') === 'calendar' ? 'calendar' : 'list');
   }
 
   query(url = this.location.path()) {

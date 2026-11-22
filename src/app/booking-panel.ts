@@ -29,7 +29,7 @@ import type { FreeWeeks } from '../beds24/weeks';
 import site from '../content/generated/site';
 import type { SeasonName } from '../content/names';
 import { BookingBar, type BarLine } from './booking-bar';
-import { Choice, fits, taxed, taxFor } from './choice';
+import { Choice, fits, taxed, taxFor, type View } from './choice';
 import { GuestCounts } from './guest-counts';
 import { Season } from './season';
 import { swapper } from './swap';
@@ -56,7 +56,6 @@ interface Month {
   stays: Stay[];
   rows: Day[][];
 }
-type View = 'list' | 'calendar';
 
 // Each season's shown month, by its key. In the root injector, so that it outlives a change of
 // language, which replaces the page's components.
@@ -1162,8 +1161,6 @@ export class BookingPanel {
         params.set('departure', stay.departure);
         if (pick.season === this.season.current()) params.set('season', pick.season);
       } else ['arrival', 'departure', 'season'].forEach((name) => params.delete(name));
-      if (this.view() === 'calendar') params.set('view', 'calendar');
-      else params.delete('view');
     });
     this.carry();
   }
@@ -1186,8 +1183,7 @@ export class BookingPanel {
 
   // A change of view fades the new one in; the month and the chosen week stay.
   protected show(name: View) {
-    this.view.set(name);
-    this.keep();
+    this.choice.show(name);
     afterNextRender(
       {
         write: () => {
