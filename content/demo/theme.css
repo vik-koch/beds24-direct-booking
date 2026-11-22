@@ -21,10 +21,10 @@
   --color-accent-soft: #e2e8f0;
   --color-on-accent: #ffffff;
 
-  /* The map's own colours, the same in every season: its water and woods, and the circles behind
+  /* The map's own colours, the same in every season: its water and trails, and the circles behind
      the icons of each group of places. */
   --color-water: #b9d3e3;
-  --color-wood: #cfdfc4;
+  --color-trail: #9a5a2b;
   --color-poi-food: #b5542e;
   --color-poi-shop: #7b4f8e;
   --color-poi-transport: #2f6aa3;

@@ -16,7 +16,7 @@ colors:
   summer-soft: '#deede8'
   on-accent: '#ffffff'
   water: '#b9d3e3'
-  wood: '#cfdfc4'
+  trail: '#9a5a2b'
   poi-food: '#b5542e'
   poi-shop: '#7b4f8e'
   poi-transport: '#2f6aa3'
@@ -152,12 +152,13 @@ A neutral, slightly warm light palette with a single accent that changes with th
 
 ### Map
 
-The map's own colours stay the same in every season, so that water is always blue and a wood always
-green.
+The map's own colours stay the same in every season, so that water is always blue. Parks and meadows
+take the season's soft accent, woods a shade darker with small trees in a darker shade of the
+accent.
 
 - **Lake** (#b9d3e3): water. Its names are four fifths ink on it, above 5:1.
-- **Sage** (#cfdfc4): woods, with small trees in ink drawn over them; parks and meadows are it mixed
-  60% into the ground.
+- **Trail Brown** (#9a5a2b): paths and tracks, dashed, at least 3.5:1 on the ground, a park and a
+  wood.
 - **The places' circles**, a white Lucide icon on each, at least 4.5:1 for the icon and 3:1 against
   the ground and a park: **Terracotta** (#b5542e) for food and drink, **Plum** (#7b4f8e) for shops,
   **Harbour Blue** (#2f6aa3) for transport and parking, **Berry** (#a83a4c) for services such as a
@@ -413,21 +414,27 @@ keyboard. In the sheet the apartments are indented under their entry at weight 4
 
 ### Map
 
-- **Size:** edge to edge up to 120rem, 70% of the screen's height between 28rem and 48rem; flat,
-  never turned or tilted.
-- **Colours:** the theme's: ground for land, the season's soft accent for green, oak for buildings,
-  white for roads, a mix of ground and accent for water. On a change of season it takes the new
-  colours as the page starts to fade into them.
-- **Panel:** a card over the map, at its upper left from 48rem, at its foot on a phone above the
-  attribution's line, scrolling inside when the places do not fit. Without JavaScript it lists the
-  places shown by default. The apartments are small outlined pills, the chosen one filled in ink;
-  the switch for more places is a track in the edge colour that turns to the accent.
-- **Pins:** an apartment is a white pill with a house and its name, filled in ink once chosen; a
-  place is a round accent pill with its icon, which adds the distance from the chosen apartment
-  ("900 m"); a walking time depends on too much to promise. Pins and buttons take the site's focus
-  ring.
+- **Size:** edge to edge up to 120rem, 70% of the screen's height between 28rem and 48rem; a square
+  on a phone. Flat, never turned or tilted.
+- **Colours:** the theme's: ground for land, oak for buildings, white roads with casings at 3:1, and
+  the map's own colours above. On a change of season it takes the new colours as the page starts to
+  fade into them.
+- **Detail:** lifts as ink lines with ticks for their pylons and their names beside them; places of
+  interest as a white Lucide icon on a circle of their group's colour with their name, a bus stop
+  without its name. Every name has a halo of what it lies on.
+- **Panel:** a card over the map's upper left from 48rem, below the map on a phone, with no scroll
+  of its own. The apartments are accent text that becomes an accent pill once chosen, as a price
+  does; the places are lines that choose a place, the chosen one on the ground colour. An arrow at
+  its foot unfolds the other places without moving the map. Without JavaScript it lists the places
+  shown by default.
+- **Pins:** a teardrop whose tip stands on its point, its icon in the head and its label beside it:
+  an apartment white with an accent icon and an edge outline, filled in the accent once chosen; a
+  place the same in ink. The label is an apartment's name, a place's distance from the chosen
+  apartment ("900 m"), or a chosen place's name; a walking time depends on too much to promise. Pins
+  and buttons take the site's focus ring.
+- **Zoom:** plus and minus as the site's round buttons in a white pill, level with the panel's top.
 - **Routes:** a dashed accent line with a white casing, from the chosen apartment to each place
-  shown.
+  shown; once a place is chosen, its route solid and the others faded to 3:1.
 
 ### Language menu
 

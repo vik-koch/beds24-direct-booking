@@ -52,6 +52,7 @@ import {
 } from '@ng-icons/lucide';
 import { layers, namedFlavor, type Flavor } from '@protomaps/basemaps';
 import type {
+  ExpressionSpecification,
   FilterSpecification,
   LayerSpecification,
   Map as MapLibre,
@@ -164,12 +165,11 @@ const mix = (a: string, b: string, t: number) => {
 // Protomaps' light flavour in the theme's colours.
 function flavor(c: (name: string) => string): Flavor {
   const [ground, road] = [c('ground'), c('surface')];
-  // Parks, meadows and grass; a wood's trees are drawn over it.
-  const green = mix(ground, c('wood'), 0.6);
+  // Parks, meadows and grass in the season's tint; a wood is a shade darker, with its trees.
+  const green = c('accent-soft');
   // At least 3:1 against the ground, as are the routes, the lifts and the pins' outlines.
   const casing = mix(ground, c('ink-soft'), 0.75);
   const water = c('water');
-  const poi = c('ink-soft');
   return {
     ...namedFlavor('light'),
     background: ground,
@@ -206,17 +206,6 @@ function flavor(c: (name: string) => string): Flavor {
     city_label_halo: ground,
     address_label: c('ink-soft'),
     address_label_halo: ground,
-    // Every kind of place in one soft ink, so that only our pins carry colour.
-    pois: {
-      blue: poi,
-      green: poi,
-      lapis: poi,
-      pink: poi,
-      red: poi,
-      slategray: poi,
-      tangerine: poi,
-      turquoise: poi,
-    },
     // The coarse land cover of lower zooms, in the same two tones as the land use above it.
     landcover: {
       grassland: green,
@@ -730,26 +719,27 @@ export class LocationMap {
       hold();
       drawn.on('resize', hold);
       // The images the style names, drawn at twice their size when a tile first needs one: a
-      // place's icon in white on a circle of its group's colour, 18 px, and a wood's trees.
+      // place's icon in white on a circle of its group's colour, 18 px, and a wood's trees, whose
+      // two colours are in their name: they change with the season.
       drawn.setMissingStyleImageResolver(async (id) => {
-        if (id !== 'trees' && !(id in kinds)) return;
+        const [trees, wood, tree] = id.split('|');
+        if (trees !== 'trees' && !(id in kinds)) return;
         const color = (name: string) =>
           getComputedStyle(this.document.documentElement)
             .getPropertyValue(`--color-${name}`)
             .trim();
-        const size = id === 'trees' ? 64 : 36;
+        const size = trees === 'trees' ? 64 : 36;
         const canvas = Object.assign(this.document.createElement('canvas'), {
           width: size,
           height: size,
         });
         const context = canvas.getContext('2d')!;
-        if (id === 'trees') {
-          context.fillStyle = color('wood');
+        if (trees === 'trees') {
+          context.fillStyle = wood!;
           context.fillRect(0, 0, size, size);
-          context.globalAlpha = 0.3;
-          const tree = await lucide(lucideTreePine, 20, color('ink'));
-          context.drawImage(tree, 6, 6);
-          context.drawImage(tree, 38, 38);
+          const image = await lucide(lucideTreePine, 20, tree!);
+          context.drawImage(image, 6, 6);
+          context.drawImage(image, 38, 38);
         } else {
           context.fillStyle = color(`poi-${kinds[id]!.group}`);
           context.arc(18, 18, 18, 0, 2 * Math.PI);
@@ -915,6 +905,15 @@ export class LocationMap {
     const base = layers('town', flavor(c), { lang: this.language.code })
       .filter((layer) => layer.id !== 'roads_oneway')
       .map((layer): LayerSpecification => {
+        // Paths and tracks are the trails' own layer.
+        if (layer.id === 'roads_other' && layer.type === 'line')
+          return {
+            ...layer,
+            filter: [
+              ...(layer.filter as unknown[]),
+              ['!in', 'kind_detail', 'path', 'track'],
+            ] as FilterSpecification,
+          };
         if (layer.type !== 'symbol') return layer;
         // A name along a line or over an area keeps its letters clear of what lies under it.
         const clear = { ...layer, paint: { ...layer.paint, 'text-halo-width': 2 } };
@@ -930,12 +929,44 @@ export class LocationMap {
                   ['-', ['get', 'min_zoom'], ['match', ['get', 'kind'], early, 2, 0]],
                 ],
               ] as FilterSpecification,
-              layout: { ...layer.layout, 'icon-image': ['get', 'kind'], 'text-offset': [1.4, 0] },
-              paint: { ...clear.paint, 'text-halo-color': c('ground') },
+              // Protomaps' font, size and name; the name's place is ours.
+              layout: {
+                'text-font': layer.layout!['text-font'],
+                'text-size': layer.layout!['text-size'],
+                'text-max-width': layer.layout!['text-max-width'],
+                'text-justify': 'auto',
+                'icon-image': ['get', 'kind'],
+                // Beside, above or below its icon, wherever the name finds room.
+                'text-variable-anchor-offset': [
+                  'left',
+                  [1.4, 0],
+                  'right',
+                  [-1.4, 0],
+                  'top',
+                  [0, 1.2],
+                  'bottom',
+                  [0, -1.2],
+                ],
+                // A bus stop's icon is enough: its name is the stop's, often a place's beside it.
+                'text-field': [
+                  'case',
+                  ['==', ['get', 'kind'], 'bus_stop'],
+                  '',
+                  layer.layout!['text-field'] as ExpressionSpecification,
+                ],
+              },
+              // Every kind's name in the soft ink: Protomaps leaves the kinds it does not group,
+              // such as information, nearly as light as the ground.
+              paint: {
+                ...clear.paint,
+                'text-color': c('ink-soft'),
+                'text-halo-color': c('ground'),
+              },
             }
           : clear;
       });
     // A wood's trees over its green.
+    const wood = mix(c('accent-soft'), c('accent'), 0.15);
     base.splice(
       base.findIndex((layer) => layer.id === 'landuse_urban_green'),
       0,
@@ -945,9 +976,27 @@ export class LocationMap {
         source: 'town',
         'source-layer': 'landuse',
         filter: ['in', ['get', 'kind'], ['literal', ['forest', 'wood']]],
-        paint: { 'fill-pattern': 'trees' },
+        paint: { 'fill-pattern': `trees|${wood}|${mix(wood, c('accent'), 0.6)}` },
       },
     );
+    // Paths and tracks, dashed in the trails' colour as hiking maps draw them.
+    base.splice(base.findIndex((layer) => layer.id === 'roads_other') + 1, 0, {
+      id: 'trails',
+      type: 'line',
+      source: 'town',
+      'source-layer': 'roads',
+      filter: [
+        'all',
+        ['!has', 'is_tunnel'],
+        ['!has', 'is_bridge'],
+        ['in', 'kind_detail', 'path', 'track'],
+      ] as FilterSpecification,
+      paint: {
+        'line-color': c('trail'),
+        'line-width': ['interpolate', ['linear'], ['zoom'], 12, 1, 16, 2],
+        'line-dasharray': [3, 1.5],
+      },
+    });
     // The lifts lie over the roads and under every label, their names along them.
     base.splice(
       base.findIndex((layer) => layer.id === 'address_label'),
