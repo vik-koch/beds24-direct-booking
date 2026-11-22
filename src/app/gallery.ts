@@ -13,6 +13,7 @@ import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideChevronLeft, lucideChevronRight, lucideSparkles, lucideX } from '@ng-icons/lucide';
 import { placesOf, srcset, type Shown } from '../content/names';
 import type { Picture } from '../content/schema';
+import { Files } from './files';
 import { Season } from './season';
 import { fill, LANGUAGE, TEXTS } from './texts';
 
@@ -20,7 +21,7 @@ import { fill, LANGUAGE, TEXTS } from './texts';
   encapsulation: ViewEncapsulation.None,
   selector: 'app-gallery',
   host: { '(document:keydown)': 'key($event)' },
-  imports: [NgIcon],
+  imports: [Files, NgIcon],
   providers: [provideIcons({ lucideChevronLeft, lucideChevronRight, lucideSparkles, lucideX })],
   template: `
     <section class="gallery" [attr.aria-label]="texts.gallery.name" [attr.data-shown]="shown()">
@@ -39,11 +40,13 @@ import { fill, LANGUAGE, TEXTS } from './texts';
               <img
                 class="season-picture"
                 [attr.data-for]="shown.season"
-                [attr.srcset]="srcset(picture)"
-                [sizes]="
-                  first ? '(min-width: 64rem) 33rem, 100vw' : '(min-width: 48rem) 13rem, 100vw'
-                "
-                [src]="picture.sources[0].url"
+                [appFiles]="{
+                  sizes: first
+                    ? '(min-width: 64rem) 33rem, 100vw'
+                    : '(min-width: 48rem) 13rem, 100vw',
+                  srcset: srcset(picture),
+                  src: picture.sources[0].url,
+                }"
                 [width]="picture.width"
                 [height]="picture.height"
                 [alt]="picture.alt[language.code]"
@@ -112,9 +115,11 @@ import { fill, LANGUAGE, TEXTS } from './texts';
                 <img
                   class="season-picture"
                   [attr.data-for]="shown.season"
-                  [attr.srcset]="srcset(picture)"
-                  sizes="100vw"
-                  [src]="picture.sources[0].url"
+                  [appFiles]="{
+                    sizes: '100vw',
+                    srcset: srcset(picture),
+                    src: picture.sources[0].url,
+                  }"
                   [width]="picture.width"
                   [height]="picture.height"
                   alt=""
@@ -168,7 +173,7 @@ import { fill, LANGUAGE, TEXTS } from './texts';
                 <img
                   class="season-picture"
                   [attr.data-for]="shown.season"
-                  [src]="shown.picture.sources[0].url"
+                  [appFiles]="{ src: shown.picture.sources[0].url }"
                   alt=""
                   loading="lazy"
                 />

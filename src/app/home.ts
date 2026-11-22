@@ -6,6 +6,7 @@ import { icons } from '../content/generated/icons';
 import site from '../content/generated/site';
 import { heroPortrait, heroSizes, lucideName, srcset } from '../content/names';
 import { Choice } from './choice';
+import { Files } from './files';
 import { FreeWeeksList } from './free-weeks-list';
 import { Season } from './season';
 import { Teasers } from './teasers';
@@ -13,7 +14,7 @@ import { address, LANGUAGE, TEXTS } from './texts';
 
 @Component({
   selector: 'app-home',
-  imports: [NgIcon, FreeWeeksList, Teasers],
+  imports: [Files, FreeWeeksList, NgIcon, Teasers],
   providers: [provideIcons(icons)],
   template: `
     <!-- Every season's photo is in the page; only the shown one is displayed and fetched. -->
@@ -22,16 +23,20 @@ import { address, LANGUAGE, TEXTS } from './texts';
         <picture class="hero-photo" [attr.data-for]="photo.name">
           @if (photo.hero.portrait; as portrait) {
             <source
-              [attr.media]="heroPortrait"
-              [attr.srcset]="srcset(portrait)"
-              [attr.sizes]="heroSizes(portrait)"
+              [appFiles]="{
+                media: heroPortrait,
+                sizes: heroSizes(portrait),
+                srcset: srcset(portrait),
+              }"
             />
           }
           <img
             class="absolute inset-0 size-full object-cover"
-            [attr.srcset]="srcset(photo.hero)"
-            [attr.sizes]="heroSizes(photo.hero)"
-            [src]="photo.hero.sources[0].url"
+            [appFiles]="{
+              sizes: heroSizes(photo.hero),
+              srcset: srcset(photo.hero),
+              src: photo.hero.sources[0].url,
+            }"
             [width]="photo.hero.width"
             [height]="photo.hero.height"
             [alt]="texts.hero[photo.name]"

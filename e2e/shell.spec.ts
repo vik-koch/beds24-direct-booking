@@ -861,3 +861,76 @@ test('a click on the page does not take the focus to the main element', async ({
   await page.keyboard.press('Enter');
   await expect(page.locator('main')).toBeFocused();
 });
+
+// A written src, srcset, sizes or media loads the picture again, even with the value it had (#235).
+test('the started application keeps the pictures the server rendered, loaded once', async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const state = { written: [] as string[], loads: new Map<Element, number>() };
+    Object.assign(window, { state });
+    new MutationObserver((records) =>
+      state.written.push(...records.map((record) => record.attributeName!)),
+    ).observe(document, { subtree: true, attributeFilter: ['src', 'srcset', 'sizes', 'media'] });
+    document.addEventListener(
+      'load',
+      ({ target }) =>
+        target instanceof HTMLImageElement &&
+        state.loads.set(target, (state.loads.get(target) ?? 0) + 1),
+      true,
+    );
+  });
+  interface State {
+    written: string[];
+    loads: Map<Element, number>;
+    loaded: Element[];
+  }
+  for (const path of ['/en', '/en/apartments/zirbe']) {
+    const { promise: held, resolve: release } = Promise.withResolvers<void>();
+    await page.route(/\/main-[\w-]+\.js$/, async (route) => {
+      await held;
+      await route.continue();
+    });
+    await page.goto(path, { waitUntil: 'commit' });
+    await expect
+      .poll(() => page.evaluate(() => (window as unknown as { state: State }).state.loads.size))
+      .toBeGreaterThan(0);
+    await page.evaluate(() => {
+      const { state } = window as unknown as { state: State };
+      state.loaded = [...state.loads.keys()];
+    });
+    release();
+    await expect(page.locator('html')).toHaveAttribute('data-started', '');
+    // A load again would follow its write within a frame or two.
+    await page.evaluate(
+      () => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))),
+    );
+    const { written, kept } = await page.evaluate(() => {
+      const { state } = window as unknown as { state: State };
+      return {
+        written: state.written,
+        kept: state.loaded.map((image) => image.isConnected && state.loads.get(image)),
+      };
+    });
+    expect(written, path).toEqual([]);
+    expect(kept, path).toEqual(kept.map(() => 1));
+    await page.unrouteAll();
+  }
+});
+
+// Firefox writes a picture's alternative text over it while it loads (#235).
+test('a loading picture hides its alternative text, a failed one shows it', async ({ page }) => {
+  await page.route(/\.webp$/, (route) =>
+    /zirbe-2-/.test(route.request().url()) ? route.fulfill({ status: 404 }) : undefined,
+  );
+  // The held pictures keep the page from its load event.
+  await page.goto('/en/apartments/zirbe', { waitUntil: 'domcontentloaded' });
+  const [failed, loading] = [0, 1].map((at) =>
+    page.locator('.tile').nth(at).locator('img:visible'),
+  );
+  await expect(failed).toHaveAttribute('data-broken', '');
+  await expect(failed).not.toHaveCSS('color', 'rgba(0, 0, 0, 0)');
+  await expect(loading).not.toHaveAttribute('data-broken');
+  await expect(loading).toHaveCSS('color', 'rgba(0, 0, 0, 0)');
+  await expect(failed).toHaveAttribute('alt', /\w/);
+});
