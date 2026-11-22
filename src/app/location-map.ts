@@ -8,7 +8,6 @@ import {
   ElementRef,
   inject,
   Injector,
-  input,
   signal,
   viewChild,
   viewChildren,
@@ -48,11 +47,14 @@ const fitting = (width: number, height: number) =>
     ),
   );
 
-// A theme colour as written (#rrggbb) or as a registered property computes it (rgb(r, g, b)).
+// The three channels of a colour in the form normal() gives: #rrggbb, or rgba() with an alpha.
 const channels = (color: string) =>
   color.startsWith('#')
     ? [1, 3, 5].map((i) => parseInt(color.slice(i, i + 2), 16))
-    : color.match(/\d+/g)!.slice(0, 3).map(Number);
+    : color
+        .match(/[\d.]+/g)!
+        .slice(0, 3)
+        .map(Number);
 // Mixes two colours: 0 is a, 1 is b.
 const mix = (a: string, b: string, t: number) => {
   const [x, y] = [channels(a), channels(b)];
@@ -429,8 +431,6 @@ function flavor(c: (name: string) => string): Flavor {
   `,
 })
 export class LocationMap {
-  // The apartment whose routes show at first, on its own page.
-  readonly apartment = input<string>();
   protected readonly texts = inject(TEXTS).map!;
   protected readonly season = inject(Season);
   private readonly language = inject(LANGUAGE);
@@ -449,7 +449,6 @@ export class LocationMap {
   private readonly injector = inject(Injector);
 
   constructor() {
-    effect(() => this.chosen.set(this.apartment()));
     const destroyed = inject(DestroyRef);
     afterNextRender(async () => {
       const { LngLatBounds, Map, Marker, NavigationControl, getVersion, setWorkerUrl } =
@@ -560,9 +559,9 @@ export class LocationMap {
     return routes.find((r) => r.apartment === this.chosen() && r.place === place);
   }
 
-  // On a page with one apartment it stays chosen; elsewhere a second click clears the choice.
+  // A second click on the chosen apartment clears the choice.
   protected choose(slug: string) {
-    this.chosen.set(this.chosen() === slug && !this.apartment() ? undefined : slug);
+    this.chosen.set(this.chosen() === slug ? undefined : slug);
   }
 
   protected distance({ meters }: Route) {
@@ -574,7 +573,17 @@ export class LocationMap {
     }).format(value);
   }
 
+  // Only in the browser: the server's document has no canvas.
+  private canvas2d?: CanvasRenderingContext2D;
+
   private style(): StyleSpecification {
+    // Any colour a theme may write, such as white or hsl(), in a form MapLibre and mix() read: a
+    // canvas gives it back as #rrggbb, or as rgba() when it has an alpha.
+    const normal = (color: string) => {
+      this.canvas2d ??= this.document.createElement('canvas').getContext('2d')!;
+      this.canvas2d.fillStyle = color.trim();
+      return String(this.canvas2d.fillStyle);
+    };
     // A change of season fades the accents on <html>: the map takes the colours they fade to, and
     // fades as long, so that it changes with the page.
     const html = this.document.documentElement;
@@ -586,9 +595,9 @@ export class LocationMap {
       const property = `--color-${name}`;
       const effect = fading.find((a) => a.transitionProperty === property)
         ?.effect as KeyframeEffect;
-      return String(
-        effect?.getKeyframes().at(-1)?.[property] ?? css.getPropertyValue(property),
-      ).trim();
+      return normal(
+        String(effect?.getKeyframes().at(-1)?.[property] ?? css.getPropertyValue(property)),
+      );
     };
     const shown = this.shown().map((place) => place.key);
     const lines = routes
@@ -623,7 +632,8 @@ export class LocationMap {
           maxzoom: 15,
           bounds: [map.box.west, map.box.south, map.box.east, map.box.north],
           attribution:
-            '<a href="https://www.openstreetmap.org/copyright">© OpenStreetMap</a> · <a href="https://protomaps.com">Protomaps</a>',
+            // OpenStreetMap's licence asks for this credit and its link, the map's only link out.
+            '<a href="https://www.openstreetmap.org/copyright">© OpenStreetMap</a> · Protomaps',
         },
         routes: { type: 'geojson', data: { type: 'FeatureCollection', features: lines } },
       },

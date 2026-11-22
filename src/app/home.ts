@@ -73,7 +73,9 @@ import { address, LANGUAGE, TEXTS } from './texts';
       @if (section === 'location' && hasMap) {
         <section class="pt-(--space-section)">
           <h2 class="headline column mb-6" [id]="anchors[section]">{{ texts.nav[section] }}</h2>
-          @defer (on viewport) {
+          <!-- The server renders the panel, which a page without JavaScript shows; the map's code
+               loads when the section comes into view. -->
+          @defer (on viewport; hydrate on viewport) {
             <app-location-map />
           } @placeholder {
             <div class="h-[clamp(28rem,70svh,48rem)]"></div>

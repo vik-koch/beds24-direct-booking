@@ -3,6 +3,29 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 import sharp from 'sharp';
 
+// The pixels the map itself draws in the accent colour, the routes', with pins and panel hidden.
+async function accentPixels(page: Page) {
+  const hide = await page.addStyleTag({
+    content: '.map-pin, .map-panel { visibility: hidden !important; }',
+  });
+  const accent = await page.evaluate(() => {
+    const canvas = document.createElement('canvas').getContext('2d')!;
+    canvas.fillStyle = getComputedStyle(document.documentElement).getPropertyValue(
+      '--color-accent',
+    );
+    return String(canvas.fillStyle);
+  });
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(accent.slice(i, i + 2), 16));
+  const shot = await page.locator('.location-map').screenshot();
+  await hide.evaluate((element) => element.remove());
+  const { data, info } = await sharp(shot).raw().toBuffer({ resolveWithObject: true });
+  let count = 0;
+  for (let i = 0; i < data.length; i += info.channels)
+    if (Math.abs(data[i]! - r!) + Math.abs(data[i + 1]! - g!) + Math.abs(data[i + 2]! - b!) < 30)
+      count++;
+  return count;
+}
+
 const panel = (page: Page) => page.locator('.map-panel');
 const places = (page: Page) => panel(page).locator('.map-places li');
 
@@ -10,11 +33,14 @@ const places = (page: Page) => panel(page).locator('.map-places li');
 const scrollToMap = (page: Page) =>
   page.getByRole('heading', { name: /^(Location|Lage)$/ }).scrollIntoViewIfNeeded();
 
-// The home page's map, scrolled into view and drawn; an engine without WebGL draws none.
+// The home page's map, scrolled into view and drawn. CI's headless Firefox has no WebGL and draws
+// none (ADR 14); Chromium and WebKit must.
 async function openMap(page: Page, path = '/en') {
   await page.goto(path);
   const webgl = await page.evaluate(() => !!document.createElement('canvas').getContext('webgl2'));
-  test.skip(!webgl, 'This engine has no WebGL here; the panel is tested without the map.');
+  const firefox = page.context().browser()?.browserType().name() === 'firefox';
+  test.skip(firefox && !webgl, 'No WebGL in this Firefox; the panel is tested without the map.');
+  expect(webgl, 'WebGL in Chromium and WebKit').toBe(true);
   await scrollToMap(page);
   await expect(page.locator('.location-map[data-drawn]')).toBeVisible({ timeout: 20000 });
 }
@@ -48,7 +74,9 @@ test("a pin or the panel chooses an apartment, whose routes' distances show", as
   await openMap(page);
   await expect(places(page)).toHaveCount(2);
   await expect(places(page).first()).not.toContainText(' m');
+  await expect.poll(() => accentPixels(page)).toBeLessThan(50);
   await page.getByRole('button', { name: 'Ahorn' }).click();
+  await expect.poll(() => accentPixels(page)).toBeGreaterThan(500);
   await expect(panel(page).getByRole('radio', { name: 'Ahorn' })).toBeChecked();
   await expect(places(page).first()).toContainText('900 m');
   await expect(page.locator('.map-place').first()).toHaveText('900 m');
@@ -70,6 +98,7 @@ test('a second click on the chosen apartment clears the choice', async ({ page }
   await panel(page).getByText('Ahorn').click();
   await expect(radio).not.toBeChecked();
   await expect(page.locator('.map-place').first()).toHaveText('');
+  await expect.poll(() => accentPixels(page)).toBeLessThan(50);
   const pin = page.getByRole('button', { name: 'Lärche' });
   await pin.click();
   await expect(pin).toHaveAttribute('aria-pressed', 'true');
@@ -90,8 +119,11 @@ test("the map's hint to hold Ctrl while scrolling stays under the panel", async 
   await openMap(page);
   const hint = page.locator('.maplibregl-cooperative-gesture-screen');
   await page.locator('.maplibregl-canvas').hover({ position: { x: 800, y: 300 } });
-  await page.mouse.wheel(0, 40);
-  await expect(hint).toHaveClass(/maplibregl-show/);
+  // A wheel while the page still scrolls the map into view can miss it.
+  await expect(async () => {
+    await page.mouse.wheel(0, 40);
+    await expect(hint).toHaveClass(/maplibregl-show/, { timeout: 1000 });
+  }).toPass();
   await expect(hint).toHaveCSS('opacity', '1');
   // The panel's white ground stays white: the hint's dark veil lies only on the map.
   const shot = await panel(page).screenshot();
@@ -140,6 +172,9 @@ test('without WebGL the panel stands alone and works', async ({ page }) => {
   });
   await page.goto('/en');
   await scrollToMap(page);
+  // The section has started once it asks for MapLibre's stylesheet; a click before that is outside
+  // what the site supports.
+  await expect(page.locator('link[href^="/map/maplibre-gl.css"]')).toHaveCount(1);
   await panel(page).getByText('Ahorn').click();
   await expect(places(page).first()).toContainText('900 m');
   await expect(page.locator('.location-map')).not.toHaveAttribute('data-drawn');
@@ -184,4 +219,18 @@ test('the map section passes axe', async ({ page }) => {
   await panel(page).getByText('Ahorn').click();
   const results = await new AxeBuilder({ page }).include('app-location-map').analyze();
   expect(results.violations.map((v) => v.id)).toEqual([]);
+});
+
+test('without JavaScript the panel names the places and their seasonal texts', async ({
+  browser,
+}) => {
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  const page = await context.newPage();
+  await page.goto('/en');
+  await expect(places(page)).toHaveText([
+    /Schattberg X-press.*Gondola to/,
+    /Kohlmaisbahn.*Gondola to/,
+  ]);
+  await expect(panel(page)).toBeVisible();
+  await context.close();
 });

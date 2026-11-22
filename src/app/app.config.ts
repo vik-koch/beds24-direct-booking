@@ -1,5 +1,5 @@
 import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
-import { provideClientHydration } from '@angular/platform-browser';
+import { provideClientHydration, withIncrementalHydration } from '@angular/platform-browser';
 import {
   provideRouter,
   withInMemoryScrolling,
@@ -18,6 +18,7 @@ export const appConfig: ApplicationConfig = {
       withRouterConfig({ paramsInheritanceStrategy: 'always' }),
       withViewTransitions({ skipInitialTransition: true }),
     ),
-    provideClientHydration(),
+    // The home page's map is rendered by the server and started only once it comes into view.
+    provideClientHydration(withIncrementalHydration()),
   ],
 };
