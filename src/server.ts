@@ -42,9 +42,7 @@ app.use(
   }),
 );
 
-// An apartment page renders the booking panel's view that the visitor's cookie names.
 app.use((req, res, next) => {
-  res.vary('Cookie');
   angularApp
     .handle(req, { language: req.acceptsLanguages(languages) || languages[0] })
     .then((response) => (response ? writeResponseToNodeResponse(response, res) : next()))

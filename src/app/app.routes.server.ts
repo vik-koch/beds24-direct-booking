@@ -10,5 +10,11 @@ export const serverRoutes: ServerRoute[] = [
       renderMode: RenderMode.Prerender as const,
     })),
   ),
+  // An apartment page renders the booking panel's view that the visitor's cookie names.
+  ...site.languages.map(({ code, paths }) => ({
+    path: `${code}/${paths.apartments}/*`,
+    renderMode: RenderMode.Server as const,
+    headers: { Vary: 'Cookie' },
+  })),
   { path: '**', renderMode: RenderMode.Server },
 ];

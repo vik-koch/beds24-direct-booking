@@ -725,6 +725,9 @@ test(
         .click(),
     ]);
     expect(await response.text()).toContain('class="calendar"');
+    // Only a page that renders the view varies by the cookie.
+    expect(response.headers()['vary']).toMatch(/cookie/i);
+    expect((await page.request.get('/en/faq')).headers()['vary'] ?? '').not.toMatch(/cookie/i);
     await expect(page.getByRole('radio', { name: 'Calendar' })).toBeChecked();
     // Also by way of the home page.
     await page.locator('a.back').click();
