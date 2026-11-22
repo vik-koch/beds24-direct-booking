@@ -84,8 +84,9 @@ A spike (#254, branch `spike/254-map`, not merged) tried the decision below in t
   - The colours follow the season once the page's colour transition has ended; read earlier, they
     are the old season's.
   - OSRM's foot profile returned all twelve routes between three apartments and four places, 220 m
-    to 1,730 m, 1.2 to 2.3 times the straight distance. None of them runs over steps: no route comes
-    within 4 m of the nine step segments in the tiles' box.
+    to 1,730 m, 1.2 to 2.3 times the straight distance. None of them runs over steps: of points
+    sampled along each route, ten to a segment, none lies within 4 m of the nine step segments in
+    the tiles' box.
   - In the CI image (`mcr.microsoft.com/playwright:v1.65.0-resolute`), headless Chromium and WebKit
     have WebGL 2 and draw the map; headless Firefox has no WebGL, also with `webgl.force-enabled`,
     and the map's constructor throws.
