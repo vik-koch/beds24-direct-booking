@@ -45,7 +45,6 @@ export interface ChosenWeek {
   page: string;
   slug: string;
   arrival: string;
-  departure: string;
 }
 
 // The visitor's choice, made once for every apartment and page: the group, the booking panel's
@@ -105,8 +104,7 @@ export class Choice {
     const week = this.week();
     if (week && url.pathname === week.home)
       Object.assign(carried, { apartment: week.slug, arrival: week.arrival });
-    if (week && url.pathname === week.page)
-      Object.assign(carried, { arrival: week.arrival, departure: week.departure });
+    if (week && url.pathname === week.page) carried['arrival'] = week.arrival;
     // Guests left at the usual two adults are not carried, and a link's own may be stale.
     url.searchParams.delete('adults');
     url.searchParams.delete('children');

@@ -384,7 +384,6 @@ export class FreeWeeksList implements OnInit {
             page: address(this.language, 'apartment', slug),
             slug,
             arrival: week.arrival,
-            departure: week.departure,
           }
         : null,
     );
@@ -472,10 +471,8 @@ export class FreeWeeksList implements OnInit {
   }
 
   protected link(pick: Week) {
-    const { arrival, departure } = this.weekOf(pick);
     const { slug } = this.weeks()!.apartments[pick.apartment];
-    const query = new URLSearchParams({ arrival, departure });
-    return this.choice.link(`${address(this.language, 'apartment', slug)}?${query}`);
+    return this.choice.link(`${address(this.language, 'apartment', slug)}?arrival=${pick.arrival}`);
   }
 
   protected isChosen(season: SeasonName, apartment: number, arrival: string) {

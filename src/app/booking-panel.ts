@@ -1014,12 +1014,14 @@ export class BookingPanel {
       this.chosen.set({ season: season.name, arrival });
       if (!this.months()[season.name])
         this.months.update((months) => ({ ...months, [season.name]: arrival.slice(0, 7) }));
-    } else if (arrival && this.weeks && this.browser)
-      // A week outside the seasons, such as last year's, leaves the address too; without the
-      // weeks, while Beds24 cannot be reached, the address keeps it for a later visit.
+    }
+    // The week's departure comes from its arrival, and a week outside the seasons, such as last
+    // year's, leaves the address; without the weeks, while Beds24 cannot be reached, the address
+    // keeps them for a later visit.
+    if (this.weeks && this.browser)
       replaceQuery(this.location, (params) => {
-        params.delete('arrival');
         params.delete('departure');
+        if (!season) params.delete('arrival');
       });
     this.carry();
     if (this.weeks) this.choice.limit(Object.values(this.weeks.capacities));
@@ -1229,9 +1231,8 @@ export class BookingPanel {
     replaceQuery(this.location, (params) => {
       if (stay) {
         params.set('arrival', stay.arrival);
-        params.set('departure', stay.departure);
         this.season.mark(params);
-      } else ['arrival', 'departure', 'season'].forEach((name) => params.delete(name));
+      } else ['arrival', 'season'].forEach((name) => params.delete(name));
     });
     this.carry();
   }
@@ -1246,7 +1247,6 @@ export class BookingPanel {
         page: address(this.language, 'apartment', this.slug),
         slug: this.slug,
         arrival: stay.arrival,
-        departure: stay.departure,
       },
     );
   }
