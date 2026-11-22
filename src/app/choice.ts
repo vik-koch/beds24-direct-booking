@@ -18,6 +18,8 @@ import { replaceQuery } from './texts';
 const usual = { adults: 2, children: 0 };
 
 export type View = 'list' | 'calendar';
+const viewIn = (cookies: string): View =>
+  /(^|;\s*)view=calendar(;|$)/.test(cookies) ? 'calendar' : 'list';
 
 // A room takes any group up to its total.
 export const fits = (room: Capacity, adults: number, children: number) =>
@@ -63,10 +65,8 @@ export class Choice {
     this.asksChildren() ? this.maxAdults() - this.adults() : 0,
   );
   readonly week = signal<ChosenWeek | null>(null);
-  private readonly cookies =
-    (this.browser ? this.document.cookie : inject(REQUEST)?.headers.get('cookie')) ?? '';
-  readonly view = signal<View>(
-    /(^|;\s*)view=calendar(;|$)/.test(this.cookies) ? 'calendar' : 'list',
+  readonly view = signal(
+    viewIn((this.browser ? this.document.cookie : inject(REQUEST)?.headers.get('cookie')) ?? ''),
   );
   readonly params = computed(() => {
     const params: Record<string, string> = {};
@@ -77,6 +77,11 @@ export class Choice {
 
   constructor() {
     this.read();
+    // A page the browser restores from its back/forward cache missed a choice made since.
+    if (this.browser)
+      this.document.defaultView!.addEventListener('pageshow', (event) => {
+        if (event.persisted) this.view.set(viewIn(this.document.cookie));
+      });
     // Back or Forward to an entry of this page, such as a section's fragment, restores its
     // address and with it the choice it had.
     this.location.subscribe(({ url }) => {

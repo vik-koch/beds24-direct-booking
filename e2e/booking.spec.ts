@@ -756,6 +756,16 @@ test(
   },
 );
 
+test('a page restored from the browser’s cache takes the view chosen since', async ({ page }) => {
+  await open(page, '/en/apartments/laerche');
+  await page.context().addCookies([{ name: 'view', value: 'calendar', url: page.url() }]);
+  // Playwright's browsers keep no page in that cache, so the test sends what a return sends.
+  await page.evaluate(() =>
+    dispatchEvent(new PageTransitionEvent('pageshow', { persisted: true })),
+  );
+  await expect(page.locator('.views')).toHaveAttribute('data-view', 'calendar');
+});
+
 // One test per width: six scans in one come too close to the test's time limit.
 for (const width of [320, 1280])
   test(
