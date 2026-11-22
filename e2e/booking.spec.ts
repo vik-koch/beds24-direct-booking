@@ -652,8 +652,9 @@ for (const [path, book] of [
   });
 
 test('the site name leads home with the chosen week', async ({ page }) => {
-  await open(page, '/en/apartments/laerche');
+  await openNext(page, '/en/apartments/laerche');
   await (await firstFree(page)).click();
+  await expect(page).toHaveURL(/arrival=\d{4}-\d\d-\d\d/);
   const arrival = new URL(page.url()).searchParams.get('arrival');
   await expect(page.locator('.wordmark a')).toHaveAttribute(
     'href',
