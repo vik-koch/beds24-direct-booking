@@ -651,6 +651,19 @@ for (const [path, book] of [
     await expect.poll(async () => (await place(home)).right).toBe(true);
   });
 
+test('the site name leads home with the chosen week', async ({ page }) => {
+  await open(page, '/en/apartments/laerche');
+  await (await firstFree(page)).click();
+  const arrival = new URL(page.url()).searchParams.get('arrival');
+  await expect(page.locator('.wordmark a')).toHaveAttribute(
+    'href',
+    `/en?apartment=laerche&arrival=${arrival}`,
+  );
+  await page.locator('.wordmark a').click();
+  await expect(page).toHaveURL(`/en?apartment=laerche&arrival=${arrival}`);
+  await expect(page.locator('.stay.chosen:visible')).toHaveCount(1);
+});
+
 test('a week from the address is chosen on the home page at the first paint', async ({
   page,
   browser,
