@@ -78,5 +78,20 @@
     "address": ["Musterweg 0", "5753 Saalbach", "Österreich"],
     "phone": "+43 000 0000000",
     "email": "hallo@firn-und-farn.example"
+  },
+  "map": {
+    "box": { "west": 12.6, "south": 47.375, "east": 12.67, "north": 47.405 },
+    "places": [
+      { "key": "schattberg", "icon": "cable-car", "lat": 47.39031, "lon": 12.63528 },
+      { "key": "kohlmais", "icon": "cable-car", "lat": 47.39208, "lon": 12.64018 },
+      { "key": "tourist-office", "icon": "info", "lat": 47.3891, "lon": 12.64102, "more": true },
+      {
+        "key": "supermarket",
+        "icon": "shopping-cart",
+        "lat": 47.3887,
+        "lon": 12.6454,
+        "more": true
+      }
+    ]
   }
 }

@@ -37,7 +37,9 @@ headers() { curl -ksfL -o /dev/null -D - -H "Accept-Encoding: ${2:-gzip, deflate
 home=$(curl -ksfL -o /dev/null -w "%{url_effective}" "$url")
 script=$(grep -oE "main-[A-Za-z0-9_-]+\\.js" <<<"$answer" | head -1)
 picture=$(grep -oE "/pictures/[^\" ]+\\.webp" <<<"$answer" | head -1)
-for path in "${home#"$url"}" "/$script"; do
+# The demo's largest map tile, which the proxy compresses by its type.
+tile=$(cd content/demo && ls -S map/tiles/*/15/*/*.mvt | head -1)
+for path in "${home#"$url"}" "/$script" "/$tile"; do
   answer=$(headers "$path")
   expect "content-encoding: br"
   grep -qiE "^vary:.*accept-encoding" <<<"$answer" || { echo "MISSING: vary accept-encoding on $path" >&2; exit 1; }

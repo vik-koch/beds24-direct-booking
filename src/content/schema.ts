@@ -56,6 +56,58 @@ const picture = z.strictObject({
     .optional(),
 });
 
+// A point in degrees, by its keys so that a pair copied from a map app cannot be swapped unnoticed.
+const latitude = z.number().min(-90).max(90);
+const longitude = z.number().min(-180).max(180);
+interface Box {
+  west: number;
+  south: number;
+  east: number;
+  north: number;
+}
+export const inBox = (box: Box, { lat, lon }: { lat: number; lon: number }) =>
+  lat >= box.south && lat <= box.north && lon >= box.west && lon <= box.east;
+
+// The tiles' grid ends at 85° of latitude and at 180° east, which is its first column again.
+const boxLatitude = z.number().min(-85).max(85);
+const boxLongitude = z.number().min(-180).lt(180);
+// A span of 0.1° given in decimals, such as 47.3 to 47.4, comes out a hair above it.
+const span = 0.1 + 1e-9;
+
+// The map: the box its tiles cover and the places it marks, each with a Lucide icon for its kind,
+// shown always or only behind the switch for more places. Each language's texts name them.
+const map = z
+  .strictObject({
+    box: z
+      .strictObject({
+        west: boxLongitude,
+        south: boxLatitude,
+        east: boxLongitude,
+        north: boxLatitude,
+      })
+      .refine((b) => b.west < b.east && b.south < b.north, 'west and south below east and north')
+      .refine((b) => b.east - b.west <= span && b.north - b.south <= span, 'at most 0.1° each way'),
+    places: z
+      .array(
+        z.strictObject({
+          key: segment,
+          icon: segment,
+          lat: latitude,
+          lon: longitude,
+          more: z.literal(true).optional(),
+        }),
+      )
+      .min(1, 'at least one place')
+      .max(10, 'at most ten places')
+      .refine((list) => unique(list, (place) => place.key), 'a place key is listed twice'),
+  })
+  .superRefine(({ box, places }, context) =>
+    places.forEach((place, index) => {
+      if (!inBox(box, place))
+        context.addIssue({ code: 'custom', path: ['places', index], message: 'outside the box' });
+    }),
+  );
+
 // With two seasons each starts on its day and lasts until the other starts; a single season
 // covers the year and has no start.
 const seasons = z
@@ -154,6 +206,7 @@ export const siteSchema = z.strictObject({
     })
     .refine((value) => Object.keys(value).length > 0, 'lists nothing: leave the contact out')
     .optional(),
+  map: map.optional(),
 });
 
 // An apartment's pictures in their order: a file in the content folder's pictures/ or an https
@@ -162,6 +215,9 @@ export const siteSchema = z.strictObject({
 // season shows in that season only; each season's gallery is the list without the other's.
 export const apartmentSchema = z.strictObject({
   roomId: z.number().int(),
+  // Where a guest leaves the house; given with a map and only then.
+  lat: latitude.optional(),
+  lon: longitude.optional(),
   name: text.refine((value) => letters(value) <= 20, 'at most 20 characters'),
   pictures: z
     .array(
@@ -337,6 +393,15 @@ export const textsSchema = z.strictObject({
     codes: z.record(text, text),
     rooms: z.record(text, text),
   }),
+  // Each place of the map by its key: its name, and a text for each season the site lists.
+  map: z
+    .strictObject({
+      places: z.record(
+        segment,
+        z.strictObject({ name: text, winter: text.optional(), summer: text.optional() }),
+      ),
+    })
+    .optional(),
   placeholder: text,
   notFound: z.strictObject({ title: text, text, home: text }),
   footer: z.strictObject({ label: text, contact: text, more: text }),
@@ -372,7 +437,13 @@ export type Apartment = { slug: string; pictures: Picture[] } & Omit<
   z.infer<typeof apartmentSchema>,
   'pictures'
 >;
-export type Site = Omit<z.infer<typeof siteSchema>, 'languages' | 'apartments' | 'seasons'> & {
+type Map = NonNullable<z.infer<typeof siteSchema>['map']>;
+export type Site = Omit<
+  z.infer<typeof siteSchema>,
+  'languages' | 'apartments' | 'seasons' | 'map'
+> & {
+  // The tiles' address, /map/tiles/<build>, by the Protomaps build they were cut from.
+  map?: Map & { tiles: string };
   languages: Language[];
   apartments: Apartment[];
   seasons: { [name in keyof Seasons]: Omit<NonNullable<Seasons[name]>, 'hero'> & { hero: Hero } };

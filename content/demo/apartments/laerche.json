@@ -1,6 +1,8 @@
 {
   "roomId": 9001012,
   "name": "Lärche",
+  "lat": 47.39377,
+  "lon": 12.63286,
   "pictures": [
     {
       "file": "pictures/laerche-1.webp",

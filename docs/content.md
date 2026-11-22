@@ -15,6 +15,7 @@ content. The application has no wording, no colour and no typeface of its own. T
 | `theme.css` | The palette and the typeface as custom properties on `:root`, and the typeface's `@font-face`. |
 | `fonts/` | Optional: the font files `theme.css` refers to, as `fonts/<file>`. |
 | `pictures/` | The pictures `site.json` names, such as each season's hero photo. |
+| `map/` | With a map: its tiles and walking routes, written by the two map scripts and committed. |
 
 - **Fonts are served at `/fonts/<file>`** under their own names, and every page preloads each
   `.woff2` file, so the font arrives with the stylesheet instead of after it. Browsers keep them for
@@ -132,6 +133,32 @@ content. The application has no wording, no colour and no typeface of its own. T
 - **The contact** in `site.json` lists any of a name, address lines, a phone number and an email
   address. The footer shows what is listed, and no contact column without `contact`, so a site can
   keep its footer short and give the full details on its imprint page.
+- **The map** (`map` in `site.json`) is optional. Its `box` is the area the map covers, as
+  `{ "west": 12.6, "south": 47.375, "east": 12.67, "north": 47.405 }` in degrees, and its `places`
+  are what it marks, in their order:
+  `{ "key": "schattberg", "icon": "cable-car", "lat": 47.39031, "lon": 12.63528 }`. The icon is any
+  Lucide icon and shows the place's kind; a place with `"more": true` is shown only behind the map's
+  switch for more places. With a map, every apartment's file gives `lat` and `lon`, the point where
+  a guest leaves the house; without one, none does. Every point lies inside the box. A texts file
+  names each place under `map.places.<key>` with its `name`, and optionally a text for each season
+  the site lists, such as `"winter": "Gondola to the slopes"`. How the map is built is
+  [ADR 14](adr/0014-the-map.md).
+- **The map's tiles** are `map/tiles/<build>/`, cut out of a
+  [Protomaps](https://maps.protomaps.com/builds/) planet build of OpenStreetMap at zoom 12 to 15
+  inside the box, with `map/tiles.json` naming the build, the box and the number of tiles. They are
+  served at `/map/tiles/<build>/`, so tiles cut again get new addresses although browsers keep files
+  for a year. Cut them when the map gets a box, when the box changes, or when the map should show
+  newer data: `node scripts/map-tiles.mjs` takes the latest build,
+  `node scripts/map-tiles.mjs 20261122` that day's. The old tiles stay until every new one has
+  arrived. The demo's box is 62 tiles, 773 kB.
+- **The walking routes** are `map/routes.json`: one line from each apartment to each place, with its
+  metres and minutes on foot, from OSRM's foot profile on
+  [routing.openstreetmap.de](https://routing.openstreetmap.de/). Compute them with
+  `node scripts/map-routes.mjs` when a point is added, moved or removed; it asks for one route a
+  second, as the service asks. The routes follow OpenStreetMap's ways, which do not say what is
+  closed or a piste in winter: walk them before a site shows them.
+- **Both scripts** read the folder `CONTENT_DIR` names, the demo's without it, and write into its
+  `map/`; commit what they write. A site that drops its map deletes the folder.
 - **The season's colours:** `theme.css` sets one season's accents on `:root` and, with two seasons,
   the other's under its attribute, as the demo does with
   `[data-season='summer'] { --color-accent: …; --color-accent-soft: …; }`.
@@ -155,6 +182,8 @@ beyond a limit fails its build, with the limit named.
 | A room's guests in Beds24 | `maxAdult` empty or equal to `maxPeople`; `maxChildren` empty, 0 or at least `maxPeople − 1` | The site takes a room by its total: any guest may be an adult, and with one adult required the children's limit never applies on its own | Not the build: the server logs a warning when it loads a room beyond this, and treats it by its total |
 | Hero features | Up to 5 | The hero's card | The schema |
 | An apartment's picture | Square to 2:1, landscape, with 1% to spare | The gallery's frames; tested with 1:1, 4:3 and 3:2 | The content script; the demo has 3:2, the e2e test site 1:1 and 4:3 |
+| The map's box | At most 0.1° each way, within 85° of latitude | The tiles grow with the area, and the repository and the image carry them; the demo's 0.07° by 0.03° is 773 kB | The schema |
+| The map's places | 1 to 10 | One route for each apartment and place, and the map's list of places | The schema |
 
 **The site name's size comes from its length,** at an assumed 0.55em per letter: the widest
 mixed-case average measured in the demo's font (Jost at weight 500: 0.547em in "Wohnen am Wald").
@@ -175,10 +204,14 @@ without its feature, an amenity's or a room's icon that is not Lucide's, a code 
 area or a room without its name or a name without its area or room, a listed code without its label,
 a missing picture, an apartment picture that is not one, does not answer, is portrait or wider than
 2:1 or lacks its alternative text in a language, an apartment without its file or a file in
-`apartments/` that `site.json` does not list, and a part beyond its boundary stop the build with the
-file and the key named. The schema, not the demo's files, defines the keys, so the compiler checks
-every template against the same keys for every site. Every language has the same keys, so every
-language renders the same elements and a change of language finds the reader's place.
+`apartments/` that `site.json` does not list, a point outside the map's box or an apartment's point
+without a map, a place without its name or with a text for a season the site does not list, tiles
+cut for another box or a tile missing, a `map/` folder without a map, a route missing, left over or
+computed before a point moved, and a part beyond its boundary stop the build with the file and the
+key named; for the tiles and the routes, with the script to run. The schema, not the demo's files,
+defines the keys, so the compiler checks every template against the same keys for every site. Every
+language has the same keys, so every language renders the same elements and a change of language
+finds the reader's place.
 
 ## Another folder
 

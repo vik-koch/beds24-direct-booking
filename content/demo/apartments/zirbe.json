@@ -1,6 +1,8 @@
 {
   "roomId": 9001011,
   "name": "Zirbe",
+  "lat": 47.38782,
+  "lon": 12.64654,
   "pictures": [
     {
       "file": "pictures/zirbe-1.webp",

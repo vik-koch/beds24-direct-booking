@@ -29,6 +29,11 @@
                 "glob": "**/*",
                 "input": "src/content/generated/pictures",
                 "output": "pictures"
+              },
+              {
+                "glob": "**/*",
+                "input": "src/content/generated/map",
+                "output": "map"
               }
             ],
             "styles": ["src/styles.css"],
