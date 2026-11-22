@@ -52,18 +52,18 @@
 
 @layer base {
   html {
-    /* The narrowest layout; narrower, the page scrolls sideways. In px, so that zoom up to
-       400% at 1280 px still reflows. */
-    min-width: 320px;
+    /* The narrowest layout; narrower, the page scrolls sideways. 300, so that a 320 px window
+       fits beside a classic scrollbar; in px, so that zoom up to 400% at 1280 px still reflows. */
+    min-width: 300px;
     /* For focus moved by the keyboard; a jump from a link is placed by the router. The header
        takes itself out of it (.site-header). */
     scroll-padding-top: 5.5rem;
     --space-section: 2rem;
 
     /* Short and long pages keep the header in one place, with or without a scrollbar. From
-       340 px only, where the 320 px layout still fits beside a classic one; in px, as that
+       320 px only, where the 300 px layout still fits beside a classic one; in px, as that
        layout is, whatever the browser's font size. */
-    @media (min-width: 340px) {
+    @media (min-width: 320px) {
       scrollbar-gutter: stable;
     }
 

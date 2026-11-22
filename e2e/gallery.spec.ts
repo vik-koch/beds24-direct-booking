@@ -380,11 +380,13 @@ test('on a phone the pictures are a strip, and the viewer’s buttons sit under 
   await settled(page);
   const frame = await box(viewer(page).locator('.viewer-track'));
   // The dialog's width: a desktop keeps its scrollbar's room beside it; a phone has none.
-  expect(frame.width).toBe((await box(viewer(page))).width);
+  const room = (await box(viewer(page))).width;
+  expect(frame.width).toBe(room);
   for (const button of ['.viewer-previous', '.viewer-next'])
     expect((await box(viewer(page).locator(button))).y).toBeGreaterThan(frame.y + frame.height);
   await expect(viewer(page).locator('.viewer-thumbs')).toBeHidden();
-  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(320);
+  // The room beside the scrollbar, not the root's own width, which a too-wide floor would set.
+  await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBe(room);
 });
 
 test('the page behind the viewer holds still, and keeps its place when it closes', async ({
