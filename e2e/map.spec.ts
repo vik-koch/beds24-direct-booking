@@ -124,8 +124,9 @@ test("the map's hint to hold Ctrl while scrolling stays under the panel", async 
   await expect(async () => {
     await page.mouse.wheel(0, 40);
     await expect(hint).toHaveClass(/maplibregl-show/, { timeout: 1000 });
+    // The hint fades away again soon: under load it may be gone before a later look.
+    await expect(hint).toHaveCSS('opacity', '1', { timeout: 1000 });
   }).toPass();
-  await expect(hint).toHaveCSS('opacity', '1');
   // The panel's white ground stays white: the hint's dark veil lies only on the map.
   const shot = await panel(page).screenshot();
   const { data, info } = await sharp(shot).raw().toBuffer({ resolveWithObject: true });
