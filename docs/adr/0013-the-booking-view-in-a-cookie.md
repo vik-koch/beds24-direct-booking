@@ -23,9 +23,11 @@ force the sender's view on the receiver. What weighs on it:
 
 1. **The view lives in a cookie,** `view=calendar` with `Path=/`, `SameSite=Lax` and a `Max-Age` of
    30 days, the season's time limit, counted from the last choice. Choosing the calendar sets it.
-   Choosing the list, the default, removes it.
+   Choosing the list, the default, removes it. A page the browser restores from its back/forward
+   cache reads the cookie again.
 2. **The server reads the cookie** from the request and renders that view, so the first paint is
-   right at any network speed. Rendered pages answer with `Vary: Cookie`.
+   right at any network speed. Apartment pages answer with `Vary: Cookie`; the others do not depend
+   on it.
 3. **The address carries no view,** and the site's links add none. `?view=` was never in a release.
 
 ## Options
@@ -36,7 +38,7 @@ force the sender's view on the receiver. What weighs on it:
 | The view in the address | A shared link shows the same view. | Every link must carry it, and a shared link forces the sender's preference on the receiver. | Replaced. |
 | Local storage, and the application switches once it starts | No new mechanism. | The list shows for up to five seconds on a slow phone, then changes. | Rejected. |
 | Local storage, and the panel hidden until the application starts | No wrong view is painted. | The panel is empty for up to five seconds. | Rejected. |
-| Local storage, both views in the page, a head script picks one, as for the season (ADR 8) | One mechanism for both preferences. | About 30 kB more HTML per apartment page (2 kB gzipped), and both grids are hydrated and kept in step on every choice. | Rejected. |
+| Local storage, both views in the page, a head script picks one, as for the season (ADR 8) | One mechanism for both preferences. | Each apartment page carries the list's markup and the calendar's, more than either alone, and both grids are hydrated and kept in step on every choice. | Rejected. |
 | A cookie, read by the server | The server renders the remembered view: no second grid, no head script. | A cookie beside the season's local storage, and the view depends on the page being rendered per request. | Chosen. |
 
 ADR 8 rejected a cookie for the season because it would make prerendered pages and shared caches
@@ -45,9 +47,19 @@ vary by visitor. The view is not on a prerendered page.
 ## What this rests on
 
 - **Verified by the e2e suite:** the calendar chosen on one apartment shows on others reached
-  through the footer, the header and the home page, with no view in any address. The cookie lasts 30
-  days, and a new browser context with it shows the calendar at the first paint with the application
-  held back. Choosing the list removes the cookie.
+  through the footer, the header and the home page, with no view in any address. The cookie is set
+  to last 30 days, and a new browser context with it shows the calendar at the first paint with the
+  application held back. A restored page takes a choice made since. Choosing the list removes the
+  cookie. Only apartment pages vary by the cookie.
+- **Documented, not verified:** Safari deletes cookies written by a script, and all other storage a
+  script can write such as local storage, after seven days without a click, tap or key press on the
+  site
+  ([WebKit tracking prevention](https://webkit.org/tracking-prevention/#7-day-cap-on-all-script-writeable-storage)).
+  A visitor in Safari who comes back later than that sees the list again, and the season by date. A
+  cookie the server sets is not named in that rule, but it would need a request on every change of
+  view.
+- **Not checked by an engine:** a real return from the back/forward cache; Playwright's browsers do
+  not use it, so the test sends the browser's `pageshow` event itself.
 - **Not checked:** whether the cookie needs a consent prompt in the real site's country. The reading
   is the same as ADR 8's for the season: it is stored only on the visitor's action and only for that
   purpose, and it belongs on the privacy page.
