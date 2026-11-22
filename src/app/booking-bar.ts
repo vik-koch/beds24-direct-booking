@@ -1,4 +1,3 @@
-import { DOCUMENT } from '@angular/common';
 import { Component, inject, input, output, ViewEncapsulation } from '@angular/core';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideX } from '@ng-icons/lucide';
@@ -6,8 +5,8 @@ import type { SeasonName } from '../content/names';
 import { TEXTS } from './texts';
 
 // What the bar says in one season: maybe an apartment's name, an amount with words around it,
-// maybe the parts of a line below, and a link on to booking with its label, or without a link
-// the way to the panel. A chosen week has a cross that clears it.
+// maybe the parts of a line below, and a link on with its label, or without a link a button the
+// page answers. A chosen week has a cross that clears it.
 export interface BarLine {
   season: SeasonName;
   name: string;
@@ -64,7 +63,9 @@ export interface BarLine {
             @if (line.link) {
               <a class="button" [href]="line.link">{{ line.label }}</a>
             } @else {
-              <button type="button" class="button" (click)="toPanel()">{{ line.label }}</button>
+              <button type="button" class="button" (click)="pressed.emit()">
+                {{ line.label }}
+              </button>
             }
           </div>
         </div>
@@ -183,11 +184,6 @@ export class BookingBar {
   readonly lines = input.required<BarLine[]>();
   readonly shown = input.required<boolean>();
   readonly cleared = output<MouseEvent>();
+  readonly pressed = output();
   protected readonly texts = inject(TEXTS);
-  private readonly document = inject(DOCUMENT);
-
-  // The focus goes to the panel's heading, which scrolls the panel into view.
-  protected toPanel() {
-    this.document.getElementById('booking-title')!.focus();
-  }
 }

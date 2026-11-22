@@ -492,7 +492,7 @@ test('beside the content a panel taller than the window shows its foot', async (
   expect(right!.x).toBeGreaterThan(left!.x + left!.width);
 });
 
-test('on a phone a bar leads to the panel while it is below the screen, then on to booking', async ({
+test('on a phone a bar leads to the panel while it is below the screen, with a week to its total', async ({
   page,
 }) => {
   // Low enough that the page scrolls past the panel.
@@ -507,10 +507,18 @@ test('on a phone a bar leads to the panel while it is below the screen, then on 
   await (await firstFree(page)).click();
   await page.evaluate(() => scrollTo(0, 0));
   await expect(bar).toBeVisible();
-  await expect(bar.getByRole('link', { name: 'Weiter' })).toHaveAttribute(
-    'href',
-    /^\/de\/wohnungen\/laerche\/buchen\?arrival=/,
-  );
+  // The week's price, without the tax the panel's total adds.
+  const price = await chosen(page).innerText();
+  await expect(bar.locator('.bar-parts > span:visible').nth(1)).toHaveText(price);
+  await bar.getByRole('button', { name: 'Weiter' }).click();
+  const book = panel(page).getByRole('link', { name: 'Weiter zur Buchung' });
+  await expect(book).toBeFocused();
+  await expect(book).toHaveAttribute('href', /^\/de\/wohnungen\/laerche\/buchen\?arrival=/);
+  await expect(bar).toBeHidden();
+  // The panel's foot, its total and button, at the screen's foot.
+  await expect
+    .poll(() => panel(page).evaluate((box) => innerHeight - box.getBoundingClientRect().bottom))
+    .toBeCloseTo(0, 0);
   // Past the panel the footer's links stay uncovered.
   await page.evaluate(() => scrollTo({ top: document.body.scrollHeight, behavior: 'instant' }));
   expect(await panel(page).evaluate((box) => box.getBoundingClientRect().bottom)).toBeLessThan(0);
@@ -546,7 +554,7 @@ test('a week in the address is shown at the first paint, before the application 
     await expect(fresh.locator('.outcome:visible .total')).toBeVisible();
     const bar = fresh.locator('.booking-bar');
     await expect(bar).toBeVisible({ visible: barShown });
-    if (barShown) await expect(bar.getByRole('link', { name: 'Weiter' })).toBeVisible();
+    if (barShown) await expect(bar.getByRole('button', { name: 'Weiter' })).toBeVisible();
     await expect(fresh.locator('html')).not.toHaveAttribute('data-started');
     await fresh.close();
   }
@@ -567,9 +575,9 @@ const place = (bar: Locator) =>
     };
   });
 
-for (const [path, book, tax] of [
-  ['/de/wohnungen/laerche', 'Weiter', 'mit Ortstaxe'],
-  ['/en/apartments/laerche', 'Continue', 'with local tax'],
+for (const [path, book] of [
+  ['/de/wohnungen/laerche', 'Weiter'],
+  ['/en/apartments/laerche', 'Continue'],
 ] as const)
   test(`a chosen week comes back home in a bar alike (${path.slice(1, 3)})`, async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 640 });
@@ -577,13 +585,8 @@ for (const [path, book, tax] of [
     await (await firstFree(page)).click();
     await page.evaluate(() => scrollTo({ top: 0, behavior: 'instant' }));
     const phone = page.locator('.booking-bar');
-    await expect(phone.locator('.bar-parts > span:visible')).toHaveText([
-      /^Lärche$/,
-      /€/,
-      /./,
-      tax,
-    ]);
-    await expect(phone.getByRole('link', { name: book })).toBeVisible();
+    await expect(phone.locator('.bar-parts > span:visible')).toHaveText([/^Lärche$/, /€/, /./]);
+    await expect(phone.getByRole('button', { name: book })).toBeVisible();
     const said = await parts(phone);
     const sits = await place(phone);
     expect(sits.right).toBe(true);

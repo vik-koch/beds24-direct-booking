@@ -342,7 +342,12 @@ const addDays = (date: string, days: number) =>
       }
     </section>
     @if (weeks && limits) {
-      <app-booking-bar [lines]="barLines()" [shown]="barShown()" (cleared)="clear()" />
+      <app-booking-bar
+        [lines]="barLines()"
+        [shown]="barShown()"
+        (cleared)="clear()"
+        (pressed)="onward()"
+      />
     }
   `,
   styles: `
@@ -885,7 +890,8 @@ export class BookingPanel {
     };
   });
 
-  // The bar's line per season: the chosen week's total, or the season's lowest price.
+  // The bar's line per season: the chosen week's price, or the season's lowest. The total with the
+  // tax, which depends on the guests, is the panel's.
   protected readonly barLines = computed(() =>
     this.weeks!.seasons.flatMap((season): BarLine[] => {
       const stay = this.pickIn(season.name);
@@ -895,14 +901,10 @@ export class BookingPanel {
             season: season.name,
             name: this.name,
             before: '',
-            amount: this.money(stay.price! + (this.taxLine()?.amount ?? 0)),
+            amount: this.money(stay.price!),
             after: '',
-            detail: !this.fitting()
-              ? [this.small()]
-              : this.taxLine()
-                ? [this.stayText(stay), this.texts.weeks.withTax]
-                : [this.stayText(stay)],
-            link: this.fitting() ? this.bookingLink(stay) : null,
+            detail: [this.fitting() ? this.stayText(stay) : this.small()],
+            link: null,
             label: this.fitting() ? this.texts.panel.bar.book : this.texts.panel.guests,
             chosen: true,
           },
@@ -1117,6 +1119,17 @@ export class BookingPanel {
           ?.focus(),
       { injector: this.injector },
     );
+  }
+
+  // The bar's button. A week that fits brings the panel's foot, its total and booking button, to
+  // the screen's foot, and the focus to the button; otherwise the focus goes to the heading.
+  protected onward() {
+    const book = this.host.querySelector<HTMLElement>(
+      `.outcome[data-for=${this.season.current()}] a.button`,
+    );
+    if (!book) return this.document.getElementById('booking-title')!.focus();
+    book.focus({ preventScroll: true });
+    this.host.querySelector('.panel')!.scrollIntoView({ block: 'end' });
   }
 
   // A click on a day or a booked week that does not start a free one would clear the chosen

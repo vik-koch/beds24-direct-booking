@@ -109,15 +109,14 @@ test('a chosen week leads to its apartment with the stay, also in a fresh browse
   const price = await first.innerText();
   await first.locator('.price').click();
   await expect(first).toHaveAttribute('aria-selected', 'true');
-  // With the tourist tax of two adults for seven nights at € 3.50.
-  const total = Number(price.replace(/[^\d,]/g, '').replace(',', '.')) + 49;
+  // The week's price as the list shows it: the tax is added on the apartment's page.
+  const amount = Number(price.replace(/[^\d,]/g, '').replace(',', '.'));
   const money = new Intl.NumberFormat('de-AT', { style: 'currency', currency: 'EUR' });
-  const shown = money.format(total).replace(',00', '');
+  const shown = money.format(amount).replace(',00', '');
   await expect(page.locator('.pick .bar-parts > span')).toHaveText([
     apartment,
     shown,
     dates.replace(/\s+/g, ' ').trim(),
-    'mit Ortstaxe',
   ]);
   await page.locator('.pick').getByRole('link', { name: 'Weiter' }).click();
   await expect(page).toHaveURL(

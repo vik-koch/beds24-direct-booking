@@ -22,7 +22,7 @@ import type { FreeWeeks } from '../beds24/weeks';
 import type { SeasonName } from '../content/names';
 import { BookingBar, type BarLine } from './booking-bar';
 import { GuestCounts } from './guest-counts';
-import { fits, Guests, replaceQuery, taxed, taxFor } from './guests';
+import { fits, Guests, replaceQuery } from './guests';
 import { Season } from './season';
 import { swapper } from './swap';
 import { address, fill, formatMoney, formatStay, LANGUAGE, TEXTS } from './texts';
@@ -249,16 +249,15 @@ export class FreeWeeksList implements OnInit {
     const season = pick && weeks?.seasons.find(({ name }) => name === pick.season);
     if (!pick || !season) return [];
     const week = season.weeks[pick.row];
-    const { slug, name, tax } = weeks!.apartments[pick.apartment];
-    const count = taxed(weeks!.capacities[slug], this.group.adults(), this.group.children());
+    const { name } = weeks!.apartments[pick.apartment];
     return [
       {
         season: season.name,
         name,
         before: '',
-        amount: this.money(week.prices[pick.apartment]! + (tax ? taxFor(tax, count) : 0)),
+        amount: this.money(week.prices[pick.apartment]!),
         after: '',
-        detail: tax ? [this.stay(week), this.texts.weeks.withTax] : [this.stay(week)],
+        detail: [this.stay(week)],
         link: this.link(season, pick.apartment, pick.row),
         label: this.texts.panel.bar.book,
         chosen: true,

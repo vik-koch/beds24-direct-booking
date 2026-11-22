@@ -115,9 +115,8 @@ content. The application has no wording, no colour and no typeface of its own. T
   form) and `{amount}` (the tourist tax as money). `note` says what the week's price includes, since
   that is how a deployment sets up its Beds24 prices; the tax follows it as `tax.night` or
   `tax.stay`, by Beds24's upsell item. `small` stands in the cells of an apartment too small for the
-  chosen guests and `smallFor` (`{guests}`) on its card; `withTax` follows a chosen week's stay in
-  its bar where the price includes the tax for the chosen guests. The apartments' order in the list
-  is their order in `site.json`; their guests, size, prices and tax come from Beds24.
+  chosen guests and `smallFor` (`{guests}`) on its card. The apartments' order in the list is their
+  order in `site.json`; their guests, size, prices and tax come from Beds24.
 - **A picture** is a file in `pictures/` with an optional `credit`: its title, author, source
   address and licence with its address, and optionally what was changed: `changes` lists `cropped`,
   `scaled` or both, and each language's texts name them under `credits.changes`. The picture credits
