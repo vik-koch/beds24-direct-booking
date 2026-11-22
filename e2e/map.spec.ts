@@ -3,25 +3,32 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 import sharp from 'sharp';
 
-// The pixels the map itself draws in the accent colour, the routes', with pins and panel hidden.
-async function accentPixels(page: Page) {
+// The pixels the map itself draws in the accent colour, the routes', with pins, labels and panel
+// hidden; with a fade, in the accent faded towards white as far, as the routes beside a chosen one.
+async function accentPixels(page: Page, fade = 0) {
   const hide = await page.addStyleTag({
-    content: '.map-pin, .map-panel { visibility: hidden !important; }',
+    content: '.map-pin, .map-label, .map-panel { visibility: hidden !important; }',
   });
-  const accent = await page.evaluate(() => {
+  const [r, g, b] = await page.evaluate((fade) => {
     const canvas = document.createElement('canvas').getContext('2d')!;
-    canvas.fillStyle = getComputedStyle(document.documentElement).getPropertyValue(
-      '--color-accent',
-    );
-    return String(canvas.fillStyle);
-  });
-  const [r, g, b] = [1, 3, 5].map((i) => parseInt(accent.slice(i, i + 2), 16));
+    const [accent, surface] = ['accent', 'surface'].map((name) => {
+      canvas.fillStyle = getComputedStyle(document.documentElement).getPropertyValue(
+        `--color-${name}`,
+      );
+      const hex = String(canvas.fillStyle);
+      return [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+    });
+    return accent!.map((n, i) => Math.round(n * (1 - fade) + surface![i]! * fade));
+  }, fade);
   const shot = await page.locator('.location-map').screenshot();
   await hide.evaluate((element) => element.remove());
   const { data, info } = await sharp(shot).raw().toBuffer({ resolveWithObject: true });
   let count = 0;
   for (let i = 0; i < data.length; i += info.channels)
-    if (Math.abs(data[i]! - r!) + Math.abs(data[i + 1]! - g!) + Math.abs(data[i + 2]! - b!) < 30)
+    if (
+      Math.abs(data[i]! - r!) + Math.abs(data[i + 1]! - g!) + Math.abs(data[i + 2]! - b!) <
+      (fade ? 6 : 30)
+    )
       count++;
   return count;
 }
@@ -318,6 +325,8 @@ test("a place's line chooses it by keyboard, and with an apartment its route sta
   await openMap(page);
   await panel(page).getByText('Ahorn').click();
   await expect.poll(() => accentPixels(page)).toBeGreaterThan(500);
+  // The map's water is near the faded accent: about 90 of its pixels come close.
+  expect(await accentPixels(page, 0.6)).toBeLessThan(150);
   const line = places(page).first().getByRole('button');
   await expect(line).toHaveAccessibleName(/Schattberg X-press.*900 m/);
   await line.focus();
@@ -326,13 +335,48 @@ test("a place's line chooses it by keyboard, and with an apartment its route sta
   await expect(
     page.getByRole('button', { name: 'Schattberg X-press', exact: true }),
   ).toHaveAttribute('aria-pressed', 'true');
-  // The other route fades out of the accent; the chosen one is drawn whole.
-  const dashed = await accentPixels(page);
+  // The chosen route keeps the accent; the other one fades.
+  await expect.poll(() => accentPixels(page, 0.6)).toBeGreaterThan(250);
+  expect(await accentPixels(page)).toBeGreaterThan(500);
   // Counting the pixels hides the panel for a moment, which takes the focus away.
   await line.focus();
   await page.keyboard.press('Space');
   await expect(line).toHaveAttribute('aria-pressed', 'false');
-  await expect.poll(() => accentPixels(page)).not.toBe(dashed);
+  await expect.poll(() => accentPixels(page, 0.6)).toBeLessThan(150);
+});
+
+test("a place's pin chosen by keyboard can be cleared from the same pin", async ({
+  page,
+  browserName,
+}) => {
+  test.skip(browserName === 'webkit', 'Safari tabs only to fields unless told otherwise');
+  await openMap(page);
+  const pin = page.getByRole('button', { name: 'Kohlmaisbahn', exact: true });
+  await pin.focus();
+  await page.keyboard.press('Enter');
+  await expect(pin).toHaveAttribute('aria-pressed', 'true');
+  await expect(pin).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(pin).toHaveAttribute('aria-pressed', 'false');
+});
+
+test('choosing a place keeps a closer zoom the visitor has chosen', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await openMap(page);
+  const gondolas = () => spread(page, 'Kohlmaisbahn', 'Schattberg X-press');
+  const far = await gondolas();
+  await places(page).nth(1).getByRole('button').click();
+  await expect.poll(gondolas).toBeGreaterThan(far * 1.5);
+  // A step of the zoom doubles the distance on the screen.
+  const near = await gondolas();
+  await page.getByRole('button', { name: 'Zoom in' }).click();
+  await expect.poll(gondolas).toBeGreaterThan(near * 1.9);
+  const nearer = await gondolas();
+  await places(page).first().getByRole('button').click();
+  await expect(places(page).first().getByRole('button')).toHaveAttribute('aria-pressed', 'true');
+  // A view that zoomed out would have moved by then.
+  await page.waitForTimeout(1500);
+  expect(Math.abs((await gondolas()) / nearer - 1)).toBeLessThan(0.05);
 });
 
 test('a chosen place among the other places is cleared when they fold', async ({ page }) => {

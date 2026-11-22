@@ -229,8 +229,7 @@ function flavor(c: (name: string) => string): Flavor {
           </button>
         </div>
       </div>
-      <!-- The map takes these as its markers; until it is drawn they stay out of sight. The labels
-           come first, so that every pin lies over every label and none is hidden. -->
+      <!-- The map takes these as its markers; until it is drawn they stay out of sight. -->
       @for (apartment of apartments; track apartment.slug) {
         <span
           #marker
@@ -334,7 +333,9 @@ function flavor(c: (name: string) => string): Flavor {
         width: 2.25rem;
         height: 2.75rem;
         padding-top: 0.5625rem;
-        color: var(--color-ink);
+        /* Over every label; a chosen pin over the others. */
+        z-index: 1;
+        color: var(--color-accent);
         cursor: pointer;
         --ng-icon__size: 1.125rem;
         --pin: var(--color-surface);
@@ -368,8 +369,9 @@ function flavor(c: (name: string) => string): Flavor {
         }
 
         &[aria-pressed='true'] {
-          color: var(--color-surface);
-          --pin: var(--color-ink);
+          z-index: 2;
+          color: var(--color-on-accent);
+          --pin: var(--color-accent);
         }
 
         [data-drawn] & {
@@ -377,9 +379,14 @@ function flavor(c: (name: string) => string): Flavor {
         }
       }
 
+      /* The apartments in the accent, the places in ink. */
       .map-place {
-        color: var(--color-on-accent);
-        --pin: var(--color-accent);
+        color: var(--color-ink);
+
+        &[aria-pressed='true'] {
+          color: var(--color-surface);
+          --pin: var(--color-ink);
+        }
       }
 
       /* Beside a pin's head: an apartment's name, the way to a place, a chosen place's name. */
@@ -433,14 +440,16 @@ function flavor(c: (name: string) => string): Flavor {
       .map-choices {
         display: flex;
         flex-wrap: wrap;
-        gap: 0.5rem;
-        margin-top: 0.5rem;
+        gap: 0.25rem;
+        /* The first name stands in line with the legend; its pill reaches into the padding. */
+        margin: 0.5rem -0.75rem 0;
 
         span {
           display: grid;
           place-items: center;
           min-height: var(--size-control-small);
-          padding: 0 1rem;
+          padding: 0 0.75rem;
+          border-radius: var(--radius-control);
         }
       }
 
@@ -531,7 +540,6 @@ function flavor(c: (name: string) => string): Flavor {
 
         &[aria-pressed='true'] {
           background: var(--color-ground);
-          box-shadow: inset 0 0 0 1px var(--color-ink);
         }
 
         &:focus-visible {
@@ -613,16 +621,23 @@ export class LocationMap {
       drawn.on('zoom', () => this.zoom.set(drawn.getZoom()));
       drawn.touchZoomRotate.disableRotation();
       drawn.keyboard.disableRotation();
-      const markers = new Set<InstanceType<typeof Marker>>();
-      // The pins and labels in the template become the markers, again whenever they change. A pin's
-      // tip stands on its place; a label starts beside the pin's head.
+      const markers = new globalThis.Map<HTMLElement, InstanceType<typeof Marker>>();
+      // The pins and labels in the template become the markers. One that stays is kept: removing a
+      // focused pin would take the keyboard's focus with it. A pin's tip stands on its place; a
+      // label starts beside the pin's head.
       effect(
         () => {
-          for (const marker of markers) marker.remove();
-          markers.clear();
-          for (const { nativeElement: element } of this.markers()) {
+          const elements = new Set(this.markers().map((marker) => marker.nativeElement));
+          for (const [element, marker] of markers)
+            if (!elements.has(element)) {
+              marker.remove();
+              markers.delete(element);
+            }
+          for (const element of elements) {
+            if (markers.has(element)) continue;
             const label = element.dataset['anchor'] === 'left';
-            markers.add(
+            markers.set(
+              element,
               new Marker({
                 element,
                 anchor: label ? 'left' : 'bottom',
@@ -662,7 +677,8 @@ export class LocationMap {
               bottom: 48,
               left: over ? panel.right - frame.left + 48 : 48,
             },
-            maxZoom: 16,
+            // A lone place keeps a closer zoom the visitor has chosen.
+            maxZoom: picked && !lines.length ? Math.max(16, untracked(this.zoom)) : 16,
             animate: !matchMedia('(prefers-reduced-motion: reduce)').matches && !!this.drawn(),
           });
         },
