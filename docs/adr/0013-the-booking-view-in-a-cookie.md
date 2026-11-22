@@ -51,13 +51,15 @@ vary by visitor. The view is not on a prerendered page.
   to last 30 days, and a new browser context with it shows the calendar at the first paint with the
   application held back. A restored page takes a choice made since. Choosing the list removes the
   cookie. Only apartment pages vary by the cookie.
-- **Documented, not verified:** Safari deletes cookies written by a script, and all other storage a
-  script can write such as local storage, after seven days without a click, tap or key press on the
-  site
-  ([WebKit tracking prevention](https://webkit.org/tracking-prevention/#7-day-cap-on-all-script-writeable-storage)).
-  A visitor in Safari who comes back later than that sees the list again, and the season by date. A
-  cookie the server sets is not named in that rule, but it would need a request on every change of
-  view.
+- **Documented, not verified:** Safari caps a persistent cookie written by `document.cookie` at
+  seven days from the write
+  ([ITP 2.1](https://webkit.org/blog/8613/intelligent-tracking-prevention-2-1/)), so there the
+  calendar is kept for seven days, not 30. The season's local storage falls under a separate rule:
+  Safari deletes it after seven days of Safari use without a click, tap or key press on the site
+  ([WebKit, 2020](https://webkit.org/blog/10218/full-third-party-cookie-blocking-and-more/)). A
+  visitor who returns after eight days without opening Safari may therefore find the list with their
+  chosen season. A cookie the server sets is not capped by that rule, but it would need a request on
+  every change of view.
 - **Not checked by an engine:** a real return from the back/forward cache; Playwright's browsers do
   not use it, so the test sends the browser's `pageshow` event itself.
 - **Not checked:** whether the cookie needs a consent prompt in the real site's country. The reading
