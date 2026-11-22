@@ -1,6 +1,6 @@
 # ADR 8: The season in the page
 
-Status: accepted, 2026-11-16. Group: stack.
+Status: accepted, 2026-11-16; a week's arrival day added on 2026-11-22. Group: stack.
 
 ## Context
 
@@ -25,16 +25,19 @@ flash, and whether both seasons' content is in the HTML. What weighs on it:
 2. **Both seasons' content is in the HTML,** and the attribute `data-season` on `<html>` selects.
    The other season's photo is not displayed, so it is not fetched either.
 3. **An inline script in the head sets the attribute before the body is parsed.** Its order of
-   precedence: a link's `?season=`, then a stored choice, then today's date in the visitor's time
-   zone. The server sets the attribute by its own date first, which is what a visitor without
-   JavaScript sees; for them the switch is not shown.
+   precedence: a link's `?season=`, then the season of the arrival day of a week the address names
+   (`?arrival=`, if that day lies in one of the two shown seasons), then a stored choice, then
+   today's date in the visitor's time zone. The server sets the attribute by its own date first,
+   which is what a visitor without JavaScript sees; for them the switch is not shown.
 4. **The script is the same function the application and the unit tests use,** written into the page
    with `Function.prototype.toString()`. It must therefore use nothing from outside its own body.
 5. **The choice is stored in local storage** as the dated season and the day it was made, such as
    `{"season":"summer-2027","on":"2026-11-16"}`. It is dropped after 30 days, or once that dated
    season is no longer one of the two shown. A switch stores it, and so does a link that names a
-   season, so that the site's own links keep the season for the visit.
+   season or a week, so that the site's own links keep the season for the visit.
 6. **A switch removes `?season=` from the address,** or a reload would bring the link's season back.
+   Beside a chosen week the address, and the site's links that carry the week, name a season only
+   once the visitor has switched away from the week's, so that this switch stays too.
 
 ## Options
 
@@ -50,13 +53,13 @@ flash, and whether both seasons' content is in the HTML. What weighs on it:
 ## What this rests on
 
 - **Verified by unit tests:** both boundary days, the turn of the year, 29 February, the two shown
-  seasons and their dated names, the precedence, the 30 days, a stored season no longer shown, a
-  single season, and that the script runs on its own.
+  seasons and their dated names, the precedence with a week's arrival day, the 30 days, a stored
+  season no longer shown, a single season, and that the script runs on its own.
 - **Verified by the e2e suite in Chromium:** the date's season on a server-rendered and a
   prerendered page, the season with the application's scripts held back, switching by click and by
-  keyboard, the stored choice across pages and languages, its end, a link's season, that only the
-  shown photo is fetched, a single-season site, and axe in both seasons. WebKit and Firefox run in
-  CI.
+  keyboard, the stored choice across pages and languages, its end, a link's season, a linked week's
+  season at the first paint, that only the shown photo is fetched, a single-season site, and axe in
+  both seasons. WebKit and Firefox run in CI.
 - **Checked by hand:** a first visit with the cache off on a throttled network in Chromium; every
   painted frame was in the right season.
 - **Not checked:** whether a stored preference after an explicit choice needs a consent prompt in

@@ -97,8 +97,9 @@ export class Choice {
     const url = new URL(href, 'https://site');
     const carried = { ...this.params() };
     const week = this.week();
-    // The week's season only while it is shown: a switch since then stays.
-    const season = week?.season === this.season.current() ? { season: week.season } : {};
+    // The week's arrival day gives the page its season; a switch away from it since then stays.
+    const shown = this.season.current();
+    const season = week && week.season !== shown ? { season: shown } : {};
     if (week && url.pathname === week.home)
       Object.assign(carried, { apartment: week.slug, arrival: week.arrival }, season);
     if (week && url.pathname === week.page)

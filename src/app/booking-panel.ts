@@ -1150,8 +1150,8 @@ export class BookingPanel {
     if (to >= 0 && to < this.monthsOf(season).length) this.page(season, by);
   }
 
-  // The address keeps the choice, and with a week of the shown season that season, which a
-  // shared link then shows first, whatever season the page would show by itself.
+  // The address keeps the choice. The week's arrival day gives the page its season (ADR 8), so the
+  // address names a season only once the visitor has switched away from the week's.
   private keep() {
     const pick = this.chosen();
     const stay = pick && this.pickIn(pick.season);
@@ -1159,7 +1159,9 @@ export class BookingPanel {
       if (stay) {
         params.set('arrival', stay.arrival);
         params.set('departure', stay.departure);
-        if (pick.season === this.season.current()) params.set('season', pick.season);
+        const shown = this.season.current();
+        if (pick.season === shown) params.delete('season');
+        else params.set('season', shown);
       } else ['arrival', 'departure', 'season'].forEach((name) => params.delete(name));
     });
     this.carry();
@@ -1251,8 +1253,8 @@ export class BookingPanel {
     return () => {
       const next = box?.querySelector<HTMLElement>(`[data-for=${to}]`);
       if (box && old && next) this.swapSeason(box, old, next, direction, height!);
-      // Back in the chosen week's season, the address names it again.
-      if (this.chosen()?.season === to) this.keep();
+      // The switch took the season out of the address.
+      if (this.chosen()) this.keep();
     };
   }
 }
