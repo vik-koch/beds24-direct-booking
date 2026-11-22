@@ -378,6 +378,8 @@ const addDays = (date: string, days: number) =>
       .panel {
         --inset: 1.25rem;
         padding: 1.5rem var(--inset);
+        /* The phone bar brings the panel's foot as far from the screen's foot as from its sides. */
+        scroll-margin-bottom: 1rem;
 
         @media (min-width: 48rem) {
           --inset: 2rem;

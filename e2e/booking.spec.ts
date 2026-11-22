@@ -515,9 +515,14 @@ test('on a phone a bar leads to the panel while it is below the screen, with a w
   await expect(book).toBeFocused();
   await expect(book).toHaveAttribute('href', /^\/de\/wohnungen\/laerche\/buchen\?arrival=/);
   await expect(bar).toBeHidden();
-  // The panel's foot, its total and button, at the screen's foot.
+  // The panel's foot, its total and button, as far from the screen's foot as from its left side.
   await expect
-    .poll(() => panel(page).evaluate((box) => innerHeight - box.getBoundingClientRect().bottom))
+    .poll(() =>
+      panel(page).evaluate((box) => {
+        const { left, bottom } = box.getBoundingClientRect();
+        return innerHeight - bottom - left;
+      }),
+    )
     .toBeCloseTo(0, 0);
   // Past the panel the footer's links stay uncovered.
   await page.evaluate(() => scrollTo({ top: document.body.scrollHeight, behavior: 'instant' }));
