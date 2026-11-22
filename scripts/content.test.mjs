@@ -631,16 +631,18 @@ test('the tiles were cut for the box, and are there', () => {
     /map\/tiles\.json\n {2}box: cut for another box than site\.json's; run scripts\/map-tiles\.mjs/,
   );
   const gone = changed('site.json', () => undefined);
-  const { build } = JSON.parse(readFileSync(join(gone, 'map', 'tiles.json'), 'utf8'));
+  const { build, count } = JSON.parse(readFileSync(join(gone, 'map', 'tiles.json'), 'utf8'));
   const column = join(gone, 'map', 'tiles', build, '15');
   const x = readdirSync(column)[0];
   rmSync(join(column, x, readdirSync(join(column, x))[0]));
   assert.throws(
     () => readContent(gone),
-    /map\/tiles\/\d+\n {2}\(folder\): 61 of 62 tiles; run scripts\/map-tiles\.mjs/,
+    new RegExp(
+      `map/tiles/\\d+\\n  \\(folder\\): ${count - 1} of ${count} tiles; run scripts/map-tiles`,
+    ),
   );
   rmSync(join(gone, 'map', 'tiles'), { recursive: true });
-  assert.throws(() => readContent(gone), /\(folder\): 0 of 62 tiles; run/);
+  assert.throws(() => readContent(gone), new RegExp(`\\(folder\\): 0 of ${count} tiles; run`));
   rmSync(join(gone, 'map', 'tiles.json'));
   assert.throws(() => readContent(gone), /map\/tiles\.json\n {2}\(file\): missing; run/);
 });
