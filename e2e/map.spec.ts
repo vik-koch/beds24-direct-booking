@@ -221,7 +221,7 @@ test('the map section passes axe', async ({ page }) => {
   expect(results.violations.map((v) => v.id)).toEqual([]);
 });
 
-test('without JavaScript the panel names the places and their seasonal texts', async ({
+test('without JavaScript the panel names the places and their seasonal texts, and nothing to choose', async ({
   browser,
 }) => {
   const context = await browser.newContext({ javaScriptEnabled: false });
@@ -232,5 +232,8 @@ test('without JavaScript the panel names the places and their seasonal texts', a
     /Kohlmaisbahn.*Gondola to/,
   ]);
   await expect(panel(page)).toBeVisible();
+  // Its choice and switch need the application, so they are not offered.
+  await expect(panel(page).getByRole('radio')).toHaveCount(0);
+  await expect(panel(page).getByRole('switch')).toBeHidden();
   await context.close();
 });

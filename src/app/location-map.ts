@@ -318,6 +318,11 @@ function flavor(c: (name: string) => string): Flavor {
         }
       }
 
+      /* Without the application the choice and the switch cannot work, so only the places show. */
+      html:not([data-script]) .map-panel :is(fieldset, .map-switch) {
+        display: none;
+      }
+
       .map-choices {
         display: flex;
         flex-wrap: wrap;
