@@ -42,6 +42,8 @@ test('the map draws from the site alone, and loads only once in view', async ({ 
 });
 
 test("a pin or the panel chooses an apartment, whose routes' distances show", async ({ page }) => {
+  // Wide enough that no pin lies under the panel, which on a phone covers the map's foot.
+  await page.setViewportSize({ width: 1280, height: 900 });
   await openMap(page);
   await expect(places(page)).toHaveCount(2);
   await expect(places(page).first()).not.toContainText('on foot');
