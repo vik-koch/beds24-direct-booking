@@ -84,20 +84,21 @@ A spike (#254, branch `spike/254-map`, not merged) tried the decision below in t
   - The colours follow the season once the page's colour transition has ended; read earlier, they
     are the old season's.
   - OSRM's foot profile returned all twelve routes between three apartments and four places, 220 m
-    to 1,730 m, 1.2 to 2.3 times the straight distance. None of them runs over steps: of points
-    sampled along each route, ten to a segment, none lies within 4 m of the nine step segments in
-    the tiles' box.
+    to 1,730 m, 1.2 to 2.3 times the straight distance. Of points sampled along each route, ten to a
+    segment, none lies within 4 m of the nine step segments in the tiles' box; a crossing between
+    two samples is not ruled out.
   - In the CI image (`mcr.microsoft.com/playwright:v1.65.0-resolute`), headless Chromium and WebKit
     have WebGL 2 and draw the map; headless Firefox has no WebGL, also with `webgl.force-enabled`,
     and the map's constructor throws.
 - **Documented, not verified:** OpenStreetMap data is under the ODbL, which asks for the attribution
   above; MapLibre, `pmtiles` and `@protomaps/basemaps` are under the BSD 3-Clause licence (their
-  package files).
-- **Not checked:** the foot router's usage policy for a script run a few times a year; whether the
-  computed routes take paths that are closed or groomed for skiing in winter, which the tiles do not
-  record, so the owner of a deployment has to walk them; points of interest in the private
-  deployment's town; the reading that a map loading nothing from a third party needs no consent
-  prompt in the EU, which is ours, not a lawyer's.
+  package files). routing.openstreetmap.de allows one request a second with a valid user agent
+  ([its about page](https://routing.openstreetmap.de/about.html), read 2026-11-22), which the routes
+  script keeps.
+- **Not checked:** whether the computed routes take paths that are closed or groomed for skiing in
+  winter, which the tiles do not record, so the owner of a deployment has to walk them; points of
+  interest in the private deployment's town; the reading that a map loading nothing from a third
+  party needs no consent prompt in the EU, which is ours, not a lawyer's.
 
 ## Consequences
 
