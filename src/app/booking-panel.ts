@@ -39,6 +39,7 @@ import {
   fill,
   formatMoney,
   formatStay,
+  isDay,
   LANGUAGE,
   replaceQuery,
   TEXTS,
@@ -225,8 +226,8 @@ const shownMonths = new InjectionToken('booking panel months', {
                                 (selectedChange)="select($event, season, stay)"
                                 [tabindex]="stop ? (stop === stay.arrival ? 0 : -1) : undefined"
                                 [attr.data-date]="stay.arrival"
-                                (click)="guard($event, stay.price !== null)"
-                                (keydown)="keys($event, season, stay.price !== null)"
+                                (click)="guard($event, open(season.name, stay))"
+                                (keydown)="keys($event, season, open(season.name, stay))"
                                 >{{
                                   stay.price === null ? texts.weeks.taken : money(stay.price)
                                 }}</span
@@ -273,8 +274,16 @@ const shownMonths = new InjectionToken('booking panel months', {
                                   [attr.aria-label]="cell.label"
                                   [tabindex]="stop ? (stop === cell.date ? 0 : -1) : undefined"
                                   [attr.data-date]="cell.date"
-                                  (click)="guard($event, !!cell.start)"
-                                  (keydown)="keys($event, season, !!cell.start)"
+                                  (click)="
+                                    guard($event, !!cell.start && open(season.name, cell.start))
+                                  "
+                                  (keydown)="
+                                    keys(
+                                      $event,
+                                      season,
+                                      !!cell.start && open(season.name, cell.start)
+                                    )
+                                  "
                                   ><span [class.start]="cell.start" [class.booked]="cell.booked">{{
                                     cell.day
                                   }}</span></span
@@ -307,9 +316,10 @@ const shownMonths = new InjectionToken('booking panel months', {
             }
           </p>
         </div>
-        <!-- A season with no week to choose has no total and no button. -->
+        <!-- A season with no week to choose has no total and no button, unless a link's week
+             of it is chosen, which shows as blocked. -->
         @for (season of weeks.seasons; track season.name) {
-          @if (season.state === 'open') {
+          @if (season.state === 'open' || pickIn(season.name)) {
             <div class="outcome" [attr.data-for]="season.name">
               @if (pickIn(season.name); as stay) {
                 <dl class="total">
@@ -989,7 +999,7 @@ export class BookingPanel {
     const query = this.route.queryParamMap;
     const arrival = query.get('arrival') ?? '';
     // Also a week booked or passed since, which stays chosen as blocked.
-    const season = /^\d{4}-\d\d-\d\d$/.test(arrival)
+    const season = isDay(arrival)
       ? this.weeks?.seasons.find(({ start, end }) => arrival >= start && arrival <= end)
       : undefined;
     // A month browsed to before a change of language stays shown.
@@ -997,8 +1007,9 @@ export class BookingPanel {
       this.chosen.set({ season: season.name, arrival });
       if (!this.months()[season.name])
         this.months.update((months) => ({ ...months, [season.name]: arrival.slice(0, 7) }));
-    } else if (arrival && this.browser)
-      // A week outside the seasons, such as last year's, leaves the address too.
+    } else if (arrival && this.weeks && this.browser)
+      // A week outside the seasons, such as last year's, leaves the address too; without the
+      // weeks, while Beds24 cannot be reached, the address keeps it for a later visit.
       replaceQuery(this.location, (params) => {
         params.delete('arrival');
         params.delete('departure');
@@ -1156,9 +1167,11 @@ export class BookingPanel {
     this.keep();
     afterNextRender(
       () =>
-        this.host
-          .querySelector<HTMLElement>(`.booking-bar [data-for=${this.season.current()}] .button`)
-          ?.focus(),
+        (
+          this.host.querySelector<HTMLElement>(
+            `.booking-bar [data-for=${this.season.current()}] .button`,
+          ) ?? this.document.getElementById('booking-title')!
+        ).focus(),
       { injector: this.injector },
     );
   }
@@ -1178,6 +1191,12 @@ export class BookingPanel {
   // week; so would Enter or Space on it. Page Up and Page Down show the month before or after.
   protected guard(event: Event, free: boolean) {
     if (!free) event.stopPropagation();
+  }
+
+  // Whether a week can be chosen or cleared here: a free one, but not the chosen week while it
+  // is blocked, which only the bar's cross clears.
+  protected open(season: SeasonName, stay: Stay) {
+    return stay.price !== null && !(this.blocked() && this.isChosen(season, stay));
   }
 
   protected keys(event: KeyboardEvent, season: SeasonWeeks, free: boolean) {

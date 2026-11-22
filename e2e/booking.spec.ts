@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Locator, type Page } from '@playwright/test';
 
@@ -757,29 +758,68 @@ for (const [lang, path, gone, book, taken] of [
     expect(home.violations).toEqual([]);
   });
 
-test('a linked week that has passed shows in the bars; one from last year is dropped', async ({
-  page,
-}) => {
+// The demo's season that a day lies in began on the latest of the seasons' starts before it,
+// and its weeks start on Saturdays.
+const starts: string[] = Object.values(
+  JSON.parse(readFileSync('content/demo/site.json', 'utf8')).seasons as Record<
+    string,
+    { start: string }
+  >,
+).map(({ start }) => start);
+const seasonStart = (day: string) => {
+  const year = Number(day.slice(0, 4));
+  return [year - 1, year]
+    .flatMap((one) => starts.map((start) => `${one}-${start}`))
+    .filter((start) => start <= day)
+    .sort()
+    .at(-1)!;
+};
+const saturdayFrom = (day: string) => plus(day, (6 - new Date(day).getUTCDay() + 7) % 7);
+
+test('a linked week that has passed stays blocked, also in a full season', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 700 });
-  // Today's week is no longer offered, and today lies in the shown season.
   const today = new Date().toISOString().slice(0, 10);
+  const passed = saturdayFrom(seasonStart(today));
+  test.skip(passed >= today, 'the shown season has no Saturday before today yet');
+  // A site with prices up to today: its shown season is full, and its passed week has no row.
+  const site = 'http://localhost:4003';
+  await open(page, `${site}/de/wohnungen/laerche?arrival=${passed}&departure=${plus(passed, 7)}`);
+  await expect(panel(page)).toHaveAttribute('data-blocked', '');
+  const outcome = page.locator('.outcome:visible');
+  await expect(outcome.locator('.total dd')).toHaveText(['belegt']);
+  await expect(outcome.getByRole('button', { name: 'Weiter zur Buchung' })).toBeDisabled();
+  await page.evaluate(() => scrollTo({ top: 0, behavior: 'instant' }));
   const bar = page.locator('.booking-bar');
-  await open(page, `/de/wohnungen/laerche?arrival=${today}&departure=${plus(today, 7)}`);
-  await page.evaluate(() => scrollTo({ top: 0, behavior: 'instant' }));
   await expect(barParts(bar)).toHaveText(['Lärche', 'nicht mehr frei', /\d/]);
-  await open(page, `/de?apartment=laerche&arrival=${today}`);
+  // The cross by keyboard: the bar leaves no button for the full season, so the focus goes to
+  // the panel's heading.
+  await bar.locator('.bar-clear:visible').focus();
+  await page.keyboard.press('Enter');
+  await expect(panel(page).locator('h2')).toBeFocused();
+  await expect(page).not.toHaveURL(/arrival=/);
+  // The home page: no row to choose, the bar says why, and its cross leads to the heading.
+  await open(page, `${site}/de?apartment=laerche&arrival=${passed}`);
   await expect(page.locator('.weeks [aria-selected=true]')).toHaveCount(0);
-  await expect(barParts(page.locator('.pick'))).toHaveText(['Lärche', 'nicht mehr frei', /\d/]);
-  // A year ago lies before both seasons: neither page shows it, and the address drops it.
-  const last = plus(today, -365);
-  await open(page, `/de/wohnungen/laerche?arrival=${last}&departure=${plus(last, 7)}`);
+  const pick = page.locator('.pick');
+  await expect(barParts(pick)).toHaveText(['Lärche', 'nicht mehr frei', /\d/]);
+  await pick.locator('.bar-clear').focus();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('.weeks h2')).toBeFocused();
   await expect(page).not.toHaveURL(/arrival=/);
-  await expect(panel(page)).not.toHaveAttribute('data-blocked');
-  await page.evaluate(() => scrollTo({ top: 0, behavior: 'instant' }));
-  await expect(bar.getByRole('button', { name: 'Woche wählen' })).toBeVisible();
-  await open(page, `/de?apartment=laerche&arrival=${last}`);
-  await expect(page).not.toHaveURL(/arrival=/);
-  await expect(page.locator('.pick')).toHaveCount(0);
+});
+
+test('a linked week from last year or of no date is dropped from both pages', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 700 });
+  const last = plus(new Date().toISOString().slice(0, 10), -365);
+  for (const arrival of [last, '2027-02-00']) {
+    await open(page, `/de/wohnungen/laerche?arrival=${arrival}&departure=${plus(last, 7)}`);
+    await expect(page).not.toHaveURL(/arrival=/);
+    await expect(panel(page)).not.toHaveAttribute('data-blocked');
+    await expect(page.locator('.bar-clear:visible')).toHaveCount(0);
+    await open(page, `/de?apartment=laerche&arrival=${arrival}`);
+    await expect(page).not.toHaveURL(/arrival=/);
+    await expect(page.locator('.pick')).toHaveCount(0);
+  }
 });
 
 test('the phone bar’s cross clears the week and leaves the focus on its button', async ({
@@ -904,9 +944,14 @@ for (const width of [320, 1280])
 test('an apartment too small says how many it takes and does not book', async ({ page }) => {
   await openNext(page, '/de/wohnungen/laerche?adults=4&children=1');
   await expect(page.locator('.too-small')).toHaveText('Lärche hat Platz für bis zu 4 Gäste.');
-  await (await firstFree(page)).click();
+  const week = await firstFree(page);
+  await week.click();
   const outcome = panel(page).locator('.outcome:visible');
   await expect(outcome.getByRole('button', { name: 'Weiter zur Buchung' })).toBeDisabled();
+  // The chosen week, blocked, is cleared by the bar's cross alone: a click or Enter keeps it.
+  await week.click();
+  await page.keyboard.press('Enter');
+  await expect(week).toHaveAttribute('aria-selected', 'true');
   await pickCount(page, 'children', 0);
   await expect(page.locator('.too-small')).toBeEmpty();
   await expect(outcome.getByRole('link', { name: 'Weiter zur Buchung' })).toHaveAttribute(

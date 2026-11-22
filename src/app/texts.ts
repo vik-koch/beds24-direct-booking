@@ -42,6 +42,11 @@ export function replaceQuery(location: Location, change: (params: URLSearchParam
 export const addDays = (date: string, days: number) =>
   new Date(Date.parse(date) + days * 864e5).toISOString().slice(0, 10);
 
+// A day of the calendar as YYYY-MM-DD: not 2027-02-00, which Date.parse turns into NaN, nor
+// 2027-02-30, which some engines roll over into March.
+export const isDay = (text: string) =>
+  /^\d{4}-\d\d-\d\d$/.test(text) && !Number.isNaN(Date.parse(text)) && addDays(text, 0) === text;
+
 // Puts values into a text's {placeholders}.
 export const fill = (text: string, values: Record<string, string | number>) =>
   text.replace(/\{(\w+)\}/g, (_, key: string) => String(values[key] ?? ''));

@@ -31,6 +31,7 @@ import {
   fill,
   formatMoney,
   formatStay,
+  isDay,
   LANGUAGE,
   replaceQuery,
   TEXTS,
@@ -62,7 +63,7 @@ const shownTab = new InjectionToken('shown tab', { providedIn: 'root', factory: 
     <div class="weeks-head">
       <!-- The seasons' names, and the button's labels, lie over each other: the heading and the
            button keep the size of the longer one, so nothing below moves on a change. -->
-      <h2 class="headline">
+      <h2 class="headline" tabindex="-1">
         {{ texts.nav.weeks }}&ngsp;
         @if (weeks()?.seasons?.[0]?.years) {
           <span class="weeks-season stack">
@@ -189,7 +190,7 @@ const shownTab = new InjectionToken('shown tab', { providedIn: 'root', factory: 
                               >
                                 @if (free) {
                                   <span class="price">{{ money(price!) }}</span>
-                                } @else if (fitting()[$index]) {
+                                } @else if (fitting()[$index] || (chosen && price === null)) {
                                   <span class="taken">{{ texts.weeks.taken }}</span>
                                 } @else {
                                   <span class="taken small"
@@ -354,7 +355,7 @@ export class FreeWeeksList implements OnInit {
     const apartment =
       weeks?.apartments.findIndex(({ slug }) => slug === query.get('apartment')) ?? -1;
     const arrival = query.get('arrival') ?? '';
-    const season = /^\d{4}-\d\d-\d\d$/.test(arrival)
+    const season = isDay(arrival)
       ? weeks?.seasons.find(({ start, end }) => arrival >= start && arrival <= end)
       : undefined;
     const pick = season && apartment >= 0 ? { season: season.name, apartment, arrival } : null;
@@ -390,7 +391,8 @@ export class FreeWeeksList implements OnInit {
           }
         : null,
     );
-    if (!this.browser) return;
+    // Without the weeks, while Beds24 cannot be reached, the address keeps its week.
+    if (!this.browser || !this.weeks()) return;
     replaceQuery(this.location, (params) => {
       if (week && slug) {
         params.set('apartment', slug);
@@ -523,12 +525,13 @@ export class FreeWeeksList implements OnInit {
     this.cell({ season: season.name, apartment, arrival })?.focus();
   }
 
-  // The bar goes with its button, so the focus returns to the week that was chosen. A pointer
-  // leaves the page where it is: the browser would scroll a price out of view to it.
+  // The bar goes with its button, so the focus returns to the week that was chosen, or to the
+  // heading for a passed week, which has no row. A pointer leaves the page where it is: the
+  // browser would scroll a price out of view to it.
   protected clear(event: MouseEvent) {
-    const cell = this.cell(this.chosen());
+    const cell = this.cell(this.chosen()) ?? this.host.nativeElement.querySelector('h2')!;
     this.chosen.set(null);
-    cell?.focus({ preventScroll: event.detail > 0 });
+    cell.focus({ preventScroll: event.detail > 0 });
   }
 
   // The grid enters where the focus last left it, which after a change of season is not the
