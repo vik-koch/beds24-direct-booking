@@ -864,26 +864,58 @@ test('a click on the page does not take the focus to the main element', async ({
 
 // A written src, srcset, sizes or media loads the picture again, even with the value it had (#235).
 test(
-  'the started application leaves the server-rendered pictures as they are',
+  'the started application keeps the pictures the server rendered, loaded once',
   { tag: '@any-engine' },
   async ({ page }) => {
     await page.addInitScript(() => {
-      const written: string[] = ((window as unknown as { written: string[] }).written = []);
+      const state = { written: [] as string[], loads: new Map<Element, number>() };
+      Object.assign(window, { state });
       new MutationObserver((records) =>
-        written.push(...records.map((record) => record.attributeName!)),
-      ).observe(document, {
-        subtree: true,
-        attributeFilter: ['src', 'srcset', 'sizes', 'media'],
-      });
-    });
-    for (const path of ['/en', '/en/apartments/zirbe']) {
-      await page.goto(path);
-      await expect(page.locator('html')).toHaveAttribute('data-started', '');
-      expect(await page.locator('img').count(), path).toBeGreaterThan(2);
-      const written = await page.evaluate(
-        () => (window as unknown as { written: string[] }).written,
+        state.written.push(...records.map((record) => record.attributeName!)),
+      ).observe(document, { subtree: true, attributeFilter: ['src', 'srcset', 'sizes', 'media'] });
+      document.addEventListener(
+        'load',
+        ({ target }) =>
+          target instanceof HTMLImageElement &&
+          state.loads.set(target, (state.loads.get(target) ?? 0) + 1),
+        true,
       );
+    });
+    interface State {
+      written: string[];
+      loads: Map<Element, number>;
+      loaded: Element[];
+    }
+    for (const path of ['/en', '/en/apartments/zirbe']) {
+      const { promise: held, resolve: release } = Promise.withResolvers<void>();
+      await page.route(/\/main-[\w-]+\.js$/, async (route) => {
+        await held;
+        await route.continue();
+      });
+      await page.goto(path, { waitUntil: 'commit' });
+      await expect
+        .poll(() => page.evaluate(() => (window as unknown as { state: State }).state.loads.size))
+        .toBeGreaterThan(0);
+      await page.evaluate(() => {
+        const { state } = window as unknown as { state: State };
+        state.loaded = [...state.loads.keys()];
+      });
+      release();
+      await expect(page.locator('html')).toHaveAttribute('data-started', '');
+      // A load again would follow its write within a frame or two.
+      await page.evaluate(
+        () => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))),
+      );
+      const { written, kept } = await page.evaluate(() => {
+        const { state } = window as unknown as { state: State };
+        return {
+          written: state.written,
+          kept: state.loaded.map((image) => image.isConnected && state.loads.get(image)),
+        };
+      });
       expect(written, path).toEqual([]);
+      expect(kept, path).toEqual(kept.map(() => 1));
+      await page.unrouteAll();
     }
   },
 );
