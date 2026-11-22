@@ -33,8 +33,10 @@ deployment built from a public tag plus its own content. The demo is a deploymen
 4. Viktor accepts in the browser, reviews what carries risk, approves and merges. A merge deploys
    the demo; a tag is a release.
 
-Small batches: one issue, one branch, one pull request. Every bug and every piece of debt is its own
-issue, however small; nothing rides along on another branch.
+Small batches: one issue, one branch, one pull request. A bug the work runs into in code not yet
+released is fixed in that pull request, in a commit of its own; a bug in released code or elsewhere,
+and every piece of debt, is its own issue. A new or changed e2e test runs locally in Chromium; CI
+runs every engine.
 
 Viktor owns scope, the design language, anything about the real business, and merging. Ask before
 adding a dependency, a route, a content key or an environment variable.
