@@ -99,7 +99,7 @@ test(
     const kept = new URL(page.url()).searchParams;
     expect(kept.get('arrival')).toMatch(/^\d{4}-\d\d-\d\d$/);
     expect(kept.get('departure')).toMatch(/^\d{4}-\d\d-\d\d$/);
-    expect(kept.get('season')).toBe(await page.locator('html').getAttribute('data-season'));
+    expect(kept.has('season')).toBe(false);
     // So does the other language's link.
     const english = new URL(
       (await page.locator('link[rel=alternate][hreflang=en-GB]').getAttribute('href'))!,
@@ -414,12 +414,13 @@ test(
     await expect(page.locator('html')).not.toHaveAttribute('data-season', other!);
     const shown = await page.locator('html').getAttribute('data-season');
     await (await firstFree(page)).click();
-    await expect(page).toHaveURL(new RegExp(`season=${shown}`));
-    // Away from the week's season and back: the address names it again.
-    await panel(page).locator('.other-season').click();
+    // The week's arrival day gives the season. Away from it, the address names the shown one.
+    await expect(page).toHaveURL(/arrival=/);
     await expect(page).not.toHaveURL(/season=/);
     await panel(page).locator('.other-season').click();
-    await expect(page).toHaveURL(new RegExp(`season=${shown}`));
+    await expect(page).toHaveURL(new RegExp(`season=${other}`));
+    await panel(page).locator('.other-season').click();
+    await expect(page).not.toHaveURL(/season=/);
     // Opened afresh, in this language and in the other.
     const english = await page.locator('link[rel=alternate][hreflang=en-GB]').getAttribute('href');
     for (const [link, book] of [
@@ -544,8 +545,13 @@ test('a week in the address is shown at the first paint, before the application 
   page,
   browser,
 }) => {
+  // A week of the next season, in an address without a season, opens in a browser that would show
+  // today's season: by its date, and on the widest screen also by a remembered choice.
   await openNext(page, '/de/wohnungen/laerche');
+  const today = await panel(page).locator('.panel-season').first().getAttribute('data-for');
+  const later = await page.locator('html').getAttribute('data-season');
   await (await firstFree(page)).click();
+  await expect(page).not.toHaveURL(/season=/);
   const stay = await chosen(page).locator('xpath=..').locator('[role=rowheader]').innerText();
   // On a tall tablet the panel is in view already, and the bar would cover it.
   for (const [width, height, barShown] of [
@@ -554,8 +560,10 @@ test('a week in the address is shown at the first paint, before the application 
     [1280, 700, false],
   ] as const) {
     const fresh = await browser.newPage({ viewport: { width, height } });
+    if (width === 1280) await open(fresh, `/de?season=${today}`);
     await fresh.route(/\/main-[\w-]+\.js$/, () => undefined);
     await fresh.goto(page.url(), { waitUntil: 'commit' });
+    await expect(fresh.locator('html')).toHaveAttribute('data-season', later!);
     const row = fresh.locator('.panel-season:visible .month[data-current] .week.chosen');
     await expect(row.locator('[role=rowheader]')).toHaveText(stay);
     await expect(row).not.toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
@@ -626,14 +634,22 @@ test('a week from the address is chosen on the home page at the first paint', as
   page,
   browser,
 }) => {
+  // As on the apartment page: a week of the next season, by date and by a remembered choice.
   await openNext(page, '/de/wohnungen/laerche');
+  const today = await panel(page).locator('.panel-season').first().getAttribute('data-for');
+  const later = await page.locator('html').getAttribute('data-season');
   await (await firstFree(page)).click();
-  await expect(page.locator('a.back')).toHaveAttribute('href', /apartment=laerche&arrival=/);
+  await expect(page.locator('a.back')).toHaveAttribute(
+    'href',
+    /\?apartment=laerche&arrival=[\d-]+#wohnungen$/,
+  );
   const back = await page.locator('a.back').getAttribute('href');
   for (const width of [375, 1280]) {
     const fresh = await browser.newPage({ viewport: { width, height: 700 } });
+    if (width === 1280) await open(fresh, `/de?season=${today}`);
     await fresh.route(/\/main-[\w-]+\.js$/, () => undefined);
     await fresh.goto(back!, { waitUntil: 'commit' });
+    await expect(fresh.locator('html')).toHaveAttribute('data-season', later!);
     await expect(fresh.locator('.stay.chosen:visible')).toHaveCount(1);
     await expect(fresh.locator('.pick .booking-bar')).toContainText('Lärche');
     await expect(fresh.locator('html')).not.toHaveAttribute('data-started');
@@ -652,7 +668,7 @@ test(
     const header = page.getByRole('navigation', { name: 'Hauptmenü' });
     await header.getByRole('link', { name: 'Freie Wochen' }).click();
     await expect(page).toHaveURL(
-      new RegExp(`/de\\?apartment=laerche&arrival=${arrival}&season=\\w+#freie-wochen$`),
+      new RegExp(`/de\\?apartment=laerche&arrival=${arrival}#freie-wochen$`),
     );
     const bar = page.locator('.pick .booking-bar');
     await expect(bar).toContainText('Lärche');
@@ -660,25 +676,25 @@ test(
     const html = page.locator('html');
     const shown = await html.getAttribute('data-season');
     // A section of the same page, another week there and the other season, which keeps the
-    // fragment; then Back: the address's week and season again.
+    // fragment and names the season; then Back: the address's week and its season again.
     await header.getByRole('link', { name: 'Lage' }).click();
     await expect(page).toHaveURL(/#lage$/);
     await page.locator('[role=gridcell]:not([aria-selected=true]) .price:visible').last().click();
     await expect(page).not.toHaveURL(new RegExp(`arrival=${arrival}`));
     await page.locator('.other-season').first().click();
     await expect(html).not.toHaveAttribute('data-season', shown!);
-    await expect(page).toHaveURL(/#lage$/);
-    await expect(page).not.toHaveURL(/season=/);
+    const other = await html.getAttribute('data-season');
+    await expect(page).toHaveURL(new RegExp(`&season=${other}#lage$`));
     await page.goBack();
-    await expect(page).toHaveURL(new RegExp(`arrival=${arrival}(&season=\\w+)?#freie-wochen$`));
+    await expect(page).toHaveURL(new RegExp(`arrival=${arrival}#freie-wochen$`));
     await expect(html).toHaveAttribute('data-season', shown!);
     await expect.poll(() => parts(bar)).toEqual(chosenWeek);
-    // A season switched since stays: the link no longer names the week's.
+    // A season switched since stays: the link names it beside the week.
     await page.locator('.other-season').first().click();
-    await expect(html).not.toHaveAttribute('data-season', shown!);
-    await expect(page).toHaveURL(/#freie-wochen$/);
+    await expect(html).toHaveAttribute('data-season', other!);
+    await expect(page).toHaveURL(new RegExp(`&season=${other}#freie-wochen$`));
     const link = header.getByRole('link', { name: 'Freie Wochen' });
-    await expect(link).not.toHaveAttribute('href', /season=/);
+    await expect(link).toHaveAttribute('href', new RegExp(`&season=${other}#freie-wochen$`));
     await link.click();
     await expect(page).toHaveURL(/#freie-wochen$/);
     await expect(html).not.toHaveAttribute('data-season', shown!);

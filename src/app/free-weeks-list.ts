@@ -351,8 +351,8 @@ export class FreeWeeksList implements OnInit {
     if (pick) this.tab.set(pick.apartment);
   }
 
-  // The address keeps the chosen week, with its season while that is shown, and the links to
-  // the home page and the week's apartment carry it.
+  // The address keeps the chosen week, with a season only once the visitor has switched away from
+  // the week's, and the links to the home page and the week's apartment carry it.
   private keep(pick: Week | null) {
     const season = pick && this.weeks()?.seasons.find(({ name }) => name === pick.season);
     const week = season && season.weeks[pick.row];
@@ -365,7 +365,6 @@ export class FreeWeeksList implements OnInit {
             slug,
             arrival: week.arrival,
             departure: week.departure,
-            season: pick.season,
           }
         : null,
     );
@@ -374,7 +373,7 @@ export class FreeWeeksList implements OnInit {
       if (week && slug) {
         params.set('apartment', slug);
         params.set('arrival', week.arrival);
-        if (pick.season === this.season.current()) params.set('season', pick.season);
+        this.season.mark(params);
       } else if (params.has('apartment'))
         ['apartment', 'arrival', 'season'].forEach((name) => params.delete(name));
     });
@@ -451,12 +450,10 @@ export class FreeWeeksList implements OnInit {
     return formatMoney(this.language.tag, this.weeks()!.currency, amount);
   }
 
-  // With the week's season, which the apartment page then shows, also to whoever the link is
-  // sent to.
   protected link(season: SeasonWeeks, apartment: number, row: number) {
     const { arrival, departure } = season.weeks[row];
     const { slug } = this.weeks()!.apartments[apartment];
-    const query = new URLSearchParams({ arrival, departure, season: season.name });
+    const query = new URLSearchParams({ arrival, departure });
     return this.choice.link(`${address(this.language, 'apartment', slug)}?${query}`);
   }
 

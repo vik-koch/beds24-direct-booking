@@ -52,14 +52,18 @@ describe('Choice', () => {
     expect(document.cookie).not.toContain('view=');
   });
 
-  it('carries a week to its home and its page, with its season only while that is shown', () => {
+  it('carries a week to its home and its page, with a season only once switched away', () => {
     const choice = at('/de/a');
-    TestBed.inject(Season).current.set('winter');
+    const season = TestBed.inject(Season);
+    season.current.set('winter');
     const week = { home: '/de', page: '/de/a', slug: 'a', arrival: '2027-01-02' };
-    choice.week.set({ ...week, departure: '2027-01-09', season: 'winter' });
-    expect(choice.link('/de#weeks')).toBe('/de?apartment=a&arrival=2027-01-02&season=winter#weeks');
-    expect(choice.link('/de/b')).toBe('/de/b');
-    choice.week.set({ ...week, departure: '2027-01-09', season: 'summer' });
+    choice.week.set({ ...week, departure: '2027-01-09' });
+    expect(choice.link('/de#weeks')).toBe('/de?apartment=a&arrival=2027-01-02#weeks');
     expect(choice.link('/de/a')).toBe('/de/a?arrival=2027-01-02&departure=2027-01-09');
+    expect(choice.link('/de/b')).toBe('/de/b');
+    season.current.set('summer');
+    expect(choice.link('/de/a')).toBe(
+      '/de/a?arrival=2027-01-02&departure=2027-01-09&season=summer',
+    );
   });
 });

@@ -22,6 +22,8 @@ export interface SeasonState {
   shown: Dated[];
   // A stored choice that no longer counts and should be removed.
   drop: boolean;
+  // The season the address names, by itself or by the arrival day of its week.
+  link?: SeasonName;
 }
 
 // What is stored after an explicit switch.
@@ -36,12 +38,12 @@ export const STORAGE_KEY = 'season';
 export const dayOf = (now: Date) =>
   `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
-// Picks the season by precedence: the link's ?season=, the stored choice, today's date.
-// It also runs as the inline script in the page's head, written out with toString(), so it
-// must not use anything from outside its own body.
+// Picks the season by precedence: the address's ?season=, the season of its week's arrival day,
+// the stored choice, today's date. It also runs as the inline script in the page's head, written
+// out with toString(), so it must not use anything from outside its own body.
 export function seasonState(
   starts: Starts,
-  wanted: string | null,
+  search: string,
   stored: string | null,
   now: Date,
 ): SeasonState {
@@ -88,8 +90,19 @@ export function seasonState(
     }
   }
   const drop = stored !== null && !kept;
-  const link = names.find((name) => name === wanted);
-  return { season: link ?? kept ?? shown[0].name, shown, drop };
+  const query = new URLSearchParams(search);
+  const arrival = query.get('arrival') ?? '';
+  // A day of any year lies in the season whose start it passed last. Only by name: the server's
+  // panels are dated by its own day, which may differ from the visitor's.
+  const byStart = [...names].sort((a, b) =>
+    (starts[a] as string) < (starts[b] as string) ? -1 : 1,
+  );
+  const week =
+    iso(Date.parse(arrival)) === arrival
+      ? (byStart.filter((name) => (starts[name] as string) <= arrival.slice(5)).pop() ?? byStart[1])
+      : undefined;
+  const link = names.find((name) => name === query.get('season')) ?? week;
+  return { season: link ?? kept ?? shown[0].name, shown, drop, link };
 }
 
 export const starts: Starts = Object.fromEntries(
@@ -106,7 +119,7 @@ export function seasonScript(value: Starts): string {
     `try{r=localStorage.getItem(${JSON.stringify(STORAGE_KEY)})}catch(e){}` +
     `var h=document.documentElement;` +
     `var n=h.dataset.season=(${seasonState.toString()})` +
-    `(s,new URLSearchParams(location.search).get("season"),r,new Date()).season;` +
+    `(s,location.search,r,new Date()).season;` +
     `var l=document.querySelector("link[rel=icon]");if(l)l.href=l.getAttribute("data-"+n);` +
     `h.dataset.script=""})(${JSON.stringify(value)})`
   );
@@ -118,7 +131,7 @@ export class Season {
   private readonly location = inject(Location);
   private readonly html = this.document.documentElement;
   private readonly server = isPlatformServer(inject(PLATFORM_ID));
-  private readonly state = this.server ? seasonState(starts, null, null, new Date()) : this.read();
+  private readonly state = this.server ? seasonState(starts, '', null, new Date()) : this.read();
   private readonly watchers = new Set<(name: SeasonName) => () => void>();
 
   readonly names = Object.keys(starts) as SeasonName[];
@@ -142,8 +155,13 @@ export class Season {
     } else
       // Back or Forward to an entry of this page that names a season shows it, as a reload would.
       this.location.subscribe(({ url = '' }) => {
-        const name = new URLSearchParams(url.split('#')[0].split('?')[1]).get('season');
-        if (name && name in starts) this.switch(name as SeasonName);
+        const { link } = seasonState(
+          starts,
+          url.split('#')[0].split('?')[1] ?? '',
+          null,
+          new Date(),
+        );
+        if (link) this.switch(link);
       });
   }
 
@@ -164,10 +182,22 @@ export class Season {
     const icon = this.document.head.querySelector('link[rel=icon]');
     icon?.setAttribute('href', icon.getAttribute(`data-${name}`)!);
     this.remember(name);
-    // The link's ?season= would win over the switch on the next reload. Before the watchers'
-    // second part, which may write the address again.
-    replaceQuery(this.location, (params) => params.delete('season'));
+    // The link's ?season=, or its week's arrival day, would win over the switch on the next
+    // reload. Before the watchers' second part, which may write the address again.
+    replaceQuery(this.location, (params) => {
+      params.delete('season');
+      this.mark(params);
+    });
     after.forEach((then) => then());
+  }
+
+  // Beside a week the address names the shown season only where the week's arrival day would give
+  // the other one, as after a switch away from it.
+  mark(params: URLSearchParams) {
+    if (!params.has('arrival')) return;
+    params.delete('season');
+    const { link } = seasonState(starts, params.toString(), null, new Date());
+    if (link && link !== this.current()) params.set('season', this.current());
   }
 
   // Fetches the other season's hero photo before it is needed, on hover or focus: the file the
@@ -186,15 +216,14 @@ export class Season {
   }
 
   // In the browser the inline script has chosen already. This repeats the choice to know the
-  // shown seasons, and keeps a link's season for the rest of the visit like a switch.
+  // shown seasons, and keeps the address's season for the rest of the visit like a switch.
   private read(): SeasonState {
     let stored: string | null = null;
     this.storage((storage) => (stored = storage.getItem(STORAGE_KEY)));
-    const wanted = new URLSearchParams(this.document.location.search).get('season');
-    const state = seasonState(starts, wanted, stored, new Date());
+    const state = seasonState(starts, this.document.location.search, stored, new Date());
     const chosen = this.html.getAttribute('data-season') as SeasonName | null;
     const season = chosen && chosen in starts ? chosen : state.season;
-    if (wanted === season) this.remember(season, state);
+    if (state.link === season) this.remember(season, state);
     else if (state.drop) this.storage((storage) => storage.removeItem(STORAGE_KEY));
     return { ...state, season };
   }
