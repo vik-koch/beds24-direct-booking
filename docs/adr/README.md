@@ -28,6 +28,7 @@ The technology the site is built with and runs on.
 | [10](0010-pictures-converted-at-build-time.md) | Apartment pictures are converted to WebP in several widths at build time, with sharp | Accepted |
 | [11](0011-rich-text-sanitised-on-the-server.md) | Beds24's rich text is sanitised on the server with sanitize-html, to a small allowlist | Accepted |
 | [13](0013-the-booking-view-in-a-cookie.md) | The booking panel's view in a cookie that the server reads, so the remembered view is rendered at the first paint | Accepted |
+| [14](0014-the-map.md) | The map: MapLibre with the town's tiles served by the site, a Protomaps style in the theme's colours, walking routes computed by a script | Accepted |
 
 ## Process
 
