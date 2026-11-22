@@ -382,7 +382,8 @@ test('a change of language or a reload keeps the view and the month', async ({ p
   // A week chosen, then the calendar and another month shown.
   await (await firstFree(page)).click();
   await page.locator('.views').getByTitle('Kalender').click();
-  await expect(page).toHaveURL(/view=calendar/);
+  await expect(page.locator('.views')).toHaveAttribute('data-view', 'calendar');
+  await expect(page).not.toHaveURL(/view=/);
   const before = await month(page).getAttribute('data-month');
   await next(page).click();
   await expect(month(page)).not.toHaveAttribute('data-month', before!);
@@ -699,26 +700,56 @@ test('the phone bar’s cross clears the week and leaves the focus on its button
 });
 
 test(
-  'the calendar view stays from one apartment page to the next, also by way of the home page',
+  'the calendar, once chosen, stays on every apartment page, also in a new browser, until the list is chosen',
   { tag: '@any-engine' },
-  async ({ page }) => {
+  async ({ page, browser }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await open(page, '/en/apartments/laerche');
     await page.locator('.views').getByTitle('Calendar').click();
-    await expect(page).toHaveURL(/view=calendar/);
-    await page.getByRole('button', { name: 'Apartments' }).click();
+    await expect(page.locator('.views')).toHaveAttribute('data-view', 'calendar');
+    const [cookie] = (await page.context().cookies()).filter(({ name }) => name === 'view');
+    expect(cookie.value).toBe('calendar');
+    expect((cookie.expires * 1000 - Date.now()) / 864e5).toBeCloseTo(30, 0);
+    // By a link that carries only the guests, then an apartment's from the header.
     await page
-      .getByRole('navigation', { name: 'Apartments' })
-      .getByRole('link', { name: 'Ahorn' })
+      .getByRole('contentinfo')
+      .getByRole('link', { name: 'Frequently asked questions' })
       .click();
-    await expect(page).toHaveURL(/\/en\/apartments\/ahorn\?view=calendar/);
+    await expect(page).toHaveURL(/\/en\/faq$/);
+    const [response] = await Promise.all([
+      page.waitForResponse(/\/en\/apartments\/ahorn$/),
+      page.getByRole('button', { name: 'Apartments' }).click(),
+      page
+        .getByRole('navigation', { name: 'Apartments' })
+        .getByRole('link', { name: 'Ahorn' })
+        .click(),
+    ]);
+    expect(await response.text()).toContain('class="calendar"');
     await expect(page.getByRole('radio', { name: 'Calendar' })).toBeChecked();
     // Also by way of the home page.
     await page.locator('a.back').click();
-    await expect(page).toHaveURL(/\/en\?view=calendar/);
+    await expect(page).toHaveURL(/\/en#apartments$/);
     await page.locator('.teaser h3 a', { hasText: 'Zirbe' }).click();
-    await expect(page).toHaveURL(/\/en\/apartments\/zirbe\?view=calendar/);
+    await expect(page).toHaveURL(/\/en\/apartments\/zirbe$/);
     await expect(page.getByRole('radio', { name: 'Calendar' })).toBeChecked();
+    // A new browser with the cookie shows the calendar at its first paint, before the
+    // application starts.
+    const later = await browser.newContext({ storageState: await page.context().storageState() });
+    const fresh = await later.newPage();
+    await fresh.route(/\/main-[\w-]+\.js$/, () => undefined);
+    await fresh.goto('/en/apartments/laerche', { waitUntil: 'commit' });
+    await expect(
+      fresh.locator('.panel-season:visible .month[data-current] .calendar'),
+    ).toBeVisible();
+    await expect(fresh.locator('.month-weeks')).toHaveCount(0);
+    await expect(fresh.locator('html')).not.toHaveAttribute('data-started');
+    await later.close();
+    // The list is the default again, and nothing is kept for it.
+    await page.locator('.views').getByTitle('List').click();
+    await expect(page.locator('.views')).toHaveAttribute('data-view', 'list');
+    expect((await page.context().cookies()).filter(({ name }) => name === 'view')).toEqual([]);
+    await page.reload();
+    await expect(page.getByRole('radio', { name: 'List' })).toBeChecked();
   },
 );
 

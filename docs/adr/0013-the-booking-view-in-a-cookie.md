@@ -1,0 +1,60 @@
+# ADR 13: The booking panel's view in a cookie
+
+Status: accepted, 2026-11-22. Group: stack.
+
+## Context
+
+The booking panel on an apartment page shows the free weeks as a list or as a calendar. The view
+first travelled in the address as `?view=calendar`, and every link that did not add it, such as the
+footer's, dropped it. It is a personal preference, like the season, and a shared link should not
+force the sender's view on the receiver. What weighs on it:
+
+- **The panel renders one view at a time.** With Zirbe's five months, its page is 86 kB of HTML with
+  the list and 116 kB with the calendar.
+- **The panel is painted long before the application starts.** Measured in Chromium on 2026-11-22,
+  on a first visit with the cache off: with no throttling the panel paints after 0.1–0.5 s and the
+  application starts 0.2 s later. On slow 4G (1.6 Mbit/s, 150 ms) with the CPU slowed four times,
+  the panel paints after 1.1–1.3 s and the application starts after 6.0–6.4 s, at 390 px and at 1280
+  px alike.
+- **Apartment pages are rendered per request,** because they show Beds24's live weeks, and no
+  response sets a cache lifetime. The view exists only on those pages.
+
+## Decision
+
+1. **The view lives in a cookie,** `view=calendar` with `Path=/`, `SameSite=Lax` and a `Max-Age` of
+   30 days, the season's time limit, counted from the last choice. Choosing the calendar sets it.
+   Choosing the list, the default, removes it.
+2. **The server reads the cookie** from the request and renders that view, so the first paint is
+   right at any network speed. Rendered pages answer with `Vary: Cookie`.
+3. **The address carries no view,** and the site's links add none. `?view=` was never in a release.
+
+## Options
+
+<!-- prettier-ignore -->
+| Option | For | Against | Result |
+|---|---|---|---|
+| The view in the address | A shared link shows the same view. | Every link must carry it, and a shared link forces the sender's preference on the receiver. | Replaced. |
+| Local storage, and the application switches once it starts | No new mechanism. | The list shows for up to five seconds on a slow phone, then changes. | Rejected. |
+| Local storage, and the panel hidden until the application starts | No wrong view is painted. | The panel is empty for up to five seconds. | Rejected. |
+| Local storage, both views in the page, a head script picks one, as for the season (ADR 8) | One mechanism for both preferences. | About 30 kB more HTML per apartment page (2 kB gzipped), and both grids are hydrated and kept in step on every choice. | Rejected. |
+| A cookie, read by the server | The server renders the remembered view: no second grid, no head script. | A cookie beside the season's local storage, and the view depends on the page being rendered per request. | Chosen. |
+
+ADR 8 rejected a cookie for the season because it would make prerendered pages and shared caches
+vary by visitor. The view is not on a prerendered page.
+
+## What this rests on
+
+- **Verified by the e2e suite:** the calendar chosen on one apartment shows on others reached
+  through the footer, the header and the home page, with no view in any address. The cookie lasts 30
+  days, and a new browser context with it shows the calendar at the first paint with the application
+  held back. Choosing the list removes the cookie.
+- **Not checked:** whether the cookie needs a consent prompt in the real site's country. The reading
+  is the same as ADR 8's for the season: it is stored only on the visitor's action and only for that
+  purpose, and it belongs on the privacy page.
+
+## Consequences
+
+- **If apartment pages are ever prerendered or cached in a shared cache,** this decision must be
+  revisited, for example with both views in the page as the season does.
+- **The cookie goes with every request to the site,** a few bytes, and only after the visitor chose
+  the calendar.

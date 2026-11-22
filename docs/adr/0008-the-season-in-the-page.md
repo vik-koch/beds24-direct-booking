@@ -68,6 +68,8 @@ flash, and whether both seasons' content is in the HTML. What weighs on it:
 
 - **The content security policy** has no `script-src` today. One that is added later must allow this
   script by its hash, as it must Angular's inline event dispatch script.
+- **The booking panel's view is remembered in a cookie instead** (ADR 13): the apartment pages that
+  show it are rendered per request, so the cookie's objection above does not apply to them.
 - **The free-weeks list uses the same state:** its dated season comes from the two shown, and a stay
   belongs to the season of its arrival day.
 - **A deployment's theme** sets one season's colours on `:root` and, with two seasons, the other's
