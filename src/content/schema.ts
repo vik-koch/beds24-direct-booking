@@ -68,14 +68,25 @@ interface Box {
 export const inBox = (box: Box, { lat, lon }: { lat: number; lon: number }) =>
   lat >= box.south && lat <= box.north && lon >= box.west && lon <= box.east;
 
+// The tiles' grid ends at 85° of latitude and at 180° east, which is its first column again.
+const boxLatitude = z.number().min(-85).max(85);
+const boxLongitude = z.number().min(-180).lt(180);
+// A span of 0.1° given in decimals, such as 47.3 to 47.4, comes out a hair above it.
+const span = 0.1 + 1e-9;
+
 // The map: the box its tiles cover and the places it marks, each with a Lucide icon for its kind,
 // shown always or only behind the switch for more places. Each language's texts name them.
 const map = z
   .strictObject({
     box: z
-      .strictObject({ west: longitude, south: latitude, east: longitude, north: latitude })
+      .strictObject({
+        west: boxLongitude,
+        south: boxLatitude,
+        east: boxLongitude,
+        north: boxLatitude,
+      })
       .refine((b) => b.west < b.east && b.south < b.north, 'west and south below east and north')
-      .refine((b) => b.east - b.west <= 0.1 && b.north - b.south <= 0.1, 'at most 0.1° each way'),
+      .refine((b) => b.east - b.west <= span && b.north - b.south <= span, 'at most 0.1° each way'),
     places: z
       .array(
         z.strictObject({

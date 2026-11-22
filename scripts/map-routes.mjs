@@ -37,6 +37,8 @@ for (const slug of site.apartments) {
       geometry: route.geometry,
     });
     console.log(`${slug} to ${place.key}: ${Math.round(route.distance)} m`);
+    // The router allows one request a second.
+    await new Promise((done) => setTimeout(done, 1000));
   }
 }
 mkdirSync(join(dir, 'map'), { recursive: true });

@@ -161,6 +161,8 @@ export function readContent(dir) {
     if (site.map && !inBox(site.map.box, { lat, lon }))
       throw new Error(`${file}\n  lat, lon: outside the map's box`);
   }
+  if (!site.map && existsSync(join(dir, 'map')))
+    throw new Error(`${join(dir, 'map')}\n  (folder): no map in site.json; delete the folder`);
   const map = site.map && readMap(dir, site.map, apartments);
   // Each place is named in every language, with a text only for a season the site lists.
   const places = site.map?.places.map((place) => place.key) ?? [];
@@ -241,8 +243,18 @@ function readMap(dir, map, apartments) {
   const tiles = json('tiles.json', 'map-tiles.mjs');
   if (JSON.stringify(tiles.box) !== JSON.stringify(map.box))
     throw stale('tiles.json', 'box', "cut for another box than site.json's", 'map-tiles.mjs');
-  if (!existsSync(join(dir, 'map', 'tiles', tiles.build)))
-    throw stale(`tiles/${tiles.build}`, '(folder)', 'missing', 'map-tiles.mjs');
+  // Every tile the script wrote, and no other: a missing one leaves a gap in the map.
+  const folder = join(dir, 'map', 'tiles', tiles.build);
+  const count = existsSync(folder)
+    ? readdirSync(folder, { recursive: true }).filter((file) => file.endsWith('.mvt')).length
+    : 0;
+  if (count !== tiles.count)
+    throw stale(
+      `tiles/${tiles.build}`,
+      '(folder)',
+      `${count} of ${tiles.count} tiles`,
+      'map-tiles.mjs',
+    );
   // One route for each apartment and place, from the points they have now.
   const routes = json('routes.json', 'map-routes.mjs').features.map((f) => f.properties);
   const same = (a, b) => a.lat === b.lat && a.lon === b.lon;

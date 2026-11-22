@@ -1,8 +1,17 @@
 import assert from 'node:assert/strict';
-import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  cpSync,
+  existsSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { after, test } from 'node:test';
+import { siteSchema } from '../src/content/schema.ts';
 import { readContent, writeContent } from './content.mjs';
 
 // Every folder a test makes, removed when the file's tests are done.
@@ -534,11 +543,15 @@ test('the map is optional, and without it no apartment has a point', () => {
     noPoint,
   ]);
   const without = changed(...edits, 'texts.en-GB.json', withoutMap, ...apartments);
-  assert.equal(readContent(without).site.map, undefined);
   assert.throws(
-    () => readContent(changed(...edits, ...apartments)),
-    /texts\.en-GB\.json\n {2}map: no map in site\.json/,
+    () => readContent(without),
+    /map\n {2}\(folder\): no map in site\.json; delete the folder/,
   );
+  rmSync(join(without, 'map'), { recursive: true });
+  assert.equal(readContent(without).site.map, undefined);
+  const named = changed(...edits, ...apartments);
+  rmSync(join(named, 'map'), { recursive: true });
+  assert.throws(() => readContent(named), /texts\.en-GB\.json\n {2}map: no map in site\.json/);
 });
 
 test('with a map every apartment has its point inside the box', () => {
@@ -555,6 +568,12 @@ test('the box is at most 0.1° each way, and each place inside it', () => {
   assert.throws(() => readContent(turned), /map\.box: west and south below east and north/);
   const outside = changed('site.json', (site) => (site.map.places[1].lon = 12.7));
   assert.throws(() => readContent(outside), /site\.json\n {2}map\.places\.1: outside the box/);
+  // Spans of exactly 0.1° in decimals pass; the tiles' grid ends at 85° and before 180° east.
+  const box = (b) => siteSchema.shape.map.unwrap().shape.box.safeParse(b);
+  assert.ok(box({ west: 12.6, south: 47.3, east: 12.7, north: 47.4 }).success);
+  assert.ok(!box({ west: 12.6, south: 47.3, east: 12.7, north: 47.40001 }).success);
+  assert.ok(!box({ west: 12.6, south: 85.95, east: 12.7, north: 86 }).success);
+  assert.ok(!box({ west: 179.95, south: 47.3, east: 180, north: 47.4 }).success);
 });
 
 test('a place names a Lucide icon, and its icon is imported', async () => {
@@ -612,11 +631,16 @@ test('the tiles were cut for the box, and are there', () => {
     /map\/tiles\.json\n {2}box: cut for another box than site\.json's; run scripts\/map-tiles\.mjs/,
   );
   const gone = changed('site.json', () => undefined);
-  rmSync(join(gone, 'map', 'tiles'), { recursive: true });
+  const { build } = JSON.parse(readFileSync(join(gone, 'map', 'tiles.json'), 'utf8'));
+  const column = join(gone, 'map', 'tiles', build, '15');
+  const x = readdirSync(column)[0];
+  rmSync(join(column, x, readdirSync(join(column, x))[0]));
   assert.throws(
     () => readContent(gone),
-    /map\/tiles\/\d+\n {2}\(folder\): missing; run scripts\/map-tiles\.mjs/,
+    /map\/tiles\/\d+\n {2}\(folder\): 61 of 62 tiles; run scripts\/map-tiles\.mjs/,
   );
+  rmSync(join(gone, 'map', 'tiles'), { recursive: true });
+  assert.throws(() => readContent(gone), /\(folder\): 0 of 62 tiles; run/);
   rmSync(join(gone, 'map', 'tiles.json'));
   assert.throws(() => readContent(gone), /map\/tiles\.json\n {2}\(file\): missing; run/);
 });

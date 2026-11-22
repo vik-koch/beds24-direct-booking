@@ -1,7 +1,8 @@
 // Cuts the map's tiles, zoom 12 to 15 inside site.json's box, out of a Protomaps planet build into
-// the content folder's map/tiles/<build>/, and notes the build and the box in map/tiles.json.
+// the content folder's map/tiles/<build>/, and notes the build, the box and the count in
+// map/tiles.json. The old tiles stay until every new one has arrived.
 // node scripts/map-tiles.mjs [build, such as 20261122; the latest by default]
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { FetchSource, PMTiles } from 'pmtiles';
 import { siteSchema } from '../src/content/schema.ts';
@@ -23,7 +24,8 @@ const row = (lat, z) => {
 };
 
 const out = join(dir, 'map', 'tiles');
-rmSync(out, { recursive: true, force: true });
+const next = join(dir, 'map', 'tiles-next');
+rmSync(next, { recursive: true, force: true });
 let [count, bytes] = [0, 0];
 for (let z = 12; z <= 15; z++) {
   const jobs = [];
@@ -32,13 +34,18 @@ for (let z = 12; z <= 15; z++) {
       jobs.push(
         archive.getZxy(z, x, y).then((tile) => {
           if (!tile) return;
-          mkdirSync(join(out, build, `${z}`, `${x}`), { recursive: true });
-          writeFileSync(join(out, build, `${z}`, `${x}`, `${y}.mvt`), new Uint8Array(tile.data));
+          mkdirSync(join(next, build, `${z}`, `${x}`), { recursive: true });
+          writeFileSync(join(next, build, `${z}`, `${x}`, `${y}.mvt`), new Uint8Array(tile.data));
           count++;
           bytes += tile.data.byteLength;
         }),
       );
   await Promise.all(jobs);
 }
-writeFileSync(join(dir, 'map', 'tiles.json'), `${JSON.stringify({ build, box: map.box })}\n`);
+rmSync(out, { recursive: true, force: true });
+renameSync(next, out);
+writeFileSync(
+  join(dir, 'map', 'tiles.json'),
+  `${JSON.stringify({ build, box: map.box, count })}\n`,
+);
 console.log(`${count} tiles of build ${build}, ${Math.round(bytes / 1000)} kB, in ${out}`);
