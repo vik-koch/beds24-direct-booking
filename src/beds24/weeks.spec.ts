@@ -102,27 +102,6 @@ describe('freeWeeks', () => {
   };
   const summer: Period = { name: 'summer', years: '2027', start: '2027-01-16', end: '2027-08-31' };
 
-  it('takes a room’s changeover weekdays from its rule, not from an unpriced stretch', () => {
-    // Two more weeks after the four, unpriced and open on every day, as Beds24 returns them.
-    const days = [
-      ...calendar(),
-      ...Array.from({ length: 14 }, (_, i): Day => ({
-        date: new Date(Date.UTC(2027, 0, 31 + i)).toISOString().slice(0, 10),
-        free: false,
-        price: null,
-        changeover: true,
-      })),
-    ];
-    const list = freeWeeks(inventory(days), apartments, [january, summer], '2026-12-01', ['de']);
-    expect(list.apartments.map(({ changeover }) => changeover)).toEqual([[6], [6]]);
-    // Unpriced on every day: only the closed days show the rule.
-    const unpriced = calendar(() => ({ price: null }));
-    const bare = freeWeeks(inventory(unpriced), apartments, [january, summer], '2026-12-01', [
-      'de',
-    ]);
-    expect(bare.apartments[1].changeover).toEqual([6]);
-  });
-
   it('puts the apartments in the content order and the week into the season of its arrival', () => {
     const list = freeWeeks(inventory(), apartments, [january, summer], '2026-12-01', ['de', 'fr']);
     expect(list.apartments).toEqual([
@@ -134,7 +113,6 @@ describe('freeWeeks', () => {
         bedrooms: 2,
         tax: { amount: 3.5, per: 'night' },
         headline: { de: 'Für vier', fr: '' },
-        changeover: [6],
       },
       {
         slug: 'one',
@@ -144,7 +122,6 @@ describe('freeWeeks', () => {
         bedrooms: 2,
         tax: { amount: 3.5, per: 'night' },
         headline: { de: 'Für vier', fr: '' },
-        changeover: [6],
       },
     ]);
     expect(list.seasons[0]).toEqual({

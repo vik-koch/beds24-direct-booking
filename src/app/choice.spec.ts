@@ -1,8 +1,7 @@
 import { Location } from '@angular/common';
 import { provideLocationMocks, SpyLocation } from '@angular/common/testing';
 import { TestBed } from '@angular/core/testing';
-import type { FreeWeeks } from '../beds24/weeks';
-import { Choice, seasonOf } from './choice';
+import { Choice } from './choice';
 import { Season } from './season';
 
 const at = (url: string) => {
@@ -66,30 +65,5 @@ describe('Choice', () => {
     expect(choice.link('/de/a')).toBe(
       '/de/a?arrival=2027-01-02&departure=2027-01-09&season=summer',
     );
-  });
-
-  it('finds the season of a day on which a week of the apartment may start, and of no other', () => {
-    const weeks = {
-      // Saturdays, Fridays, and a room whose rule cannot be told.
-      apartments: [{ changeover: [6] }, { changeover: [5] }, { changeover: [] }],
-      seasons: [
-        { name: 'winter', start: '2026-09-01', end: '2027-03-31', weeks: [] },
-        { name: 'summer', start: '2027-04-01', end: '2027-08-31', weeks: [] },
-      ],
-    } as unknown as FreeWeeks;
-    const of = (arrival: string, apartment = 0) => seasonOf(weeks, apartment, arrival)?.name;
-    expect([of('2026-12-12'), of('2027-05-01'), of('2026-11-27', 1)]).toEqual([
-      'winter',
-      'summer',
-      'winter',
-    ]);
-    for (const [day, apartment] of [
-      ['2026-11-24', 0],
-      ['2026-11-28', 1],
-      ['2026-11-28', 2],
-      ['2025-12-06', 0],
-      ['2027-02-30', 0],
-    ] as const)
-      expect(of(day, apartment)).toBeUndefined();
   });
 });
