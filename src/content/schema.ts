@@ -460,8 +460,9 @@ export type Site = Omit<
   z.infer<typeof siteSchema>,
   'languages' | 'apartments' | 'seasons' | 'map'
 > & {
-  // The tiles' address, /map/tiles/<build>, by the Protomaps build they were cut from.
-  map?: Map & { tiles: string };
+  // The tiles' address, /map/tiles/<build>, by the Protomaps build they were cut from, and the
+  // theme's font file, in which the map writes its labels.
+  map?: Map & { tiles: string; font: string };
   languages: Language[];
   apartments: Apartment[];
   seasons: { [name in keyof Seasons]: Omit<NonNullable<Seasons[name]>, 'hero'> & { hero: Hero } };

@@ -163,15 +163,13 @@ export function readContent(dir) {
   }
   if (!site.map && existsSync(join(dir, 'map')))
     throw new Error(`${join(dir, 'map')}\n  (folder): no map in site.json; delete the folder`);
-  const map = site.map && readMap(dir, site.map, apartments);
-  // The map draws its labels in the theme's typeface, from its file.
-  const woff2 =
-    existsSync(join(dir, 'fonts')) &&
-    readdirSync(join(dir, 'fonts')).some((f) => f.endsWith('.woff2'));
-  if (site.map && !woff2)
-    throw new Error(
-      `${join(dir, 'fonts')}\n  (folder): a map needs the theme's font as a .woff2 file`,
-    );
+  // The map draws its labels in the theme's typeface: the first WOFF2 file theme.css names.
+  const font = readFileSync(join(dir, 'theme.css'), 'utf8').match(
+    /url\((['"]?)(?:\.\/)?(fonts\/[^'")]+\.woff2)\1\)/,
+  )?.[2];
+  if (site.map && !(font && existsSync(join(dir, font))))
+    throw new Error(`${join(dir, 'theme.css')}\n  @font-face: a map needs a .woff2 file in fonts/`);
+  const map = site.map && { ...readMap(dir, site.map, apartments), font: `/${font}` };
   // Each place is named in every language, with a text only for a season the site lists.
   const places = site.map?.places.map((place) => place.key) ?? [];
   for (const tag of site.languages) {

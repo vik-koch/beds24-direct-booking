@@ -686,12 +686,13 @@ test('the tiles are served by their build, and the site module names their addre
   );
 });
 
-test('a map needs the theme font as a file, for its labels', () => {
+test('a map writes its labels in the font theme.css names, which must be a file', () => {
+  assert.equal(readContent('content/demo').site.map.font, '/fonts/jost-latin-wght-normal.woff2');
   const dir = changed('site.json', () => undefined);
   rmSync(join(dir, 'fonts'), { recursive: true });
   assert.throws(
     () => readContent(dir),
-    /fonts\n {2}\(folder\): a map needs the theme's font as a \.woff2 file/,
+    /theme\.css\n {2}@font-face: a map needs a \.woff2 file in fonts\//,
   );
 });
 

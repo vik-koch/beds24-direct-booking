@@ -23,7 +23,6 @@ import type {
   Map as MapLibre,
   StyleSpecification,
 } from 'maplibre-gl';
-import { fonts } from '../content/generated/fonts';
 import { icons } from '../content/generated/icons';
 import routes from '../content/generated/routes';
 import site from '../content/generated/site';
@@ -602,7 +601,7 @@ export class LocationMap {
     );
     return {
       version: 8,
-      'font-faces': { theme: fonts[0]! },
+      'font-faces': { theme: map.font },
       transition: { duration: 300 },
       sources: {
         town: {
