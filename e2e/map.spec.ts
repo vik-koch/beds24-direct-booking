@@ -345,11 +345,7 @@ test("a place's line chooses it by keyboard, and with an apartment its route sta
   await expect.poll(() => accentPixels(page, 0.6)).toBeLessThan(150);
 });
 
-test("a place's pin chosen by keyboard can be cleared from the same pin", async ({
-  page,
-  browserName,
-}) => {
-  test.skip(browserName === 'webkit', 'Safari tabs only to fields unless told otherwise');
+test("a place's pin chosen by keyboard can be cleared from the same pin", async ({ page }) => {
   await openMap(page);
   const pin = page.getByRole('button', { name: 'Kohlmaisbahn', exact: true });
   await pin.focus();
@@ -361,6 +357,8 @@ test("a place's pin chosen by keyboard can be cleared from the same pin", async 
 });
 
 test('choosing a place keeps a closer zoom the visitor has chosen', async ({ page }) => {
+  // Without motion every view is reached at once: the zoom button cannot cut one short.
+  await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.setViewportSize({ width: 1280, height: 900 });
   await openMap(page);
   const gondolas = () => spread(page, 'Kohlmaisbahn', 'Schattberg X-press');
