@@ -29,4 +29,18 @@ expect "content-security-policy: frame-ancestors 'none'"
 expect 'referrer-policy: same-origin'
 expect 'permissions-policy: camera=(), microphone=(), geolocation=()'
 expect 'x-robots-tag: noindex, nofollow'
-echo "OK: the stack serves the apartments with its headers"
+
+# Text comes compressed, a picture as it is.
+headers() { curl -ksfL -o /dev/null -D - -H "Accept-Encoding: zstd, br, gzip" "$url$1"; }
+# The language home page itself, so the redirect before it answers for nothing.
+home=$(curl -ksfL -o /dev/null -w "%{url_effective}" "$url")
+script=$(grep -oE "main-[A-Za-z0-9_-]+\\.js" <<<"$answer" | head -1)
+picture=$(grep -oE "/pictures/[^\" ]+\\.webp" <<<"$answer" | head -1)
+for path in "${home#"$url"}" "/$script"; do
+  answer=$(headers "$path")
+  expect "content-encoding:"
+  grep -qiE "^vary:.*accept-encoding" <<<"$answer" || { echo "MISSING: vary accept-encoding on $path" >&2; exit 1; }
+done
+answer=$(headers "$picture")
+! grep -qi "content-encoding:" <<<"$answer" || { echo "COMPRESSED: $picture" >&2; exit 1; }
+echo "OK: the stack serves the apartments with its headers, text compressed"

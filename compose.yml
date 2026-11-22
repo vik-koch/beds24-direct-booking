@@ -18,7 +18,7 @@ services:
       - traefik.http.routers.${STACK_NAME:?}.rule=Host(`${APP_DOMAIN:?}`)
       - traefik.http.routers.${STACK_NAME:?}.entrypoints=websecure
       - traefik.http.routers.${STACK_NAME:?}.tls.certresolver=letsencrypt
-      - traefik.http.routers.${STACK_NAME:?}.middlewares=${STACK_NAME:?}-headers
+      - traefik.http.routers.${STACK_NAME:?}.middlewares=${STACK_NAME:?}-headers,${STACK_NAME:?}-compress
       - traefik.http.services.${STACK_NAME:?}.loadbalancer.server.port=4000
       # No includeSubdomains on HSTS: the domain may carry subdomains that are not HTTPS.
       - traefik.http.middlewares.${STACK_NAME:?}-headers.headers.stsSeconds=31536000
@@ -28,6 +28,9 @@ services:
       - traefik.http.middlewares.${STACK_NAME:?}-headers.headers.permissionsPolicy=camera=(), microphone=(), geolocation=()
       # Traefik drops a header whose value is empty, so ROBOTS_TAG= opens the site to indexing.
       - traefik.http.middlewares.${STACK_NAME:?}-headers.headers.customResponseHeaders.X-Robots-Tag=${ROBOTS_TAG-noindex, nofollow}
+      # The proxy compresses, so rendered pages and static files are covered with no code in the app.
+      # WebP and WOFF2 are compressed already and pass as they are.
+      - traefik.http.middlewares.${STACK_NAME:?}-compress.compress.includedContentTypes=text/html,text/css,text/javascript,application/json,image/svg+xml
 
   # The demo's Beds24. It has no route from outside and starts only under the profile.
   sim:
