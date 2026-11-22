@@ -29,8 +29,8 @@ import type { FreeWeeks } from '../beds24/weeks';
 import site from '../content/generated/site';
 import type { SeasonName } from '../content/names';
 import { BookingBar, type BarLine } from './booking-bar';
+import { Choice, fits, taxed, taxFor } from './choice';
 import { GuestCounts } from './guest-counts';
-import { fits, Guests, taxed, taxFor } from './guests';
 import { Season } from './season';
 import { swapper } from './swap';
 import { address, fill, formatMoney, formatStay, LANGUAGE, replaceQuery, TEXTS } from './texts';
@@ -287,7 +287,7 @@ const addDays = (date: string, days: number) =>
           }
         </div>
         <div class="guests">
-          @if (guests.asksChildren()) {
+          @if (choice.asksChildren()) {
             <h3>{{ texts.panel.guests }}</h3>
           }
           <app-guest-counts />
@@ -850,12 +850,12 @@ export class BookingPanel {
 
   private readonly months = inject(shownMonths);
   protected readonly chosen = signal<{ season: SeasonName; arrival: string } | null>(null);
-  protected readonly guests = inject(Guests);
+  protected readonly choice = inject(Choice);
   // In the root injector, so that links carry it to the next apartment.
-  protected readonly view = this.guests.view;
+  protected readonly view = this.choice.view;
   // The apartment's own limits, which the choice for every apartment may exceed.
   protected readonly fitting = computed(
-    () => !this.limits || fits(this.limits, this.guests.adults(), this.guests.children()),
+    () => !this.limits || fits(this.limits, this.choice.adults(), this.choice.children()),
   );
   protected readonly small = computed(() => {
     const count = this.limits!.maxPeople;
@@ -879,7 +879,7 @@ export class BookingPanel {
   protected readonly taxLine = computed(() => {
     const tax = this.weeks?.tax;
     if (!tax || !this.limits) return null;
-    const count = taxed(this.limits, this.guests.adults(), this.guests.children());
+    const count = taxed(this.limits, this.choice.adults(), this.choice.children());
     const forms = this.limits.asksChildren ? this.texts.panel.adults : this.texts.weeks.guests;
     const guests = fill(this.plural.select(count) === 'one' ? forms.one : forms.other, { count });
     return {
@@ -973,7 +973,7 @@ export class BookingPanel {
         this.months.update((months) => ({ ...months, [season.name]: arrival.slice(0, 7) }));
     }
     this.carry();
-    if (this.weeks) this.guests.limit(Object.values(this.weeks.capacities));
+    if (this.weeks) this.choice.limit(Object.values(this.weeks.capacities));
   }
 
   // The weeks by the month they arrive in, with the week before that ends in it, and each month
@@ -1094,7 +1094,7 @@ export class BookingPanel {
 
   protected bookingLink(stay: Stay) {
     const { arrival, departure } = stay;
-    const query = new URLSearchParams({ arrival, departure, ...this.guests.params() });
+    const query = new URLSearchParams({ arrival, departure, ...this.choice.params() });
     return `${address(this.language, 'book', this.slug)}?${query}`;
   }
 
@@ -1172,7 +1172,7 @@ export class BookingPanel {
   private carry() {
     const pick = this.chosen();
     const stay = pick && this.pickIn(pick.season);
-    this.guests.week.set(
+    this.choice.week.set(
       stay && {
         home: address(this.language, 'home'),
         page: address(this.language, 'apartment', this.slug),

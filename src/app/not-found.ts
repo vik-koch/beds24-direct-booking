@@ -1,5 +1,5 @@
 import { Component, inject, RESPONSE_INIT } from '@angular/core';
-import { Guests } from './guests';
+import { Choice } from './choice';
 import { address, LANGUAGE, TEXTS } from './texts';
 
 @Component({
@@ -9,7 +9,7 @@ import { address, LANGUAGE, TEXTS } from './texts';
       <h1 class="headline">{{ texts.notFound.title }}</h1>
       <p class="text-ink-soft mt-6">{{ texts.notFound.text }}</p>
       <p class="mt-6">
-        <a class="button" [href]="guests.link(home)">{{ texts.notFound.home }}</a>
+        <a class="button" [href]="choice.link(home)">{{ texts.notFound.home }}</a>
       </p>
     </div>
   `,
@@ -17,7 +17,7 @@ import { address, LANGUAGE, TEXTS } from './texts';
 export class NotFound {
   protected readonly texts = inject(TEXTS);
   protected readonly home = address(inject(LANGUAGE), 'home');
-  protected readonly guests = inject(Guests);
+  protected readonly choice = inject(Choice);
 
   constructor() {
     const response = inject(RESPONSE_INIT, { optional: true });

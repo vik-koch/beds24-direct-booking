@@ -21,8 +21,8 @@ import { lucideArrowLeft, lucideArrowRight, lucideInfo } from '@ng-icons/lucide'
 import type { FreeWeeks } from '../beds24/weeks';
 import type { SeasonName } from '../content/names';
 import { BookingBar, type BarLine } from './booking-bar';
+import { Choice, fits } from './choice';
 import { GuestCounts } from './guest-counts';
-import { fits, Guests } from './guests';
 import { Season } from './season';
 import { swapper } from './swap';
 import { address, fill, formatMoney, formatStay, LANGUAGE, replaceQuery, TEXTS } from './texts';
@@ -232,12 +232,12 @@ export class FreeWeeksList implements OnInit {
   // On a phone the list shows one apartment, the one of the chosen tab.
   protected readonly tab = inject(shownTab);
   protected readonly chosen = inject(chosenWeek);
-  private readonly group = inject(Guests);
+  private readonly choice = inject(Choice);
   private readonly location = inject(Location);
   private readonly browser = isPlatformBrowser(inject(PLATFORM_ID));
   // Per apartment, whether it takes the chosen guests.
   protected readonly fitting = computed(() => {
-    const { adults, children } = this.group;
+    const { adults, children } = this.choice;
     const weeks = this.weeks();
     return (weeks?.apartments ?? []).map(({ slug }) =>
       fits(weeks!.capacities[slug], adults(), children()),
@@ -336,7 +336,7 @@ export class FreeWeeksList implements OnInit {
   }
 
   private read(url?: string) {
-    const query = this.group.query(url);
+    const query = this.choice.query(url);
     const weeks = this.weeks();
     const apartment = weeks?.apartments.findIndex(({ slug }) => slug === query.get('apartment'));
     let pick: Week | null = null;
@@ -357,7 +357,7 @@ export class FreeWeeksList implements OnInit {
     const season = pick && this.weeks()?.seasons.find(({ name }) => name === pick.season);
     const week = season && season.weeks[pick.row];
     const { slug } = (pick && this.weeks()?.apartments[pick.apartment]) || {};
-    this.group.week.set(
+    this.choice.week.set(
       week && slug
         ? {
             home: address(this.language, 'home'),
@@ -457,7 +457,7 @@ export class FreeWeeksList implements OnInit {
     const { arrival, departure } = season.weeks[row];
     const { slug } = this.weeks()!.apartments[apartment];
     const query = new URLSearchParams({ arrival, departure, season: season.name });
-    return this.group.link(`${address(this.language, 'apartment', slug)}?${query}`);
+    return this.choice.link(`${address(this.language, 'apartment', slug)}?${query}`);
   }
 
   protected isChosen(season: SeasonName, apartment: number, row: number) {
