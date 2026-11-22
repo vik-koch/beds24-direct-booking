@@ -265,6 +265,8 @@ export const textsSchema = z.strictObject({
     // An apartment too small for the chosen guests: in its cells, and on its card.
     small: text,
     smallFor: text,
+    // In a bar, in place of the price: a chosen week booked or passed since.
+    gone: text,
     apartment: text,
     next: text,
     current: text,

@@ -1120,6 +1120,11 @@
 
   .taken {
     color: var(--color-ink-soft);
+
+    /* A chosen week that cannot be booked, in the colours of a disabled button. */
+    .booked.chosen & {
+      background: var(--color-line);
+    }
   }
 
   /* Too small for the guests: the hint's icon tells it from a booked week. */

@@ -74,6 +74,7 @@
     "taken": "occupata",
     "small": "troppo piccolo",
     "smallFor": "Troppo piccolo per {guests}",
+    "gone": "non più libera",
     "apartment": "Appartamento",
     "next": "Prossima stagione: {season}",
     "current": "Stagione attuale: {season}",

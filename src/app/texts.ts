@@ -39,6 +39,9 @@ export function replaceQuery(location: Location, change: (params: URLSearchParam
   );
 }
 
+export const addDays = (date: string, days: number) =>
+  new Date(Date.parse(date) + days * 864e5).toISOString().slice(0, 10);
+
 // Puts values into a text's {placeholders}.
 export const fill = (text: string, values: Record<string, string | number>) =>
   text.replace(/\{(\w+)\}/g, (_, key: string) => String(values[key] ?? ''));

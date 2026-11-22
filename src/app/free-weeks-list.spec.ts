@@ -18,7 +18,16 @@ describe('FreeWeeksList', () => {
       capacities: { one: { maxPeople: 2, asksChildren: false } },
       currency: 'EUR',
       tax: null,
-      seasons: [{ name: 'summer', years: null, state: 'full', weeks: [] }],
+      seasons: [
+        {
+          name: 'summer',
+          years: null,
+          start: '2027-01-01',
+          end: '2027-12-31',
+          state: 'full',
+          weeks: [],
+        },
+      ],
     });
     await fixture.whenStable();
     const element: HTMLElement = fixture.nativeElement;

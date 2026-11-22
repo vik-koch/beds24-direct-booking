@@ -25,13 +25,22 @@ import { Choice, fits } from './choice';
 import { GuestCounts } from './guest-counts';
 import { Season } from './season';
 import { swapper } from './swap';
-import { address, fill, formatMoney, formatStay, LANGUAGE, replaceQuery, TEXTS } from './texts';
+import {
+  addDays,
+  address,
+  fill,
+  formatMoney,
+  formatStay,
+  LANGUAGE,
+  replaceQuery,
+  TEXTS,
+} from './texts';
 
 type SeasonWeeks = FreeWeeks['seasons'][number];
 interface Week {
   season: SeasonName;
   apartment: number;
-  row: number;
+  arrival: string;
 }
 
 // In the root injector, so the chosen week and the phone's tab outlive a change of language,
@@ -157,18 +166,20 @@ const shownTab = new InjectionToken('shown tab', { providedIn: 'root', factory: 
                               @let free = price !== null && fitting()[$index];
                               <!-- A booked cell, or one too small for the guests, can be
                                    reached but not chosen: Enter, Space or a click on it would
-                                   clear the chosen week. -->
+                                   clear the chosen week. A chosen one, as a link's week, counts
+                                   as selectable only so the grid marks it selected. -->
+                              @let chosen = isChosen(season.name, $index, week.arrival);
                               <span
                                 ngGridCell
                                 role="gridcell"
                                 [class]="free ? 'stay' : 'booked'"
                                 [class.elsewhere]="$index !== tab()"
-                                [class.chosen]="isChosen(season.name, $index, week.row)"
+                                [class.chosen]="chosen"
                                 [colIndex]="$index + 2"
                                 [disabled]="!shown(season.name, $index)"
-                                [selectable]="free"
-                                [selected]="isChosen(season.name, $index, week.row)"
-                                (selectedChange)="select($event, season.name, $index, week.row)"
+                                [selectable]="free || chosen"
+                                [selected]="chosen"
+                                (selectedChange)="select($event, season.name, $index, week.arrival)"
                                 [attr.data-pick]="$index + '-' + week.row"
                                 (click)="guard($event, free)"
                                 (keydown.enter)="!free && $event.stopPropagation()"
@@ -243,24 +254,30 @@ export class FreeWeeksList implements OnInit {
       fits(weeks!.capacities[slug], adults(), children()),
     );
   });
+  // Why the chosen week cannot be booked, if it cannot.
+  protected readonly blocked = computed(() => {
+    const pick = this.chosen();
+    if (!pick) return null;
+    if (this.weekOf(pick).price === null) return this.texts.weeks.gone;
+    return this.fitting()[pick.apartment] ? null : this.texts.weeks.small;
+  });
   protected readonly bar = computed((): BarLine[] => {
     const pick = this.chosen();
-    const weeks = this.weeks();
-    const season = pick && weeks?.seasons.find(({ name }) => name === pick.season);
-    if (!pick || !season) return [];
-    const week = season.weeks[pick.row];
-    const { name } = weeks!.apartments[pick.apartment];
+    if (!pick) return [];
+    const week = this.weekOf(pick);
+    const blocked = this.blocked();
     return [
       {
-        season: season.name,
-        name,
+        season: pick.season,
+        name: this.weeks()!.apartments[pick.apartment].name,
         before: '',
-        amount: this.money(week.prices[pick.apartment]!),
+        amount: blocked ?? this.money(week.price!),
         after: '',
         detail: this.stay(week),
-        link: this.link(season, pick.apartment, pick.row),
+        link: blocked ? null : this.link(pick),
         label: this.texts.panel.bar.book,
         chosen: true,
+        blocked: !!blocked,
       },
     ];
   });
@@ -303,11 +320,6 @@ export class FreeWeeksList implements OnInit {
     // Back or Forward to an entry of this page, such as a section's fragment, restores its week.
     const back = this.location.subscribe(({ url }) => this.read(url));
     destroyRef.onDestroy(() => back.unsubscribe());
-    // A week of an apartment that has become too small for the guests is no longer chosen.
-    effect(() => {
-      const pick = this.chosen();
-      if (pick && !this.fitting()[pick.apartment]) this.chosen.set(null);
-    });
     effect(() => this.keep(this.chosen()));
     afterNextRender(() => {
       const query = matchMedia('(min-width: 48rem)');
@@ -329,8 +341,9 @@ export class FreeWeeksList implements OnInit {
     });
   }
 
-  // The address's week: a free one of the named apartment, if it takes the guests. On a phone
-  // its apartment's tab is shown.
+  // The address's week, if it arrives in one of the seasons: also one that is no longer free or
+  // too small for the guests, which stays chosen as blocked. On a phone its apartment's tab is
+  // shown.
   ngOnInit() {
     this.read();
   }
@@ -338,24 +351,33 @@ export class FreeWeeksList implements OnInit {
   private read(url?: string) {
     const query = this.choice.query(url);
     const weeks = this.weeks();
-    const apartment = weeks?.apartments.findIndex(({ slug }) => slug === query.get('apartment'));
-    let pick: Week | null = null;
-    if (apartment !== undefined && apartment >= 0 && this.fitting()[apartment])
-      for (const season of weeks!.seasons) {
-        const row = season.weeks.findIndex(
-          ({ arrival, prices }) => arrival === query.get('arrival') && prices[apartment] !== null,
-        );
-        if (row >= 0) pick = { season: season.name, apartment, row };
-      }
+    const apartment =
+      weeks?.apartments.findIndex(({ slug }) => slug === query.get('apartment')) ?? -1;
+    const arrival = query.get('arrival') ?? '';
+    const season = /^\d{4}-\d\d-\d\d$/.test(arrival)
+      ? weeks?.seasons.find(({ start, end }) => arrival >= start && arrival <= end)
+      : undefined;
+    const pick = season && apartment >= 0 ? { season: season.name, apartment, arrival } : null;
     this.chosen.set(pick);
     if (pick) this.tab.set(pick.apartment);
+  }
+
+  // The chosen week's row, if the list still has it, its days, and its price while it is free.
+  private weekOf({ season, apartment, arrival }: Week) {
+    const { weeks } = this.weeks()!.seasons.find(({ name }) => name === season)!;
+    const row = weeks.findIndex((week) => week.arrival === arrival);
+    return {
+      row,
+      arrival,
+      departure: addDays(arrival, 7),
+      price: weeks[row]?.prices[apartment] ?? null,
+    };
   }
 
   // The address keeps the chosen week, with a season only once the visitor has switched away from
   // the week's, and the links to the home page and the week's apartment carry it.
   private keep(pick: Week | null) {
-    const season = pick && this.weeks()?.seasons.find(({ name }) => name === pick.season);
-    const week = season && season.weeks[pick.row];
+    const week = pick && this.weekOf(pick);
     const { slug } = (pick && this.weeks()?.apartments[pick.apartment]) || {};
     this.choice.week.set(
       week && slug
@@ -450,22 +472,22 @@ export class FreeWeeksList implements OnInit {
     return formatMoney(this.language.tag, this.weeks()!.currency, amount);
   }
 
-  protected link(season: SeasonWeeks, apartment: number, row: number) {
-    const { arrival, departure } = season.weeks[row];
-    const { slug } = this.weeks()!.apartments[apartment];
+  protected link(pick: Week) {
+    const { arrival, departure } = this.weekOf(pick);
+    const { slug } = this.weeks()!.apartments[pick.apartment];
     const query = new URLSearchParams({ arrival, departure });
     return this.choice.link(`${address(this.language, 'apartment', slug)}?${query}`);
   }
 
-  protected isChosen(season: SeasonName, apartment: number, row: number) {
+  protected isChosen(season: SeasonName, apartment: number, arrival: string) {
     const pick = this.chosen();
-    return pick?.season === season && pick.apartment === apartment && pick.row === row;
+    return pick?.season === season && pick.apartment === apartment && pick.arrival === arrival;
   }
 
   // The grid chooses and clears: a click, Enter or Space on a week, again on the chosen one.
-  protected select(selected: boolean, season: SeasonName, apartment: number, row: number) {
-    if (selected) this.chosen.set({ season, apartment, row });
-    else if (this.isChosen(season, apartment, row)) this.chosen.set(null);
+  protected select(selected: boolean, season: SeasonName, apartment: number, arrival: string) {
+    if (selected) this.chosen.set({ season, apartment, arrival });
+    else if (this.isChosen(season, apartment, arrival)) this.chosen.set(null);
   }
 
   protected shown(season: SeasonName, apartment: number) {
@@ -497,8 +519,8 @@ export class FreeWeeksList implements OnInit {
     const to = months[from + by];
     if (!to) return;
     const place = months[from].weeks.findIndex((week) => week.row === row);
-    const target = to.weeks[Math.min(place, to.weeks.length - 1)].row;
-    this.cell({ season: season.name, apartment, row: target })?.focus();
+    const { arrival } = to.weeks[Math.min(place, to.weeks.length - 1)];
+    this.cell({ season: season.name, apartment, arrival })?.focus();
   }
 
   // The bar goes with its button, so the focus returns to the week that was chosen. A pointer
@@ -530,10 +552,10 @@ export class FreeWeeksList implements OnInit {
   };
 
   private cell(pick: Week | null) {
-    const panels = this.panels()?.nativeElement;
-    return pick
-      ? panels?.querySelector<HTMLElement>(
-          `[data-for=${pick.season}] [data-pick="${pick.apartment}-${pick.row}"]`,
+    const row = pick && this.weekOf(pick).row;
+    return pick && row! >= 0
+      ? this.panels()?.nativeElement.querySelector<HTMLElement>(
+          `[data-for=${pick.season}] [data-pick="${pick.apartment}-${row}"]`,
         )
       : undefined;
   }

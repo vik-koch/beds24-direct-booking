@@ -117,18 +117,32 @@ for (const width of [1280, 320]) {
   });
 }
 
-test('a week chosen in an apartment that becomes too small is no longer chosen', async ({
+test('a week chosen in an apartment that becomes too small stays chosen as blocked', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await open(page, '/de');
   await toOtherSeason(page);
-  const stay = column(page, 1).locator('.price').first();
-  await stay.click();
-  await expect(page.locator('.pick output')).toContainText('Lärche');
+  const stay = column(page, 1, '.stay').first();
+  await stay.locator('.price').click();
+  const bar = page.locator('.pick .booking-bar');
+  await expect(bar.getByRole('link', { name: 'Weiter' })).toBeVisible();
+  // Too many guests: the week stays chosen, the bar says why and offers only the cross.
   await pickCount(page, 'children', 3);
-  await expect(page.locator('.pick')).toHaveCount(0);
-  await expect(column(page, 1, '[role=gridcell][aria-selected=true]')).toHaveCount(0);
+  const chosen = column(page, 1, '[aria-selected=true]');
+  await expect(chosen).toHaveText('zu klein');
+  await expect(bar.locator('.bar-parts > span, output small')).toHaveText([
+    'Lärche',
+    'zu klein',
+    /Sa\./,
+  ]);
+  await expect(bar.getByRole('link')).toHaveCount(0);
+  await expect(bar.getByRole('button')).toHaveAccessibleName('Gewählte Woche aufheben');
+  await expect(page).toHaveURL(/apartment=laerche&arrival=/);
+  // Fewer guests again: the same week can be booked.
+  await pickCount(page, 'children', 0);
+  await expect(chosen.locator('.price')).toBeVisible();
+  await expect(bar.getByRole('link', { name: 'Weiter' })).toBeVisible();
 });
 
 test('the chosen week’s bar leaves the tourist tax to the apartment’s page and carries the guests', async ({

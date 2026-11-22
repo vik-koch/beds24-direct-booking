@@ -83,6 +83,7 @@
     "taken": "booked",
     "small": "too small",
     "smallFor": "Too small for {guests}",
+    "gone": "no longer free",
     "apartment": "Apartment",
     "next": "Next season: {season}",
     "current": "Current season: {season}",

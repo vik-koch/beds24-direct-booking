@@ -5,8 +5,9 @@ import type { SeasonName } from '../content/names';
 import { TEXTS } from './texts';
 
 // What the bar says in one season: maybe an apartment's name, an amount with words around it,
-// maybe a line below, and a link on with its label, or without a link a button the
-// page answers. A chosen week has a cross that clears it.
+// maybe a line below, and a link on with its label, or without a link a button the page
+// answers. A chosen week has a cross that clears it; a blocked one, which cannot be booked, has
+// only the cross and says why in place of the amount.
 export interface BarLine {
   season: SeasonName;
   name: string;
@@ -17,6 +18,7 @@ export interface BarLine {
   link: string | null;
   label: string;
   chosen: boolean;
+  blocked: boolean;
 }
 
 // A bar in the accent that carries a choice on to booking, one line per season: the home page's
@@ -30,7 +32,7 @@ export interface BarLine {
   template: `
     <div class="booking-bar" [hidden]="!shown()">
       @for (line of lines(); track line.season) {
-        <div [attr.data-for]="line.season">
+        <div [attr.data-for]="line.season" [class.blocked]="line.blocked">
           <output>
             <span class="bar-parts">
               @if (line.name) {
@@ -56,12 +58,14 @@ export interface BarLine {
                 <ng-icon name="lucideX" aria-hidden="true" />
               </button>
             }
-            @if (line.link) {
-              <a class="button" [href]="line.link">{{ line.label }}</a>
-            } @else {
-              <button type="button" class="button" (click)="pressed.emit()">
-                {{ line.label }}
-              </button>
+            @if (!line.blocked) {
+              @if (line.link) {
+                <a class="button" [href]="line.link">{{ line.label }}</a>
+              } @else {
+                <button type="button" class="button" (click)="pressed.emit()">
+                  {{ line.label }}
+                </button>
+              }
             }
           </div>
         </div>
@@ -137,6 +141,17 @@ export interface BarLine {
 
         :focus-visible {
           outline-color: var(--color-on-accent);
+        }
+
+        /* A blocked week's bar in the colours of a disabled button, while its season is shown. */
+        html[data-season='winter'] &:has(> .blocked[data-for='winter']),
+        html[data-season='summer'] &:has(> .blocked[data-for='summer']) {
+          background: var(--color-line);
+          color: var(--color-ink);
+
+          :focus-visible {
+            outline-color: var(--color-accent);
+          }
         }
 
         @media (max-width: 22.4375rem) {
