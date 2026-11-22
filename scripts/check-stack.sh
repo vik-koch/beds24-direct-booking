@@ -30,16 +30,19 @@ expect 'referrer-policy: same-origin'
 expect 'permissions-policy: camera=(), microphone=(), geolocation=()'
 expect 'x-robots-tag: noindex, nofollow'
 
-# Text comes compressed, a picture as it is.
-headers() { curl -ksfL -o /dev/null -D - -H "Accept-Encoding: zstd, br, gzip" "$url$1"; }
+# Text comes compressed, in Brotli for the list Chrome sends and in gzip where only that is accepted;
+# a picture comes as it is.
+headers() { curl -ksfL -o /dev/null -D - -H "Accept-Encoding: ${2:-gzip, deflate, br, zstd}" "$url$1"; }
 # The language home page itself, so the redirect before it answers for nothing.
 home=$(curl -ksfL -o /dev/null -w "%{url_effective}" "$url")
 script=$(grep -oE "main-[A-Za-z0-9_-]+\\.js" <<<"$answer" | head -1)
 picture=$(grep -oE "/pictures/[^\" ]+\\.webp" <<<"$answer" | head -1)
 for path in "${home#"$url"}" "/$script"; do
   answer=$(headers "$path")
-  expect "content-encoding:"
+  expect "content-encoding: br"
   grep -qiE "^vary:.*accept-encoding" <<<"$answer" || { echo "MISSING: vary accept-encoding on $path" >&2; exit 1; }
+  answer=$(headers "$path" gzip)
+  expect "content-encoding: gzip"
 done
 answer=$(headers "$picture")
 ! grep -qi "content-encoding:" <<<"$answer" || { echo "COMPRESSED: $picture" >&2; exit 1; }
