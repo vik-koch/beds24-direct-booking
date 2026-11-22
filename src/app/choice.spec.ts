@@ -24,6 +24,7 @@ describe('Choice', () => {
     const choice = at('/de?apartment=a&arrival=2027-01-02&adults=3');
     expect(choice.link('/de#weeks')).toBe('/de?apartment=a&arrival=2027-01-02&adults=3#weeks');
     expect(choice.link('/de/a#x')).toBe('/de/a?adults=3#x');
+    expect(choice.link('/de?x=1#weeks')).toBe('/de?x=1&adults=3#weeks');
   });
 
   it('replaces the guests an address of the site carries', () => {
