@@ -46,7 +46,7 @@ export function heading(texts: Texts, route: ActivatedRouteSnapshot): string {
         }
       </aside>
     }
-    <app-header [alternates]="alternates" [overHero]="home" [keepPlace]="!notFound" />
+    <app-header [alternates]="alternates" [onHome]="home" [keepPlace]="!notFound" />
     <main id="content" class="grow outline-none"><router-outlet /></main>
     <app-footer />
   `,
