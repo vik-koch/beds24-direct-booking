@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import site from '../content/generated/site';
-import { Guests } from './guests';
+import { Choice } from './choice';
 import { address, LANGUAGE, TEXTS } from './texts';
 
 @Component({
@@ -36,7 +36,7 @@ import { address, LANGUAGE, TEXTS } from './texts';
         <ul class="mt-2">
           @for (link of links; track link.path) {
             <li>
-              <a [routerLink]="link.path" [queryParams]="guests.params()">{{ link.text }}</a>
+              <a [routerLink]="link.path" [queryParams]="choice.params()">{{ link.text }}</a>
             </li>
           }
         </ul>
@@ -48,7 +48,7 @@ import { address, LANGUAGE, TEXTS } from './texts';
 export class Footer {
   protected readonly texts = inject(TEXTS);
   protected readonly contact = site.contact;
-  protected readonly guests = inject(Guests);
+  protected readonly choice = inject(Choice);
   private readonly language = inject(LANGUAGE);
   protected readonly links = (['faq', 'imprint', 'privacy', 'terms', 'credits'] as const).map(
     (page) => ({ text: this.texts.pages[page], path: address(this.language, page) }),

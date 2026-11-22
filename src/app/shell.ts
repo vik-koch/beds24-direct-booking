@@ -13,8 +13,8 @@ import { filter } from 'rxjs';
 import { fonts } from '../content/generated/fonts';
 import site from '../content/generated/site';
 import type { Texts } from '../content/schema';
+import { Choice } from './choice';
 import { Footer } from './footer';
-import { Guests } from './guests';
 import { Header } from './header';
 import { Season } from './season';
 import { address, LANGUAGE, TEXTS, type Page } from './texts';
@@ -42,7 +42,7 @@ export function heading(texts: Texts, route: ActivatedRouteSnapshot): string {
       <aside class="bg-oak px-4 py-1.5 text-center text-sm">
         {{ notice.text }}
         @if (notice.link; as link) {
-          <a [href]="guests.link(link.href)">{{ link.text }}</a>
+          <a [href]="choice.link(link.href)">{{ link.text }}</a>
         }
       </aside>
     }
@@ -54,7 +54,7 @@ export function heading(texts: Texts, route: ActivatedRouteSnapshot): string {
 })
 export class Shell {
   protected readonly texts = inject(TEXTS);
-  protected readonly guests = inject(Guests);
+  protected readonly choice = inject(Choice);
   private readonly language = inject(LANGUAGE);
   private readonly route = inject(ActivatedRoute);
   private readonly document = inject(DOCUMENT);

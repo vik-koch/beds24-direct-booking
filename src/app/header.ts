@@ -7,7 +7,7 @@ import { HlmNavigationMenuImports } from '@spartan-ng/helm/navigation-menu';
 import { HlmSheetImports } from '@spartan-ng/helm/sheet';
 import site from '../content/generated/site';
 import { letters } from '../content/names';
-import { Guests } from './guests';
+import { Choice } from './choice';
 import { SeasonSwitch } from './season-switch';
 import { address, LANGUAGE, TEXTS } from './texts';
 
@@ -22,7 +22,7 @@ import { address, LANGUAGE, TEXTS } from './texts';
       <div class="wordmark" [style.--letters]="letters">
         <a
           class="-ml-3.5 inline-flex h-(--size-control) items-center rounded-full px-3.5 font-medium tracking-[-0.01em] whitespace-nowrap no-underline"
-          [href]="guests.link(home)"
+          [href]="choice.link(home)"
           >{{ site.name }}</a
         >
       </div>
@@ -30,7 +30,7 @@ import { address, LANGUAGE, TEXTS } from './texts';
       <nav hlmNavigationMenu class="header-wide flex-none" [attr.aria-label]="texts.nav.label">
         <ul hlmNavigationMenuList>
           <li hlmNavigationMenuItem>
-            <a hlmNavigationMenuLink [href]="guests.link(sections[0].href)">{{
+            <a hlmNavigationMenuLink [href]="choice.link(sections[0].href)">{{
               sections[0].text
             }}</a>
           </li>
@@ -43,13 +43,13 @@ import { address, LANGUAGE, TEXTS } from './texts';
             >
               <ul>
                 <li>
-                  <a hlmNavigationMenuLink [href]="guests.link(allApartments)">{{
+                  <a hlmNavigationMenuLink [href]="choice.link(allApartments)">{{
                     texts.nav.allApartments
                   }}</a>
                 </li>
                 @for (apartment of apartments; track apartment.path) {
                   <li>
-                    <a hlmNavigationMenuLink [href]="guests.link(apartment.path)">{{
+                    <a hlmNavigationMenuLink [href]="choice.link(apartment.path)">{{
                       apartment.name
                     }}</a>
                   </li>
@@ -59,7 +59,7 @@ import { address, LANGUAGE, TEXTS } from './texts';
           </li>
           @for (section of sections.slice(1); track section.href) {
             <li hlmNavigationMenuItem>
-              <a hlmNavigationMenuLink [href]="guests.link(section.href)">{{ section.text }}</a>
+              <a hlmNavigationMenuLink [href]="choice.link(section.href)">{{ section.text }}</a>
             </li>
           }
           <li hlmNavigationMenuItem class="ml-3">
@@ -109,18 +109,18 @@ import { address, LANGUAGE, TEXTS } from './texts';
           <nav class="sheet-nav" [attr.aria-label]="texts.nav.label">
             <ul>
               <li>
-                <a (click)="follow(menu)" [href]="guests.link(sections[0].href)">{{
+                <a (click)="follow(menu)" [href]="choice.link(sections[0].href)">{{
                   sections[0].text
                 }}</a>
               </li>
               <li>
-                <a (click)="follow(menu)" [href]="guests.link(allApartments)">{{
+                <a (click)="follow(menu)" [href]="choice.link(allApartments)">{{
                   texts.nav.apartments
                 }}</a>
                 <ul>
                   @for (apartment of apartments; track apartment.path) {
                     <li>
-                      <a (click)="follow(menu)" [href]="guests.link(apartment.path)">{{
+                      <a (click)="follow(menu)" [href]="choice.link(apartment.path)">{{
                         apartment.name
                       }}</a>
                     </li>
@@ -129,7 +129,7 @@ import { address, LANGUAGE, TEXTS } from './texts';
               </li>
               @for (section of sections.slice(1); track section.href) {
                 <li>
-                  <a (click)="follow(menu)" [href]="guests.link(section.href)">{{
+                  <a (click)="follow(menu)" [href]="choice.link(section.href)">{{
                     section.text
                   }}</a>
                 </li>
@@ -180,7 +180,7 @@ export class Header {
 
   protected readonly texts = inject(TEXTS);
   protected readonly language = inject(LANGUAGE);
-  protected readonly guests = inject(Guests);
+  protected readonly choice = inject(Choice);
   protected readonly site = site;
   protected readonly letters = letters(site.name);
   protected readonly home = address(this.language, 'home');

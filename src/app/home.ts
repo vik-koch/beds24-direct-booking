@@ -5,8 +5,8 @@ import type { FreeWeeks } from '../beds24/weeks';
 import { icons } from '../content/generated/icons';
 import site from '../content/generated/site';
 import { heroPortrait, heroSizes, lucideName, srcset } from '../content/names';
+import { Choice } from './choice';
 import { FreeWeeksList } from './free-weeks-list';
-import { Guests } from './guests';
 import { Season } from './season';
 import { Teasers } from './teasers';
 import { address, LANGUAGE, TEXTS } from './texts';
@@ -53,7 +53,7 @@ import { address, LANGUAGE, TEXTS } from './texts';
             }
           </ul>
         }
-        <a class="button" [href]="guests.link(weeksLink)">{{ texts.hero.button }}</a>
+        <a class="button" [href]="choice.link(weeksLink)">{{ texts.hero.button }}</a>
       </div>
     </section>
     <!-- A jump to the free weeks places the section's top below the header, which then covers
@@ -90,9 +90,9 @@ export class Home {
   protected readonly heroPortrait = heroPortrait;
   protected readonly heroSizes = heroSizes;
   protected readonly weeks: FreeWeeks | null = inject(ActivatedRoute).snapshot.data['weeks'];
-  protected readonly guests = inject(Guests);
+  protected readonly choice = inject(Choice);
 
   constructor() {
-    if (this.weeks) this.guests.limit(Object.values(this.weeks.capacities));
+    if (this.weeks) this.choice.limit(Object.values(this.weeks.capacities));
   }
 }

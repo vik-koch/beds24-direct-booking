@@ -10,7 +10,7 @@ import {
 import type { FreeWeeks } from '../beds24/weeks';
 import site from '../content/generated/site';
 import { placesOf, srcset } from '../content/names';
-import { fits, Guests } from './guests';
+import { Choice, fits } from './choice';
 import { Season } from './season';
 import { address, fill, formatMoney, LANGUAGE, TEXTS } from './texts';
 
@@ -207,14 +207,14 @@ export class Teasers {
   protected readonly fill = fill;
   protected readonly from = this.texts.panel.from.split('{price}');
   private readonly plural = new Intl.PluralRules(this.language.tag);
-  private readonly guests = inject(Guests);
+  private readonly choice = inject(Choice);
   private readonly seasons = inject(Season).names;
 
   protected readonly srcset = srcset;
   protected readonly cards = computed(() => {
     const weeks = this.weeks();
     const listed = weeks?.apartments ?? [];
-    const { adults, children } = this.guests;
+    const { adults, children } = this.choice;
     const count = adults() + children();
     const { one, other } = this.texts.weeks.guests;
     const small = fill(this.texts.weeks.smallFor, {
@@ -229,7 +229,7 @@ export class Teasers {
         index,
         // The first place's pictures, of one season each where the gallery has two.
         place: placesOf(pictures, this.seasons)[0],
-        link: this.guests.link(address(this.language, 'apartment', slug)),
+        link: this.choice.link(address(this.language, 'apartment', slug)),
         facts: listed[index] ?? null,
         small: capacity && !fits(capacity, adults(), children()) ? small : null,
       };

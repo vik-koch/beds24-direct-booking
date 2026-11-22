@@ -1,7 +1,7 @@
 import { Component, inject, ViewEncapsulation } from '@angular/core';
 import { BrnFieldA11yService } from '@spartan-ng/brain/field';
 import { HlmSelectImports } from '@spartan-ng/helm/select';
-import { Guests } from './guests';
+import { Choice } from './choice';
 import { TEXTS } from './texts';
 
 // The group's adults and children, within what one of the apartments takes, each a pill with
@@ -17,40 +17,40 @@ import { TEXTS } from './texts';
     <div class="counts">
       <div class="count">
         <label for="adults"
-          >{{ guests.asksChildren() ? texts.panel.adults.label : texts.panel.guests
+          >{{ choice.asksChildren() ? texts.panel.adults.label : texts.panel.guests
           }}<span class="star" aria-hidden="true">{{
-            guests.asksChildren() ? '' : star
+            choice.asksChildren() ? '' : star
           }}</span></label
         >
         <hlm-select
-          [value]="guests.adults()"
-          (valueChange)="guests.set($event!, guests.children())"
+          [value]="choice.adults()"
+          (valueChange)="choice.set($event!, choice.children())"
         >
           <hlm-select-trigger buttonId="adults" class="w-full justify-end">
             <hlm-select-value />
           </hlm-select-trigger>
           <hlm-select-content *hlmSelectPortal>
-            @for (n of range(1, guests.maxAdults()); track n) {
+            @for (n of range(1, choice.maxAdults()); track n) {
               <hlm-select-item [value]="n">{{ n }}</hlm-select-item>
             }
           </hlm-select-content>
         </hlm-select>
       </div>
-      @if (guests.asksChildren()) {
+      @if (choice.asksChildren()) {
         <div class="count">
           <label for="children"
             >{{ texts.panel.children
             }}<span class="star" aria-hidden="true">{{ star }}</span></label
           >
           <hlm-select
-            [value]="guests.children()"
-            (valueChange)="guests.set(guests.adults(), $event!)"
+            [value]="choice.children()"
+            (valueChange)="choice.set(choice.adults(), $event!)"
           >
             <hlm-select-trigger buttonId="children" class="w-full justify-end">
               <hlm-select-value />
             </hlm-select-trigger>
             <hlm-select-content *hlmSelectPortal>
-              @for (n of range(0, guests.maxChildren()); track n) {
+              @for (n of range(0, choice.maxChildren()); track n) {
                 <hlm-select-item [value]="n">{{ n }}</hlm-select-item>
               }
             </hlm-select-content>
@@ -220,7 +220,7 @@ import { TEXTS } from './texts';
   host: { class: 'guest-counts' },
 })
 export class GuestCounts {
-  protected readonly guests = inject(Guests);
+  protected readonly choice = inject(Choice);
   protected readonly texts = inject(TEXTS);
   protected readonly note = this.texts.panel.guestsNote;
   protected readonly star = this.note ? '*' : '';
