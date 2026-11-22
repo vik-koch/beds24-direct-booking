@@ -641,7 +641,7 @@ test('a week from the address is chosen on the home page at the first paint', as
 });
 
 test(
-  'a header link carries the week to its home section; Back and a season switch stay',
+  'a header link carries the week to its home section; Back, its season and a switch stay',
   { tag: '@any-engine' },
   async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
@@ -656,23 +656,31 @@ test(
     const bar = page.locator('.pick .booking-bar');
     await expect(bar).toContainText('Lärche');
     const chosenWeek = await parts(bar);
-    // A section of the same page, another week there, and Back: the address's week again.
+    const html = page.locator('html');
+    const shown = await html.getAttribute('data-season');
+    // A section of the same page, another week there and the other season, which keeps the
+    // fragment; then Back: the address's week and season again.
     await header.getByRole('link', { name: 'Lage' }).click();
     await expect(page).toHaveURL(/#lage$/);
     await page.locator('[role=gridcell]:not([aria-selected=true]) .price:visible').last().click();
     await expect(page).not.toHaveURL(new RegExp(`arrival=${arrival}`));
+    await page.locator('.other-season').first().click();
+    await expect(html).not.toHaveAttribute('data-season', shown!);
+    await expect(page).toHaveURL(/#lage$/);
+    await expect(page).not.toHaveURL(/season=/);
     await page.goBack();
-    await expect(page).toHaveURL(new RegExp(`arrival=${arrival}&season=\\w+#freie-wochen$`));
+    await expect(page).toHaveURL(new RegExp(`arrival=${arrival}(&season=\\w+)?#freie-wochen$`));
+    await expect(html).toHaveAttribute('data-season', shown!);
     await expect.poll(() => parts(bar)).toEqual(chosenWeek);
     // A season switched since stays: the link no longer names the week's.
-    const before = await page.locator('html').getAttribute('data-season');
     await page.locator('.other-season').first().click();
-    await expect(page.locator('html')).not.toHaveAttribute('data-season', before!);
+    await expect(html).not.toHaveAttribute('data-season', shown!);
+    await expect(page).toHaveURL(/#freie-wochen$/);
     const link = header.getByRole('link', { name: 'Freie Wochen' });
     await expect(link).not.toHaveAttribute('href', /season=/);
     await link.click();
     await expect(page).toHaveURL(/#freie-wochen$/);
-    await expect(page.locator('html')).not.toHaveAttribute('data-season', before!);
+    await expect(html).not.toHaveAttribute('data-season', shown!);
   },
 );
 
