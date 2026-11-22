@@ -78,7 +78,14 @@ test('a second click on the chosen apartment clears the choice', async ({ page }
   await expect(panel(page).getByRole('radio', { name: 'Lärche' })).not.toBeChecked();
 });
 
-test("the map's hint to hold Ctrl while scrolling stays under the panel", async ({ page }) => {
+test("the map's hint to hold Ctrl while scrolling stays under the panel", async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(
+    isMobile,
+    'A phone has no mouse wheel; the hint lies under the panel in every engine alike.',
+  );
   await page.setViewportSize({ width: 1280, height: 900 });
   await openMap(page);
   const hint = page.locator('.maplibregl-cooperative-gesture-screen');
