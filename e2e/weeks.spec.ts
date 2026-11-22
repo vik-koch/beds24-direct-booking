@@ -119,16 +119,13 @@ test('a chosen week leads to its apartment with the stay, also in a fresh browse
     dates.replace(/\s+/g, ' ').trim(),
   ]);
   const season = await page.locator('html').getAttribute('data-season');
-  await page.locator('.pick').getByRole('link', { name: 'Weiter' }).click();
-  await expect(page).toHaveURL(
-    /\/de\/wohnungen\/(zirbe|laerche|ahorn)\?arrival=\d{4}-\d\d-\d\d&departure=\d{4}-\d\d-\d\d$/,
+  const next = page.locator('.pick').getByRole('link', { name: 'Weiter' });
+  await expect(next).toHaveAttribute(
+    'href',
+    /^\/de\/wohnungen\/(zirbe|laerche|ahorn)\?arrival=\d{4}-\d\d-\d\d$/,
   );
-  const url = new URL(page.url());
-  const days =
-    (Date.parse(url.searchParams.get('departure')!) -
-      Date.parse(url.searchParams.get('arrival')!)) /
-    864e5;
-  expect(days).toBe(7);
+  await next.click();
+  await expect(page).toHaveURL(/\/de\/wohnungen\/(zirbe|laerche|ahorn)\?arrival=\d{4}-\d\d-\d\d$/);
   // Sent on: whoever opens it sees the week's season and the week chosen.
   const fresh = await browser.newPage();
   await fresh.goto(page.url());

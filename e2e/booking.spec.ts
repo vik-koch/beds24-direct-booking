@@ -99,7 +99,7 @@ test(
     await expect(page).toHaveURL(/adults=3&children=1/);
     const kept = new URL(page.url()).searchParams;
     expect(kept.get('arrival')).toMatch(/^\d{4}-\d\d-\d\d$/);
-    expect(kept.get('departure')).toMatch(/^\d{4}-\d\d-\d\d$/);
+    expect(kept.has('departure')).toBe(false);
     expect(kept.has('season')).toBe(false);
     // So does the other language's link.
     const english = new URL(
@@ -176,14 +176,23 @@ test(
     const week = await firstFree(page);
     const name = await monthName(page).innerText();
     await week.click();
-    const url = new URL(page.url());
-    const stay = ['arrival', 'departure', 'season'].map(
-      (name) => `${name}=${url.searchParams.get(name)}`,
-    );
-    await open(page, `/de/wohnungen/laerche?${stay.join('&')}`);
+    const arrival = new URL(page.url()).searchParams.get('arrival')!;
+    await open(page, `/de/wohnungen/laerche?arrival=${arrival}`);
     await expect(monthName(page)).toHaveText(name);
     await expect(chosen(page)).toHaveCount(1);
     await expect(panel(page).getByRole('link', { name: 'Weiter zur Buchung' })).toBeVisible();
+    // A link's departure is not read: a mismatched one shows the week from its arrival, and leaves
+    // the address.
+    await open(page, `/de/wohnungen/laerche?arrival=${arrival}&departure=${plus(arrival, 1)}`);
+    await expect(page).not.toHaveURL(/departure=/);
+    await expect(monthName(page)).toHaveText(name);
+    await expect(chosen(page)).toHaveCount(1);
+    const book = new URL(
+      (await panel(page).getByRole('link', { name: 'Weiter zur Buchung' }).getAttribute('href'))!,
+      'http://localhost',
+    );
+    expect(book.searchParams.get('arrival')).toBe(arrival);
+    expect(book.searchParams.get('departure')).toBe(plus(arrival, 7));
     // A week that is not free is not chosen.
     await open(page, '/de/wohnungen/laerche?arrival=2020-01-04&departure=2020-01-11');
     await expect(panel(page).locator('[aria-selected=true]')).toHaveCount(0);
@@ -455,6 +464,12 @@ test(
     expect(response!.status()).toBe(503);
     await expect(panel(page)).toContainText('The free weeks cannot be shown just now.');
     await expect(panel(page).locator('button, a, input')).toHaveCount(0);
+    // A linked week's arrival stays for a later visit; its departure, never read, leaves.
+    await open(
+      page,
+      'http://localhost:4001/en/apartments/laerche?arrival=2027-01-02&departure=2027-01-03',
+    );
+    await expect(page).toHaveURL(/\/laerche\?arrival=2027-01-02$/);
   },
 );
 
@@ -617,6 +632,11 @@ for (const [path, book] of [
     await page.locator('a.back').click();
     await expect(page).toHaveURL(/apartment=laerche&arrival=\d{4}-\d\d-\d\d/);
     await expect(page.locator('.stay.chosen:visible')).toHaveCount(1);
+    // And the apartment's link leads back to the week by its arrival alone.
+    await expect(page.locator('.teaser h3 a', { hasText: 'Lärche' })).toHaveAttribute(
+      'href',
+      /\/laerche\?arrival=\d{4}-\d\d-\d\d$/,
+    );
     const home = page.locator('.pick .booking-bar');
     await expect(home).toBeVisible();
     // At the list's top, where the bar keeps to the screen's foot.

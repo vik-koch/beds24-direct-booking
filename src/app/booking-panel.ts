@@ -1014,12 +1014,14 @@ export class BookingPanel {
       this.chosen.set({ season: season.name, arrival });
       if (!this.months()[season.name])
         this.months.update((months) => ({ ...months, [season.name]: arrival.slice(0, 7) }));
-    } else if (arrival && this.weeks && this.browser)
-      // A week outside the seasons, such as last year's, leaves the address too; without the
-      // weeks, while Beds24 cannot be reached, the address keeps it for a later visit.
+    }
+    // The week's departure comes from its arrival, and a week outside the seasons, such as last
+    // year's, leaves the address; without the weeks, while Beds24 cannot be reached, the address
+    // keeps its arrival for a later visit.
+    if (this.browser)
       replaceQuery(this.location, (params) => {
-        params.delete('arrival');
         params.delete('departure');
+        if (this.weeks && !season) params.delete('arrival');
       });
     this.carry();
     if (this.weeks) this.choice.limit(Object.values(this.weeks.capacities));
@@ -1225,13 +1227,11 @@ export class BookingPanel {
   // address names a season only once the visitor has switched away from the week's.
   private keep() {
     const pick = this.chosen();
-    const stay = pick && this.pickIn(pick.season);
     replaceQuery(this.location, (params) => {
-      if (stay) {
-        params.set('arrival', stay.arrival);
-        params.set('departure', stay.departure);
+      if (pick) {
+        params.set('arrival', pick.arrival);
         this.season.mark(params);
-      } else ['arrival', 'departure', 'season'].forEach((name) => params.delete(name));
+      } else ['arrival', 'season'].forEach((name) => params.delete(name));
     });
     this.carry();
   }
@@ -1239,14 +1239,12 @@ export class BookingPanel {
   // The chosen week for the links to the home page and to this page.
   private carry() {
     const pick = this.chosen();
-    const stay = pick && this.pickIn(pick.season);
     this.choice.week.set(
-      stay && {
+      pick && {
         home: address(this.language, 'home'),
         page: address(this.language, 'apartment', this.slug),
         slug: this.slug,
-        arrival: stay.arrival,
-        departure: stay.departure,
+        arrival: pick.arrival,
       },
     );
   }

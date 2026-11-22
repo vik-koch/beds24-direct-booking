@@ -375,25 +375,23 @@ export class FreeWeeksList implements OnInit {
   // The address keeps the chosen week, with a season only once the visitor has switched away from
   // the week's, and the links to the home page and the week's apartment carry it.
   private keep(pick: Week | null) {
-    const week = pick && this.weekOf(pick);
     const { slug } = (pick && this.weeks()?.apartments[pick.apartment]) || {};
     this.choice.week.set(
-      week && slug
+      pick && slug
         ? {
             home: address(this.language, 'home'),
             page: address(this.language, 'apartment', slug),
             slug,
-            arrival: week.arrival,
-            departure: week.departure,
+            arrival: pick.arrival,
           }
         : null,
     );
     // Without the weeks, while Beds24 cannot be reached, the address keeps its week.
     if (!this.browser || !this.weeks()) return;
     replaceQuery(this.location, (params) => {
-      if (week && slug) {
+      if (pick && slug) {
         params.set('apartment', slug);
-        params.set('arrival', week.arrival);
+        params.set('arrival', pick.arrival);
         this.season.mark(params);
       } else if (params.has('apartment'))
         ['apartment', 'arrival', 'season'].forEach((name) => params.delete(name));
@@ -472,10 +470,8 @@ export class FreeWeeksList implements OnInit {
   }
 
   protected link(pick: Week) {
-    const { arrival, departure } = this.weekOf(pick);
     const { slug } = this.weeks()!.apartments[pick.apartment];
-    const query = new URLSearchParams({ arrival, departure });
-    return this.choice.link(`${address(this.language, 'apartment', slug)}?${query}`);
+    return this.choice.link(`${address(this.language, 'apartment', slug)}?arrival=${pick.arrival}`);
   }
 
   protected isChosen(season: SeasonName, apartment: number, arrival: string) {
