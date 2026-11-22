@@ -12,6 +12,7 @@ import type { Tax } from '../beds24/client';
 import type { Capacity } from '../beds24/weeks';
 import type { SeasonName } from '../content/names';
 import { Season } from './season';
+import { replaceQuery } from './texts';
 
 const usual = { adults: 2, children: 0 };
 
@@ -25,22 +26,6 @@ export const taxed = (room: Capacity, adults: number, children: number) =>
 
 export const taxFor = (tax: Tax, count: number) =>
   Math.round(tax.amount * count * (tax.per === 'night' ? 7 : 1) * 100) / 100;
-
-// Changes the address's query in place, keeping its fragment and the history entry's state.
-export function replaceQuery(location: Location, change: (params: URLSearchParams) => void) {
-  const [rest, hash] = location.path(true).split('#');
-  const [path, query = ''] = rest.split('?');
-  const params = new URLSearchParams(query);
-  const before = params.toString();
-  change(params);
-  if (params.toString() === before) return;
-  const fragment = hash === undefined ? '' : `#${hash}`;
-  location.replaceState(
-    `${path}${params.size ? `?${params}` : ''}${fragment}`,
-    '',
-    location.getState(),
-  );
-}
 
 // A chosen week, with the home page's address and its apartment's page.
 export interface ChosenWeek {

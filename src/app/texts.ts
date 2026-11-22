@@ -1,3 +1,4 @@
+import type { Location } from '@angular/common';
 import { InjectionToken } from '@angular/core';
 import type { Language, Texts } from '../content/schema';
 
@@ -23,6 +24,22 @@ export function address(language: Language, page: Page, slug?: string): string {
 }
 
 // Puts values into a text's {placeholders}.
+// Changes the address's query in place, keeping its fragment and the history entry's state.
+export function replaceQuery(location: Location, change: (params: URLSearchParams) => void) {
+  const [rest, hash] = location.path(true).split('#');
+  const [path, query = ''] = rest.split('?');
+  const params = new URLSearchParams(query);
+  const before = params.toString();
+  change(params);
+  if (params.toString() === before) return;
+  const fragment = hash === undefined ? '' : `#${hash}`;
+  location.replaceState(
+    `${path}${params.size ? `?${params}` : ''}${fragment}`,
+    '',
+    location.getState(),
+  );
+}
+
 export const fill = (text: string, values: Record<string, string | number>) =>
   text.replace(/\{(\w+)\}/g, (_, key: string) => String(values[key] ?? ''));
 

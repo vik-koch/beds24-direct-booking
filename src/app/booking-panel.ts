@@ -30,10 +30,10 @@ import site from '../content/generated/site';
 import type { SeasonName } from '../content/names';
 import { BookingBar, type BarLine } from './booking-bar';
 import { GuestCounts } from './guest-counts';
-import { fits, Guests, replaceQuery, taxed, taxFor } from './guests';
+import { fits, Guests, taxed, taxFor } from './guests';
 import { Season } from './season';
 import { swapper } from './swap';
-import { address, fill, formatMoney, formatStay, LANGUAGE, TEXTS } from './texts';
+import { address, fill, formatMoney, formatStay, LANGUAGE, replaceQuery, TEXTS } from './texts';
 
 type SeasonWeeks = FreeWeeks['seasons'][number];
 interface Stay {
