@@ -31,7 +31,8 @@ content. The application has no wording, no colour and no typeface of its own. T
   site's languages.
 - **The address parts** (`paths` in a texts file) are the translated fixed parts of
   [`site-map.md`](site-map.md)'s addresses, such as `wohnungen` for `apartments`; `anchors` are the
-  home page's section anchors. An apartment's slug is the same in every language.
+  home page's section anchors, never `top`, which is the page's top. An apartment's slug is the same
+  in every language.
 - **An apartment** is a file of its own, named by its slug: `site.json` lists
   `"apartments": ["zirbe", "laerche"]`, and `apartments/zirbe.json` holds
 
