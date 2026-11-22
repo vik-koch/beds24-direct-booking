@@ -603,9 +603,17 @@ test('on the home page the site name scrolls to its top without a load, and Back
   await page.goBack();
   await expect(page).toHaveURL('/en#free-weeks');
   await expect.poll(() => page.evaluate(() => scrollY)).toBe(below);
-  // Elsewhere it leads to the home page as before.
-  await page.goto('/en/apartments/laerche');
-  await expect(page.locator('.wordmark a')).toHaveAttribute('href', '/en');
+  // Guests changed after a week keep their place in the address, and so do its links.
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.locator('.weeks .stay:visible .price').first().click();
+  await page.locator('#adults').click();
+  await page.getByRole('option', { name: '3', exact: true }).click();
+  await expect(page).toHaveURL(/\?apartment=\w+&arrival=[\d-]+&adults=3#free-weeks$/);
+  await page.locator('.wordmark a').click();
+  await expect(page).toHaveURL(/&adults=3#top$/);
+  await page.locator('app-header nav a').first().click();
+  await expect(page).toHaveURL(/&adults=3#free-weeks$/);
+  expect(await page.evaluate(() => 'kept' in window)).toBe(true);
 });
 
 test('a page whose end never arrives is still shown', async ({ page }) => {

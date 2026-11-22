@@ -20,6 +20,12 @@ describe('Choice', () => {
     expect(choice.link('//example.com/a')).toBe('//example.com/a');
   });
 
+  it('keeps the address as written in a fragment of this page', () => {
+    const choice = at('/de?apartment=a&arrival=2027-01-02&adults=3');
+    expect(choice.link('/de#weeks')).toBe('/de?apartment=a&arrival=2027-01-02&adults=3#weeks');
+    expect(choice.link('/de/a#x')).toBe('/de/a?adults=3#x');
+  });
+
   it('replaces the guests an address of the site carries', () => {
     expect(at('/de?adults=3').link('/de?children=2')).toBe('/de?adults=3');
   });
