@@ -861,3 +861,29 @@ test('a click on the page does not take the focus to the main element', async ({
   await page.keyboard.press('Enter');
   await expect(page.locator('main')).toBeFocused();
 });
+
+// A written src, srcset, sizes or media loads the picture again, even with the value it had (#235).
+test(
+  'the started application leaves the server-rendered pictures as they are',
+  { tag: '@any-engine' },
+  async ({ page }) => {
+    await page.addInitScript(() => {
+      const written: string[] = ((window as unknown as { written: string[] }).written = []);
+      new MutationObserver((records) =>
+        written.push(...records.map((record) => record.attributeName!)),
+      ).observe(document, {
+        subtree: true,
+        attributeFilter: ['src', 'srcset', 'sizes', 'media'],
+      });
+    });
+    for (const path of ['/en', '/en/apartments/zirbe']) {
+      await page.goto(path);
+      await expect(page.locator('html')).toHaveAttribute('data-started', '');
+      expect(await page.locator('img').count(), path).toBeGreaterThan(2);
+      const written = await page.evaluate(
+        () => (window as unknown as { written: string[] }).written,
+      );
+      expect(written, path).toEqual([]);
+    }
+  },
+);

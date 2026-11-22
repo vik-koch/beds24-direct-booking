@@ -11,6 +11,7 @@ import type { FreeWeeks } from '../beds24/weeks';
 import site from '../content/generated/site';
 import { placesOf, srcset } from '../content/names';
 import { Choice, fits } from './choice';
+import { Files } from './files';
 import { Season } from './season';
 import { address, fill, formatMoney, LANGUAGE, TEXTS } from './texts';
 
@@ -21,7 +22,7 @@ type SeasonWeeks = FreeWeeks['seasons'][number];
 @Component({
   encapsulation: ViewEncapsulation.None,
   selector: 'app-teasers',
-  imports: [NgIcon],
+  imports: [Files, NgIcon],
   providers: [
     provideIcons({ lucideBedDouble, lucideInfo, lucideRuler, lucideSparkles, lucideUsers }),
   ],
@@ -35,9 +36,11 @@ type SeasonWeeks = FreeWeeks['seasons'][number];
               <img
                 class="season-picture"
                 [attr.data-for]="shown.season"
-                [attr.srcset]="srcset(picture)"
-                sizes="(min-width: 64rem) 32rem, (min-width: 40rem) 50vw, 100vw"
-                [src]="picture.sources[0].url"
+                [appFiles]="{
+                  sizes: '(min-width: 64rem) 32rem, (min-width: 40rem) 50vw, 100vw',
+                  srcset: srcset(picture),
+                  src: picture.sources[0].url,
+                }"
                 [width]="picture.width"
                 [height]="picture.height"
                 [alt]="picture.alt[language.code]"
