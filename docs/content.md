@@ -15,7 +15,7 @@ content. The application has no wording, no colour and no typeface of its own. T
 | `theme.css` | The palette and the typeface as custom properties on `:root`, and the typeface's `@font-face`. |
 | `fonts/` | Optional: the font files `theme.css` refers to, as `fonts/<file>`. |
 | `pictures/` | The pictures `site.json` names, such as each season's hero photo. |
-| `map/` | With a map: its tiles and walking routes, written by the two map scripts and committed. |
+| `map/` | With a map: its tiles, walking routes and lifts, written by the three map scripts and committed. |
 
 - **Fonts are served at `/fonts/<file>`** under their own names, and every page preloads each
   `.woff2` file, so the font arrives with the stylesheet instead of after it. Browsers keep them for
@@ -166,8 +166,14 @@ content. The application has no wording, no colour and no typeface of its own. T
   `node scripts/map-routes.mjs` when a point is added, moved or removed; it asks for one route a
   second, as the service asks. The routes follow OpenStreetMap's ways, which do not say what is
   closed or a piste in winter: walk them before a site shows them.
-- **Both scripts** read the folder `CONTENT_DIR` names, the demo's without it, and write into its
-  `map/`; commit what they write. A site that drops its map deletes the folder.
+- **The lifts** are `map/lifts.json`: OpenStreetMap's aerial lifts inside the box, gondolas, cable
+  cars, chairlifts and drag lifts, each with its kind and its local name, taken through the
+  [Overpass API](https://overpass-api.de/) with the box they were taken for. Take them with
+  `node scripts/map-lifts.mjs` when the box changes or a lift is built or removed; the content build
+  refuses a file taken for another box. Magic carpets, zip lines and goods lifts are left out, and a
+  lift's name is the one OpenStreetMap has, in the local language on every page.
+- **The three scripts** read the folder `CONTENT_DIR` names, the demo's without it, and write into
+  its `map/`; commit what they write. A site that drops its map deletes the folder.
 - **The season's colours:** `theme.css` sets one season's accents on `:root` and, with two seasons,
   the other's under its attribute, as the demo does with
   `[data-season='summer'] { --color-accent: …; --color-accent-soft: …; }`.

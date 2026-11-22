@@ -454,6 +454,12 @@ export interface Route {
   meters: number;
   line: [number, number][];
 }
+// An aerial lift as OpenStreetMap tags it: its kind, such as gondola or t-bar, and its local name.
+export interface Lift {
+  kind: string;
+  name?: string;
+  line: [number, number][];
+}
 export type Site = Omit<
   z.infer<typeof siteSchema>,
   'languages' | 'apartments' | 'seasons' | 'map'

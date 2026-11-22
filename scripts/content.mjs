@@ -237,7 +237,7 @@ export function readContent(dir) {
   return { site: { ...site, languages, apartments, ...(map && { map }) }, texts };
 }
 
-// The tiles and the routes the map scripts wrote, checked against the content they came from;
+// The tiles, routes and lifts the map scripts wrote, checked against the content they came from;
 // the map with its tiles' address.
 function readMap(dir, map, apartments) {
   const stale = (file, key, reason, script) =>
@@ -280,6 +280,9 @@ function readMap(dir, map, apartments) {
         'not a pair of the content',
         'map-routes.mjs',
       );
+  const lifts = json('lifts.json', 'map-lifts.mjs');
+  if (JSON.stringify(lifts.box) !== JSON.stringify(map.box))
+    throw stale('lifts.json', 'box', "taken for another box than site.json's", 'map-lifts.mjs');
   return { ...map, tiles: `/map/tiles/${tiles.build}` };
 }
 
@@ -342,6 +345,13 @@ export async function writeContent(dir, out, cache) {
     join(out, 'routes.ts'),
     module('Route[]', routes).replace('{ Route[] }', '{ Route }'),
   );
+  // The lifts too: the script rounded their points.
+  const lifts = site.map
+    ? JSON.parse(readFileSync(join(dir, 'map', 'lifts.json'), 'utf8')).features.map(
+        ({ properties, geometry }) => ({ ...properties, line: geometry.coordinates }),
+      )
+    : [];
+  writeFileSync(join(out, 'lifts.ts'), module('Lift[]', lifts).replace('{ Lift[] }', '{ Lift }'));
   for (const [code, value] of Object.entries(texts))
     writeFileSync(join(out, `texts.${code}.ts`), module('Texts', value));
   const loaders = Object.keys(texts).map(
