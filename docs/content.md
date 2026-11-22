@@ -143,6 +143,13 @@ content. The application has no wording, no colour and no typeface of its own. T
   names each place under `map.places.<key>` with its `name`, and optionally a text for each season
   the site lists, such as `"winter": "Gondola to the slopes"`. How the map is built is
   [ADR 14](adr/0014-the-map.md).
+- **The map's wording** (`map` in a texts file, beside `places`): `label` names the map for screen
+  readers; `from` heads the panel's choice of apartment and `more` labels its switch; `walk` takes
+  `{distance}` and `{time}`, which the page writes in the page's language ("900 m", "1.4 km", "13
+  mins"). `zoomIn`, `zoomOut` and `attribution` name the map's buttons, and `gestures` holds the
+  hints the map shows when a scroll without Ctrl (`windows`) or ⌘ (`mac`), or one finger (`touch`),
+  would move it. The map writes its labels in the theme's typeface, so a site with a map needs its
+  font as a `.woff2` file in `fonts/`; the first one is used.
 - **The map's tiles** are `map/tiles/<build>/`, cut out of a
   [Protomaps](https://maps.protomaps.com/builds/) planet build of OpenStreetMap at zoom 12 to 15
   inside the box, with `map/tiles.json` naming the build, the box and the number of tiles. They are
@@ -206,12 +213,12 @@ a missing picture, an apartment picture that is not one, does not answer, is por
 2:1 or lacks its alternative text in a language, an apartment without its file or a file in
 `apartments/` that `site.json` does not list, a point outside the map's box or an apartment's point
 without a map, a place without its name or with a text for a season the site does not list, tiles
-cut for another box or a tile missing, a `map/` folder without a map, a route missing, left over or
-computed before a point moved, and a part beyond its boundary stop the build with the file and the
-key named; for the tiles and the routes, with the script to run. The schema, not the demo's files,
-defines the keys, so the compiler checks every template against the same keys for every site. Every
-language has the same keys, so every language renders the same elements and a change of language
-finds the reader's place.
+cut for another box or a tile missing, a `map/` folder without a map, a map without a `.woff2` font,
+a route missing, left over or computed before a point moved, and a part beyond its boundary stop the
+build with the file and the key named; for the tiles and the routes, with the script to run. The
+schema, not the demo's files, defines the keys, so the compiler checks every template against the
+same keys for every site. Every language has the same keys, so every language renders the same
+elements and a change of language finds the reader's place.
 
 ## Another folder
 

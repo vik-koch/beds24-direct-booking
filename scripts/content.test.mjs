@@ -685,3 +685,20 @@ test('the tiles are served by their build, and the site module names their addre
     new RegExp(`"tiles": "/map/tiles/${build}"`),
   );
 });
+
+test('a map needs the theme font as a file, for its labels', () => {
+  const dir = changed('site.json', () => undefined);
+  rmSync(join(dir, 'fonts'), { recursive: true });
+  assert.throws(
+    () => readContent(dir),
+    /fonts\n {2}\(folder\): a map needs the theme's font as a \.woff2 file/,
+  );
+});
+
+test('the routes go into a module of their own, for the map alone', async () => {
+  const out = mkdtempSync(join(root, 'generated-'));
+  await writeContent('content/demo', out, cache);
+  const routes = readFileSync(join(out, 'routes.ts'), 'utf8');
+  assert.match(routes, /"apartment": "zirbe",\s+"place": "schattberg",\s+"meters": 1090/);
+  assert.doesNotMatch(readFileSync(join(out, 'site.ts'), 'utf8'), /"line"/);
+});

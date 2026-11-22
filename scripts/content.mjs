@@ -164,6 +164,14 @@ export function readContent(dir) {
   if (!site.map && existsSync(join(dir, 'map')))
     throw new Error(`${join(dir, 'map')}\n  (folder): no map in site.json; delete the folder`);
   const map = site.map && readMap(dir, site.map, apartments);
+  // The map draws its labels in the theme's typeface, from its file.
+  const woff2 =
+    existsSync(join(dir, 'fonts')) &&
+    readdirSync(join(dir, 'fonts')).some((f) => f.endsWith('.woff2'));
+  if (site.map && !woff2)
+    throw new Error(
+      `${join(dir, 'fonts')}\n  (folder): a map needs the theme's font as a .woff2 file`,
+    );
   // Each place is named in every language, with a text only for a season the site lists.
   const places = site.map?.places.map((place) => place.key) ?? [];
   for (const tag of site.languages) {
@@ -319,6 +327,24 @@ export async function writeContent(dir, out, cache) {
   const module = (type, value) =>
     `import type { ${type} } from '../schema';\n\nconst value: ${type} = ${JSON.stringify(value, null, 2)};\nexport default value;\n`;
   writeFileSync(join(out, 'site.ts'), module('Site', { ...site, seasons, apartments }));
+  // The routes have a module of their own, which only the map's chunk imports; 5 decimals of a
+  // degree are about a metre.
+  const round = (value) => Math.round(value * 1e5) / 1e5;
+  const routes = site.map
+    ? JSON.parse(readFileSync(join(dir, 'map', 'routes.json'), 'utf8')).features.map(
+        ({ properties: { apartment, place, meters, minutes }, geometry }) => ({
+          apartment,
+          place,
+          meters,
+          minutes,
+          line: geometry.coordinates.map(([lon, lat]) => [round(lon), round(lat)]),
+        }),
+      )
+    : [];
+  writeFileSync(
+    join(out, 'routes.ts'),
+    module('Route[]', routes).replace('{ Route[] }', '{ Route }'),
+  );
   for (const [code, value] of Object.entries(texts))
     writeFileSync(join(out, `texts.${code}.ts`), module('Texts', value));
   const loaders = Object.keys(texts).map(

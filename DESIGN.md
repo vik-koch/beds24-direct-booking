@@ -391,6 +391,23 @@ Links in body text at weight 500 without underline; a pill of white behind the o
 pointer. The apartments entry opens a small white menu with the card shadow, on hover or by
 keyboard. In the sheet the apartments are indented under their entry at weight 400.
 
+### Map
+
+- **Size:** edge to edge up to 120rem, 70% of the screen's height between 28rem and 48rem; flat,
+  never turned or tilted.
+- **Colours:** the theme's: ground for land, the season's soft accent for green, oak for buildings,
+  white for roads, a mix of ground and accent for water. It changes with the season once the page's
+  colours have.
+- **Panel:** a card over the map, at its upper left from 48rem, at its foot on a phone above the
+  attribution's line, scrolling inside when the places do not fit. The apartments are small outlined
+  pills, the chosen one filled in ink; the switch for more places is a track in the edge colour that
+  turns to the accent.
+- **Pins:** an apartment is a white pill with a house and its name, filled in ink once chosen; a
+  place is a round accent pill with its icon, which adds the walk from the chosen apartment ("900 m
+  · 13 mins"). Pins and buttons take the site's focus ring.
+- **Routes:** a dashed accent line with a white casing, from the chosen apartment to each place
+  shown.
+
 ### Language menu
 
 One entry at the end of the header's line: a globe and the current language's name in its own
