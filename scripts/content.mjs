@@ -330,11 +330,10 @@ export async function writeContent(dir, out, cache) {
   const round = (value) => Math.round(value * 1e5) / 1e5;
   const routes = site.map
     ? JSON.parse(readFileSync(join(dir, 'map', 'routes.json'), 'utf8')).features.map(
-        ({ properties: { apartment, place, meters, minutes }, geometry }) => ({
+        ({ properties: { apartment, place, meters }, geometry }) => ({
           apartment,
           place,
           meters,
-          minutes,
           line: geometry.coordinates.map(([lon, lat]) => [round(lon), round(lat)]),
         }),
       )

@@ -29,7 +29,7 @@ import site from '../content/generated/site';
 import { lucideName } from '../content/names';
 import type { Route } from '../content/schema';
 import { Season } from './season';
-import { fill, LANGUAGE, TEXTS } from './texts';
+import { LANGUAGE, TEXTS } from './texts';
 
 const map = site.map!;
 // Points of interest the map leaves out: the town's other places to stay.
@@ -144,7 +144,7 @@ function flavor(c: (name: string) => string): Flavor {
                   type="radio"
                   name="map-apartment"
                   [checked]="chosen() === apartment.slug"
-                  (change)="chosen.set(apartment.slug)"
+                  (click)="choose(apartment.slug)"
                 />
                 <span>{{ apartment.name }}</span>
               </label>
@@ -162,15 +162,15 @@ function flavor(c: (name: string) => string): Flavor {
           @for (place of shown(); track place.key) {
             <li>
               <ng-icon [name]="lucideName(place.icon)" aria-hidden="true" />
-              <div>
+              <div class="map-place-name">
                 <p class="font-medium">{{ texts.places[place.key]!.name }}</p>
-                @if (texts.places[place.key]![season.current()]; as note) {
-                  <p class="text-ink-soft">{{ note }}</p>
-                }
-                @if (walk(place.key); as walk) {
-                  <p class="text-ink-soft">{{ walk }}</p>
+                @if (route(place.key); as route) {
+                  <p class="text-ink-soft tabular-nums">{{ distance(route) }}</p>
                 }
               </div>
+              @if (texts.places[place.key]![season.current()]; as note) {
+                <p class="text-ink-soft">{{ note }}</p>
+              }
             </li>
           }
         </ul>
@@ -186,7 +186,7 @@ function flavor(c: (name: string) => string): Flavor {
           [attr.data-lat]="apartment.lat"
           [attr.data-lon]="apartment.lon"
           [attr.aria-pressed]="chosen() === apartment.slug"
-          (click)="chosen.set(apartment.slug)"
+          (click)="choose(apartment.slug)"
         >
           <ng-icon name="lucideHouse" aria-hidden="true" />{{ apartment.name }}
         </button>
@@ -202,7 +202,7 @@ function flavor(c: (name: string) => string): Flavor {
         >
           <ng-icon [name]="lucideName(place.icon)" />
           @if (route(place.key); as route) {
-            {{ short(route) }}
+            {{ distance(route) }}
           }
         </span>
       }
@@ -228,6 +228,11 @@ function flavor(c: (name: string) => string): Flavor {
         max-width: 120rem;
         margin-inline: auto;
         background: var(--color-ground);
+      }
+
+      /* Its own layers, such as the hint to zoom with Ctrl, stay under the panel. */
+      .map-canvas {
+        isolation: isolate;
       }
 
       /* MapLibre makes its container relative, outside the layers; a height keeps it filled. */
@@ -397,13 +402,25 @@ function flavor(c: (name: string) => string): Flavor {
         }
       }
 
+      /* A place's icon, its name with the distance at the end of the line, its text below. */
+      .map-place-name {
+        display: flex;
+        justify-content: space-between;
+        gap: 0.75rem;
+      }
+
       .map-places {
         display: grid;
         gap: 0.875rem;
 
         li {
-          display: flex;
-          gap: 0.75rem;
+          display: grid;
+          grid-template-columns: auto 1fr;
+          column-gap: 0.75rem;
+
+          > p {
+            grid-column: 2;
+          }
           --ng-icon__color: var(--color-ink-soft);
           --ng-icon__size: 1.375rem;
         }
@@ -429,8 +446,6 @@ export class LocationMap {
   protected readonly all = signal(false);
   protected readonly shown = computed(() => map.places.filter((p) => this.all() || !p.more));
   protected readonly drawn = signal<MapLibre | undefined>(undefined);
-  // The colours after a change of season, once the page's transition has ended.
-  private readonly colours = signal(0);
   private readonly injector = inject(Injector);
 
   constructor() {
@@ -536,14 +551,8 @@ export class LocationMap {
     effect(() => {
       this.chosen();
       this.all();
-      this.colours();
-      this.drawn()?.setStyle(this.style());
-    });
-    effect(() => {
       this.season.current();
-      void Promise.all(this.document.documentElement.getAnimations().map((a) => a.finished)).then(
-        () => this.colours.update((n) => n + 1),
-      );
+      this.drawn()?.setStyle(this.style());
     });
   }
 
@@ -551,33 +560,36 @@ export class LocationMap {
     return routes.find((r) => r.apartment === this.chosen() && r.place === place);
   }
 
-  protected walk(place: string) {
-    const route = this.route(place);
-    return route && fill(this.texts.walk, this.measures(route));
+  // On a page with one apartment it stays chosen; elsewhere a second click clears the choice.
+  protected choose(slug: string) {
+    this.chosen.set(this.chosen() === slug && !this.apartment() ? undefined : slug);
   }
 
-  // On the place's pin, beside its icon.
-  protected short(route: Route) {
-    const { distance, time } = this.measures(route);
-    return `${distance} · ${time}`;
-  }
-
-  private measures({ meters, minutes }: { meters: number; minutes: number }) {
-    const unit = (value: number, name: string) =>
-      new Intl.NumberFormat(this.language.tag, {
-        style: 'unit',
-        unit: name,
-        maximumFractionDigits: 1,
-      }).format(value);
-    return {
-      distance: meters < 1000 ? unit(meters, 'meter') : unit(meters / 1000, 'kilometer'),
-      time: unit(minutes, 'minute'),
-    };
+  protected distance({ meters }: Route) {
+    const [value, unit] = meters < 1000 ? [meters, 'meter'] : [meters / 1000, 'kilometer'];
+    return new Intl.NumberFormat(this.language.tag, {
+      style: 'unit',
+      unit,
+      maximumFractionDigits: 1,
+    }).format(value);
   }
 
   private style(): StyleSpecification {
-    const css = getComputedStyle(this.document.documentElement);
-    const c = (name: string) => css.getPropertyValue(`--color-${name}`).trim();
+    // A change of season fades the accents on <html>: the map takes the colours they fade to, and
+    // fades as long, so that it changes with the page.
+    const html = this.document.documentElement;
+    const css = getComputedStyle(html);
+    const fading = html
+      .getAnimations()
+      .filter((a): a is CSSTransition => a instanceof CSSTransition);
+    const c = (name: string) => {
+      const property = `--color-${name}`;
+      const effect = fading.find((a) => a.transitionProperty === property)
+        ?.effect as KeyframeEffect;
+      return String(
+        effect?.getKeyframes().at(-1)?.[property] ?? css.getPropertyValue(property),
+      ).trim();
+    };
     const shown = this.shown().map((place) => place.key);
     const lines = routes
       .filter((r) => r.apartment === this.chosen() && shown.includes(r.place))
@@ -602,7 +614,7 @@ export class LocationMap {
     return {
       version: 8,
       'font-faces': { theme: map.font },
-      transition: { duration: 300 },
+      transition: { duration: Number(fading[0]?.effect?.getComputedTiming().duration ?? 0) },
       sources: {
         town: {
           type: 'vector',

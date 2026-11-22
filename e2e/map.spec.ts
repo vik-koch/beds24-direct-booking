@@ -1,6 +1,7 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
+import sharp from 'sharp';
 
 const panel = (page: Page) => page.locator('.map-panel');
 const places = (page: Page) => panel(page).locator('.map-places li');
@@ -46,18 +47,51 @@ test("a pin or the panel chooses an apartment, whose routes' distances show", as
   await page.setViewportSize({ width: 1280, height: 900 });
   await openMap(page);
   await expect(places(page)).toHaveCount(2);
-  await expect(places(page).first()).not.toContainText('on foot');
+  await expect(places(page).first()).not.toContainText(' m');
   await page.getByRole('button', { name: 'Ahorn' }).click();
   await expect(panel(page).getByRole('radio', { name: 'Ahorn' })).toBeChecked();
-  await expect(places(page).first()).toContainText('900 m, 13 mins on foot');
-  await expect(page.locator('.map-place').first()).toContainText('900 m · 13 mins');
+  await expect(places(page).first()).toContainText('900 m');
+  await expect(page.locator('.map-place').first()).toHaveText('900 m');
   await panel(page).getByText('Zirbe').click();
   await expect(page.getByRole('button', { name: 'Zirbe' })).toHaveAttribute('aria-pressed', 'true');
   await expect(page.getByRole('button', { name: 'Ahorn' })).toHaveAttribute(
     'aria-pressed',
     'false',
   );
-  await expect(places(page).first()).toContainText('1.1 km, 15 mins on foot');
+  await expect(places(page).first()).toContainText('1.1 km');
+});
+
+test('a second click on the chosen apartment clears the choice', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await openMap(page);
+  const radio = panel(page).getByRole('radio', { name: 'Ahorn' });
+  await panel(page).getByText('Ahorn').click();
+  await expect(radio).toBeChecked();
+  await panel(page).getByText('Ahorn').click();
+  await expect(radio).not.toBeChecked();
+  await expect(page.locator('.map-place').first()).toHaveText('');
+  const pin = page.getByRole('button', { name: 'Lärche' });
+  await pin.click();
+  await expect(pin).toHaveAttribute('aria-pressed', 'true');
+  await pin.click();
+  await expect(pin).toHaveAttribute('aria-pressed', 'false');
+  await expect(panel(page).getByRole('radio', { name: 'Lärche' })).not.toBeChecked();
+});
+
+test("the map's hint to hold Ctrl while scrolling stays under the panel", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await openMap(page);
+  const hint = page.locator('.maplibregl-cooperative-gesture-screen');
+  await page.locator('.maplibregl-canvas').hover({ position: { x: 800, y: 300 } });
+  await page.mouse.wheel(0, 40);
+  await expect(hint).toHaveClass(/maplibregl-show/);
+  await expect(hint).toHaveCSS('opacity', '1');
+  // The panel's white ground stays white: the hint's dark veil lies only on the map.
+  const shot = await panel(page).screenshot();
+  const { data, info } = await sharp(shot).raw().toBuffer({ resolveWithObject: true });
+  // A pixel of the padding above the panel's first line, away from its round corners.
+  const at = (8 * info.width + Math.round(info.width / 2)) * info.channels;
+  expect(Math.min(...data.subarray(at, at + 3))).toBeGreaterThan(240);
 });
 
 test('the switch adds the other places, with their pins', async ({ page }) => {
@@ -100,7 +134,7 @@ test('without WebGL the panel stands alone and works', async ({ page }) => {
   await page.goto('/en');
   await scrollToMap(page);
   await panel(page).getByText('Ahorn').click();
-  await expect(places(page).first()).toContainText('900 m, 13 mins on foot');
+  await expect(places(page).first()).toContainText('900 m');
   await expect(page.locator('.location-map')).not.toHaveAttribute('data-drawn');
   await expect(page.locator('.map-pin').first()).toBeHidden();
   expect(errors).toEqual([]);

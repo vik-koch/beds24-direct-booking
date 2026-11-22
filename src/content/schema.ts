@@ -395,13 +395,12 @@ export const textsSchema = z.strictObject({
   }),
   // The map's wording: the panel's, MapLibre's own (its title, controls and the hints shown when
   // a scroll or one finger would move the map), and each place by its key with its name and a
-  // text for each season the site lists. {distance} and {time} in walk are filled in by the page.
+  // text for each season the site lists.
   map: z
     .strictObject({
       label: text,
       from: text,
       more: text,
-      walk: text,
       zoomIn: text,
       zoomOut: text,
       attribution: text,
@@ -453,7 +452,6 @@ export interface Route {
   apartment: string;
   place: string;
   meters: number;
-  minutes: number;
   line: [number, number][];
 }
 export type Site = Omit<
