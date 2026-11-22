@@ -169,6 +169,12 @@ export function readContent(dir) {
   )?.[2];
   if (site.map && !(font && existsSync(join(dir, font))))
     throw new Error(`${join(dir, 'theme.css')}\n  @font-face: a map needs a .woff2 file in fonts/`);
+  // And its water, woods and places in the theme's map colours.
+  const theme = readFileSync(join(dir, 'theme.css'), 'utf8');
+  for (const name of mapColors)
+    if (site.map && !theme.includes(`--color-${name}:`))
+      throw new Error(`${join(dir, 'theme.css')}
+  --color-${name}: a map needs it`);
   const map = site.map && { ...readMap(dir, site.map, apartments), font: `/${font}` };
   // Each place is named in every language, with a text only for a season the site lists.
   const places = site.map?.places.map((place) => place.key) ?? [];
@@ -236,6 +242,12 @@ export function readContent(dir) {
   });
   return { site: { ...site, languages, apartments, ...(map && { map }) }, texts };
 }
+
+const mapColors = [
+  'water',
+  'wood',
+  ...['food', 'shop', 'transport', 'service', 'culture'].map((group) => `poi-${group}`),
+];
 
 // The tiles, routes and lifts the map scripts wrote, checked against the content they came from;
 // the map with its tiles' address.

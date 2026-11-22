@@ -675,6 +675,13 @@ test('one route for each apartment and place, from the points they have now', ()
   );
 });
 
+test('a map needs the theme to name its own colours', () => {
+  const dir = changed('site.json', () => undefined);
+  const file = join(dir, 'theme.css');
+  writeFileSync(file, readFileSync(file, 'utf8').replace(/--color-poi-shop:[^;]+;/, ''));
+  assert.throws(() => readContent(dir), /theme\.css\n {2}--color-poi-shop: a map needs it/);
+});
+
 test('the lifts are taken for the box the map has now', () => {
   const lifts = changed('map/lifts.json', (file) => (file.box.east += 0.001));
   assert.throws(

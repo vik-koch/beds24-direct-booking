@@ -48,9 +48,10 @@ A spike (#254, branch `spike/254-map`, not merged) tried the decision below in t
    default, the others once the list of more places is unfolded.
 7. **A list beside the map carries the same facts** for keyboard and screen reader users and for a
    browser that cannot draw the map. The map adds to the list; it never replaces it.
-8. **Points of interest carry Lucide icons** (#268), drawn in the soft ink in the browser when a
-   tile first needs one, for the kinds the map lists; others are left out. No sprite sheet is
-   served, and the icons match the site's own.
+8. **Points of interest carry Lucide icons** (#268), white on a circle in their group's theme
+   colour, drawn in the browser when a tile first needs one, for the kinds the map lists; others are
+   left out. Woods get a pattern of Lucide trees the same way. No sprite sheet is served, and the
+   icons match the site's own.
 9. **The attribution stays visible,** "© OpenStreetMap · Protomaps", with a link to OpenStreetMap's
    copyright page. It is the only link out, and nothing is fetched from there unless it is followed.
 

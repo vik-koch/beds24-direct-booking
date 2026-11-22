@@ -46,6 +46,7 @@ import {
   lucideStore,
   lucideToilet,
   lucideTrainFront,
+  lucideTreePine,
   lucideUtensils,
   lucideWaves,
 } from '@ng-icons/lucide';
@@ -66,43 +67,72 @@ import { Season } from './season';
 import { LANGUAGE, TEXTS } from './texts';
 
 const map = site.map!;
-// The points of interest the map shows, by their kind in the tiles, each with its Lucide icon. A
-// kind not listed, such as the town's other places to stay, is left out.
-const kinds: Record<string, string> = {
-  restaurant: lucideUtensils,
-  fast_food: lucideSandwich,
-  cafe: lucideCoffee,
-  bakery: lucideCroissant,
-  bar: lucideBeer,
-  pub: lucideBeer,
-  supermarket: lucideShoppingCart,
-  convenience: lucideStore,
-  kiosk: lucideStore,
-  clothes: lucideShirt,
-  gift: lucideGift,
-  books: lucideBookOpen,
-  hairdresser: lucideScissors,
-  pharmacy: lucidePill,
-  doctors: lucideStethoscope,
-  atm: lucideBanknote,
-  bank: lucideBanknote,
-  post_office: lucideMail,
-  information: lucideInfo,
-  toilets: lucideToilet,
-  drinking_water: lucideDroplet,
-  parking: lucideSquareParking,
-  fuel: lucideFuel,
-  bus_stop: lucideBus,
-  station: lucideTrainFront,
-  bicycle_rental: lucideBike,
-  place_of_worship: lucideChurch,
-  museum: lucideLandmark,
-  townhall: lucideLandmark,
-  swimming_pool: lucideWaves,
-  water_park: lucideWaves,
-  fitness_centre: lucideDumbbell,
-  peak: lucideMountain,
+// The points of interest the map shows, by their kind in the tiles, each with its Lucide icon, in
+// groups that each have a colour in the theme. A kind not listed, such as the town's other places
+// to stay, is left out.
+const groups: Record<string, Record<string, string>> = {
+  food: {
+    restaurant: lucideUtensils,
+    fast_food: lucideSandwich,
+    cafe: lucideCoffee,
+    bakery: lucideCroissant,
+    bar: lucideBeer,
+    pub: lucideBeer,
+  },
+  shop: {
+    supermarket: lucideShoppingCart,
+    convenience: lucideStore,
+    kiosk: lucideStore,
+    clothes: lucideShirt,
+    gift: lucideGift,
+    books: lucideBookOpen,
+    hairdresser: lucideScissors,
+  },
+  transport: {
+    parking: lucideSquareParking,
+    fuel: lucideFuel,
+    bus_stop: lucideBus,
+    station: lucideTrainFront,
+    bicycle_rental: lucideBike,
+  },
+  service: {
+    pharmacy: lucidePill,
+    doctors: lucideStethoscope,
+    atm: lucideBanknote,
+    bank: lucideBanknote,
+    post_office: lucideMail,
+    information: lucideInfo,
+    toilets: lucideToilet,
+    drinking_water: lucideDroplet,
+  },
+  culture: {
+    place_of_worship: lucideChurch,
+    museum: lucideLandmark,
+    townhall: lucideLandmark,
+    swimming_pool: lucideWaves,
+    water_park: lucideWaves,
+    fitness_centre: lucideDumbbell,
+    peak: lucideMountain,
+  },
 };
+const kinds = Object.fromEntries(
+  Object.entries(groups).flatMap(([group, icons]) =>
+    Object.entries(icons).map(([kind, svg]) => [kind, { group, svg }]),
+  ),
+);
+// What a guest looks for first shows two zooms before the tiles would show it.
+const early = ['parking', 'atm', 'bus_stop', 'supermarket', 'pharmacy', 'information'];
+
+// A Lucide icon as an image in a colour, at a size in pixels. An SVG drawn on a canvas needs its
+// size in its own attributes.
+async function lucide(svg: string, size: number, color: string) {
+  const image = new Image();
+  image.src = `data:image/svg+xml,${encodeURIComponent(
+    svg.replace('<svg ', `<svg width="${size}" height="${size}" `).replace('currentColor', color),
+  )}`;
+  await image.decode();
+  return image;
+}
 
 // The least zoom at which a view of this size stays inside the box: below it the map would show
 // where it has no tiles. Web Mercator's world is 512 px wide at zoom 0.
@@ -134,10 +164,11 @@ const mix = (a: string, b: string, t: number) => {
 // Protomaps' light flavour in the theme's colours.
 function flavor(c: (name: string) => string): Flavor {
   const [ground, road] = [c('ground'), c('surface')];
-  const green = c('accent-soft');
+  // Parks, meadows and grass; a wood's trees are drawn over it.
+  const green = mix(ground, c('wood'), 0.6);
   // At least 3:1 against the ground, as are the routes, the lifts and the pins' outlines.
   const casing = mix(ground, c('ink-soft'), 0.75);
-  const water = mix(ground, c('accent'), 0.4);
+  const water = c('water');
   const poi = c('ink-soft');
   return {
     ...namedFlavor('light'),
@@ -146,13 +177,13 @@ function flavor(c: (name: string) => string): Flavor {
     park_a: green,
     park_b: green,
     wood_a: green,
-    wood_b: mix(green, c('accent'), 0.08),
+    wood_b: green,
     scrub_a: green,
     scrub_b: green,
     pedestrian: mix(ground, c('oak'), 0.5),
     water,
     // Rivers' and lakes' names, on a halo in the water's colour: at least 4.5:1.
-    ocean_label: mix(c('accent'), c('ink'), 0.65),
+    ocean_label: mix(water, c('ink'), 0.8),
     buildings: mix(c('oak'), c('edge'), 0.15),
     other: casing,
     minor_service: road,
@@ -698,22 +729,35 @@ export class LocationMap {
       };
       hold();
       drawn.on('resize', hold);
-      // A kind's icon in the soft ink, drawn at twice its 15 px when a tile first needs it. An SVG
-      // drawn on a canvas needs its size in its own attributes.
-      drawn.setMissingStyleImageResolver(async (kind) => {
-        if (!(kind in kinds)) return;
-        const ink = getComputedStyle(this.document.documentElement).getPropertyValue(
-          '--color-ink-soft',
-        );
-        const image = new Image();
-        image.src = `data:image/svg+xml,${encodeURIComponent(
-          kinds[kind]!.replace('<svg ', '<svg width="30" height="30" ').replace(
-            'currentColor',
-            ink.trim(),
-          ),
-        )}`;
-        await image.decode();
-        if (!drawn.hasImage(kind)) drawn.addImage(kind, image, { pixelRatio: 2 });
+      // The images the style names, drawn at twice their size when a tile first needs one: a
+      // place's icon in white on a circle of its group's colour, 18 px, and a wood's trees.
+      drawn.setMissingStyleImageResolver(async (id) => {
+        if (id !== 'trees' && !(id in kinds)) return;
+        const color = (name: string) =>
+          getComputedStyle(this.document.documentElement)
+            .getPropertyValue(`--color-${name}`)
+            .trim();
+        const size = id === 'trees' ? 64 : 36;
+        const canvas = Object.assign(this.document.createElement('canvas'), {
+          width: size,
+          height: size,
+        });
+        const context = canvas.getContext('2d')!;
+        if (id === 'trees') {
+          context.fillStyle = color('wood');
+          context.fillRect(0, 0, size, size);
+          context.globalAlpha = 0.3;
+          const tree = await lucide(lucideTreePine, 20, color('ink'));
+          context.drawImage(tree, 6, 6);
+          context.drawImage(tree, 38, 38);
+        } else {
+          context.fillStyle = color(`poi-${kinds[id]!.group}`);
+          context.arc(18, 18, 18, 0, 2 * Math.PI);
+          context.fill();
+          context.drawImage(await lucide(kinds[id]!.svg, 22, '#fff'), 7, 7);
+        }
+        if (!drawn.hasImage(id))
+          drawn.addImage(id, context.getImageData(0, 0, size, size), { pixelRatio: 2 });
       });
       drawn.on('zoom', () => this.zoom.set(drawn.getZoom()));
       drawn.touchZoomRotate.disableRotation();
@@ -870,20 +914,40 @@ export class LocationMap {
     // stays. One-way arrows, which only drivers need, are left out.
     const base = layers('town', flavor(c), { lang: this.language.code })
       .filter((layer) => layer.id !== 'roads_oneway')
-      .map((layer): LayerSpecification =>
-        layer.id === 'pois' && layer.type === 'symbol'
+      .map((layer): LayerSpecification => {
+        if (layer.type !== 'symbol') return layer;
+        // A name along a line or over an area keeps its letters clear of what lies under it.
+        const clear = { ...layer, paint: { ...layer.paint, 'text-halo-width': 2 } };
+        return layer.id === 'pois'
           ? {
-              ...layer,
+              ...clear,
               filter: [
                 'all',
                 ['in', ['get', 'kind'], ['literal', Object.keys(kinds)]],
-                (layer.filter as unknown[])[2],
+                [
+                  '>=',
+                  ['zoom'],
+                  ['-', ['get', 'min_zoom'], ['match', ['get', 'kind'], early, 2, 0]],
+                ],
               ] as FilterSpecification,
-              layout: { ...layer.layout, 'icon-image': ['get', 'kind'], 'icon-size': 1 },
-              paint: { ...layer.paint, 'text-halo-color': c('ground'), 'text-halo-width': 1.5 },
+              layout: { ...layer.layout, 'icon-image': ['get', 'kind'], 'text-offset': [1.4, 0] },
+              paint: { ...clear.paint, 'text-halo-color': c('ground') },
             }
-          : layer,
-      );
+          : clear;
+      });
+    // A wood's trees over its green.
+    base.splice(
+      base.findIndex((layer) => layer.id === 'landuse_urban_green'),
+      0,
+      {
+        id: 'woods',
+        type: 'fill',
+        source: 'town',
+        'source-layer': 'landuse',
+        filter: ['in', ['get', 'kind'], ['literal', ['forest', 'wood']]],
+        paint: { 'fill-pattern': 'trees' },
+      },
+    );
     // The lifts lie over the roads and under every label, their names along them.
     base.splice(
       base.findIndex((layer) => layer.id === 'address_label'),
@@ -897,6 +961,17 @@ export class LocationMap {
           'line-width': ['interpolate', ['linear'], ['zoom'], 12, 1, 16, 2],
         },
       },
+      // Short ticks across the line, as OpenStreetMap draws a lift's pylons.
+      {
+        id: 'lift-ticks',
+        type: 'line',
+        source: 'lifts',
+        paint: {
+          'line-color': c('ink'),
+          'line-width': ['interpolate', ['linear'], ['zoom'], 12, 4, 16, 7],
+          'line-dasharray': [0.2, 5],
+        },
+      },
       {
         id: 'lift-names',
         type: 'symbol',
@@ -905,6 +980,8 @@ export class LocationMap {
         layout: {
           'symbol-placement': 'line',
           'text-field': ['get', 'name'],
+          // Beside the line, not on it.
+          'text-offset': [0, 1],
           'text-font': ['theme'],
           'text-size': 12,
         },

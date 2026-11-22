@@ -15,6 +15,13 @@ colors:
   summer: '#2c7060'
   summer-soft: '#deede8'
   on-accent: '#ffffff'
+  water: '#b9d3e3'
+  wood: '#cfdfc4'
+  poi-food: '#b5542e'
+  poi-shop: '#7b4f8e'
+  poi-transport: '#2f6aa3'
+  poi-service: '#a83a4c'
+  poi-culture: '#6e6353'
 typography:
   display:
     fontFamily: 'Jost, system-ui, sans-serif'
@@ -142,6 +149,19 @@ A neutral, slightly warm light palette with a single accent that changes with th
 - **Hairline** (#e9e3db): the line between two rows of a list.
 - **Edge** (#7c878f): the outline of a control that has no fill, at 3:1 against the ground.
 - **Navy Tint** (#e2e8f0) and **Emerald Tint** (#deede8): the hover behind a price.
+
+### Map
+
+The map's own colours stay the same in every season, so that water is always blue and a wood always
+green.
+
+- **Lake** (#b9d3e3): water. Its names are four fifths ink on it, above 5:1.
+- **Sage** (#cfdfc4): woods, with small trees in ink drawn over them; parks and meadows are it mixed
+  60% into the ground.
+- **The places' circles**, a white Lucide icon on each, at least 4.5:1 for the icon and 3:1 against
+  the ground and a park: **Terracotta** (#b5542e) for food and drink, **Plum** (#7b4f8e) for shops,
+  **Harbour Blue** (#2f6aa3) for transport and parking, **Berry** (#a83a4c) for services such as a
+  pharmacy or a cash machine, **Umber** (#6e6353) for culture and leisure.
 
 ### Named Rules
 
