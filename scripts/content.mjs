@@ -11,6 +11,7 @@ import {
 import { join, resolve } from 'node:path';
 import * as lucide from '@ng-icons/lucide';
 import { JSDOM } from 'jsdom';
+import { groups } from '../src/content/map-kinds.ts';
 import {
   apartmentSchema,
   inBox,
@@ -429,6 +430,17 @@ export async function writeContent(dir, out, cache) {
     join(out, 'icons.ts'),
     (icons.length ? `import { ${icons.join(', ')} } from '@ng-icons/lucide';\n\n` : '') +
       `export const icons: Record<string, string> = { ${icons.join(', ')} };\n`,
+  );
+  // The map's icons as their drawings: an import from @ng-icons/lucide would put them in the
+  // first page's bundle, which imports that module too.
+  const drawings = Object.fromEntries(
+    Object.values(groups)
+      .flatMap(Object.values)
+      .map((icon) => [icon, lucide[lucideName(icon)]]),
+  );
+  writeFileSync(
+    join(out, 'map-icons.ts'),
+    `export const drawings: Record<string, string> = ${JSON.stringify(drawings)};\n`,
   );
   // The pictures are served unhashed at /pictures/ too: give a changed picture a new name.
   if (existsSync(join(dir, 'pictures')))
