@@ -781,8 +781,13 @@ test('the routes go into a module of their own, for the map alone', async () => 
   const out = mkdtempSync(join(root, 'generated-'));
   await writeContent('content/demo', out, cache);
   const routes = readFileSync(join(out, 'routes.ts'), 'utf8');
-  assert.match(routes, /"apartment": "zirbe",\s+"place": "schattberg",\s+"meters": 1090/);
-  assert.match(routes, /"apartment": "zirbe",\s+"place": "tourist-office",\s+"meters": 670/);
+  // The committed routes' metres, which the weekly map data run may change.
+  const { features } = JSON.parse(readFileSync('content/demo/map/routes.json', 'utf8'));
+  for (const { properties: p } of features.filter(({ properties: p }) => p.apartment === 'zirbe'))
+    assert.match(
+      routes,
+      new RegExp(`"apartment": "zirbe",\\s+"place": "${p.place}",\\s+"meters": ${p.meters}`),
+    );
   assert.doesNotMatch(readFileSync(join(out, 'site.ts'), 'utf8'), /"line"|"via"/);
 });
 
