@@ -444,7 +444,7 @@ function flavor(p: ReturnType<typeof palette>): Flavor {
       <!-- After the panel, so that the keyboard reaches the choices first, also on a phone, where
            the panel shows below the map. -->
       <div class="map-frame">
-        <div #canvas class="map-canvas" [class.map-far]="zoom() < 16"></div>
+        <div #canvas class="map-canvas" [class.map-far]="far()"></div>
         <div class="map-zoom">
           <button
             type="button"
@@ -820,6 +820,9 @@ export class LocationMap {
   protected readonly maxZoom = 18;
   protected readonly minZoom = signal(0);
   protected readonly zoom = signal(0);
+  // Smaller pins while the map shows the whole town; decided once a zoom ends, as fitting a view
+  // passes below 16 on its way from 16 to 16.
+  protected readonly far = signal(false);
   protected readonly lucideName = lucideName;
   protected readonly chosen = signal<string | undefined>(undefined);
   protected readonly picked = signal<string | undefined>(undefined);
@@ -910,6 +913,7 @@ export class LocationMap {
           drawn.addImage(id, context.getImageData(0, 0, size, size), { pixelRatio: 2 });
       });
       drawn.on('zoom', () => this.zoom.set(drawn.getZoom()));
+      drawn.on('zoomend', () => this.far.set(drawn.getZoom() < 16));
       drawn.touchZoomRotate.disableRotation();
       drawn.keyboard.disableRotation();
       const markers = new globalThis.Map<HTMLElement, InstanceType<typeof Marker>>();
@@ -976,6 +980,7 @@ export class LocationMap {
       );
       drawn.on('load', () => {
         this.zoom.set(drawn.getZoom());
+        this.far.set(drawn.getZoom() < 16);
         this.drawn.set(drawn);
       });
       destroyed.onDestroy(() => drawn.remove());
