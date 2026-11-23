@@ -582,17 +582,17 @@ export class FreeWeeksList implements OnInit {
     this.season.switch(to.name);
   }
 
-  // Before the change: the rows shown now and their height. After it, the old rows are held in
+  // Before the change: the rows shown now and their box. After it, the old rows are held in
   // view while they leave.
   private move(to: SeasonName) {
     const direction = this.direction;
     this.direction = 0;
     const box = this.panels()?.nativeElement;
     const old = box?.querySelector<HTMLElement>(`[data-for=${this.season.current()}]`);
-    const height = box?.offsetHeight;
+    const before = box?.getBoundingClientRect();
     return () => {
       const next = box?.querySelector<HTMLElement>(`[data-for=${to}]`);
-      if (!box || !old || !next || !this.swap(box, old, next, direction, height!)) return;
+      if (!box || !old || !next || !this.swap(box, old, next, direction, before!)) return;
       // A chosen week's bar returns with its season once the colours have changed: shown during
       // the change, Edge drew its button's label in white.
       const bar = this.host.nativeElement.querySelector<HTMLElement>(`.pick:has([data-for=${to}])`);

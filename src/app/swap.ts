@@ -10,16 +10,20 @@ export function swapper() {
     old: HTMLElement,
     next: HTMLElement,
     direction: number,
-    before: number,
+    before: DOMRect,
   ) => {
     moves.forEach((one) => one.cancel());
     box.querySelectorAll('[data-leaving]').forEach((one) => one.removeAttribute('data-leaving'));
-    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return false;
+    // Above the view as it was, under the header too, the box changes at once: the browser keeps
+    // what is read below in place, and step by step it would shake by a pixel on each step.
+    const header = document.querySelector('app-header')!.getBoundingClientRect().bottom;
+    const above = before.bottom <= header;
+    if (above || matchMedia('(prefers-reduced-motion: reduce)').matches) return false;
     old.setAttribute('data-leaving', '');
     const after = next.offsetHeight;
     const duration = direction ? 450 : 600;
-    const grows = after > before;
-    const resize = Math.abs(after - before) < 1 ? 0 : grows ? duration : 250;
+    const grows = after > before.height;
+    const resize = Math.abs(after - before.height) < 1 ? 0 : grows ? duration : 250;
     const timing = (length: number, delay: number) => ({
       duration: length,
       delay,
@@ -40,7 +44,7 @@ export function swapper() {
     const card = resize
       ? [
           box.animate(
-            { height: [`${before}px`, `${after}px`] },
+            { height: [`${before.height}px`, `${after}px`] },
             timing(resize, grows ? 0 : duration),
           ),
         ]
