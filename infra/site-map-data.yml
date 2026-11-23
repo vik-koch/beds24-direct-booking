@@ -19,6 +19,8 @@ concurrency:
 
 jobs:
   update:
+    # A run by hand on another branch would propose that branch's commits too.
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -26,8 +28,8 @@ jobs:
       # The release the site is built from, so the data fits the schema the deployment checks.
       - id: release
         run: |
-          version=$(sed -n 's/^  VERSION: //p' .github/workflows/deploy.yml)
-          : "${version:?deploy.yml names no VERSION}"
+          version=$(yq '.env.VERSION' .github/workflows/deploy.yml)
+          if [ "$version" = null ]; then echo "::error::deploy.yml names no VERSION"; exit 1; fi
           echo "version=$version" >> "$GITHUB_OUTPUT"
       - uses: actions/checkout@v7
         with:

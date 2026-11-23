@@ -14,14 +14,15 @@ build 20261123 equal build 20261122's, and the routes and lifts files are unchan
 
 ## Decision
 
-1. **A workflow of its own takes the data afresh,** every Monday and when started by hand. The
-   demo's is `.github/workflows/map-data.yml`. A site of its own copies the template
+1. **A workflow of its own takes the data afresh** on `main`, every Monday and when started by hand.
+   The demo's is `.github/workflows/map-data.yml`. A site of its own copies the template
    `infra/site-map-data.yml`, which runs the scripts of the release its `deploy.yml` names.
 2. **It proposes the change in a pull request** from the branch `map-data`, which it replaces on
    every run that finds a change. The description names the tiles' build and each changed route and
-   lift. Merging the pull request deploys the data, as any merge does.
-3. **A run that finds nothing new changes nothing.** Tiles equal to the committed ones keep their
-   build and their address.
+   lift. Merging the pull request deploys the data, as any merge does. Data the content build
+   refuses is not proposed: the run fails instead.
+3. **A run that finds nothing new changes nothing,** and closes a pull request still open from an
+   earlier run. Tiles equal to the committed ones keep their build and their address.
 4. **The deployment never fetches map data,** and has no flag for it.
 
 ## Alternatives
@@ -36,10 +37,12 @@ build 20261123 equal build 20261122's, and the routes and lifts files are unchan
 
 ## Consequences
 
-- **A pull request opened with a run's own token starts no `pull_request` run,** so the demo's
-  workflow starts CI on the branch itself; `ci.yml` takes `workflow_dispatch` for that. A site's
-  repository from the templates has no CI; the content build checks the data when the merge deploys
-  it.
+- **CI on the demo's pull request waits for approval:** GitHub starts the `pull_request` run of a
+  pull request opened or updated with a run's own token only after someone with write access chooses
+  "Approve workflows to run". A site's repository from the templates has no CI, so the content
+  build's checks in the run are all its pull request gets.
+- **Tests read the demo's distances from `routes.json`,** so a real change in OpenStreetMap does not
+  fail CI on the pull request that brings it.
 - **Both repositories must allow GitHub Actions to create pull requests** (Settings, Actions,
   General). Without it the run pushes the branch and then fails.
 - **The branch `map-data` belongs to the workflow:** a commit added to it by hand is gone after the

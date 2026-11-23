@@ -95,9 +95,10 @@ A site with a map can take its map data afresh every week
 
 Every Monday, and when started by hand under Actions, the run takes the tiles, the walking routes
 and the lifts afresh. When something changed, it opens a pull request from the branch `map-data`, or
-updates the one that is open, naming the tiles' build and each changed route and lift. Merging it
-deploys the site. A run that finds nothing new opens nothing. The branch belongs to the workflow: a
-commit added to it by hand is gone after the next run.
+updates the one that is open, naming the tiles' build and each changed route and lift. The data
+passes the content build's checks first, or the run fails without a pull request. Merging it deploys
+the site. A run that finds nothing new opens nothing, and closes a pull request still open. The
+branch belongs to the workflow: a commit added to it by hand is gone after the next run.
 
 ## The machine afterwards
 

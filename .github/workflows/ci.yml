@@ -4,8 +4,6 @@ on:
   pull_request:
   push:
     branches: [main]
-  # For the map data workflow's branch, whose push with that run's token starts no run here.
-  workflow_dispatch:
 
 permissions:
   contents: read
