@@ -126,31 +126,78 @@ test('a second click on the chosen apartment clears the choice', async ({ page }
   await expect(panel(page).getByRole('radio', { name: 'Lärche' })).not.toBeChecked();
 });
 
-test("the map's hint to hold Ctrl while scrolling stays under the panel", async ({
+// One finger moving up over the map, as a phone's scroll of the page starts. WebKit has no Touch
+// constructor, so the events carry plain touches, which is all MapLibre reads.
+const swipe = (page: Page) =>
+  page.locator('.maplibregl-canvas').evaluate((canvas) => {
+    const { left, top, width } = canvas.getBoundingClientRect();
+    for (const [type, y] of [
+      ['touchstart', 120],
+      ['touchmove', 80],
+      ['touchend', 80],
+    ] as const) {
+      const touch = { identifier: 1, target: canvas, clientX: left + width / 2, clientY: top + y };
+      const touches = type === 'touchend' ? [] : [touch];
+      const event = new Event(type, { bubbles: true, cancelable: true });
+      Object.assign(event, { touches, targetTouches: touches, changedTouches: [touch] });
+      canvas.dispatchEvent(event);
+    }
+  });
+
+test("the map's hint is a pill clear of its controls, the map not dimmed", async ({
   page,
   isMobile,
 }) => {
-  test.skip(
-    isMobile,
-    'A phone has no mouse wheel; the hint lies under the panel in every engine alike.',
-  );
-  await page.setViewportSize({ width: 1280, height: 900 });
-  await openMap(page);
-  const hint = page.locator('.maplibregl-cooperative-gesture-screen');
-  await page.locator('.maplibregl-canvas').hover({ position: { x: 800, y: 300 } });
-  // A wheel while the page still scrolls the map into view can miss it.
-  await expect(async () => {
-    await page.mouse.wheel(0, 40);
-    await expect(hint).toHaveClass(/maplibregl-show/, { timeout: 1000 });
-    // The hint fades away again soon: under load it may be gone before a later look.
-    await expect(hint).toHaveCSS('opacity', '1', { timeout: 1000 });
-  }).toPass();
-  // The panel's white ground stays white: the hint's dark veil lies only on the map.
-  const shot = await panel(page).screenshot();
-  const { data, info } = await sharp(shot).raw().toBuffer({ resolveWithObject: true });
-  // A pixel of the padding above the panel's first line, away from its round corners.
-  const at = (8 * info.width + Math.round(info.width / 2)) * info.channels;
-  expect(Math.min(...data.subarray(at, at + 3))).toBeGreaterThan(240);
+  const widths = isMobile ? [page.viewportSize()!.width] : [1280, 1024, 768, 320];
+  for (const width of widths) {
+    await page.setViewportSize({ width, height: 900 });
+    await openMap(page);
+    if (!isMobile)
+      await page.locator('.maplibregl-canvas').hover({ position: { x: width / 2, y: 100 } });
+    // The hint fades soon after the gesture, so it is read in one frame while fully shown. A
+    // gesture while the page still scrolls the map into view can miss it.
+    const read = () =>
+      page.evaluate(() => {
+        const box = (element: Element) => {
+          const { left, right, top, bottom } = element.getBoundingClientRect();
+          return { left, right, top, bottom };
+        };
+        const screen = document.querySelector('.maplibregl-cooperative-gesture-screen')!;
+        const pill = [...screen.children].find((child) => child.checkVisibility())!;
+        return {
+          opacity: getComputedStyle(screen).opacity,
+          ground: getComputedStyle(screen).backgroundColor,
+          text: pill.textContent,
+          pill: box(pill),
+          frame: box(document.querySelector('.map-frame')!),
+          controls: ['.map-panel', '.map-zoom', '.maplibregl-ctrl-attrib'].map((selector) =>
+            box(document.querySelector(selector)!),
+          ),
+        };
+      });
+    let seen!: Awaited<ReturnType<typeof read>>;
+    await expect(async () => {
+      await (isMobile ? swipe(page) : page.mouse.wheel(0, 40));
+      seen = await read();
+      expect(seen.opacity).toBe('1');
+    }).toPass();
+    const { pill, frame, controls } = seen;
+    expect(seen.text).toMatch(isMobile ? /two fingers/ : /Ctrl/);
+    expect(seen.ground).toBe('rgba(0, 0, 0, 0)');
+    for (const box of controls)
+      expect(
+        pill.right <= box.left ||
+          box.right <= pill.left ||
+          pill.bottom <= box.top ||
+          box.bottom <= pill.top,
+        `the hint at ${width} px clear of ${JSON.stringify(box)}`,
+      ).toBe(true);
+    expect(pill.left).toBeGreaterThanOrEqual(frame.left);
+    expect(pill.right).toBeLessThanOrEqual(frame.right);
+    // A wide map has room for it in its middle beside the panel.
+    if (width === 1280)
+      expect(Math.abs(pill.left + pill.right - frame.left - frame.right)).toBeLessThan(2);
+  }
 });
 
 // Once the fold has finished: a view the fold moved would be moving by then.
@@ -467,11 +514,29 @@ test('a change of season keeps the choice and shows the places in that season', 
   const season = await page.locator('html').getAttribute('data-season');
   const other = season === 'winter' ? 'summer' : 'winter';
   const texts = { winter: 'Gondola to the slopes', summer: 'Gondola to hiking and bike trails' };
-  await expect(places(page).first()).toContainText(texts[season as 'winter']);
+  const note = places(page).first().locator('[data-for]:visible');
+  await expect(note).toHaveText(new RegExp(texts[season as 'winter']));
   await page.locator(`.season-switch label[data-for=${other}]`).click();
-  await expect(places(page).first()).toContainText(texts[other]);
+  await expect(note).toHaveText(new RegExp(texts[other]));
   await expect(panel(page).getByRole('radio', { name: 'Lärche' })).toBeChecked();
 });
+
+for (const path of ['/en', '/en/apartments/zirbe']) {
+  test(`on ${path} the places' texts are the page's season in the first paint`, async ({
+    page,
+  }) => {
+    // Hold the application's scripts back: only the inline script in the head runs.
+    await page.route(/\/(main|chunk)-[\w-]+\.js$/, () => undefined);
+    for (const season of ['winter', 'summer']) {
+      await page.goto(`${path}?season=${season}`, { waitUntil: 'commit' });
+      await expect(page.locator('html')).toHaveAttribute('data-script', '');
+      await expect(places(page).first().locator('[data-for]:visible')).toHaveAttribute(
+        'data-for',
+        season,
+      );
+    }
+  });
+}
 
 // Counts the maps let go: MapLibre's remove() loses its WebGL context.
 const countLost = (page: Page) =>

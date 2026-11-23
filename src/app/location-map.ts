@@ -474,8 +474,11 @@ function flavor(p: ReturnType<typeof palette>): Flavor {
                   }}</span>
                 }
               </span>
-              @if (texts.places[place.key]![season.current()]; as note) {
-                <span class="text-ink-soft">{{ note }}</span>
+              <!-- Both seasons' texts, so that the first paint shows the page's season. -->
+              @for (name of season.names; track name) {
+                @if (texts.places[place.key]![name]; as note) {
+                  <span class="text-ink-soft" [attr.data-for]="name">{{ note }}</span>
+                }
               }
             </button>
           </li>
@@ -594,6 +597,37 @@ function flavor(p: ReturnType<typeof palette>): Flavor {
     .location-map :is(.maplibregl-ctrl-attrib-button, .maplibregl-canvas):focus-visible {
       outline: var(--focus-ring);
       outline-offset: -3px;
+    }
+
+    /* The hint to zoom with Ctrl or move with two fingers: a pill above the attribution, in the
+       map's middle, the map not dimmed. */
+    .location-map .maplibregl-cooperative-gesture-screen {
+      inset: auto 3rem 2.75rem;
+      padding: 0;
+      background: none;
+      color: var(--color-ink);
+      font-family: var(--font-sans);
+      font-size: 0.875rem;
+      line-height: 1.25rem;
+      text-align: center;
+
+      /* Its middle 34rem from the left at least, so that a pill of 20rem clears the panel's 23rem
+         by 1rem; on a wide map, the map's middle. */
+      @media (min-width: 48rem) {
+        left: max(3rem, 71rem - 100%);
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        transition: none;
+      }
+
+      > div {
+        max-width: 20rem;
+        padding: 0.5rem 1rem;
+        border-radius: var(--radius-control);
+        background: var(--color-surface);
+        box-shadow: var(--shadow-control);
+      }
     }
 
     @layer components {
@@ -717,7 +751,7 @@ function flavor(p: ReturnType<typeof palette>): Flavor {
         padding: 0.125rem 0.5rem;
         border-radius: var(--radius-control);
         background: var(--color-surface);
-        box-shadow: 0 0.25rem 0.75rem -0.25rem rgb(39 50 58 / 0.35);
+        box-shadow: var(--shadow-control);
         color: var(--color-ink);
         /* MapLibre sets its own font on the map; a label takes the theme's. */
         font-family: var(--font-sans);
@@ -831,7 +865,7 @@ function flavor(p: ReturnType<typeof palette>): Flavor {
       .map-pill {
         border-radius: var(--radius-control);
         background: var(--color-surface);
-        box-shadow: 0 0.25rem 0.75rem -0.25rem rgb(39 50 58 / 0.35);
+        box-shadow: var(--shadow-control);
       }
 
       /* A place's icon, its name with the distance at the end of the line, its text below. */
@@ -861,7 +895,12 @@ function flavor(p: ReturnType<typeof palette>): Flavor {
         --ng-icon__color: var(--color-ink-soft);
         --ng-icon__size: 1.375rem;
 
-        > :last-child:not(.map-place-name) {
+        /* Level with the name's capitals, which sit below the middle of its line. */
+        > ng-icon {
+          margin-top: 0.0625rem;
+        }
+
+        > [data-for] {
           grid-column: 2;
         }
 

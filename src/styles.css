@@ -44,6 +44,7 @@
   --radius-card: 1.5rem;
   --radius-menu: 1rem;
   --shadow-card: 0 1.5rem 3rem -1.5rem rgb(39 50 58 / 0.25);
+  --shadow-control: 0 0.25rem 0.75rem -0.25rem rgb(39 50 58 / 0.35);
   /* The focus ring of every control; each sets its own offset. */
   --focus-ring: 2px solid var(--color-accent);
   /* A text link is as tall as a control to be touched, but its ring as tall as a small one. */
@@ -714,14 +715,14 @@
     }
   }
 
-  /* The free-weeks list and the booking panel: both seasons are in the page and the page's
-     season shows one. Parts that are leaving stay in view until their move has ended, and the
+  /* The free-weeks list, the booking panel and the map's places: both seasons are in the page and
+     the page's season shows one. Parts that are leaving stay in view until their move has ended, and the
      versions in a stack keep their place, unseen. */
   html:not([data-season='winter'])
-    :is(.weeks, .booking)
+    :is(.weeks, .booking, .map-places)
     [data-for='winter']:not([data-leaving], .stack > *),
   html:not([data-season='summer'])
-    :is(.weeks, .booking)
+    :is(.weeks, .booking, .map-places)
     [data-for='summer']:not([data-leaving], .stack > *) {
     display: none;
   }
