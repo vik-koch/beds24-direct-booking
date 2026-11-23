@@ -255,6 +255,37 @@ test('on a phone a language change keeps the apartment of the chosen tab', async
   expect(Math.abs((await fromEdge(same)) - before)).toBeLessThan(2);
 });
 
+// The header's ground in every frame, from before the sheet opens until the new language has
+// settled: down the page it stays as it was, through the sheet and the new page's first paint.
+test('on a phone the header keeps its ground through a language change', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 800 });
+  for (const path of ['/en', '/en/apartments/zirbe'])
+    for (const switched of [false, true]) {
+      await page.goto(path);
+      await expect(page.locator('html')).toHaveAttribute('data-started', '');
+      if (switched) await toNextSeason(page);
+      await page.evaluate(() =>
+        scrollTo({ top: document.documentElement.scrollHeight / 2, behavior: 'instant' }),
+      );
+      await settled(page);
+      await page.evaluate(() => {
+        const grounds: string[] = ((window as unknown as { grounds: string[] }).grounds = []);
+        const sample = () => {
+          grounds.push(getComputedStyle(document.querySelector('app-header')!).backgroundColor);
+          requestAnimationFrame(sample);
+        };
+        requestAnimationFrame(sample);
+      });
+      await toLanguage(page, 'Language: English', 'Deutsch');
+      await expect(page.locator('html')).toHaveAttribute('lang', 'de-AT');
+      await settled(page);
+      const grounds = await page.evaluate(
+        () => (window as unknown as { grounds: string[] }).grounds,
+      );
+      expect(new Set(grounds), `${path}, switched ${switched}`).toEqual(new Set([grounds.at(-1)]));
+    }
+});
+
 // The home page's free weeks come with a full load only (ADR 6), so a 404's links, which lead
 // there, load it.
 test('from a missing page the language link loads the home page with its free weeks', async ({
