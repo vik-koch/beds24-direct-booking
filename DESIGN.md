@@ -152,17 +152,18 @@ A neutral, slightly warm light palette with a single accent that changes with th
 
 ### Map
 
-The map's own colours stay the same in every season, so that water is always blue. Parks and meadows
-take the season's soft accent, woods a shade darker with small trees in a darker shade of the
-accent.
+The map's own colours stay the same in every season, so that water is always blue. The land takes
+the season's soft accent and the village, its houses and shops, the page's ground; woods are a shade
+darker with small trees in a darker shade of the accent. Roads are outlined at 3:1 on both.
 
 - **Lake** (#b9d3e3): water. Its names are four fifths ink on it, above 5:1.
 - **Trail Brown** (#9a5a2b): paths and tracks, dashed, at least 3.5:1 on the ground, a park and a
   wood.
-- **The places' circles**, a white Lucide icon on each, at least 4.5:1 for the icon and 3:1 against
-  the ground and a park: **Terracotta** (#b5542e) for food and drink, **Plum** (#7b4f8e) for shops,
-  **Harbour Blue** (#2f6aa3) for transport and parking, **Berry** (#a83a4c) for services such as a
-  pharmacy or a cash machine, **Umber** (#6e6353) for culture and leisure.
+- **The places' icons**, Lucide's in a group's colour with no circle, 18 px with lines of 2.5 in its
+  24 units, at least 3:1 against the ground, the land and a building: **Terracotta** (#b5542e) for
+  food and drink, **Plum** (#7b4f8e) for shops, **Harbour Blue** (#2f6aa3) for transport and
+  parking, **Berry** (#a83a4c) for services such as a pharmacy or a cash machine, **Umber**
+  (#6e6353) for culture and leisure.
 
 ### Named Rules
 

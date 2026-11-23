@@ -124,12 +124,15 @@ const kinds = Object.fromEntries(
 // What a guest looks for first shows two zooms before the tiles would show it.
 const early = ['parking', 'atm', 'bus_stop', 'supermarket', 'pharmacy', 'information'];
 
-// A Lucide icon as an image in a colour, at a size in pixels. An SVG drawn on a canvas needs its
-// size in its own attributes.
-async function lucide(svg: string, size: number, color: string) {
+// A Lucide icon as an image in a colour, at a size in pixels, its lines as wide as given in its 24
+// units. An SVG drawn on a canvas needs its size in its own attributes.
+async function lucide(svg: string, size: number, color: string, stroke: number) {
   const image = new Image();
   image.src = `data:image/svg+xml,${encodeURIComponent(
-    svg.replace('<svg ', `<svg width="${size}" height="${size}" `).replace('currentColor', color),
+    svg
+      .replace('<svg ', `<svg width="${size}" height="${size}" `)
+      .replace('currentColor', color)
+      .replace('var(--ng-icon__stroke-width, 2)', `${stroke}`),
   )}`;
   await image.decode();
   return image;
@@ -165,15 +168,20 @@ const mix = (a: string, b: string, t: number) => {
 // Protomaps' light flavour in the theme's colours.
 function flavor(c: (name: string) => string): Flavor {
   const [ground, road] = [c('ground'), c('surface')];
-  // Parks, meadows and grass in the season's tint; a wood is a shade darker, with its trees.
+  // The land in the season's tint, the village on the page's ground; a wood is a shade darker,
+  // with its trees.
   const green = c('accent-soft');
-  // At least 3:1 against the ground, as are the routes, the lifts and the pins' outlines.
-  const casing = mix(ground, c('ink-soft'), 0.75);
+  // At least 3:1 against the land and the ground, as are the routes, the lifts and the pins'
+  // outlines.
+  const casing = mix(green, c('ink-soft'), 0.8);
   const water = c('water');
   return {
     ...namedFlavor('light'),
-    background: ground,
-    earth: ground,
+    background: green,
+    earth: green,
+    industrial: ground,
+    school: ground,
+    hospital: ground,
     park_a: green,
     park_b: green,
     wood_a: green,
@@ -209,7 +217,7 @@ function flavor(c: (name: string) => string): Flavor {
     // The coarse land cover of lower zooms, in the same two tones as the land use above it.
     landcover: {
       grassland: green,
-      barren: ground,
+      barren: green,
       urban_area: ground,
       farmland: green,
       glacier: ground,
@@ -719,7 +727,7 @@ export class LocationMap {
       hold();
       drawn.on('resize', hold);
       // The images the style names, drawn at twice their size when a tile first needs one: a
-      // place's icon in white on a circle of its group's colour, 18 px, and a wood's trees, whose
+      // place's icon in its group's colour, 18 px, and a wood's trees, whose
       // two colours are in their name: they change with the season.
       drawn.setMissingStyleImageResolver(async (id) => {
         const [trees, wood, tree] = id.split('|');
@@ -737,14 +745,12 @@ export class LocationMap {
         if (trees === 'trees') {
           context.fillStyle = wood!;
           context.fillRect(0, 0, size, size);
-          const image = await lucide(lucideTreePine, 20, tree!);
+          const image = await lucide(lucideTreePine, 20, tree!, 2);
           context.drawImage(image, 6, 6);
           context.drawImage(image, 38, 38);
         } else {
-          context.fillStyle = color(`poi-${kinds[id]!.group}`);
-          context.arc(18, 18, 18, 0, 2 * Math.PI);
-          context.fill();
-          context.drawImage(await lucide(kinds[id]!.svg, 22, '#fff'), 7, 7);
+          const icon = await lucide(kinds[id]!.svg, size, color(`poi-${kinds[id]!.group}`), 2.5);
+          context.drawImage(icon, 0, 0);
         }
         if (!drawn.hasImage(id))
           drawn.addImage(id, context.getImageData(0, 0, size, size), { pixelRatio: 2 });
@@ -965,6 +971,19 @@ export class LocationMap {
             }
           : clear;
       });
+    // The village's houses and shops on the page's ground, under its parks.
+    base.splice(
+      base.findIndex((layer) => layer.id === 'landuse_park'),
+      0,
+      {
+        id: 'village',
+        type: 'fill',
+        source: 'town',
+        'source-layer': 'landuse',
+        filter: ['in', ['get', 'kind'], ['literal', ['residential', 'commercial', 'retail']]],
+        paint: { 'fill-color': c('ground') },
+      },
+    );
     // A wood's trees over its green.
     const wood = mix(c('accent-soft'), c('accent'), 0.15);
     base.splice(
