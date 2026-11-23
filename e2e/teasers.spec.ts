@@ -161,6 +161,50 @@ test(
   },
 );
 
+test('the price keeps its space after “from” while the seasons cross-fade', async ({ page }) => {
+  for (const path of ['/en', '/de']) {
+    await page.goto(path);
+    await settled(page);
+    // The glitch is in the leaving line, so the fade starts from a priced season: the next one
+    // always is.
+    const season = () => page.locator('html').getAttribute('data-season');
+    if (!(await page.locator(`.teaser-price > [data-for=${await season()}] strong`).count()))
+      await toOtherSeason(page);
+    const leaving = await season();
+    // Each line's fade is held halfway as it starts, so a slow browser cannot pass it by.
+    await page.evaluate(() =>
+      document.addEventListener('transitionrun', ({ target }) => {
+        if (!(target as Element).matches('.teaser-price > span')) return;
+        for (const fade of (target as Element).getAnimations()) {
+          fade.pause();
+          fade.currentTime = 100;
+        }
+      }),
+    );
+    await page.locator('.other-season').click();
+    const held = page.locator(`.teaser-price > [data-for=${leaving}]`).first();
+    await expect
+      .poll(() => held.evaluate((line) => line.getAnimations().length))
+      .toBeGreaterThan(0);
+    // The gap between the word and the price on every line held in its fade.
+    const gaps = await page.evaluate(() =>
+      [...document.querySelectorAll<HTMLElement>('.teaser-price > span')].flatMap((line) => {
+        const price = line.querySelector('strong');
+        const word = price?.previousSibling;
+        if (!price || !word || !line.getAnimations().length) return [];
+        const range = document.createRange();
+        range.selectNodeContents(word);
+        range.setEnd(word, word.textContent!.trimEnd().length);
+        const gap = price.getBoundingClientRect().left - range.getBoundingClientRect().right;
+        return [{ season: line.dataset['for']!, gap }];
+      }),
+    );
+    expect(gaps.filter((one) => one.season === leaving).length, path).toBeGreaterThan(0);
+    expect(Math.min(...gaps.map((one) => one.gap)), path).toBeGreaterThan(2);
+    await page.evaluate(() => document.getAnimations().forEach((one) => one.finish()));
+  }
+});
+
 test('a season not open yet says so on each card', async ({ page }) => {
   // Its prices end today: the current season is full, the next one not open.
   await page.goto('http://localhost:4003/en');
