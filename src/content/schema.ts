@@ -220,6 +220,10 @@ export const apartmentSchema = z.strictObject({
   lon: longitude.optional(),
   // Its name on the map left of its pin, for one that would cover a neighbour's.
   mapLabel: z.literal('left').optional(),
+  // The points a route to a place goes through in their order, by the place's key.
+  via: z
+    .record(segment, z.array(z.strictObject({ lat: latitude, lon: longitude })).min(1))
+    .optional(),
   name: text.refine((value) => letters(value) <= 20, 'at most 20 characters'),
   pictures: z
     .array(
@@ -446,7 +450,7 @@ export type Hero = Files & {
 };
 export type Apartment = { slug: string; pictures: Picture[] } & Omit<
   z.infer<typeof apartmentSchema>,
-  'pictures'
+  'pictures' | 'via'
 >;
 type Map = NonNullable<z.infer<typeof siteSchema>['map']>;
 // A walking route as the map draws it: its line as [longitude, latitude] pairs.

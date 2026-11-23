@@ -167,6 +167,16 @@ content. The application has no wording, no colour and no typeface of its own. T
   `node scripts/map-routes.mjs` when a point is added, moved or removed; it asks for one route a
   second, as the service asks. The routes follow OpenStreetMap's ways, which do not say what is
   closed or a piste in winter: walk them before a site shows them.
+- **A route's waypoints** lead it the way people walk where the router takes another, such as a road
+  around the centre: an apartment's `via` gives, by a place's key, the points its route to that
+  place goes through, in their order:
+  `"via": { "tourist-office": [{ "lat": 47.38938, "lon": 12.64275 }] }`. The metres shown are the
+  route's through them. Try them first on
+  [routing.openstreetmap.de](https://routing.openstreetmap.de/) with the profile set to foot:
+  dragging its line adds a waypoint, and the address names each point as `loc=lat,lon`. The router
+  moves a point to the nearest way, so put it on the path itself, away from a junction, or the route
+  walks to a road beside it and back. No waypoint leads a route along a way OpenStreetMap lacks: map
+  it there first.
 - **The lifts** are `map/lifts.json`: OpenStreetMap's aerial lifts inside the box, gondolas, cable
   cars, chairlifts and drag lifts, each with its kind and its local name, taken through the
   [Overpass API](https://overpass-api.de/) with the box they were taken for. Take them with
@@ -223,13 +233,14 @@ area or a room without its name or a name without its area or room, a listed cod
 a missing picture, an apartment picture that is not one, does not answer, is portrait or wider than
 2:1 or lacks its alternative text in a language, an apartment without its file or a file in
 `apartments/` that `site.json` does not list, a point outside the map's box or an apartment's point
-without a map, a place without its name or with a text for a season the site does not list, tiles
-cut for another box or a tile missing, a `map/` folder without a map, a map without a `.woff2` font
-in `theme.css`, a route missing, left over or computed before a point moved, and a part beyond its
-boundary stop the build with the file and the key named; for the tiles and the routes, with the
-script to run. The schema, not the demo's files, defines the keys, so the compiler checks every
-template against the same keys for every site. Every language has the same keys, so every language
-renders the same elements and a change of language finds the reader's place.
+without a map, a waypoint on the way to no place of the map, a place without its name or with a text
+for a season the site does not list, tiles cut for another box or a tile missing, a `map/` folder
+without a map, a map without a `.woff2` font in `theme.css`, a route missing, left over or computed
+before a point moved, and a part beyond its boundary stop the build with the file and the key named;
+for the tiles and the routes, with the script to run. The schema, not the demo's files, defines the
+keys, so the compiler checks every template against the same keys for every site. Every language has
+the same keys, so every language renders the same elements and a change of language finds the
+reader's place.
 
 ## Another folder
 

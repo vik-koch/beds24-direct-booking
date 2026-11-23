@@ -1,5 +1,6 @@
-// Computes the walking route from every apartment to every place of the map with OSRM's foot
-// profile on routing.openstreetmap.de, and writes them to the content folder's map/routes.json.
+// Computes the walking route from every apartment to every place of the map, through the points the
+// apartment gives for it, with OSRM's foot profile on routing.openstreetmap.de, and writes them to
+// the content folder's map/routes.json.
 // node scripts/map-routes.mjs
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
@@ -12,11 +13,12 @@ if (!site.map) throw new Error(`${join(dir, 'site.json')} has no map`);
 
 const features = [];
 for (const slug of site.apartments) {
-  const { lat, lon } = read(`apartments/${slug}.json`, apartmentSchema);
+  const { lat, lon, via = {} } = read(`apartments/${slug}.json`, apartmentSchema);
   if (lat === undefined || lon === undefined)
     throw new Error(`apartments/${slug}.json has no point`);
   for (const place of site.map.places) {
-    const path = `${lon},${lat};${place.lon},${place.lat}`;
+    const points = [{ lat, lon }, ...(via[place.key] ?? []), place];
+    const path = points.map((point) => `${point.lon},${point.lat}`).join(';');
     const response = await fetch(
       `https://routing.openstreetmap.de/routed-foot/route/v1/foot/${path}?overview=full&geometries=geojson`,
       { headers: { 'User-Agent': 'beds24-direct-booking map routes' } },
@@ -33,6 +35,7 @@ for (const slug of site.apartments) {
         minutes: Math.ceil(route.duration / 60),
         from: { lat, lon },
         to: { lat: place.lat, lon: place.lon },
+        ...(via[place.key] && { via: via[place.key] }),
       },
       geometry: route.geometry,
     });

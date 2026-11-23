@@ -532,6 +532,7 @@ const withoutMap = (texts) => delete texts.map;
 const noPoint = (apartment) => {
   delete apartment.lat;
   delete apartment.lon;
+  delete apartment.via;
 };
 
 test('the map is optional, and without it no apartment has a point', () => {
@@ -559,6 +560,22 @@ test('with a map every apartment has its point inside the box', () => {
   assert.throws(() => readContent(missing), /laerche\.json\n {2}lat, lon: both needed with a map/);
   const outside = changed('apartments/laerche.json', (apartment) => (apartment.lat = 47.5));
   assert.throws(() => readContent(outside), /laerche\.json\n {2}lat, lon: outside the map's box/);
+});
+
+test("an apartment's route goes through points inside the box, to a place of the map", () => {
+  const outside = changed('apartments/zirbe.json', (a) => (a.via['tourist-office'][0].lat = 47.5));
+  assert.throws(
+    () => readContent(outside),
+    /zirbe\.json\n {2}via\.tourist-office\.0: outside the map's box/,
+  );
+  const elsewhere = changed(
+    'apartments/zirbe.json',
+    (a) => (a.via.station = [{ lat: 47.39, lon: 12.64 }]),
+  );
+  assert.throws(
+    () => readContent(elsewhere),
+    /zirbe\.json\n {2}via\.station: not a place of site\.json's map/,
+  );
 });
 
 test('the box is at most 0.1° each way, and each place inside it', () => {
@@ -660,6 +677,18 @@ test('one route for each apartment and place, from the points they have now', ()
   );
   const placeMoved = changed('site.json', (site) => (site.map.places[2].lon += 0.0001));
   assert.throws(() => readContent(placeMoved), /zirbe to tourist-office: computed before a point/);
+  const viaMoved = changed(
+    'apartments/zirbe.json',
+    (a) => (a.via['tourist-office'][0].lon += 1e-4),
+  );
+  assert.throws(() => readContent(viaMoved), /zirbe to tourist-office: computed before a point/);
+  const viaGone = changed('apartments/zirbe.json', (a) => delete a.via);
+  assert.throws(() => readContent(viaGone), /zirbe to tourist-office: computed before a point/);
+  const viaAdded = changed(
+    'apartments/ahorn.json',
+    (a) => (a.via = { kohlmais: [{ lat: 47.39, lon: 12.635 }] }),
+  );
+  assert.throws(() => readContent(viaAdded), /ahorn to kohlmais: computed before a point/);
   const withoutShop = (texts) => delete texts.map.places.supermarket;
   const fewer = changed(
     'site.json',
@@ -736,7 +765,8 @@ test('the routes go into a module of their own, for the map alone', async () => 
   await writeContent('content/demo', out, cache);
   const routes = readFileSync(join(out, 'routes.ts'), 'utf8');
   assert.match(routes, /"apartment": "zirbe",\s+"place": "schattberg",\s+"meters": 1090/);
-  assert.doesNotMatch(readFileSync(join(out, 'site.ts'), 'utf8'), /"line"/);
+  assert.match(routes, /"apartment": "zirbe",\s+"place": "tourist-office",\s+"meters": 670/);
+  assert.doesNotMatch(readFileSync(join(out, 'site.ts'), 'utf8'), /"line"|"via"/);
 });
 
 test('the lifts go into a module of their own, for the map alone', async () => {
