@@ -873,9 +873,18 @@ export class LocationMap {
   constructor() {
     const destroyed = inject(DestroyRef);
     afterNextRender(async () => {
-      destroyed.onDestroy(() =>
-        Object.assign(handover, { chosen: this.chosen(), picked: this.picked(), all: this.all() }),
-      );
+      // Only a home page takes the map and the choices over, as after a change of language or
+      // Back; other pages let them go.
+      const home = () => {
+        const to = this.router.currentNavigation()?.finalUrl?.toString().split(/[?#]/)[0];
+        return site.languages.some(({ code }) => to === `/${code}`);
+      };
+      destroyed.onDestroy(() => {
+        const kept = home();
+        handover.chosen = kept ? this.chosen() : undefined;
+        handover.picked = kept ? this.picked() : undefined;
+        handover.all = kept && this.all();
+      });
       const { LngLatBounds, Map, Marker, getVersion, setWorkerUrl } = await import('maplibre-gl');
       const locale = {
         'Map.Title': this.texts.label,
@@ -1062,12 +1071,8 @@ export class LocationMap {
       };
       if (kept) ready();
       else drawn.once('load', ready);
-      // Only a home page takes the map over, as after a change of language or Back; other pages
-      // let it go.
       destroyed.onDestroy(() => {
-        const to = this.router.currentNavigation()?.finalUrl?.toString().split(/[?#]/)[0];
-        const home = site.languages.some(({ code }) => to === `/${code}`);
-        if (!this.drawn() || !home) return drawn.remove();
+        if (!this.drawn() || !home()) return drawn.remove();
         for (const marker of markers.values()) marker.remove();
         for (const listener of listeners) listener.unsubscribe();
         handover.drawn = drawn;

@@ -512,12 +512,20 @@ test("a change of language keeps the pins' size", async ({ page }) => {
   expect(new Set(await widths)).toEqual(new Set([width]));
 });
 
-test('a page without the map lets it go', async ({ page }) => {
+test('a page without the map lets it go with its choices: Back opens the first view', async ({
+  page,
+}) => {
   await countLost(page);
   await openMap(page);
+  await panel(page).getByText('Lärche').click();
+  await expect(panel(page).getByRole('radio', { name: 'Lärche' })).toBeChecked();
   await page.locator('footer a[href^="/en/faq"]').click();
   await expect(page).toHaveURL(/\/en\/faq/);
   await expect.poll(() => lost(page)).toBe(1);
+  await page.goBack();
+  await scrollToMap(page);
+  await expect(page.locator('.location-map[data-drawn]')).toBeVisible({ timeout: 20000 });
+  await expect(panel(page).getByRole('radio', { checked: true })).toHaveCount(0);
 });
 
 test('without WebGL the panel stands alone and works', async ({ page }) => {
