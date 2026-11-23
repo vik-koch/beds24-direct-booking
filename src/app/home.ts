@@ -9,6 +9,7 @@ import { Choice } from './choice';
 import { Files } from './files';
 import { FreeWeeksList } from './free-weeks-list';
 import { LocationMap } from './location-map';
+import { handover } from './map-handover';
 import { Season } from './season';
 import { Teasers } from './teasers';
 import { address, LANGUAGE, TEXTS } from './texts';
@@ -74,8 +75,8 @@ import { address, LANGUAGE, TEXTS } from './texts';
         <section class="pt-(--space-section)">
           <h2 class="headline column mb-6" [id]="anchors[section]">{{ texts.nav[section] }}</h2>
           <!-- The server renders the panel, which a page without JavaScript shows; the map's code
-               loads when the section comes into view. -->
-          @defer (on viewport; hydrate on viewport) {
+               loads when the section comes into view. A map the last page left shows at once. -->
+          @defer (on viewport; when handover.drawn; hydrate on viewport) {
             <app-location-map />
           } @placeholder {
             <div class="aspect-square md:aspect-auto md:h-[clamp(28rem,70svh,48rem)]"></div>
@@ -102,6 +103,7 @@ export class Home {
   protected readonly features = site.features;
   protected readonly sections = ['apartments', 'location', 'about'] as const;
   protected readonly hasMap = !!site.map;
+  protected readonly handover = handover;
   protected readonly weeksLink = `${address(this.language, 'home')}#${this.anchors.weeks}`;
   protected readonly photos = inject(Season).names.map((name) => ({
     name,

@@ -91,6 +91,7 @@ import routes from '../content/generated/routes';
 import site from '../content/generated/site';
 import { lucideName } from '../content/names';
 import type { Route } from '../content/schema';
+import { handover } from './map-handover';
 import { Season } from './season';
 import { LANGUAGE, TEXTS } from './texts';
 
@@ -242,18 +243,6 @@ const fitting = (width: number, height: number) =>
       height / ((mercator(map.box.south) - mercator(map.box.north)) * 512),
     ),
   );
-
-// The view the last map left, kept only in the browser: the next map the application draws, such
-// as the other language's after a change of language, opens as the visitor left this one. A page
-// the browser loads starts afresh.
-let left:
-  | {
-      chosen?: string;
-      picked?: string;
-      all: boolean;
-      camera?: { center: [number, number]; zoom: number };
-    }
-  | undefined;
 
 // The three channels of a colour in the form normal() gives: #rrggbb, or rgba() with an alpha.
 const channels = (color: string) =>
@@ -479,8 +468,9 @@ function flavor(p: ReturnType<typeof palette>): Flavor {
       </div>
       <!-- After the panel, so that the keyboard reaches the choices first, also on a phone, where
            the panel shows below the map. -->
-      <div class="map-frame">
-        <div #canvas class="map-canvas" [class.map-far]="far()"></div>
+      <div class="map-frame" [class.map-far]="far()">
+        <!-- Replaced by a map taken over, with its own element: no binding here. -->
+        <div #canvas class="map-canvas"></div>
         <div class="map-zoom">
           <button
             type="button"
@@ -600,7 +590,7 @@ function flavor(p: ReturnType<typeof palette>): Flavor {
 
       /* The pins' heads, smaller when the map shows the whole town; at 1.5rem still the 24px a
          target needs. */
-      .map-canvas {
+      .map-frame {
         --head: 1.75rem;
 
         @media (prefers-reduced-motion: no-preference) {
@@ -870,70 +860,78 @@ export class LocationMap {
   // a view passes below 16 on its way from 16 to 16.
   protected readonly far = signal(false);
   protected readonly lucideName = lucideName;
-  protected readonly chosen = signal(left?.chosen);
-  protected readonly picked = signal(left?.picked);
-  protected readonly all = signal(left?.all ?? false);
+  protected readonly chosen = signal(handover.chosen);
+  protected readonly picked = signal(handover.picked);
+  protected readonly all = signal(handover.all ?? false);
   protected readonly shown = computed(() => map.places.filter((p) => this.all() || !p.more));
   protected readonly drawn = signal<MapLibre | undefined>(undefined);
   private readonly injector = inject(Injector);
 
   constructor() {
     const destroyed = inject(DestroyRef);
-    let camera = left?.camera;
     afterNextRender(async () => {
-      destroyed.onDestroy(() => {
-        const drawn = this.drawn();
-        left = {
-          chosen: this.chosen(),
-          picked: this.picked(),
-          all: this.all(),
-          camera: drawn && { center: drawn.getCenter().toArray(), zoom: drawn.getZoom() },
-        };
-      });
+      destroyed.onDestroy(() =>
+        Object.assign(handover, { chosen: this.chosen(), picked: this.picked(), all: this.all() }),
+      );
       const { LngLatBounds, Map, Marker, getVersion, setWorkerUrl } = await import('maplibre-gl');
-      // Served beside the page's files; the version gives a new one a new address.
-      setWorkerUrl(`/map/maplibre-gl-worker.mjs?v=${getVersion()}`);
-      await new Promise((loaded) => {
-        const link = Object.assign(this.document.createElement('link'), {
-          rel: 'stylesheet',
-          href: `/map/maplibre-gl.css?v=${getVersion()}`,
-          onload: loaded,
-        });
-        this.document.head.append(link);
-      });
+      const locale = {
+        'Map.Title': this.texts.label,
+        'AttributionControl.ToggleAttribution': this.texts.attribution,
+        'CooperativeGesturesHandler.WindowsHelpText': this.texts.gestures.windows,
+        'CooperativeGesturesHandler.MacHelpText': this.texts.gestures.mac,
+        'CooperativeGesturesHandler.MobileHelpText': this.texts.gestures.touch,
+      };
+      // A map taken over keeps its view, until the next choice.
+      let kept = handover.drawn;
+      handover.drawn = undefined;
       let drawn: MapLibre;
-      try {
-        drawn = new Map({
-          container: this.canvas().nativeElement,
-          style: this.style(),
-          ...camera,
-          maxBounds: [map.box.west, map.box.south, map.box.east, map.box.north],
-          maxZoom: this.maxZoom,
-          maxPitch: 0,
-          dragRotate: false,
-          pitchWithRotate: false,
-          touchPitch: false,
-          cooperativeGestures: true,
-          attributionControl: { compact: true },
-          locale: {
-            'Map.Title': this.texts.label,
-            'AttributionControl.ToggleAttribution': this.texts.attribution,
-            'CooperativeGesturesHandler.WindowsHelpText': this.texts.gestures.windows,
-            'CooperativeGesturesHandler.MacHelpText': this.texts.gestures.mac,
-            'CooperativeGesturesHandler.MobileHelpText': this.texts.gestures.touch,
-          },
+      if (kept) {
+        drawn = kept;
+        this.canvas().nativeElement.replaceWith(drawn.getContainer());
+        // MapLibre writes its texts as it makes its parts: they are written again.
+        Object.assign(drawn._locale, locale);
+        drawn.getCanvas().setAttribute('aria-label', locale['Map.Title']);
+        const toggle = drawn.getContainer().querySelector('.maplibregl-ctrl-attrib-button');
+        toggle?.setAttribute('title', locale['AttributionControl.ToggleAttribution']);
+        toggle?.setAttribute('aria-label', locale['AttributionControl.ToggleAttribution']);
+        drawn.cooperativeGestures.disable();
+        drawn.cooperativeGestures.enable();
+      } else {
+        // Served beside the page's files; the version gives a new one a new address.
+        setWorkerUrl(`/map/maplibre-gl-worker.mjs?v=${getVersion()}`);
+        await new Promise((loaded) => {
+          const link = Object.assign(this.document.createElement('link'), {
+            rel: 'stylesheet',
+            href: `/map/maplibre-gl.css?v=${getVersion()}`,
+            onload: loaded,
+          });
+          this.document.head.append(link);
         });
-      } catch {
-        // Without WebGL the panel stands alone.
-        return;
+        try {
+          drawn = new Map({
+            container: this.canvas().nativeElement,
+            style: this.style(),
+            maxBounds: [map.box.west, map.box.south, map.box.east, map.box.north],
+            maxZoom: this.maxZoom,
+            maxPitch: 0,
+            dragRotate: false,
+            pitchWithRotate: false,
+            touchPitch: false,
+            cooperativeGestures: true,
+            attributionControl: { compact: true },
+            locale,
+          });
+        } catch {
+          // Without WebGL the panel stands alone.
+          return;
+        }
       }
       const hold = () => {
-        const { width, height } = this.canvas().nativeElement.getBoundingClientRect();
+        const { width, height } = drawn.getContainer().getBoundingClientRect();
         drawn.setMinZoom(Math.min(fitting(width, height), 16));
         this.minZoom.set(drawn.getMinZoom());
       };
       hold();
-      drawn.on('resize', hold);
       // The images the style names, drawn at twice their size when a tile first needs one: a
       // place's icon in its group's colour filled white, 18 px, and a wood's trees, whose
       // two colours are in their name: they change with the season.
@@ -969,12 +967,15 @@ export class LocationMap {
         if (!drawn.hasImage(id))
           drawn.addImage(id, context.getImageData(0, 0, size, size), { pixelRatio: 2 });
       });
-      drawn.on('zoom', () => {
-        this.zoom.set(drawn.getZoom());
-        if (drawn.getLayer('route'))
-          drawn.setPaintProperty('route', 'line-dasharray', dashes(drawn.getZoom()));
-      });
-      drawn.on('zoomend', () => this.far.set(drawn.getZoom() < 16));
+      const listeners = [
+        drawn.on('resize', hold),
+        drawn.on('zoom', () => {
+          this.zoom.set(drawn.getZoom());
+          if (drawn.getLayer('route'))
+            drawn.setPaintProperty('route', 'line-dasharray', dashes(drawn.getZoom()));
+        }),
+        drawn.on('zoomend', () => this.far.set(drawn.getZoom() < 16)),
+      ];
       drawn.touchZoomRotate.disableRotation();
       drawn.keyboard.disableRotation();
       const markers = new globalThis.Map<HTMLElement, InstanceType<typeof Marker>>();
@@ -1013,8 +1014,7 @@ export class LocationMap {
           const lines = routes.filter(
             (r) => r.apartment === this.chosen() && shown.some((p) => p.key === r.place),
           );
-          // A view handed over stands until the next choice.
-          if (camera) return void (camera = undefined);
+          if (kept) return void (kept = undefined);
           const points: [number, number][] = lines.length
             ? lines.flatMap(walk)
             : [...(picked ? [] : this.apartments), ...shown].map(({ lon, lat }) => [lon!, lat!]);
@@ -1022,7 +1022,7 @@ export class LocationMap {
             (box, point) => box.extend(point),
             new LngLatBounds(points[0], points[0]),
           );
-          const frame = this.canvas().nativeElement.getBoundingClientRect();
+          const frame = drawn.getContainer().getBoundingClientRect();
           const panel = this.panel().nativeElement.getBoundingClientRect();
           // From 48rem the panel lies over the map's left side, on a phone below it.
           const over = panel.top < frame.bottom;
@@ -1052,12 +1052,20 @@ export class LocationMap {
         },
         { injector: this.injector },
       );
-      drawn.on('load', () => {
+      const ready = () => {
         this.zoom.set(drawn.getZoom());
         this.far.set(drawn.getZoom() < 16);
         this.drawn.set(drawn);
+      };
+      if (kept) ready();
+      else drawn.once('load', ready);
+      // A drawn map is left to the next one, without this page's pins and listeners.
+      destroyed.onDestroy(() => {
+        if (!this.drawn()) return drawn.remove();
+        for (const marker of markers.values()) marker.remove();
+        for (const listener of listeners) listener.unsubscribe();
+        handover.drawn = drawn;
       });
-      destroyed.onDestroy(() => drawn.remove());
     });
     effect(() => {
       this.chosen();

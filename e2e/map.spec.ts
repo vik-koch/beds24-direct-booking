@@ -2,6 +2,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 import sharp from 'sharp';
+import { toLanguage } from './header';
 
 // The pixels the map itself draws in a theme colour, the accent of the routes by default, with
 // pins, labels and panel hidden.
@@ -411,7 +412,7 @@ test('a change of season keeps the choice and shows the places in that season', 
   await expect(panel(page).getByRole('radio', { name: 'Lärche' })).toBeChecked();
 });
 
-test('a change of language keeps the view, the apartment and the places; a load starts afresh', async ({
+test('a change of language keeps the map, its view and the choices; a load starts afresh', async ({
   page,
 }) => {
   // Without motion the view stands still once reached.
@@ -433,10 +434,7 @@ test('a change of language keeps the view, the apartment and the places; a load 
   await page.getByRole('button', { name: 'Zoom out' }).click();
   await expect.poll(pins).not.toEqual(first);
   const left = await pins();
-  const menu = page.getByRole('button', { name: 'Language: English' });
-  await menu.focus();
-  await page.keyboard.press('Enter');
-  await page.getByRole('link', { name: 'Deutsch' }).click();
+  await toLanguage(page, 'Language: English', 'Deutsch');
   await expect(page).toHaveURL(/\/de$/);
   await expect(page.locator('.location-map[data-drawn]')).toBeVisible({ timeout: 20000 });
   await expect(panel(page).getByRole('radio', { name: 'Lärche' })).toBeChecked();
@@ -446,6 +444,15 @@ test('a change of language keeps the view, the apartment and the places; a load 
     'true',
   );
   expect(await pins()).toEqual(left);
+  // The map taken over speaks the page's language.
+  await expect(page.getByRole('region', { name: 'Karte von Saalbach' })).toBeVisible();
+  await expect(page.locator('.maplibregl-ctrl-attrib-button')).toHaveAttribute(
+    'aria-label',
+    'Quellen der Karte',
+  );
+  await expect(page.locator('.maplibregl-mobile-message')).toHaveText(
+    'Die Karte mit zwei Fingern bewegen',
+  );
   await page.reload();
   await scrollToMap(page);
   await expect(page.locator('.location-map[data-drawn]')).toBeVisible({ timeout: 20000 });
