@@ -389,7 +389,9 @@ text button.
   switch cross-fades the rows over 0.6 s, like the hero photos. When the new season has more rows,
   the card grows while they move; when it has fewer, it shrinks after them (0.25 s), so the leaving
   rows are not cut off. The heading's season name and the button's label cross-fade over 0.2 s. With
-  reduced motion the list changes at once.
+  reduced motion the list changes at once, and so does a card that ends above the view, under the
+  header included, so that what is read below it stays still: the browser keeps it in place. Firefox
+  does so only to the whole pixel and may leave it a pixel off, and we leave it so.
 
 ### Booking bar
 
