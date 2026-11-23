@@ -179,9 +179,9 @@ content. The application has no wording, no colour and no typeface of its own. T
   `[data-season='summer'] { --color-accent: …; --color-accent-soft: …; }`.
 - **The theme's names** are the ones in [`DESIGN.md`](../DESIGN.md): `--font-sans` and the
   `--color-*` properties of `content/demo/theme.css`. A site with a map also names the map's own
-  colours, which the content build requires: `--color-water`, `--color-trail`, and the colours of
-  the places' icons, `--color-poi-food`, `-shop`, `-transport`, `-service` and `-culture`. Every
-  pair of text and ground is measured before a theme is used.
+  colours, which the content build requires: `--color-water`, `--color-trail`, `--color-pitch`, and
+  the colours of the places' icons, `--color-poi-food`, `-shop`, `-transport`, `-service` and
+  `-culture`. Every pair of text and ground is measured before a theme is used.
 
 ## Its boundaries
 

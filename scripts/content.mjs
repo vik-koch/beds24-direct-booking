@@ -246,6 +246,7 @@ export function readContent(dir) {
 const mapColors = [
   'water',
   'trail',
+  'pitch',
   ...['food', 'shop', 'transport', 'service', 'culture'].map((group) => `poi-${group}`),
 ];
 

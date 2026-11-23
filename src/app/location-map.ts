@@ -173,35 +173,102 @@ const mix = (a: string, b: string, t: number) => {
   const [x, y] = [channels(a), channels(b)];
   return `rgb(${x.map((n, i) => Math.round(n * (1 - t) + y[i]! * t)).join(', ')})`;
 };
+// A colour's OKLCH lightness, chroma and hue, and a colour from them: unlike a mix, a tint keeps
+// its lightness when its hue changes.
+const oklch = (color: string) => {
+  const [r, g, b] = channels(color).map((v) =>
+    (v /= 255) <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4,
+  ) as [number, number, number];
+  const [l, m, s] = [
+    0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b,
+    0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b,
+    0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b,
+  ].map(Math.cbrt) as [number, number, number];
+  const [a, z] = [
+    1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s,
+    0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s,
+  ];
+  return {
+    lightness: 0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s,
+    hue: Math.atan2(z, a),
+  };
+};
+const tint = (lightness: number, chroma: number, hue: number) => {
+  const [a, b] = [chroma * Math.cos(hue), chroma * Math.sin(hue)];
+  const [l, m, s] = [
+    lightness + 0.3963377774 * a + 0.2158037573 * b,
+    lightness - 0.1055613458 * a - 0.0638541728 * b,
+    lightness - 0.0894841775 * a - 1.291485548 * b,
+  ].map((v) => v ** 3) as [number, number, number];
+  return `rgb(${[
+    4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
+    -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
+    -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s,
+  ]
+    .map((v) =>
+      Math.round(
+        255 * Math.min(1, Math.max(0, v <= 0.0031308 ? 12.92 * v : 1.055 * v ** (1 / 2.4) - 0.055)),
+      ),
+    )
+    .join(', ')})`;
+};
 
-// Protomaps' light flavour in the theme's colours.
-function flavor(c: (name: string) => string): Flavor {
-  const [ground, road] = [c('ground'), c('surface')];
-  // The land in the season's tint, the village on the page's ground; a wood is a shade darker,
-  // with its trees.
-  const green = c('accent-soft');
-  // At least 3:1 against the land, a wood and the ground, as are the routes, the lifts and the
-  // pins' outlines.
-  const casing = mix(green, c('ink-soft'), 0.85);
-  const water = c('water');
+// Every colour the map draws, from the theme's. The land, its woods and their trees take the
+// accent's hue a little below the ground's lightness, so the map stays as light as the page and the
+// season shows in its tint alone. Outlines and lines keep 3:1 against the land, a wood and the
+// ground; names 4.5:1.
+function palette(c: (name: string) => string) {
+  const [ground, accent, water] = [c('ground'), c('accent'), c('water')];
+  const { lightness } = oklch(ground);
+  const accentHue = oklch(accent).hue;
+  const land = tint(lightness - 0.005, 0.014, accentHue);
+  const wood = tint(lightness - 0.035, 0.022, accentHue);
+  return {
+    ground,
+    land,
+    wood,
+    tree: tint(lightness - 0.13, 0.035, accentHue),
+    pitch: c('pitch'),
+    building: mix(c('oak'), c('edge'), 0.2),
+    pedestrian: mix(ground, c('oak'), 0.5),
+    road: c('surface'),
+    casing: mix(land, c('ink-soft'), 0.85),
+    water,
+    bank: mix(water, c('poi-transport'), 0.6),
+    waterName: mix(water, c('ink'), 0.8),
+    trail: c('trail'),
+    footway: c('ink-soft'),
+    cycleway: c('poi-transport'),
+    ink: c('ink'),
+    inkSoft: c('ink-soft'),
+    route: accent,
+    // Beside a chosen place's route the others fade, no further than 3:1 against the ground.
+    faded: mix(accent, c('surface'), 0.25),
+    routeCasing: c('surface'),
+    poi: Object.fromEntries(Object.keys(groups).map((group) => [group, c(`poi-${group}`)])),
+  };
+}
+
+// Protomaps' light flavour in the map's colours.
+function flavor(p: ReturnType<typeof palette>): Flavor {
+  const { ground, land, road, casing } = p;
   return {
     ...namedFlavor('light'),
-    background: green,
-    earth: green,
+    background: land,
+    earth: land,
     industrial: ground,
     school: ground,
     hospital: ground,
-    park_a: green,
-    park_b: green,
-    wood_a: green,
-    wood_b: green,
-    scrub_a: green,
-    scrub_b: green,
-    pedestrian: mix(ground, c('oak'), 0.5),
-    water,
-    // Rivers' and lakes' names, on a halo in the water's colour: at least 4.5:1.
-    ocean_label: mix(water, c('ink'), 0.8),
-    buildings: mix(c('oak'), c('edge'), 0.2),
+    park_a: land,
+    park_b: land,
+    wood_a: land,
+    wood_b: land,
+    scrub_a: land,
+    scrub_b: land,
+    pedestrian: p.pedestrian,
+    water: p.water,
+    ocean_label: p.waterName,
+    buildings: p.building,
     other: casing,
     minor_service: road,
     minor_a: road,
@@ -213,25 +280,25 @@ function flavor(c: (name: string) => string): Flavor {
     minor_service_casing: casing,
     major_casing_early: casing,
     major_casing_late: casing,
-    roads_label_minor: c('ink-soft'),
+    roads_label_minor: p.inkSoft,
     roads_label_minor_halo: road,
-    roads_label_major: c('ink-soft'),
+    roads_label_major: p.inkSoft,
     roads_label_major_halo: road,
-    subplace_label: c('ink-soft'),
+    subplace_label: p.inkSoft,
     subplace_label_halo: ground,
-    city_label: c('ink'),
+    city_label: p.ink,
     city_label_halo: ground,
-    address_label: c('ink-soft'),
+    address_label: p.inkSoft,
     address_label_halo: ground,
     // The coarse land cover of lower zooms, in the same two tones as the land use above it.
     landcover: {
-      grassland: green,
-      barren: green,
+      grassland: land,
+      barren: land,
       urban_area: ground,
-      farmland: green,
+      farmland: land,
       glacier: ground,
-      scrub: green,
-      forest: green,
+      scrub: land,
+      forest: land,
     },
     regular: 'theme',
     bold: 'theme',
@@ -755,7 +822,7 @@ export class LocationMap {
         if (trees === 'trees') {
           context.fillStyle = wood!;
           context.fillRect(0, 0, size, size);
-          const image = await lucide(lucideTreePine, 20, tree!, 2);
+          const image = await lucide(lucideTreePine, 20, tree!, 1);
           context.drawImage(image, 6, 6);
           context.drawImage(image, 38, 38);
         } else {
@@ -768,7 +835,7 @@ export class LocationMap {
                   '<path stroke="#fff" ',
                 )
               : kinds[id]!.svg;
-          const icon = await lucide(svg, size, group, 2.5);
+          const icon = await lucide(svg, size, group, 2);
           context.drawImage(icon, 0, 0);
         }
         if (!drawn.hasImage(id))
@@ -929,8 +996,8 @@ export class LocationMap {
     // stays. Paths are ours too. One-way arrows, which only drivers need, and roads under ground,
     // which no one finds from the map, are left out.
     const streets = ['living_street', 'pedestrian'];
-    const edge = mix(c('water'), c('poi-transport'), 0.6);
-    const base = layers('town', flavor(c), { lang: this.language.code })
+    const p = palette(c);
+    const base = layers('town', flavor(p), { lang: this.language.code })
       .filter((layer) => !/^roads_(oneway|tunnels_|other|bridges_other)/.test(layer.id))
       .map((layer): LayerSpecification => {
         // Streets that guests walk are as wide as a road, in the pedestrian areas' shade.
@@ -941,19 +1008,16 @@ export class LocationMap {
             ...(layer.id === 'roads_minor' && {
               paint: {
                 ...layer.paint,
-                'line-color': [
-                  'match',
-                  ['get', 'kind_detail'],
-                  streets,
-                  mix(c('ground'), c('oak'), 0.5),
-                  c('surface'),
-                ],
+                'line-color': ['match', ['get', 'kind_detail'], streets, p.pedestrian, p.road],
               },
             }),
           };
         // Streams in a deeper blue than the water, as the lines along its banks.
         if (layer.id === 'water_stream')
-          return { ...layer, paint: { ...layer.paint, 'line-color': edge } } as LayerSpecification;
+          return {
+            ...layer,
+            paint: { ...layer.paint, 'line-color': p.bank },
+          } as LayerSpecification;
         if (layer.type !== 'symbol') return layer;
         // A name along a line or over an area keeps its letters clear of what lies under it.
         const clear = { ...layer, paint: { ...layer.paint, 'text-halo-width': 2 } };
@@ -995,8 +1059,8 @@ export class LocationMap {
               // such as information, nearly as light as the ground.
               paint: {
                 ...clear.paint,
-                'text-color': c('ink-soft'),
-                'text-halo-color': c('ground'),
+                'text-color': p.inkSoft,
+                'text-halo-color': p.ground,
               },
             }
           : clear;
@@ -1011,10 +1075,10 @@ export class LocationMap {
         source: 'town',
         'source-layer': 'landuse',
         filter: ['in', ['get', 'kind'], ['literal', ['residential', 'commercial', 'retail']]],
-        paint: { 'fill-color': c('ground') },
+        paint: { 'fill-color': p.ground },
       },
     );
-    // Pitches and playgrounds a shade darker than the land.
+    // Pitches and playgrounds in their green, whatever the season.
     base.splice(
       base.findIndex((layer) => layer.id === 'landuse_park'),
       0,
@@ -1028,7 +1092,7 @@ export class LocationMap {
           ['get', 'kind'],
           ['literal', ['pitch', 'playground', 'recreation_ground', 'garden']],
         ],
-        paint: { 'fill-color': mix(c('accent-soft'), c('accent'), 0.1) },
+        paint: { 'fill-color': p.pitch },
       },
     );
     base.splice(base.findIndex((layer) => layer.id === 'water') + 1, 0, {
@@ -1037,10 +1101,9 @@ export class LocationMap {
       source: 'town',
       'source-layer': 'water',
       filter: ['==', '$type', 'Polygon'],
-      paint: { 'line-color': edge, 'line-width': 1 },
+      paint: { 'line-color': p.bank, 'line-width': 1 },
     });
     // A wood's trees over its green.
-    const wood = mix(c('accent-soft'), c('accent'), 0.1);
     base.splice(
       base.findIndex((layer) => layer.id === 'landuse_urban_green'),
       0,
@@ -1050,7 +1113,7 @@ export class LocationMap {
         source: 'town',
         'source-layer': 'landuse',
         filter: ['in', ['get', 'kind'], ['literal', ['forest', 'wood']]],
-        paint: { 'fill-pattern': `trees|${wood}|${mix(wood, c('accent'), 0.25)}` },
+        paint: { 'fill-pattern': `trees|${p.wood}|${p.tree}` },
       },
     );
     // Under the roads, as OpenStreetMap draws them: paths and tracks dashed in the trails' colour,
@@ -1072,9 +1135,9 @@ export class LocationMap {
     base.splice(
       base.findIndex((layer) => layer.id === 'roads_minor_service_casing'),
       0,
-      path('trails', ['path', 'track'], c('trail'), [3, 1.5]),
-      path('footways', ['footway', 'steps', 'corridor'], c('ink-soft'), [0, 2]),
-      path('cycleways', ['cycleway'], c('poi-transport'), [3, 1.5]),
+      path('trails', ['path', 'track'], p.trail, [3, 1.5]),
+      path('footways', ['footway', 'steps', 'corridor'], p.footway, [0, 2]),
+      path('cycleways', ['cycleway'], p.cycleway, [3, 1.5]),
     );
     // Until its icon shows, a place is a dot in its group's colour.
     base.splice(
@@ -1097,9 +1160,9 @@ export class LocationMap {
             ['get', 'kind'],
             ...Object.entries(groups).flatMap(([group, icons]) => [
               Object.keys(icons),
-              c(`poi-${group}`),
+              p.poi[group],
             ]),
-            c('ink'),
+            p.ink,
           ] as unknown as ExpressionSpecification,
         },
       },
@@ -1113,7 +1176,7 @@ export class LocationMap {
         type: 'line',
         source: 'lifts',
         paint: {
-          'line-color': c('ink'),
+          'line-color': p.ink,
           'line-width': ['interpolate', ['linear'], ['zoom'], 12, 1, 16, 1.5],
         },
       },
@@ -1123,7 +1186,7 @@ export class LocationMap {
         type: 'line',
         source: 'lifts',
         paint: {
-          'line-color': c('ink'),
+          'line-color': p.ink,
           'line-width': ['interpolate', ['linear'], ['zoom'], 12, 4, 16, 7],
           'line-dasharray': [0.2, 5],
         },
@@ -1141,7 +1204,7 @@ export class LocationMap {
           'text-font': ['theme'],
           'text-size': 12,
         },
-        paint: { 'text-color': c('ink'), 'text-halo-color': c('ground'), 'text-halo-width': 1.5 },
+        paint: { 'text-color': p.ink, 'text-halo-color': p.ground, 'text-halo-width': 1.5 },
       },
     );
     return {
@@ -1179,7 +1242,7 @@ export class LocationMap {
           type: 'line',
           source: 'routes',
           layout: { 'line-cap': 'round', 'line-join': 'round' },
-          paint: { 'line-color': c('surface'), 'line-width': 7 },
+          paint: { 'line-color': p.routeCasing, 'line-width': 7 },
         },
         {
           id: 'route',
@@ -1188,9 +1251,7 @@ export class LocationMap {
           filter: ['!', ['get', 'picked']],
           layout: { 'line-cap': 'round', 'line-join': 'round' },
           paint: {
-            // Beside a chosen place's route the others fade.
-            // Faded no further than 3:1 against the ground.
-            'line-color': this.picked() ? mix(c('accent'), c('surface'), 0.25) : c('accent'),
+            'line-color': this.picked() ? p.faded : p.route,
             'line-width': 3.5,
             'line-dasharray': [1, 1.6],
           },
@@ -1201,7 +1262,7 @@ export class LocationMap {
           source: 'routes',
           filter: ['get', 'picked'],
           layout: { 'line-cap': 'round', 'line-join': 'round' },
-          paint: { 'line-color': c('accent'), 'line-width': 4.5 },
+          paint: { 'line-color': p.route, 'line-width': 4.5 },
         },
       ],
     };

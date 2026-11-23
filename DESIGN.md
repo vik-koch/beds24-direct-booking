@@ -17,6 +17,7 @@ colors:
   on-accent: '#ffffff'
   water: '#b9d3e3'
   trail: '#827142'
+  pitch: '#c5e5c9'
   poi-food: '#c2410c'
   poi-shop: '#9440b0'
   poi-transport: '#0068b4'
@@ -152,14 +153,15 @@ A neutral, slightly warm light palette with a single accent that changes with th
 
 ### Map
 
-The map's own colours stay the same in every season, so that water is always blue. The land takes
-the season's soft accent and the village, its houses and shops, the page's ground; woods are a shade
-darker with small trees in a darker shade of the accent, pitches and playgrounds the same shade
-without them. Roads are outlined at 3:1 on both; streets for walking are as wide, in the pedestrian
-areas' shade. Roads under ground are left out.
+The map's own colours stay the same in every season, so that water is always blue and pitches green.
+The land takes the accent's hue just below the ground's lightness, mixed in OKLCH so that it keeps
+the page's lightness, and the village, its houses and shops, the page's ground; woods are a shade
+darker with small trees in a darker shade of the same hue. Roads are outlined at 3:1 on both;
+streets for walking are as wide, in the pedestrian areas' shade. Roads under ground are left out.
 
 - **Lake** (#b9d3e3): water, its banks and streams in a deeper blue, three fifths of the way to the
   transport blue. Its names are four fifths ink on it, above 5:1.
+- **Pitch** (#c5e5c9): pitches and playgrounds.
 - **Trail Olive** (#827142): paths and tracks, thin and dashed, at least 3:1 on the ground, the
   land, a wood and a building. Footways and steps are dotted in soft ink, cycleways dashed in the
   transport blue.
