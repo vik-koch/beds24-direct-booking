@@ -2,6 +2,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 import sharp from 'sharp';
+import { toLanguage } from './header';
 
 // The pixels the map itself draws in a theme colour, the accent of the routes by default, with
 // pins, labels and panel hidden.
@@ -411,6 +412,122 @@ test('a change of season keeps the choice and shows the places in that season', 
   await expect(panel(page).getByRole('radio', { name: 'Lärche' })).toBeChecked();
 });
 
+// Counts the maps let go: MapLibre's remove() loses its WebGL context.
+const countLost = (page: Page) =>
+  page.addInitScript(() => {
+    const counted = new WeakSet<HTMLCanvasElement>();
+    const get = HTMLCanvasElement.prototype.getContext;
+    Object.assign(window, { lost: 0 });
+    HTMLCanvasElement.prototype.getContext = function (this: HTMLCanvasElement, ...args: never[]) {
+      if (String(args[0]).startsWith('webgl') && !counted.has(this)) {
+        counted.add(this);
+        this.addEventListener(
+          'webglcontextlost',
+          () => (window as unknown as { lost: number }).lost++,
+        );
+      }
+      return get.apply(this, args);
+    } as typeof get;
+  });
+const lost = (page: Page) => page.evaluate(() => (window as unknown as { lost: number }).lost);
+
+test('a change of language keeps the map, its view and the choices; a load starts afresh', async ({
+  page,
+}) => {
+  // Without motion the view stands still once reached.
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await countLost(page);
+  await openMap(page);
+  const pins = () =>
+    page.locator('.map-frame').evaluate((frame) => {
+      const { x, y } = frame.getBoundingClientRect();
+      return ['Ahorn', 'Lärche'].map((name) => {
+        const box = frame.querySelector(`.map-pin[aria-label="${name}"]`)!.getBoundingClientRect();
+        return [Math.round(box.x - x), Math.round(box.y - y)];
+      });
+    });
+  const first = await pins();
+  await panel(page).getByText('Lärche').click();
+  await panel(page).locator('.map-unfold').click();
+  const line = places(page).filter({ hasText: 'Supermarket' }).getByRole('button');
+  await line.click();
+  await expect(line).toHaveAttribute('aria-pressed', 'true');
+  const chosen = await pins();
+  await page.getByRole('button', { name: 'Zoom out' }).click();
+  await expect.poll(pins).not.toEqual(chosen);
+  const left = await pins();
+  await toLanguage(page, 'Language: English', 'Deutsch');
+  await expect(page).toHaveURL(/\/de$/);
+  await expect(page.locator('.location-map[data-drawn]')).toBeVisible({ timeout: 20000 });
+  await expect(panel(page).getByRole('radio', { name: 'Lärche' })).toBeChecked();
+  await expect(panel(page).locator('.map-unfold')).toHaveAttribute('aria-expanded', 'true');
+  await expect(places(page).filter({ hasText: 'Supermarkt' }).getByRole('button')).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  await expect.poll(pins).toEqual(left);
+  expect(await lost(page)).toBe(0);
+  // The map taken over speaks the page's language.
+  await expect(page.getByRole('region', { name: 'Karte von Saalbach' })).toBeVisible();
+  await expect(page.locator('.maplibregl-ctrl-attrib-button')).toHaveAttribute(
+    'aria-label',
+    'Quellen der Karte',
+  );
+  await expect(page.locator('.maplibregl-mobile-message')).toHaveText(
+    'Die Karte mit zwei Fingern bewegen',
+  );
+  await page.reload();
+  await scrollToMap(page);
+  await expect(page.locator('.location-map[data-drawn]')).toBeVisible({ timeout: 20000 });
+  await expect(panel(page).getByRole('radio', { checked: true })).toHaveCount(0);
+  await expect(panel(page).locator('.map-unfold')).toHaveAttribute('aria-expanded', 'false');
+  await expect.poll(pins).toEqual(first);
+});
+
+test("a change of language keeps the pins' size", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await openMap(page);
+  const width = await page
+    .locator('.map-pin')
+    .first()
+    .evaluate((pin) => pin.offsetWidth);
+  // A pin's width in every frame, until 30 frames after the other language's page is shown.
+  const widths = page.evaluate(
+    () =>
+      new Promise<number[]>((resolve) => {
+        const widths: number[] = [];
+        let after = 0;
+        const step = () => {
+          const pin = document.querySelector<HTMLElement>('.map-pin');
+          if (pin?.checkVisibility()) widths.push(pin.getBoundingClientRect().width);
+          if (document.documentElement.lang === 'de-AT') after++;
+          if (after < 30) requestAnimationFrame(step);
+          else resolve(widths);
+        };
+        requestAnimationFrame(step);
+      }),
+  );
+  await toLanguage(page, 'Language: English', 'Deutsch');
+  expect(new Set(await widths)).toEqual(new Set([width]));
+});
+
+test('a page without the map lets it go with its choices: Back opens the first view', async ({
+  page,
+}) => {
+  await countLost(page);
+  await openMap(page);
+  await panel(page).getByText('Lärche').click();
+  await expect(panel(page).getByRole('radio', { name: 'Lärche' })).toBeChecked();
+  await page.locator('footer a[href^="/en/faq"]').click();
+  await expect(page).toHaveURL(/\/en\/faq/);
+  await expect.poll(() => lost(page)).toBe(1);
+  await page.goBack();
+  await scrollToMap(page);
+  await expect(page.locator('.location-map[data-drawn]')).toBeVisible({ timeout: 20000 });
+  await expect(panel(page).getByRole('radio', { checked: true })).toHaveCount(0);
+});
+
 test('without WebGL the panel stands alone and works', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(String(error)));
@@ -430,6 +547,16 @@ test('without WebGL the panel stands alone and works', async ({ page }) => {
   await expect(page.locator('.location-map')).not.toHaveAttribute('data-drawn');
   await expect(page.locator('.map-pin').first()).toBeHidden();
   await expect(page.getByRole('button', { name: 'Zoom in' })).toBeHidden();
+  // A change of language keeps the panel's choices.
+  await panel(page).locator('.map-unfold').click();
+  await places(page).filter({ hasText: 'Supermarket' }).getByRole('button').click();
+  await toLanguage(page, 'Language: English', 'Deutsch');
+  await expect(panel(page).getByRole('radio', { name: 'Ahorn' })).toBeChecked();
+  await expect(panel(page).locator('.map-unfold')).toHaveAttribute('aria-expanded', 'true');
+  await expect(places(page).filter({ hasText: 'Supermarkt' }).getByRole('button')).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
   expect(errors).toEqual([]);
 });
 

@@ -14,6 +14,7 @@ import {
   viewChildren,
   ViewEncapsulation,
 } from '@angular/core';
+import { Router } from '@angular/router';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import {
   lucideBanknote,
@@ -91,6 +92,7 @@ import routes from '../content/generated/routes';
 import site from '../content/generated/site';
 import { lucideName } from '../content/names';
 import type { Route } from '../content/schema';
+import { handover } from './map-handover';
 import { Season } from './season';
 import { LANGUAGE, TEXTS } from './texts';
 
@@ -467,8 +469,9 @@ function flavor(p: ReturnType<typeof palette>): Flavor {
       </div>
       <!-- After the panel, so that the keyboard reaches the choices first, also on a phone, where
            the panel shows below the map. -->
-      <div class="map-frame">
-        <div #canvas class="map-canvas" [class.map-far]="far()"></div>
+      <div class="map-frame" [class.map-far]="far()">
+        <!-- Replaced by a map taken over, with its own element: no binding here. -->
+        <div #canvas class="map-canvas"></div>
         <div class="map-zoom">
           <button
             type="button"
@@ -588,7 +591,7 @@ function flavor(p: ReturnType<typeof palette>): Flavor {
 
       /* The pins' heads, smaller when the map shows the whole town; at 1.5rem still the 24px a
          target needs. */
-      .map-canvas {
+      .map-frame {
         --head: 1.75rem;
 
         @media (prefers-reduced-motion: no-preference) {
@@ -853,64 +856,94 @@ export class LocationMap {
   protected readonly more = map.places.filter((place) => place.more);
   protected readonly maxZoom = 18;
   protected readonly minZoom = signal(0);
-  protected readonly zoom = signal(0);
+  protected readonly zoom = signal(handover.drawn?.getZoom() ?? 0);
   // Smaller pins while the map shows the whole town; decided by the zoom a move ends at, as fitting
-  // a view passes below 16 on its way from 16 to 16.
-  protected readonly far = signal(false);
+  // a view passes below 16 on its way from 16 to 16. A map taken over has its size from the first
+  // render: the pins would grow or shrink.
+  protected readonly far = signal(!!handover.drawn && this.zoom() < 16);
   protected readonly lucideName = lucideName;
-  protected readonly chosen = signal<string | undefined>(undefined);
-  protected readonly picked = signal<string | undefined>(undefined);
-  protected readonly all = signal(false);
+  protected readonly chosen = signal(handover.chosen);
+  protected readonly picked = signal(handover.picked);
+  protected readonly all = signal(handover.all ?? false);
   protected readonly shown = computed(() => map.places.filter((p) => this.all() || !p.more));
   protected readonly drawn = signal<MapLibre | undefined>(undefined);
   private readonly injector = inject(Injector);
+  private readonly router = inject(Router);
 
   constructor() {
     const destroyed = inject(DestroyRef);
     afterNextRender(async () => {
-      const { LngLatBounds, Map, Marker, getVersion, setWorkerUrl } = await import('maplibre-gl');
-      // Served beside the page's files; the version gives a new one a new address.
-      setWorkerUrl(`/map/maplibre-gl-worker.mjs?v=${getVersion()}`);
-      await new Promise((loaded) => {
-        const link = Object.assign(this.document.createElement('link'), {
-          rel: 'stylesheet',
-          href: `/map/maplibre-gl.css?v=${getVersion()}`,
-          onload: loaded,
-        });
-        this.document.head.append(link);
+      // Only a home page takes the map and the choices over, as after a change of language or
+      // Back; other pages let them go.
+      const home = () => {
+        const to = this.router.currentNavigation()?.finalUrl?.toString().split(/[?#]/)[0];
+        return site.languages.some(({ code }) => to === `/${code}`);
+      };
+      destroyed.onDestroy(() => {
+        const kept = home();
+        handover.chosen = kept ? this.chosen() : undefined;
+        handover.picked = kept ? this.picked() : undefined;
+        handover.all = kept && this.all();
       });
+      const { LngLatBounds, Map, Marker, getVersion, setWorkerUrl } = await import('maplibre-gl');
+      const locale = {
+        'Map.Title': this.texts.label,
+        'AttributionControl.ToggleAttribution': this.texts.attribution,
+        'CooperativeGesturesHandler.WindowsHelpText': this.texts.gestures.windows,
+        'CooperativeGesturesHandler.MacHelpText': this.texts.gestures.mac,
+        'CooperativeGesturesHandler.MobileHelpText': this.texts.gestures.touch,
+      };
+      // A map taken over keeps its view, until the next choice.
+      let kept = handover.drawn;
+      handover.drawn = undefined;
       let drawn: MapLibre;
-      try {
-        drawn = new Map({
-          container: this.canvas().nativeElement,
-          style: this.style(),
-          maxBounds: [map.box.west, map.box.south, map.box.east, map.box.north],
-          maxZoom: this.maxZoom,
-          maxPitch: 0,
-          dragRotate: false,
-          pitchWithRotate: false,
-          touchPitch: false,
-          cooperativeGestures: true,
-          attributionControl: { compact: true },
-          locale: {
-            'Map.Title': this.texts.label,
-            'AttributionControl.ToggleAttribution': this.texts.attribution,
-            'CooperativeGesturesHandler.WindowsHelpText': this.texts.gestures.windows,
-            'CooperativeGesturesHandler.MacHelpText': this.texts.gestures.mac,
-            'CooperativeGesturesHandler.MobileHelpText': this.texts.gestures.touch,
-          },
+      if (kept) {
+        drawn = kept;
+        this.canvas().nativeElement.replaceWith(drawn.getContainer());
+        // MapLibre writes its texts as it makes its parts: they are written again.
+        Object.assign(drawn._locale, locale);
+        drawn.getCanvas().setAttribute('aria-label', locale['Map.Title']);
+        const toggle = drawn.getContainer().querySelector('.maplibregl-ctrl-attrib-button');
+        toggle?.setAttribute('title', locale['AttributionControl.ToggleAttribution']);
+        toggle?.setAttribute('aria-label', locale['AttributionControl.ToggleAttribution']);
+        drawn.cooperativeGestures.disable();
+        drawn.cooperativeGestures.enable();
+      } else {
+        // Served beside the page's files; the version gives a new one a new address.
+        setWorkerUrl(`/map/maplibre-gl-worker.mjs?v=${getVersion()}`);
+        await new Promise((loaded) => {
+          const link = Object.assign(this.document.createElement('link'), {
+            rel: 'stylesheet',
+            href: `/map/maplibre-gl.css?v=${getVersion()}`,
+            onload: loaded,
+          });
+          this.document.head.append(link);
         });
-      } catch {
-        // Without WebGL the panel stands alone.
-        return;
+        try {
+          drawn = new Map({
+            container: this.canvas().nativeElement,
+            style: this.style(),
+            maxBounds: [map.box.west, map.box.south, map.box.east, map.box.north],
+            maxZoom: this.maxZoom,
+            maxPitch: 0,
+            dragRotate: false,
+            pitchWithRotate: false,
+            touchPitch: false,
+            cooperativeGestures: true,
+            attributionControl: { compact: true },
+            locale,
+          });
+        } catch {
+          // Without WebGL the panel stands alone.
+          return;
+        }
       }
       const hold = () => {
-        const { width, height } = this.canvas().nativeElement.getBoundingClientRect();
+        const { width, height } = drawn.getContainer().getBoundingClientRect();
         drawn.setMinZoom(Math.min(fitting(width, height), 16));
         this.minZoom.set(drawn.getMinZoom());
       };
       hold();
-      drawn.on('resize', hold);
       // The images the style names, drawn at twice their size when a tile first needs one: a
       // place's icon in its group's colour filled white, 18 px, and a wood's trees, whose
       // two colours are in their name: they change with the season.
@@ -946,12 +979,15 @@ export class LocationMap {
         if (!drawn.hasImage(id))
           drawn.addImage(id, context.getImageData(0, 0, size, size), { pixelRatio: 2 });
       });
-      drawn.on('zoom', () => {
-        this.zoom.set(drawn.getZoom());
-        if (drawn.getLayer('route'))
-          drawn.setPaintProperty('route', 'line-dasharray', dashes(drawn.getZoom()));
-      });
-      drawn.on('zoomend', () => this.far.set(drawn.getZoom() < 16));
+      const listeners = [
+        drawn.on('resize', hold),
+        drawn.on('zoom', () => {
+          this.zoom.set(drawn.getZoom());
+          if (drawn.getLayer('route'))
+            drawn.setPaintProperty('route', 'line-dasharray', dashes(drawn.getZoom()));
+        }),
+        drawn.on('zoomend', () => this.far.set(drawn.getZoom() < 16)),
+      ];
       drawn.touchZoomRotate.disableRotation();
       drawn.keyboard.disableRotation();
       const markers = new globalThis.Map<HTMLElement, InstanceType<typeof Marker>>();
@@ -990,6 +1026,7 @@ export class LocationMap {
           const lines = routes.filter(
             (r) => r.apartment === this.chosen() && shown.some((p) => p.key === r.place),
           );
+          if (kept) return void (kept = undefined);
           const points: [number, number][] = lines.length
             ? lines.flatMap(walk)
             : [...(picked ? [] : this.apartments), ...shown].map(({ lon, lat }) => [lon!, lat!]);
@@ -997,7 +1034,7 @@ export class LocationMap {
             (box, point) => box.extend(point),
             new LngLatBounds(points[0], points[0]),
           );
-          const frame = this.canvas().nativeElement.getBoundingClientRect();
+          const frame = drawn.getContainer().getBoundingClientRect();
           const panel = this.panel().nativeElement.getBoundingClientRect();
           // From 48rem the panel lies over the map's left side, on a phone below it.
           const over = panel.top < frame.bottom;
@@ -1021,17 +1058,25 @@ export class LocationMap {
           if (zoom !== undefined) this.far.set(zoom < 16);
           drawn.fitBounds(bounds, {
             ...view,
-            animate: !matchMedia('(prefers-reduced-motion: reduce)').matches && !!this.drawn(),
+            animate:
+              !matchMedia('(prefers-reduced-motion: reduce)').matches && !!untracked(this.drawn),
           });
         },
         { injector: this.injector },
       );
-      drawn.on('load', () => {
+      const ready = () => {
         this.zoom.set(drawn.getZoom());
         this.far.set(drawn.getZoom() < 16);
         this.drawn.set(drawn);
+      };
+      if (kept) ready();
+      else drawn.once('load', ready);
+      destroyed.onDestroy(() => {
+        if (!this.drawn() || !home()) return drawn.remove();
+        for (const marker of markers.values()) marker.remove();
+        for (const listener of listeners) listener.unsubscribe();
+        handover.drawn = drawn;
       });
-      destroyed.onDestroy(() => drawn.remove());
     });
     effect(() => {
       this.chosen();

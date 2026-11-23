@@ -1,6 +1,7 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Locator, type Page } from '@playwright/test';
+import { open, toLanguage } from './header';
 
 // The site map's table: every page in both languages.
 const pages = [
@@ -17,18 +18,6 @@ const pages = [
 ];
 
 const axe = async (page: Page) => (await new AxeBuilder({ page }).analyze()).violations;
-
-// Opens a menu of the wide header by keyboard, once the application has started, with the
-// pointer resting where its pane is attached before it is placed (#212).
-async function open(page: Page, name: string) {
-  const menu = page.getByRole('button', { name });
-  await expect(page.locator('html')).toHaveAttribute('data-started', '');
-  await page.mouse.move(0, 0);
-  await menu.focus();
-  await page.keyboard.press('Enter');
-  await expect(menu).toHaveAttribute('aria-expanded', 'true');
-  return menu;
-}
 
 // The header is folded where there is no hover or less than 64rem of width.
 const folded = (page: Page) => page.getByRole('button', { name: 'Menü' }).isVisible();
@@ -153,18 +142,6 @@ const fromEdge = (target: Locator) =>
       element.getBoundingClientRect().top -
       document.querySelector('app-header')!.getBoundingClientRect().bottom,
   );
-
-// Through the header's language menu, or the sheet where the header is folded. The menu
-// button is pressed by its coordinates: a locator's click scrolls the sticky header's button
-// "into view" and moves the page.
-async function toLanguage(page: Page, current: string, other: string) {
-  const menu = page.locator('.header-narrow .icon-button');
-  if (await menu.isVisible()) {
-    const box = (await menu.boundingBox())!;
-    await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
-  } else await open(page, current);
-  await page.getByRole('link', { name: other }).click();
-}
 
 const settled = (page: Page) =>
   expect.poll(() => page.evaluate(() => document.getAnimations().length)).toBe(0);
