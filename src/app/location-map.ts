@@ -14,6 +14,7 @@ import {
   viewChildren,
   ViewEncapsulation,
 } from '@angular/core';
+import { Router } from '@angular/router';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import {
   lucideBanknote,
@@ -867,6 +868,7 @@ export class LocationMap {
   protected readonly shown = computed(() => map.places.filter((p) => this.all() || !p.more));
   protected readonly drawn = signal<MapLibre | undefined>(undefined);
   private readonly injector = inject(Injector);
+  private readonly router = inject(Router);
 
   constructor() {
     const destroyed = inject(DestroyRef);
@@ -1060,9 +1062,12 @@ export class LocationMap {
       };
       if (kept) ready();
       else drawn.once('load', ready);
-      // A drawn map is left to the next one, without this page's pins and listeners.
+      // Only a home page takes the map over, as after a change of language or Back; other pages
+      // let it go.
       destroyed.onDestroy(() => {
-        if (!this.drawn()) return drawn.remove();
+        const to = this.router.currentNavigation()?.finalUrl?.toString().split(/[?#]/)[0];
+        const home = site.languages.some(({ code }) => to === `/${code}`);
+        if (!this.drawn() || !home) return drawn.remove();
         for (const marker of markers.values()) marker.remove();
         for (const listener of listeners) listener.unsubscribe();
         handover.drawn = drawn;
