@@ -13,19 +13,27 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
 
-const route = (meters, end) => ({
+const route = (meters, minutes, end = [12.61, 47.39]) => ({
   type: 'Feature',
-  properties: { apartment: 'ahorn', place: 'lake', meters },
+  properties: { apartment: 'ahorn', place: 'lake', meters, minutes },
   geometry: { type: 'LineString', coordinates: [[12.6, 47.38], end] },
 });
-const lifts = (...names) => ({
-  type: 'FeatureCollection',
-  features: names.map((name) => ({ properties: { kind: 'gondola', name } })),
+const lift = (name, top = 47.4) => ({
+  properties: { kind: 'gondola', name },
+  geometry: {
+    type: 'LineString',
+    coordinates: [
+      [12.6, 47.38],
+      [12.62, top],
+    ],
+  },
 });
+const lifts = (...features) => ({ type: 'FeatureCollection', features });
 
 // A site's repository with its map committed and pushed, the script beside stand-ins for the map
-// scripts, which write `writes` into the map, and for gh, which notes its calls and knows `pr`.
-function site(writes, pr = '') {
+// scripts, which write `writes` into the map, for the content check, which refuses the map when
+// `invalid`, and for gh, which notes its calls and knows `pr`.
+function site(writes, { pr = '', invalid = false } = {}) {
   const root = mkdtempSync(join(tmpdir(), 'map-data-'));
   const [repo, scripts, bin] = ['repo', 'scripts', 'bin'].map((name) => join(root, name));
   const map = join(repo, 'content', 'demo', 'map');
@@ -35,11 +43,8 @@ function site(writes, pr = '') {
   git('init', '-q', '-b', 'main');
   git('remote', 'add', 'origin', join(root, 'origin.git'));
   writeFileSync(join(map, 'tiles.json'), JSON.stringify({ build: '20261122' }));
-  writeFileSync(
-    join(map, 'routes.json'),
-    JSON.stringify({ features: [route(1000, [12.61, 47.39])] }),
-  );
-  writeFileSync(join(map, 'lifts.json'), JSON.stringify(lifts('Ahornbahn')));
+  writeFileSync(join(map, 'routes.json'), JSON.stringify({ features: [route(1000, 13)] }));
+  writeFileSync(join(map, 'lifts.json'), JSON.stringify(lifts(lift('Ahornbahn'))));
   git('add', '.');
   git('-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-q', '-m', 'map');
   git('push', '-q', 'origin', 'main');
@@ -55,6 +60,12 @@ function site(writes, pr = '') {
       `import { writeFileSync } from 'node:fs';\n${body || ''}\n`,
     );
   }
+  writeFileSync(
+    join(scripts, 'content.mjs'),
+    `export const readContent = (dir) => {
+      if (dir !== 'content/demo' || ${invalid}) throw new Error('routes.json: missing');
+    };`,
+  );
   writeFileSync(
     join(bin, 'gh'),
     `#!/bin/sh\nprintf '%s\\n---\\n' "$*" >> ${join(root, 'gh.log')}\n[ "$2" = list ] && echo '${pr}'\nexit 0\n`,
@@ -90,21 +101,36 @@ test('data as committed proposes nothing', () => {
   const { run, gh, proposed } = site({});
   assert.equal(run.status, 0, run.stderr);
   assert.match(run.stdout, /as committed/);
-  assert.equal(gh, '');
+  assert.doesNotMatch(gh, /pr (create|edit|close)/);
+  assert.equal(proposed, undefined);
+});
+
+test('data as committed closes the pull request that proposed other data', () => {
+  const { run, gh } = site({}, { pr: '7' });
+  assert.equal(run.status, 0, run.stderr);
+  assert.match(gh, /pr close 7 --delete-branch/);
+});
+
+test('data the content build refuses is not proposed', () => {
+  const { run, gh, proposed } = site({ 'lifts.json': lifts() }, { invalid: true });
+  assert.notEqual(run.status, 0);
+  assert.match(run.stderr, /routes\.json: missing/);
+  assert.doesNotMatch(gh, /pr (create|edit)/);
   assert.equal(proposed, undefined);
 });
 
 test('changed data is pushed to map-data and opens a pull request that names the changes', () => {
   const { run, gh, proposed, git } = site({
     'tiles.json': { build: '20261130' },
-    'routes.json': { features: [route(900, [12.62, 47.39])] },
-    'lifts.json': lifts('Ahornbahn', 'Gipfelbahn'),
+    'routes.json': { features: [route(900, 12, [12.62, 47.39])] },
+    'lifts.json': lifts(lift('Ahornbahn'), lift('Gipfelbahn'), lift('Gipfelbahn')),
   });
   assert.equal(run.status, 0, run.stderr);
   const summary = [
     '- Tiles of build 20261130, were 20261122',
-    '- Route ahorn to lake: 900 m, was 1000 m',
-    '- Lift added: gondola Gipfelbahn',
+    '- Route ahorn to lake: 900 m, 12 min, was 1000 m, 13 min',
+    '- Lift new or changed: gondola Gipfelbahn',
+    '- Lift new or changed: gondola Gipfelbahn',
   ].join('\n');
   assert.equal(proposed.trim(), `Take the map's data afresh\n\n${summary}`);
   assert.match(gh, /^pr list --head map-data/);
@@ -117,9 +143,21 @@ test('changed data is pushed to map-data and opens a pull request that names the
 });
 
 test('a run with a pull request open replaces its branch and its description', () => {
-  const { run, gh, proposed } = site({ 'lifts.json': lifts() }, '7');
+  const { run, gh, proposed } = site({ 'lifts.json': lifts() }, { pr: '7' });
   assert.equal(run.status, 0, run.stderr);
-  assert.match(proposed, /- Lift gone: gondola Ahornbahn/);
+  assert.match(proposed, /- Lift gone or changed: gondola Ahornbahn/);
   assert.match(gh, /pr edit 7 --body [^]*Lift gone/);
   assert.doesNotMatch(gh, /pr create/);
+});
+
+test('a walk that takes longer on the same line, and a lift that moved, are named', () => {
+  const { proposed } = site({
+    'routes.json': { features: [route(1000, 15)] },
+    'lifts.json': lifts(lift('Ahornbahn', 47.41)),
+  });
+  assert.match(proposed, /- Route ahorn to lake: 1000 m, 15 min, was 1000 m, 13 min/);
+  assert.match(
+    proposed,
+    /- Lift new or changed: gondola Ahornbahn\n- Lift gone or changed: gondola Ahornbahn/,
+  );
 });
