@@ -116,7 +116,8 @@ A spike (#254, branch `spike/254-map`, not merged) tried the decision below in t
   script writes every zoom from 0 up, so the measured extract was
   `node scripts/map-tiles.mjs 20261122 12.6,47.375,12.67,47.405 15 <dir>` with zoom 0 to 11 deleted
   afterwards; the content slice's script takes the zoom range. Routes are computed again when a pin
-  moves, lifts taken again when the box changes.
+  moves, lifts taken again when the box changes. Since ADR 15 a weekly workflow runs the three
+  scripts and proposes any change in a pull request.
 - **Firefox's e2e tests see no map,** so they cover the list and the page without the map; the map
   itself is tested in Chromium and WebKit.
 - **The map's chunk is large,** but loaded only by visitors who scroll to it.

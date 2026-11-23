@@ -41,3 +41,4 @@ How the project is developed, reviewed and released.
 | [3](0003-agent-identities.md) | Each agent has its own identity on GitHub | Accepted |
 | [9](0009-ci-in-the-playwright-image.md) | The CI check runs in the Playwright image, whose tag must match the installed package | Accepted |
 | [12](0012-ci-in-parallel-jobs.md) | The CI check runs in parallel jobs: the e2e suite one engine per job and WebKit over two, the static checks beside them | Accepted |
+| [15](0015-map-data-in-a-weekly-pull-request.md) | Fresh map data comes as a weekly pull request from a workflow of its own; the deployment never fetches it | Accepted |

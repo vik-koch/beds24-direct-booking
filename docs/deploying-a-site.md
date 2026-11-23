@@ -82,6 +82,23 @@ later, ends without deploying.
   [`.env.example`](../.env.example) describes it. The machine keeps the image it runs, so a restart
   of the machine or of Docker needs no registry.
 
+## Fresh map data
+
+A site with a map can take its map data afresh every week
+([ADR 15](adr/0015-map-data-in-a-weekly-pull-request.md)), with release `0.4.0` or later:
+
+1. **Copy the template** `infra/site-map-data.yml` to `.github/workflows/map-data.yml`. It runs the
+   map scripts of the release that `deploy.yml` names in `VERSION`, so the data always fits the
+   site's build. It needs no secrets or variables.
+2. **Let workflows open pull requests:** Settings, Actions, General, "Allow GitHub Actions to create
+   and approve pull requests".
+
+Every Monday, and when started by hand under Actions, the run takes the tiles, the walking routes
+and the lifts afresh. When something changed, it opens a pull request from the branch `map-data`, or
+updates the one that is open, naming the tiles' build and each changed route and lift. Merging it
+deploys the site. A run that finds nothing new opens nothing. The branch belongs to the workflow: a
+commit added to it by hand is gone after the next run.
+
 ## The machine afterwards
 
 - **The proxy** is `/srv/proxy/compose.yml` with the Let's Encrypt address in `/srv/proxy/.env`,
