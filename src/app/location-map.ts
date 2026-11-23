@@ -1008,8 +1008,13 @@ export class LocationMap {
               bottom: 48,
               left: over ? panel.right - frame.left + 48 : 48,
             },
-            // A lone place keeps a closer zoom the visitor has chosen.
-            maxZoom: picked && !lines.length ? Math.max(16, untracked(this.zoom)) : 16,
+            // A chosen place's route as close as it fits, a short one too; a lone place keeps a
+            // closer zoom the visitor has chosen.
+            maxZoom: picked
+              ? lines.length
+                ? this.maxZoom
+                : Math.max(16, untracked(this.zoom))
+              : 16,
           };
           // The pins take the size of the zoom the map eases to as it starts.
           const zoom = drawn.cameraForBounds(bounds, view)?.zoom;
@@ -1320,7 +1325,20 @@ export class LocationMap {
         },
       },
     );
-    // The lifts lie over the roads and under every label, their names along them.
+    // The lifts lie over the roads and under every label, their names along them. As
+    // OpenStreetMap draws them, a gondola or a cable car in ink, a chair lift in soft ink and
+    // thinner, both with ticks for their pylons, and a drag lift in soft ink, dashed.
+    const main: ExpressionSpecification = [
+      'in',
+      ['get', 'kind'],
+      ['literal', ['gondola', 'cable_car', 'mixed_lift']],
+    ];
+    const drag: FilterSpecification = [
+      'in',
+      ['get', 'kind'],
+      ['literal', ['drag_lift', 't-bar', 'j-bar', 'platter', 'rope_tow']],
+    ];
+    const color: ExpressionSpecification = ['case', main, p.ink, p.inkSoft];
     base.splice(
       base.findIndex((layer) => layer.id === 'address_label'),
       0,
@@ -1328,18 +1346,38 @@ export class LocationMap {
         id: 'lifts',
         type: 'line',
         source: 'lifts',
+        filter: ['!', drag],
         paint: {
-          'line-color': p.ink,
-          'line-width': ['interpolate', ['linear'], ['zoom'], 12, 1, 16, 1.5],
+          'line-color': color,
+          'line-width': [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            12,
+            ['case', main, 1, 0.75],
+            16,
+            ['case', main, 1.5, 1],
+          ],
         },
       },
-      // Short ticks across the line, as OpenStreetMap draws a lift's pylons.
+      {
+        id: 'drag-lifts',
+        type: 'line',
+        source: 'lifts',
+        filter: drag,
+        paint: {
+          'line-color': p.inkSoft,
+          'line-width': ['interpolate', ['linear'], ['zoom'], 12, 0.75, 16, 1],
+          'line-dasharray': [4, 3],
+        },
+      },
       {
         id: 'lift-ticks',
         type: 'line',
         source: 'lifts',
+        filter: ['!', drag],
         paint: {
-          'line-color': p.ink,
+          'line-color': color,
           'line-width': ['interpolate', ['linear'], ['zoom'], 12, 4, 16, 7],
           'line-dasharray': [0.2, 5],
         },
@@ -1357,7 +1395,7 @@ export class LocationMap {
           'text-font': ['theme'],
           'text-size': 12,
         },
-        paint: { 'text-color': p.ink, 'text-halo-color': p.ground, 'text-halo-width': 1.5 },
+        paint: { 'text-color': color, 'text-halo-color': p.ground, 'text-halo-width': 1.5 },
       },
       {
         id: 'stations',
@@ -1408,9 +1446,9 @@ export class LocationMap {
           type: 'geojson',
           data: {
             type: 'FeatureCollection',
-            features: lifts.map(({ name, line }) => ({
+            features: lifts.map(({ kind, name, line }) => ({
               type: 'Feature',
-              properties: { name },
+              properties: { kind, name },
               geometry: { type: 'LineString', coordinates: line },
             })),
           },

@@ -430,7 +430,8 @@ keyboard. In the sheet the apartments are indented under their entry at weight 4
 - **Colours:** the theme's: ground for land, oak for buildings, white roads with casings at 3:1, and
   the map's own colours above. On a change of season it takes the new colours as the page starts to
   fade into them.
-- **Detail:** lifts as ink lines with ticks for their pylons and their names beside them; places of
+- **Detail:** gondolas and cable cars as ink lines with ticks for their pylons, chair lifts the same
+  in soft ink and thinner, drag lifts dashed in soft ink, their names beside them; places of
   interest as a Lucide icon in their group's colour, filled white, with their name, a bus stop
   without its name. Every name has a halo of what it lies on.
 - **Panel:** a card over the map's upper left from 48rem, below the map on a phone, with no scroll
@@ -448,8 +449,8 @@ keyboard. In the sheet the apartments are indented under their entry at weight 4
 - **Zoom:** plus and minus as the site's round buttons in a white pill, level with the panel's top.
 - **Routes:** a dashed accent line with a white casing, its dashes as long at every zoom, from the
   chosen apartment's point to each place's, the router's line joined to both; once a place is
-  chosen, its route solid, a white dot ringed in the accent at each end under the pins' tips, and
-  the others faded to 3:1.
+  chosen, its route solid and as close as it fits, a white dot ringed in the accent at each end
+  under the pins' tips, and the others faded to 3:1.
 
 ### Language menu
 
