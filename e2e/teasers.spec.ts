@@ -161,6 +161,39 @@ test(
   },
 );
 
+test('the price keeps its space after “from” while the seasons cross-fade', async ({ page }) => {
+  for (const path of ['/en', '/de']) {
+    await page.goto(path);
+    await expect(page.locator('html')).toHaveAttribute('data-started', '');
+    // Each frame of the fade, the gap between the word and the price on every line in view.
+    const gaps = page.evaluate(
+      () =>
+        new Promise<number[]>((resolve) => {
+          const gaps: number[] = [];
+          let started = false;
+          const measure = () => {
+            const moving = document.getAnimations().length > 0;
+            if (started && !moving) return resolve(gaps);
+            started ||= moving;
+            for (const line of document.querySelectorAll<HTMLElement>('.teaser-price > span')) {
+              const price = line.querySelector('strong');
+              const word = price?.previousSibling;
+              if (!price || !word || Number(getComputedStyle(line).opacity) === 0) continue;
+              const range = document.createRange();
+              range.selectNodeContents(word);
+              range.setEnd(word, word.textContent!.trimEnd().length);
+              gaps.push(price.getBoundingClientRect().left - range.getBoundingClientRect().right);
+            }
+            requestAnimationFrame(measure);
+          };
+          requestAnimationFrame(measure);
+        }),
+    );
+    await page.locator('.other-season').click();
+    expect(Math.min(...(await gaps)), path).toBeGreaterThan(2);
+  }
+});
+
 test('a season not open yet says so on each card', async ({ page }) => {
   // Its prices end today: the current season is full, the next one not open.
   await page.goto('http://localhost:4003/en');

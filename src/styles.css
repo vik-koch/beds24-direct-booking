@@ -704,9 +704,14 @@
   }
 
   /* The free-weeks list and the booking panel: both seasons are in the page and the page's
-     season shows one. Parts that are leaving stay in view until their move has ended. */
-  html:not([data-season='winter']) :is(.weeks, .booking) [data-for='winter']:not([data-leaving]),
-  html:not([data-season='summer']) :is(.weeks, .booking) [data-for='summer']:not([data-leaving]) {
+     season shows one. Parts that are leaving stay in view until their move has ended, and the
+     versions in a stack keep their place, unseen. */
+  html:not([data-season='winter'])
+    :is(.weeks, .booking)
+    [data-for='winter']:not([data-leaving], .stack > *),
+  html:not([data-season='summer'])
+    :is(.weeks, .booking)
+    [data-for='summer']:not([data-leaving], .stack > *) {
     display: none;
   }
 
@@ -752,7 +757,6 @@
 
   html:not([data-season='winter']) :is(.weeks, .booking, .teasers) .stack > [data-for='winter'],
   html:not([data-season='summer']) :is(.weeks, .booking, .teasers) .stack > [data-for='summer'] {
-    display: flex;
     visibility: hidden;
     opacity: 0;
   }
