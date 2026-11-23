@@ -75,7 +75,8 @@ git add -- "$map"
 git commit -q -m "Take the map's data afresh" -m "$summary"
 git push -q -f origin "HEAD:refs/heads/$branch"
 body=$(printf '%s\n' "The map scripts found newer data in OpenStreetMap:" "" "$summary" "" \
-  "Walk a changed route, or check it on the map, before merging. A later run replaces this branch.")
+  "The data passed the content build's checks before it was proposed. Walk a changed route, or" \
+  "check it on the map, before merging. A later run replaces this branch.")
 if [ -n "$pr" ]; then
   gh pr edit "$pr" --body "$body"
 else
