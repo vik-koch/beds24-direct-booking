@@ -165,12 +165,11 @@ streets for walking are as wide, in the pedestrian areas' shade. Roads under gro
 - **Trail Olive** (#827142): paths and tracks, thin and dashed, at least 3:1 on the ground, the
   land, a wood and a building. Footways and steps are dotted in soft ink, cycleways dashed in the
   transport blue.
-- **The places' icons**, Lucide's in a group's colour with no circle, 18 px with lines of 2.5 in its
-  24 units, at least 3:1 against the ground, the land and a building: **Rust** (#c2410c) for food
-  and drink, **Violet** (#9440b0) for shops, **Sign Blue** (#0068b4) for transport, **Crimson**
-  (#c4283f) for services such as a pharmacy or a cash machine, **Walnut** (#8a6234) for culture and
-  leisure. Parking is its sign: a white P on a filled square. Until its icon shows, a place is a dot
-  in its colour.
+- **The places' icons**, Lucide's in a group's colour, filled white, with no circle, 18 px with
+  lines of 2 in its 24 units, at least 3:1 against the ground, the land and a building: **Rust**
+  (#c2410c) for food and drink, **Violet** (#9440b0) for shops, **Sign Blue** (#0068b4) for
+  transport, **Crimson** (#c4283f) for services such as a pharmacy or a cash machine, **Walnut**
+  (#8a6234) for culture and leisure. Until its icon shows, a place is a dot in its colour.
 
 ### Named Rules
 

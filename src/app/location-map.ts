@@ -804,7 +804,7 @@ export class LocationMap {
       hold();
       drawn.on('resize', hold);
       // The images the style names, drawn at twice their size when a tile first needs one: a
-      // place's icon in its group's colour, 18 px, parking's as its sign, and a wood's trees, whose
+      // place's icon in its group's colour filled white, 18 px, and a wood's trees, whose
       // two colours are in their name: they change with the season.
       drawn.setMissingStyleImageResolver(async (id) => {
         const [trees, wood, tree] = id.split('|');
@@ -826,16 +826,9 @@ export class LocationMap {
           context.drawImage(image, 6, 6);
           context.drawImage(image, 38, 38);
         } else {
-          const group = color(`poi-${kinds[id]!.group}`);
-          // Parking as its sign: a white P on a filled square.
-          const svg =
-            id === 'parking'
-              ? kinds[id]!.svg.replace('<rect ', `<rect fill="${group}" `).replace(
-                  '<path ',
-                  '<path stroke="#fff" ',
-                )
-              : kinds[id]!.svg;
-          const icon = await lucide(svg, size, group, 2);
+          // Filled in the surface's white, so that each icon reads as a shape, not lines.
+          const svg = kinds[id]!.svg.replace('fill="none"', `fill="${color('surface')}"`);
+          const icon = await lucide(svg, size, color(`poi-${kinds[id]!.group}`), 2);
           context.drawImage(icon, 0, 0);
         }
         if (!drawn.hasImage(id))
