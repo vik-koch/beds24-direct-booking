@@ -159,20 +159,19 @@ the page's lightness, and the village, its houses and shops, the page's ground; 
 darker with small trees in a darker shade of the same hue. Roads are outlined at 3:1 on both;
 streets for walking are as wide, in the pedestrian areas' shade. Roads under ground are left out.
 
-- **Lake** (#b9d3e3): water, its banks and streams in a deeper blue, three fifths of the way to the
-  transport blue. Its names are four fifths ink on it, above 5:1.
+- **Lake** (#b9d3e3): water, its banks and streams in a deeper blue, three quarters of the way to
+  the transport blue, at least 3:1 against the land. Its names are four fifths ink on it, above 5:1.
 - **Pitch** (#c5e5c9): pitches and playgrounds.
 - **Trail Olive** (#827142): paths and tracks, thin and dashed, at least 3:1 on the ground, the
   land, a wood and a building. Footways and steps are dotted in soft ink, cycleways dashed in the
   transport blue.
 - **The places' icons**, Lucide's in a group's colour, filled white, with no circle, 18 px with
-  lines of 2 in its 24 units, at least 3:1 against the ground, the land and a building: **Rust**
+  lines of 1.5 in its 24 units, at least 3:1 against the ground, the land and a building: **Rust**
   (#c2410c) for food and drink, **Violet** (#9440b0) for shops, **Sign Blue** (#0068b4) for
   transport, **Crimson** (#c4283f) for services such as a pharmacy or a cash machine, **Walnut**
-  (#8a6234) for culture and leisure. Until its icon shows, a place is a dot, grey and half seen
-  while the whole town shows, in its colour closer in; culture, most services and bus stops show
-  their icons a zoom after food and shops, and all the town's places step back to 60% beside a
-  chosen apartment's routes. The quarters' names are smaller than Protomaps draws them, and paths
+  (#8a6234) for culture and leisure. Until its icon shows, a place is a dot, grey while the whole
+  town shows, in its colour closer in; culture, most services and bus stops show their icons a zoom
+  after food and shops,. The quarters' names are smaller than Protomaps draws them, and paths
   thinner while the whole town shows. A gondola's or a cable car's stations show its icon in the
   transport blue; a pin takes the place of the tiles' own entry or a station within a metre of it.
 
@@ -432,7 +431,7 @@ keyboard. In the sheet the apartments are indented under their entry at weight 4
   the map's own colours above. On a change of season it takes the new colours as the page starts to
   fade into them.
 - **Detail:** lifts as ink lines with ticks for their pylons and their names beside them; places of
-  interest as a white Lucide icon on a circle of their group's colour with their name, a bus stop
+  interest as a Lucide icon in their group's colour, filled white, with their name, a bus stop
   without its name. Every name has a halo of what it lies on.
 - **Panel:** a card over the map's upper left from 48rem, below the map on a phone, with no scroll
   of its own. The apartments are accent text that becomes an accent pill once chosen, as a price
@@ -451,6 +450,24 @@ keyboard. In the sheet the apartments are indented under their entry at weight 4
   chosen apartment's point to each place's, the router's line joined to both; once a place is
   chosen, its route solid, a white dot ringed in the accent at each end under the pins' tips, and
   the others faded to 3:1.
+
+### Language menu
+
+One entry at the end of the header's line: a globe and the current language's name in its own
+language ("Deutsch"). It opens the same small menu as the apartments with the other languages, each
+a link to the same page in that language, so it takes any number of them. In the sheet the languages
+are indented below a label like the apartments, at weight 400, the current one in the accent. The
+label, a globe and "Sprache", is in soft ink at label size, so it does not look like an entry that
+can be followed. It is a menu, not a pill, so that the two switches are easy to tell apart.
+
+A change of language keeps the visitor's place: the element at the header's lower edge stays there,
+as far scrolled past as before, however long the other language's texts are. A chosen week stays
+chosen, and the focus is on the language entry, or the menu button where the header is folded.
+
+## Do's and Don'ts
+
+### Do:
+
 - **Do** keep the ground light and let white surfaces and space do the separating.
 - **Do** use the season's accent for what a visitor can act on, and nothing else.
 - **Do** measure every colour pair of a new theme in both seasons before using it.

@@ -318,7 +318,7 @@ function palette(c: (name: string) => string) {
     road: c('surface'),
     casing: mix(land, c('ink-soft'), 0.85),
     water,
-    bank: mix(water, c('poi-transport'), 0.6),
+    bank: mix(water, c('poi-transport'), 0.75),
     waterName: mix(water, c('ink'), 0.8),
     trail: c('trail'),
     footway: c('ink-soft'),
@@ -1134,8 +1134,6 @@ export class LocationMap {
     // which no one finds from the map, are left out.
     const streets = ['living_street', 'pedestrian'];
     const p = palette(c);
-    // Beside a chosen apartment's routes the town's places step back.
-    const dim = this.chosen() ? 0.6 : 1;
     const base = layers('town', flavor(p), { lang: this.language.code })
       .filter((layer) => !/^roads_(oneway|tunnels_|other|bridges_other)/.test(layer.id))
       .map((layer): LayerSpecification => {
@@ -1210,8 +1208,6 @@ export class LocationMap {
                 ...clear.paint,
                 'text-color': p.inkSoft,
                 'text-halo-color': p.ground,
-                'icon-opacity': dim,
-                'text-opacity': dim,
               },
             }
           : clear;
@@ -1303,8 +1299,6 @@ export class LocationMap {
         ],
         paint: {
           'circle-radius': 2.5,
-          // Half seen while the map shows the whole town, and dimmed beside a chosen apartment.
-          'circle-opacity': ['interpolate', ['linear'], ['zoom'], 15, 0.5 * dim, 16.5, dim],
           // Grey while the whole town shows, in its group's colour closer in.
           'circle-color': [
             'interpolate',
@@ -1373,6 +1367,7 @@ export class LocationMap {
         layout: { 'icon-image': 'lift_station' },
       },
     );
+    const labels = base.findIndex((layer) => layer.type === 'symbol');
     return {
       version: 8,
       'font-faces': { theme: map.font },
@@ -1421,8 +1416,9 @@ export class LocationMap {
           },
         },
       },
+      // Under every name, so that a walk along a street leaves the street's name legible.
       layers: [
-        ...base,
+        ...base.slice(0, labels),
         {
           id: 'route-casing',
           type: 'line',
@@ -1462,6 +1458,7 @@ export class LocationMap {
             'circle-stroke-width': 2.5,
           },
         },
+        ...base.slice(labels),
       ],
     };
   }
