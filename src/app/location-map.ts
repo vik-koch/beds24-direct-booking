@@ -1046,10 +1046,10 @@ export class LocationMap {
       // The apartments and the places shown, or the chosen apartment's routes, beside the panel; a
       // chosen place alone, or its route. Folding the places leaves the view as it is.
       this.fit = (keep: boolean) => {
-        const picked = untracked(this.picked);
-        const shown = untracked(this.shown).filter((p) => !picked || p.key === picked);
+        const [picked, chosen] = [this.picked(), this.chosen()];
+        const shown = this.shown().filter((p) => !picked || p.key === picked);
         const lines = routes.filter(
-          (r) => r.apartment === untracked(this.chosen) && shown.some((p) => p.key === r.place),
+          (r) => r.apartment === chosen && shown.some((p) => p.key === r.place),
         );
         const points: [number, number][] = lines.length
           ? lines.flatMap(walk)
@@ -1075,7 +1075,7 @@ export class LocationMap {
             ? lines.length
               ? this.maxZoom
               : keep
-                ? Math.max(16, untracked(this.zoom))
+                ? Math.max(16, this.zoom())
                 : 16
             : 16,
         };
@@ -1084,8 +1084,7 @@ export class LocationMap {
         if (zoom !== undefined) this.far.set(zoom < 16);
         drawn.fitBounds(bounds, {
           ...view,
-          animate:
-            !matchMedia('(prefers-reduced-motion: reduce)').matches && !!untracked(this.drawn),
+          animate: !matchMedia('(prefers-reduced-motion: reduce)').matches && !!this.drawn(),
         });
       };
       effect(
@@ -1093,7 +1092,7 @@ export class LocationMap {
           this.picked();
           this.chosen();
           if (kept) kept = undefined;
-          else this.fit!(true);
+          else untracked(() => this.fit!(true));
         },
         { injector: this.injector },
       );

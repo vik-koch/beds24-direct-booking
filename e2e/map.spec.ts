@@ -385,15 +385,33 @@ test("the reset button returns to the view of the choices, a chosen place's too"
   await reset.focus();
   await page.keyboard.press('Enter');
   await expect.poll(gondolas).toBeCloseTo(far, 0);
-  expect((await pin.boundingBox())!.x).toBeCloseTo(first.x, 0);
+  await expect.poll(async () => (await pin.boundingBox())!.x).toBeCloseTo(first.x, 0);
   const line = places(page).nth(1).getByRole('button');
   await line.click();
   await expect.poll(gondolas).toBeGreaterThan(far * 1.5);
   const near = await gondolas();
+  const gondola = page.getByRole('button', { name: 'Kohlmaisbahn', exact: true });
+  const at = (await gondola.boundingBox())!;
   await page.getByRole('button', { name: 'Zoom in' }).click();
   await expect.poll(gondolas).toBeGreaterThan(near * 1.9);
+  // Dragged away from the place, too.
+  const dragged = (await gondola.boundingBox())!;
+  const frame = (await page.locator('.map-canvas').boundingBox())!;
+  await page.mouse.move(frame.x + frame.width / 2, frame.y + frame.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(frame.x + frame.width / 2 + 150, frame.y + frame.height / 2 + 100, {
+    steps: 5,
+  });
+  await page.mouse.up();
+  await expect.poll(async () => (await gondola.boundingBox())!.x - dragged.x).toBeCloseTo(150, -1);
   await reset.click();
   await expect.poll(gondolas).toBeCloseTo(near, 0);
+  await expect
+    .poll(async () => {
+      const box = (await gondola.boundingBox())!;
+      return Math.hypot(box.x - at.x, box.y - at.y);
+    })
+    .toBeLessThan(1);
   await expect(line).toHaveAttribute('aria-pressed', 'true');
 });
 
