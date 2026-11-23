@@ -134,6 +134,9 @@ test('a switch on a scrolled page keeps its place, and focus in the page lands b
   page,
 }) => {
   await page.clock.setFixedTime(november);
+  // Without motion a scroll to reveal the focus would be instant, so the place is read at once:
+  // after a switch WebKit's software rendering can take seconds to play its transitions out.
+  await page.emulateMedia({ reducedMotion: 'reduce' });
   const at = () => page.evaluate(() => Math.round(window.scrollY));
   const scrollTo = (top: number) =>
     page.evaluate((y) => window.scrollTo({ top: y, behavior: 'instant' }), top);
@@ -149,13 +152,11 @@ test('a switch on a scrolled page keeps its place, and focus in the page lands b
     const box = (await page.locator('.season-switch label[data-for=summer]').boundingBox())!;
     await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
     await expect(page.locator('html')).toHaveAttribute('data-season', 'summer');
-    await settled(page);
     expect(await at(), `click at ${width}`).toBe(832);
 
     await page.getByRole('radio', { name: 'Summer' }).focus();
     await page.keyboard.press('ArrowLeft');
     await expect(page.locator('html')).toHaveAttribute('data-season', 'winter');
-    await settled(page);
     expect(await at(), `keyboard at ${width}`).toBe(832);
 
     // A control in the page that lies under the header comes out below it when focused.
