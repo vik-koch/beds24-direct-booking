@@ -89,8 +89,8 @@ Top to bottom. Each section other than the hero has an anchor that the header li
 5. **Who we are:** a short text with contact, and a link to the company page.
 
 An apartment's page ends with the same map, under the same anchor, with that apartment alone and
-always chosen: its routes drawn and their distances in the list. Its address in the facts below
-the name leads there.
+always chosen: its routes drawn and their distances in the list. Its address in the facts below the
+name leads there.
 
 ## Layout rules
 
