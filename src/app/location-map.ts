@@ -39,6 +39,7 @@ import {
   lucideEgg,
   lucideFish,
   lucideFlagTriangleRight,
+  lucideFocus,
   lucideFuel,
   lucideGift,
   lucideGraduationCap,
@@ -397,7 +398,16 @@ function flavor(p: ReturnType<typeof palette>): Flavor {
   // Its styles reach the elements MapLibre adds, such as its attribution.
   encapsulation: ViewEncapsulation.None,
   imports: [NgIcon, NgTemplateOutlet],
-  providers: [provideIcons({ ...icons, lucideChevronDown, lucideHouse, lucideMinus, lucidePlus })],
+  providers: [
+    provideIcons({
+      ...icons,
+      lucideChevronDown,
+      lucideHouse,
+      lucideFocus,
+      lucideMinus,
+      lucidePlus,
+    }),
+  ],
   template: `
     <div class="location-map" [attr.data-drawn]="drawn() ? '' : null">
       <div #panel class="map-panel">
@@ -473,23 +483,33 @@ function flavor(p: ReturnType<typeof palette>): Flavor {
         <!-- Replaced by a map taken over, with its own element: no binding here. -->
         <div #canvas class="map-canvas"></div>
         <div class="map-zoom">
+          <div class="map-pill">
+            <button
+              type="button"
+              class="icon-button"
+              [attr.aria-label]="texts.zoomIn"
+              [disabled]="zoom() >= maxZoom"
+              (click)="drawn()?.zoomIn()"
+            >
+              <ng-icon name="lucidePlus" aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              class="icon-button"
+              [attr.aria-label]="texts.zoomOut"
+              [disabled]="zoom() <= minZoom()"
+              (click)="drawn()?.zoomOut()"
+            >
+              <ng-icon name="lucideMinus" aria-hidden="true" />
+            </button>
+          </div>
           <button
             type="button"
-            class="icon-button"
-            [attr.aria-label]="texts.zoomIn"
-            [disabled]="zoom() >= maxZoom"
-            (click)="drawn()?.zoomIn()"
+            class="icon-button map-pill"
+            [attr.aria-label]="texts.reset"
+            (click)="fit?.(false)"
           >
-            <ng-icon name="lucidePlus" aria-hidden="true" />
-          </button>
-          <button
-            type="button"
-            class="icon-button"
-            [attr.aria-label]="texts.zoomOut"
-            [disabled]="zoom() <= minZoom()"
-            (click)="drawn()?.zoomOut()"
-          >
-            <ng-icon name="lucideMinus" aria-hidden="true" />
+            <ng-icon name="lucideFocus" aria-hidden="true" />
           </button>
         </div>
       </div>
@@ -785,13 +805,18 @@ function flavor(p: ReturnType<typeof palette>): Flavor {
         inset: 1.5rem 0.75rem auto auto;
         display: none;
         flex-direction: column;
-        border-radius: var(--radius-control);
-        background: var(--color-surface);
-        box-shadow: 0 0.25rem 0.75rem -0.25rem rgb(39 50 58 / 0.35);
+        gap: 0.5rem;
 
         [data-drawn] & {
           display: flex;
         }
+      }
+
+      /* The zoom's two buttons and the reset each on a white pill. */
+      .map-pill {
+        border-radius: var(--radius-control);
+        background: var(--color-surface);
+        box-shadow: 0 0.25rem 0.75rem -0.25rem rgb(39 50 58 / 0.35);
       }
 
       /* A place's icon, its name with the distance at the end of the line, its text below. */
@@ -869,6 +894,7 @@ export class LocationMap {
   protected readonly drawn = signal<MapLibre | undefined>(undefined);
   private readonly injector = inject(Injector);
   private readonly router = inject(Router);
+  protected fit?: (keep: boolean) => void;
 
   constructor() {
     const destroyed = inject(DestroyRef);
@@ -1019,48 +1045,55 @@ export class LocationMap {
       );
       // The apartments and the places shown, or the chosen apartment's routes, beside the panel; a
       // chosen place alone, or its route. Folding the places leaves the view as it is.
+      this.fit = (keep: boolean) => {
+        const picked = untracked(this.picked);
+        const shown = untracked(this.shown).filter((p) => !picked || p.key === picked);
+        const lines = routes.filter(
+          (r) => r.apartment === untracked(this.chosen) && shown.some((p) => p.key === r.place),
+        );
+        const points: [number, number][] = lines.length
+          ? lines.flatMap(walk)
+          : [...(picked ? [] : this.apartments), ...shown].map(({ lon, lat }) => [lon!, lat!]);
+        const bounds = points.reduce(
+          (box, point) => box.extend(point),
+          new LngLatBounds(points[0], points[0]),
+        );
+        const frame = drawn.getContainer().getBoundingClientRect();
+        const panel = this.panel().nativeElement.getBoundingClientRect();
+        // From 48rem the panel lies over the map's left side, on a phone below it.
+        const over = panel.top < frame.bottom;
+        const view = {
+          padding: {
+            top: 64,
+            right: 96,
+            bottom: 48,
+            left: over ? panel.right - frame.left + 48 : 48,
+          },
+          // A chosen place's route as close as it fits, a short one too; a lone place keeps a
+          // closer zoom the visitor has chosen, unless the view is reset.
+          maxZoom: picked
+            ? lines.length
+              ? this.maxZoom
+              : keep
+                ? Math.max(16, untracked(this.zoom))
+                : 16
+            : 16,
+        };
+        // The pins take the size of the zoom the map eases to as it starts.
+        const zoom = drawn.cameraForBounds(bounds, view)?.zoom;
+        if (zoom !== undefined) this.far.set(zoom < 16);
+        drawn.fitBounds(bounds, {
+          ...view,
+          animate:
+            !matchMedia('(prefers-reduced-motion: reduce)').matches && !!untracked(this.drawn),
+        });
+      };
       effect(
         () => {
-          const picked = this.picked();
-          const shown = untracked(this.shown).filter((p) => !picked || p.key === picked);
-          const lines = routes.filter(
-            (r) => r.apartment === this.chosen() && shown.some((p) => p.key === r.place),
-          );
-          if (kept) return void (kept = undefined);
-          const points: [number, number][] = lines.length
-            ? lines.flatMap(walk)
-            : [...(picked ? [] : this.apartments), ...shown].map(({ lon, lat }) => [lon!, lat!]);
-          const bounds = points.reduce(
-            (box, point) => box.extend(point),
-            new LngLatBounds(points[0], points[0]),
-          );
-          const frame = drawn.getContainer().getBoundingClientRect();
-          const panel = this.panel().nativeElement.getBoundingClientRect();
-          // From 48rem the panel lies over the map's left side, on a phone below it.
-          const over = panel.top < frame.bottom;
-          const view = {
-            padding: {
-              top: 64,
-              right: 96,
-              bottom: 48,
-              left: over ? panel.right - frame.left + 48 : 48,
-            },
-            // A chosen place's route as close as it fits, a short one too; a lone place keeps a
-            // closer zoom the visitor has chosen.
-            maxZoom: picked
-              ? lines.length
-                ? this.maxZoom
-                : Math.max(16, untracked(this.zoom))
-              : 16,
-          };
-          // The pins take the size of the zoom the map eases to as it starts.
-          const zoom = drawn.cameraForBounds(bounds, view)?.zoom;
-          if (zoom !== undefined) this.far.set(zoom < 16);
-          drawn.fitBounds(bounds, {
-            ...view,
-            animate:
-              !matchMedia('(prefers-reduced-motion: reduce)').matches && !!untracked(this.drawn),
-          });
+          this.picked();
+          this.chosen();
+          if (kept) kept = undefined;
+          else this.fit!(true);
         },
         { injector: this.injector },
       );
