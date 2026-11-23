@@ -336,7 +336,7 @@ test("a place's line chooses it by keyboard, and with an apartment its route sta
   await panel(page).getByText('Ahorn').click();
   await expect.poll(() => accentPixels(page)).toBeGreaterThan(500);
   const line = places(page).first().getByRole('button');
-  await expect(line).toHaveAccessibleName(/Schattberg X-press.*900 m/);
+  await expect(line).toHaveAccessibleName(new RegExp(`Schattberg X-press.*${walk('ahorn')}`));
   await line.focus();
   await page.keyboard.press('Enter');
   await expect(line).toHaveAttribute('aria-pressed', 'true');
