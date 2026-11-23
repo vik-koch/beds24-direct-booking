@@ -267,6 +267,8 @@ test('on a phone the header keeps its ground through a language change', async (
       await page.evaluate(() =>
         scrollTo({ top: document.documentElement.scrollHeight / 2, behavior: 'instant' }),
       );
+      // The scroll's own fade starts only once the header has taken the scroll.
+      await expect(page.locator('app-header')).not.toHaveAttribute('data-over');
       await settled(page);
       await page.evaluate(() => {
         const grounds: string[] = ((window as unknown as { grounds: string[] }).grounds = []);
