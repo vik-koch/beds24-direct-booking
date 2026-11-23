@@ -161,36 +161,49 @@ test(
   },
 );
 
+interface Probe {
+  gaps: { season: string; gap: number }[] | null;
+}
+
 test('the price keeps its space after “from” while the seasons cross-fade', async ({ page }) => {
   for (const path of ['/en', '/de']) {
     await page.goto(path);
-    await expect(page.locator('html')).toHaveAttribute('data-started', '');
-    // Each frame of the fade, the gap between the word and the price on every line in view.
-    const gaps = page.evaluate(
-      () =>
-        new Promise<number[]>((resolve) => {
-          const gaps: number[] = [];
-          let started = false;
-          const measure = () => {
-            const moving = document.getAnimations().length > 0;
-            if (started && !moving) return resolve(gaps);
-            started ||= moving;
-            for (const line of document.querySelectorAll<HTMLElement>('.teaser-price > span')) {
-              const price = line.querySelector('strong');
-              const word = price?.previousSibling;
-              if (!price || !word || Number(getComputedStyle(line).opacity) === 0) continue;
-              const range = document.createRange();
-              range.selectNodeContents(word);
-              range.setEnd(word, word.textContent!.trimEnd().length);
-              gaps.push(price.getBoundingClientRect().left - range.getBoundingClientRect().right);
-            }
-            requestAnimationFrame(measure);
-          };
-          requestAnimationFrame(measure);
-        }),
-    );
-    await page.locator('.other-season').click();
-    expect(Math.min(...(await gaps)), path).toBeGreaterThan(2);
+    await settled(page);
+    // The glitch is in the leaving line, so the fade starts from a priced season: the next one
+    // always is.
+    const season = () => page.locator('html').getAttribute('data-season');
+    if (!(await page.locator(`.teaser-price > [data-for=${await season()}] strong`).count()))
+      await toOtherSeason(page);
+    const leaving = await season();
+    // Each frame, the gap between the word and the price on every line that is fading.
+    await page.evaluate(() => {
+      const probe = window as unknown as Probe;
+      const gaps = (probe.gaps = []) as Probe['gaps'];
+      const measure = () => {
+        for (const line of document.querySelectorAll<HTMLElement>('.teaser-price > span')) {
+          const price = line.querySelector('strong');
+          const word = price?.previousSibling;
+          const opacity = Number(getComputedStyle(line).opacity);
+          if (!price || !word || opacity === 0 || opacity === 1) continue;
+          const range = document.createRange();
+          range.selectNodeContents(word);
+          range.setEnd(word, word.textContent!.trimEnd().length);
+          const gap = price.getBoundingClientRect().left - range.getBoundingClientRect().right;
+          gaps.push({ season: line.dataset['for']!, gap });
+        }
+        if (probe.gaps) requestAnimationFrame(measure);
+      };
+      requestAnimationFrame(measure);
+    });
+    await toOtherSeason(page);
+    const gaps = await page.evaluate(() => {
+      const probe = window as unknown as Probe;
+      const gaps = probe.gaps!;
+      probe.gaps = null;
+      return gaps;
+    });
+    expect(gaps.filter((one) => one.season === leaving).length, path).toBeGreaterThan(0);
+    expect(Math.min(...gaps.map((one) => one.gap)), path).toBeGreaterThan(2);
   }
 });
 
