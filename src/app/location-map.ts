@@ -187,6 +187,15 @@ const kinds = Object.fromEntries(
     Object.entries(icons).map(([kind, svg]) => [kind, { group, svg }]),
   ),
 );
+// A route from the apartment's point to the place's: the router's line starts and ends on the
+// nearest way, which may be across a yard or a road.
+const walk = ({ apartment, place, line }: Route): [number, number][] => {
+  const [from, to] = [
+    site.apartments.find(({ slug }) => slug === apartment)!,
+    map.places.find(({ key }) => key === place)!,
+  ];
+  return [[from.lon!, from.lat!], ...line, [to.lon, to.lat]];
+};
 // What a guest looks for first shows two zooms before the tiles would show it.
 const early = ['parking', 'atm', 'bus_stop', 'supermarket', 'pharmacy', 'information'];
 const iconZoom: ExpressionSpecification = [
@@ -962,7 +971,7 @@ export class LocationMap {
             (r) => r.apartment === this.chosen() && shown.some((p) => p.key === r.place),
           );
           const points: [number, number][] = lines.length
-            ? lines.flatMap((route) => route.line)
+            ? lines.flatMap(walk)
             : [...(picked ? [] : this.apartments), ...shown].map(({ lon, lat }) => [lon!, lat!]);
           const bounds = points.reduce(
             (box, point) => box.extend(point),
@@ -1070,7 +1079,7 @@ export class LocationMap {
       .map((route) => ({
         type: 'Feature' as const,
         properties: { picked: route.place === this.picked() },
-        geometry: { type: 'LineString' as const, coordinates: route.line },
+        geometry: { type: 'LineString' as const, coordinates: walk(route) },
       }));
     // The tiles' own entry for a place a pin marks, and a station under one, give way to the pin:
     // whatever lies within a metre of it.
@@ -1337,7 +1346,8 @@ export class LocationMap {
             type: 'FeatureCollection',
             features: routes
               .filter((r) => r.apartment === this.chosen() && r.place === this.picked())
-              .flatMap(({ line }) => [point(line[0]!), point(line.at(-1)!)]),
+              .map(walk)
+              .flatMap((line) => [point(line[0]!), point(line.at(-1)!)]),
           },
         },
         stations: {
