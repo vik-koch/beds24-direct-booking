@@ -471,11 +471,29 @@ test('a change of season keeps the choice and shows the places in that season', 
   const season = await page.locator('html').getAttribute('data-season');
   const other = season === 'winter' ? 'summer' : 'winter';
   const texts = { winter: 'Gondola to the slopes', summer: 'Gondola to hiking and bike trails' };
-  await expect(places(page).first()).toContainText(texts[season as 'winter']);
+  const note = places(page).first().locator('[data-for]:visible');
+  await expect(note).toHaveText(new RegExp(texts[season as 'winter']));
   await page.locator(`.season-switch label[data-for=${other}]`).click();
-  await expect(places(page).first()).toContainText(texts[other]);
+  await expect(note).toHaveText(new RegExp(texts[other]));
   await expect(panel(page).getByRole('radio', { name: 'Lärche' })).toBeChecked();
 });
+
+for (const path of ['/en', '/en/apartments/zirbe']) {
+  test(`on ${path} the places' texts are the page's season in the first paint`, async ({
+    page,
+  }) => {
+    // Hold the application's scripts back: only the inline script in the head runs.
+    await page.route(/\/(main|chunk)-[\w-]+\.js$/, () => undefined);
+    for (const season of ['winter', 'summer']) {
+      await page.goto(`${path}?season=${season}`, { waitUntil: 'commit' });
+      await expect(page.locator('html')).toHaveAttribute('data-script', '');
+      await expect(places(page).first().locator('[data-for]:visible')).toHaveAttribute(
+        'data-for',
+        season,
+      );
+    }
+  });
+}
 
 // Counts the maps let go: MapLibre's remove() loses its WebGL context.
 const countLost = (page: Page) =>

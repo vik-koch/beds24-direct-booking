@@ -474,8 +474,11 @@ function flavor(p: ReturnType<typeof palette>): Flavor {
                   }}</span>
                 }
               </span>
-              @if (texts.places[place.key]![season.current()]; as note) {
-                <span class="text-ink-soft">{{ note }}</span>
+              <!-- Both seasons' texts, so that the first paint shows the page's season. -->
+              @for (name of season.names; track name) {
+                @if (texts.places[place.key]![name]; as note) {
+                  <span class="text-ink-soft" [attr.data-for]="name">{{ note }}</span>
+                }
               }
             </button>
           </li>
@@ -894,7 +897,7 @@ function flavor(p: ReturnType<typeof palette>): Flavor {
           margin-top: 0.0625rem;
         }
 
-        > :last-child:not(.map-place-name) {
+        > [data-for] {
           grid-column: 2;
         }
 

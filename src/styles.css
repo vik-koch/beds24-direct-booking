@@ -715,14 +715,14 @@
     }
   }
 
-  /* The free-weeks list and the booking panel: both seasons are in the page and the page's
-     season shows one. Parts that are leaving stay in view until their move has ended, and the
+  /* The free-weeks list, the booking panel and the map's places: both seasons are in the page and
+     the page's season shows one. Parts that are leaving stay in view until their move has ended, and the
      versions in a stack keep their place, unseen. */
   html:not([data-season='winter'])
-    :is(.weeks, .booking)
+    :is(.weeks, .booking, .map-places)
     [data-for='winter']:not([data-leaving], .stack > *),
   html:not([data-season='summer'])
-    :is(.weeks, .booking)
+    :is(.weeks, .booking, .map-places)
     [data-for='summer']:not([data-leaving], .stack > *) {
     display: none;
   }
