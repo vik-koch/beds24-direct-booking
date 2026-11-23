@@ -301,6 +301,14 @@ test('the generated site gives each picture its files and its texts by address p
   assert.ok(existsSync(join(out, 'pictures', 'icon-winter.svg')));
 });
 
+test('an anchor the pages already use is refused', () => {
+  for (const taken of ['top', 'booking', 'month-winter-0'])
+    assert.throws(
+      () => readContent(changed('texts.en-GB.json', (texts) => (texts.anchors.location = taken))),
+      /anchors\.location/,
+    );
+});
+
 test('two languages with one address prefix are refused', () => {
   const dir = changed('site.json', (site) => (site.languages[1] = 'de-DE'));
   assert.throws(() => readContent(dir), /one address prefix/);
