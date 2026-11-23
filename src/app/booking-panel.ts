@@ -1265,7 +1265,7 @@ export class BookingPanel {
     const old = box.querySelector<HTMLElement>(`[data-month="${from}"]`)!;
     const cells = (month: Element) => [...month.querySelectorAll<HTMLElement>('[role=gridcell]')];
     const place = cells(old).indexOf(document.activeElement as HTMLElement);
-    const height = box.offsetHeight;
+    const before = box.getBoundingClientRect();
     const month = this.monthsOf(season)[from + by];
     this.months.update((months) => ({ ...months, [season.name]: month.key }));
     this.announced.set(month.name);
@@ -1273,7 +1273,7 @@ export class BookingPanel {
       {
         write: () => {
           const next = box.querySelector<HTMLElement>(`[data-month="${from + by}"]`)!;
-          this.swapMonth(box, old, next, by, height);
+          this.swapMonth(box, old, next, by, before);
           const all = cells(next);
           const cell = date
             ? next.querySelector<HTMLElement>(`[data-date="${date}"]`)
@@ -1297,17 +1297,17 @@ export class BookingPanel {
     this.season.switch(to.name);
   }
 
-  // Before the change: the season shown now and its height. After it, the old one is held in
+  // Before the change: the season shown now and its box. After it, the old one is held in
   // view while it leaves.
   private move(to: SeasonName) {
     const direction = this.direction;
     this.direction = 0;
     const box = this.host.querySelector<HTMLElement>('.panel-seasons');
     const old = box?.querySelector<HTMLElement>(`[data-for=${this.season.current()}]`);
-    const height = box?.offsetHeight;
+    const before = box?.getBoundingClientRect();
     return () => {
       const next = box?.querySelector<HTMLElement>(`[data-for=${to}]`);
-      if (box && old && next) this.swapSeason(box, old, next, direction, height!);
+      if (box && old && next) this.swapSeason(box, old, next, direction, before!);
     };
   }
 }

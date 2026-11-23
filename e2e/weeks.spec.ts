@@ -519,7 +519,7 @@ test('the card moves to the new rows’ own height, so nothing jumps at the end'
 test('a switch above the list keeps the sections below it still', async ({ page }) => {
   for (const width of [1280, 320]) {
     await page.setViewportSize({ width, height: 700 });
-    await page.goto('/en');
+    await page.goto('/en?season=winter');
     await expect(page.locator('html')).toHaveAttribute('data-started', '');
     for (const [id, below] of [
       ['apartments', 0],
@@ -531,7 +531,8 @@ test('a switch above the list keeps the sections below it still', async ({ page 
         scrollBy({ top: -below, behavior: 'instant' });
       }, below);
       for (const name of ['summer', 'winter']) {
-        // The heading's place on each frame until the change has settled.
+        // The heading's place before the click and on each frame until the change has settled.
+        const start = await heading.evaluate((element) => element.getBoundingClientRect().top);
         const tops = heading.evaluate(
           (element, name) =>
             new Promise<number[]>((resolve) => {
@@ -549,7 +550,7 @@ test('a switch above the list keeps the sections below it still', async ({ page 
         // By the pointer: a locator's click would scroll the label into view first.
         const box = (await page.locator(`.season-switch label[data-for=${name}]`).boundingBox())!;
         await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
-        const moved = await tops;
+        const moved = [start, ...(await tops)];
         const steps = moved.filter((top, index) => index && top !== moved[index - 1]);
         const where = `${id}, ${name} at ${width}`;
         expect(steps.length, where).toBeLessThanOrEqual(2);
@@ -557,6 +558,23 @@ test('a switch above the list keeps the sections below it still', async ({ page 
       }
     }
   }
+});
+
+// The rows shown when the switch was made decide, also when the other season's rows, made short
+// here, would end under the header.
+test('a switch with the list’s last rows in view still moves them', async ({ page }) => {
+  await page.goto('/en?season=winter');
+  await expect(page.locator('html')).toHaveAttribute('data-started', '');
+  await page.locator('.weeks-bodies').evaluate((box) => {
+    box
+      .querySelectorAll('[data-for=summer] .weeks-month:not(:first-child)')
+      .forEach((month) => month.remove());
+    const edge = document.querySelector('app-header')!.getBoundingClientRect().bottom;
+    scrollBy({ top: box.getBoundingClientRect().bottom - edge - 10, behavior: 'instant' });
+  });
+  const box = (await page.locator('.season-switch label[data-for=summer]').boundingBox())!;
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+  await expect(page.locator('.weeks-bodies [data-leaving]')).toHaveCount(1);
 });
 
 test('with reduced motion the season changes at once', async ({ page }) => {
