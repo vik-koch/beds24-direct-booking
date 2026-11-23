@@ -1,0 +1,49 @@
+# A template: the map data workflow of a site of its own. It does not run in this repository. A
+# private repository copies it to .github/workflows/map-data.yml beside deploy.yml. Every week, and
+# when started by hand, it takes the site's map data afresh with the release deploy.yml names and
+# proposes any change in a pull request; merging it deploys the site (ADR 15).
+name: Map data
+
+on:
+  schedule:
+    - cron: '41 5 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: map-data
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      # The release the site is built from, so the data fits the schema the deployment checks.
+      - id: release
+        run: |
+          version=$(sed -n 's/^  VERSION: //p' .github/workflows/deploy.yml)
+          : "${version:?deploy.yml names no VERSION}"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v7
+        with:
+          repository: vik-koch/beds24-direct-booking
+          ref: v${{ steps.release.outputs.version }}
+          path: app
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - run: npm ci --prefix app
+      - env:
+          CONTENT_DIR: content
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GIT_AUTHOR_NAME: github-actions[bot]
+          GIT_AUTHOR_EMAIL: 41898283+github-actions[bot]@users.noreply.github.com
+          GIT_COMMITTER_NAME: github-actions[bot]
+          GIT_COMMITTER_EMAIL: 41898283+github-actions[bot]@users.noreply.github.com
+        run: app/scripts/map-data.sh

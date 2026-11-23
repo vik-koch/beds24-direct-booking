@@ -1,0 +1,48 @@
+# Takes the demo's map data afresh every week and proposes any change in a pull request
+# (ADR 15). The deployment never fetches map data: it builds what main holds.
+name: Map data
+
+on:
+  schedule:
+    - cron: '41 5 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: write
+
+concurrency:
+  group: map-data
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - id: modules
+        uses: actions/cache/restore@v5
+        with:
+          path: node_modules
+          key: modules-static-node24-${{ hashFiles('package.json', 'package-lock.json') }}
+      - if: steps.modules.outputs.cache-hit != 'true'
+        run: npm ci
+      - id: data
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GIT_AUTHOR_NAME: github-actions[bot]
+          GIT_AUTHOR_EMAIL: 41898283+github-actions[bot]@users.noreply.github.com
+          GIT_COMMITTER_NAME: github-actions[bot]
+          GIT_COMMITTER_EMAIL: 41898283+github-actions[bot]@users.noreply.github.com
+        run: scripts/map-data.sh
+      # A push with this run's token starts no pull_request run, so CI is started here.
+      - if: steps.data.outputs.branch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh workflow run ci.yml --ref "${{ steps.data.outputs.branch }}"
