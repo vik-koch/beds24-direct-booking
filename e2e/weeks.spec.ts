@@ -513,39 +513,48 @@ test('the card moves to the new rows’ own height, so nothing jumps at the end'
   }
 });
 
-test('a switch above the list keeps the section below it still', async ({ page }) => {
+// Under the header as after a jump to the apartments, or further down. The browser keeps the
+// heading in place by itself, so it may move by rounding, for a frame or for good, but not on
+// each frame of the change.
+test('a switch above the list keeps the sections below it still', async ({ page }) => {
   for (const width of [1280, 320]) {
     await page.setViewportSize({ width, height: 700 });
     await page.goto('/en');
     await expect(page.locator('html')).toHaveAttribute('data-started', '');
-    const heading = page.getByRole('heading', { name: 'Location' });
-    await heading.evaluate((element) =>
-      window.scrollTo({
-        top: element.getBoundingClientRect().top + scrollY - 300,
-        behavior: 'instant',
-      }),
-    );
-    for (const name of ['summer', 'winter']) {
-      // The heading's place on each frame until the change has settled.
-      const tops = heading.evaluate(
-        (element, name) =>
-          new Promise<number[]>((resolve) => {
-            const tops: number[] = [];
-            const measure = () => {
-              tops.push(element.getBoundingClientRect().top);
-              const done = document.documentElement.dataset['season'] === name;
-              if (done && !document.getAnimations().length) resolve(tops);
-              else requestAnimationFrame(measure);
-            };
-            requestAnimationFrame(measure);
-          }),
-        name,
-      );
-      // By the pointer: a locator's click would scroll the label into view first.
-      const box = (await page.locator(`.season-switch label[data-for=${name}]`).boundingBox())!;
-      await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
-      const moved = await tops;
-      expect(Math.max(...moved) - Math.min(...moved), `${name} at ${width}`).toBeLessThan(0.5);
+    for (const [id, below] of [
+      ['apartments', 0],
+      ['location', 300],
+    ] as const) {
+      const heading = page.locator(`#${id}`);
+      await heading.evaluate((element, below) => {
+        element.scrollIntoView({ behavior: 'instant' });
+        scrollBy({ top: -below, behavior: 'instant' });
+      }, below);
+      for (const name of ['summer', 'winter']) {
+        // The heading's place on each frame until the change has settled.
+        const tops = heading.evaluate(
+          (element, name) =>
+            new Promise<number[]>((resolve) => {
+              const tops: number[] = [];
+              const measure = () => {
+                tops.push(element.getBoundingClientRect().top);
+                const done = document.documentElement.dataset['season'] === name;
+                if (done && !document.getAnimations().length) resolve(tops);
+                else requestAnimationFrame(measure);
+              };
+              requestAnimationFrame(measure);
+            }),
+          name,
+        );
+        // By the pointer: a locator's click would scroll the label into view first.
+        const box = (await page.locator(`.season-switch label[data-for=${name}]`).boundingBox())!;
+        await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+        const moved = await tops;
+        const steps = moved.filter((top, index) => index && top !== moved[index - 1]);
+        const where = `${id}, ${name} at ${width}`;
+        expect(steps.length, where).toBeLessThanOrEqual(2);
+        expect(Math.max(...moved) - Math.min(...moved), where).toBeLessThanOrEqual(1);
+      }
     }
   }
 });
