@@ -23,6 +23,7 @@ import {
   lucideBinoculars,
   lucideBookOpen,
   lucideBus,
+  lucideCableCar,
   lucideCakeSlice,
   lucideCandy,
   lucideCarrot,
@@ -141,6 +142,8 @@ const groups: Record<string, Record<string, string>> = {
     parking: lucideSquareParking,
     fuel: lucideFuel,
     bus_stop: lucideBus,
+    // Not the tiles': the ends of a gondola or a cable car, where guests board.
+    lift_station: lucideCableCar,
     bus_station: lucideBus,
     charging_station: lucidePlugZap,
     station: lucideTrainFront,
@@ -566,6 +569,10 @@ function flavor(p: ReturnType<typeof palette>): Flavor {
          target needs. */
       .map-canvas {
         --head: 1.75rem;
+
+        @media (prefers-reduced-motion: no-preference) {
+          transition: --head 0.2s ease-out;
+        }
 
         &.map-far {
           --head: 1.5rem;
@@ -1065,6 +1072,28 @@ export class LocationMap {
         properties: { picked: route.place === this.picked() },
         geometry: { type: 'LineString' as const, coordinates: route.line },
       }));
+    // The tiles' own entry for a place a pin marks, and a station under one, give way to the pin:
+    // whatever lies within a metre of it.
+    const pinned = this.shown().map(({ lat, lon }) => {
+      const [y, x] = [1 / 110540, 1 / (111320 * Math.cos((lat! * Math.PI) / 180))];
+      return [
+        [
+          [lon! - x, lat! - y],
+          [lon! + x, lat! - y],
+          [lon! + x, lat! + y],
+          [lon! - x, lat! + y],
+          [lon! - x, lat! - y],
+        ],
+      ];
+    });
+    const unpinned: ExpressionSpecification[] = pinned.length
+      ? [['!', ['within', { type: 'MultiPolygon', coordinates: pinned }]]]
+      : [];
+    const point = (coordinates: number[]) => ({
+      type: 'Feature' as const,
+      properties: {},
+      geometry: { type: 'Point' as const, coordinates },
+    });
     // The points of interest are ours, each kind beside its icon; the tiles' least zoom for each
     // stays. Paths are ours too. One-way arrows, which only drivers need, and roads under ground,
     // which no one finds from the map, are left out.
@@ -1101,6 +1130,7 @@ export class LocationMap {
                 'all',
                 ['in', ['get', 'kind'], ['literal', Object.keys(kinds)]],
                 ['>=', ['zoom'], iconZoom],
+                ...unpinned,
               ] as FilterSpecification,
               // Protomaps' font, size and name; the name's place is ours.
               layout: {
@@ -1221,6 +1251,7 @@ export class LocationMap {
           'all',
           ['in', ['get', 'kind'], ['literal', Object.keys(kinds)]],
           ['<', ['zoom'], iconZoom],
+          ...unpinned,
         ],
         paint: {
           'circle-radius': 2.5,
@@ -1275,6 +1306,13 @@ export class LocationMap {
         },
         paint: { 'text-color': p.ink, 'text-halo-color': p.ground, 'text-halo-width': 1.5 },
       },
+      {
+        id: 'stations',
+        type: 'symbol',
+        source: 'stations',
+        filter: ['all', ...unpinned],
+        layout: { 'icon-image': 'lift_station' },
+      },
     );
     return {
       version: 8,
@@ -1292,6 +1330,25 @@ export class LocationMap {
             '<a href="https://www.openstreetmap.org/copyright">© OpenStreetMap</a> · Protomaps',
         },
         routes: { type: 'geojson', data: { type: 'FeatureCollection', features: lines } },
+        // Both ends of the chosen place's route.
+        ends: {
+          type: 'geojson',
+          data: {
+            type: 'FeatureCollection',
+            features: routes
+              .filter((r) => r.apartment === this.chosen() && r.place === this.picked())
+              .flatMap(({ line }) => [point(line[0]!), point(line.at(-1)!)]),
+          },
+        },
+        stations: {
+          type: 'geojson',
+          data: {
+            type: 'FeatureCollection',
+            features: lifts
+              .filter(({ kind }) => kind === 'gondola' || kind === 'cable_car')
+              .flatMap(({ line }) => [point(line[0]!), point(line.at(-1)!)]),
+          },
+        },
         lifts: {
           type: 'geojson',
           data: {
@@ -1337,6 +1394,18 @@ export class LocationMap {
           filter: ['get', 'picked'],
           layout: { 'line-cap': 'round', 'line-join': 'round' },
           paint: { 'line-color': p.route, 'line-width': 4.5 },
+        },
+        // A white dot ringed in the accent under a pin's tip, where the line starts or ends.
+        {
+          id: 'route-ends',
+          type: 'circle',
+          source: 'ends',
+          paint: {
+            'circle-radius': 4,
+            'circle-color': p.routeCasing,
+            'circle-stroke-color': p.route,
+            'circle-stroke-width': 2.5,
+          },
         },
       ],
     };

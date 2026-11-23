@@ -169,7 +169,9 @@ streets for walking are as wide, in the pedestrian areas' shade. Roads under gro
   lines of 2 in its 24 units, at least 3:1 against the ground, the land and a building: **Rust**
   (#c2410c) for food and drink, **Violet** (#9440b0) for shops, **Sign Blue** (#0068b4) for
   transport, **Crimson** (#c4283f) for services such as a pharmacy or a cash machine, **Walnut**
-  (#8a6234) for culture and leisure. Until its icon shows, a place is a dot in its colour.
+  (#8a6234) for culture and leisure. Until its icon shows, a place is a dot in its colour. A
+  gondola's or a cable car's stations show its icon in the transport blue; a pin takes the place of
+  the tiles' own entry or a station within a metre of it.
 
 ### Named Rules
 
@@ -435,15 +437,15 @@ keyboard. In the sheet the apartments are indented under their entry at weight 4
   its foot unfolds the other places without moving the map. Without JavaScript it lists the places
   shown by default.
 - **Pins:** a teardrop whose tip stands on its point, its icon in the head and its label beside it,
-  the head 1.5rem while the whole town shows and 1.75rem closer in, the icon three fifths of it: an
-  apartment white with an accent icon and outline, filled in the accent once chosen; a place the
-  same in ink. The label is an apartment's name, a place's distance from the chosen apartment ("900
-  m"), or a chosen place's name; a walking time depends on too much to promise. Pins and buttons
-  take the site's focus ring.
+  the head 1.5rem while the whole town shows and 1.75rem closer in, easing between the two in 0.2 s,
+  the icon three fifths of it: an apartment white with an accent icon and outline, filled in the
+  accent once chosen; a place the same in ink. The label is an apartment's name, a place's distance
+  from the chosen apartment ("900 m"), or a chosen place's name; a walking time depends on too much
+  to promise. Pins and buttons take the site's focus ring.
 - **Zoom:** plus and minus as the site's round buttons in a white pill, level with the panel's top.
 - **Routes:** a line of accent dots on a white line as wide, from the chosen apartment to each place
-  shown, as maps draw a walk; once a place is chosen, its route solid on a wider white casing and
-  the others faded to 3:1.
+  shown, as maps draw a walk; once a place is chosen, its route solid on a wider white casing, a
+  white dot ringed in the accent at each end under the pins' tips, and the others faded to 3:1.
 
 ### Language menu
 

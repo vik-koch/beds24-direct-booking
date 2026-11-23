@@ -1242,3 +1242,11 @@
     }
   }
 }
+
+/* The map's pins' size, registered so that its change eases. Here, as Angular renames a
+   component's @property; its initial value in px, as rem voids the rule. */
+@property --head {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 28px;
+}
