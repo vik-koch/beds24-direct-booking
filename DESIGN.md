@@ -17,11 +17,11 @@ colors:
   on-accent: '#ffffff'
   water: '#b9d3e3'
   trail: '#827142'
-  poi-food: '#b5542e'
-  poi-shop: '#7b4f8e'
-  poi-transport: '#2f6aa3'
-  poi-service: '#a83a4c'
-  poi-culture: '#6e6353'
+  poi-food: '#c2410c'
+  poi-shop: '#9440b0'
+  poi-transport: '#0068b4'
+  poi-service: '#c4283f'
+  poi-culture: '#8a6234'
 typography:
   display:
     fontFamily: 'Jost, system-ui, sans-serif'
@@ -154,16 +154,21 @@ A neutral, slightly warm light palette with a single accent that changes with th
 
 The map's own colours stay the same in every season, so that water is always blue. The land takes
 the season's soft accent and the village, its houses and shops, the page's ground; woods are a shade
-darker with small trees in a darker shade of the accent. Roads are outlined at 3:1 on both.
+darker with small trees in a darker shade of the accent, pitches and playgrounds the same shade
+without them. Roads are outlined at 3:1 on both; streets for walking are as wide, in the pedestrian
+areas' shade. Roads under ground are left out.
 
-- **Lake** (#b9d3e3): water. Its names are four fifths ink on it, above 5:1.
+- **Lake** (#b9d3e3): water, its banks and streams in a deeper blue, three fifths of the way to the
+  transport blue. Its names are four fifths ink on it, above 5:1.
 - **Trail Olive** (#827142): paths and tracks, thin and dashed, at least 3:1 on the ground, the
-  land, a wood and a building.
+  land, a wood and a building. Footways and steps are dotted in soft ink, cycleways dashed in the
+  transport blue.
 - **The places' icons**, Lucide's in a group's colour with no circle, 18 px with lines of 2.5 in its
-  24 units, at least 3:1 against the ground, the land and a building: **Terracotta** (#b5542e) for
-  food and drink, **Plum** (#7b4f8e) for shops, **Harbour Blue** (#2f6aa3) for transport and
-  parking, **Berry** (#a83a4c) for services such as a pharmacy or a cash machine, **Umber**
-  (#6e6353) for culture and leisure.
+  24 units, at least 3:1 against the ground, the land and a building: **Rust** (#c2410c) for food
+  and drink, **Violet** (#9440b0) for shops, **Sign Blue** (#0068b4) for transport, **Crimson**
+  (#c4283f) for services such as a pharmacy or a cash machine, **Walnut** (#8a6234) for culture and
+  leisure. Parking is its sign: a white P on a filled square. Until its icon shows, a place is a dot
+  in its colour.
 
 ### Named Rules
 
@@ -429,10 +434,10 @@ keyboard. In the sheet the apartments are indented under their entry at weight 4
   its foot unfolds the other places without moving the map. Without JavaScript it lists the places
   shown by default.
 - **Pins:** a teardrop whose tip stands on its point, its icon in the head and its label beside it:
-  an apartment white with an accent icon and an edge outline, filled in the accent once chosen; a
-  place the same in ink. The label is an apartment's name, a place's distance from the chosen
-  apartment ("900 m"), or a chosen place's name; a walking time depends on too much to promise. Pins
-  and buttons take the site's focus ring.
+  an apartment white with an accent icon and outline, filled in the accent once chosen; a place the
+  same in ink. The label is an apartment's name, a place's distance from the chosen apartment ("900
+  m"), or a chosen place's name; a walking time depends on too much to promise. Pins and buttons
+  take the site's focus ring.
 - **Zoom:** plus and minus as the site's round buttons in a white pill, level with the panel's top.
 - **Routes:** a dashed accent line with a white casing, from the chosen apartment to each place
   shown; once a place is chosen, its route solid and the others faded to 3:1.

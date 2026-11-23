@@ -25,11 +25,11 @@
      group of places. */
   --color-water: #b9d3e3;
   --color-trail: #827142;
-  --color-poi-food: #b5542e;
-  --color-poi-shop: #7b4f8e;
-  --color-poi-transport: #2f6aa3;
-  --color-poi-service: #a83a4c;
-  --color-poi-culture: #6e6353;
+  --color-poi-food: #c2410c;
+  --color-poi-shop: #9440b0;
+  --color-poi-transport: #0068b4;
+  --color-poi-service: #c4283f;
+  --color-poi-culture: #8a6234;
 }
 
 /* Winter's accent is the default above; summer replaces it. */
