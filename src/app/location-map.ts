@@ -444,7 +444,7 @@ function flavor(p: ReturnType<typeof palette>): Flavor {
       <!-- After the panel, so that the keyboard reaches the choices first, also on a phone, where
            the panel shows below the map. -->
       <div class="map-frame">
-        <div #canvas class="map-canvas"></div>
+        <div #canvas class="map-canvas" [class.map-far]="zoom() < 16"></div>
         <div class="map-zoom">
           <button
             type="button"
@@ -562,19 +562,28 @@ function flavor(p: ReturnType<typeof palette>): Flavor {
         height: 100%;
       }
 
+      /* The pins' heads, smaller when the map shows the whole town. */
+      .map-canvas {
+        --head: 2rem;
+
+        &.map-far {
+          --head: 1.75rem;
+        }
+      }
+
       /* A teardrop with its icon in the head, its tip on the place: the element is as tall as the
-         head turned on its corner, 2.25rem times (1 + sqrt 2) / 2. */
+         head turned on its corner, (1 + sqrt 2) / 2 heads. */
       .map-pin {
         display: none;
         justify-items: center;
-        width: 2.25rem;
-        height: 2.75rem;
-        padding-top: 0.5625rem;
+        width: var(--head);
+        height: calc(var(--head) * 1.2071);
+        padding-top: calc(var(--head) / 4);
         /* Over every label; a chosen pin over the others. */
         z-index: 1;
         color: var(--color-accent);
         cursor: pointer;
-        --ng-icon__size: 1.125rem;
+        --ng-icon__size: calc(var(--head) / 2);
         --pin: var(--color-surface);
         /* A white pin's outline stands out from the map at 3:1; a filled one needs none. */
         --outline: var(--color-accent);
@@ -584,7 +593,7 @@ function flavor(p: ReturnType<typeof palette>): Flavor {
           position: absolute;
           inset: 0 0 auto;
           z-index: -1;
-          height: 2.25rem;
+          height: var(--head);
           border-radius: 50% 50% 0;
           background: var(--pin);
           box-shadow:
@@ -648,6 +657,8 @@ function flavor(p: ReturnType<typeof palette>): Flavor {
         font-weight: 500;
         white-space: nowrap;
         cursor: pointer;
+        /* Its left edge beside the pin's head, level with its middle. */
+        translate: calc(var(--head) * 0.67) calc(var(--head) * -0.71);
 
         [data-drawn] & {
           display: block;
@@ -921,7 +932,6 @@ export class LocationMap {
               new Marker({
                 element,
                 anchor: label ? 'left' : 'bottom',
-                offset: label ? [24, -26] : [0, 0],
               })
                 .setLngLat([+element.dataset['lon']!, +element.dataset['lat']!])
                 .addTo(drawn),
