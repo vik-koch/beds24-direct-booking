@@ -126,36 +126,79 @@ test('a second click on the chosen apartment clears the choice', async ({ page }
   await expect(panel(page).getByRole('radio', { name: 'Lärche' })).not.toBeChecked();
 });
 
-for (const width of [1280, 320]) {
-  test(`at ${width} px the map's hint is a pill clear of its controls, the map not dimmed`, async ({
-    page,
-    isMobile,
-  }) => {
-    test.skip(isMobile, 'A phone has no mouse wheel; its hint takes the same place.');
+// One finger moving up over the map, as a phone's scroll of the page starts. WebKit has no Touch
+// constructor, so the events carry plain touches, which is all MapLibre reads.
+const swipe = (page: Page) =>
+  page.locator('.maplibregl-canvas').evaluate((canvas) => {
+    const { left, top, width } = canvas.getBoundingClientRect();
+    for (const [type, y] of [
+      ['touchstart', 120],
+      ['touchmove', 80],
+      ['touchend', 80],
+    ] as const) {
+      const touch = { identifier: 1, target: canvas, clientX: left + width / 2, clientY: top + y };
+      const touches = type === 'touchend' ? [] : [touch];
+      const event = new Event(type, { bubbles: true, cancelable: true });
+      Object.assign(event, { touches, targetTouches: touches, changedTouches: [touch] });
+      canvas.dispatchEvent(event);
+    }
+  });
+
+test("the map's hint is a pill clear of its controls, the map not dimmed", async ({
+  page,
+  isMobile,
+}) => {
+  const widths = isMobile ? [page.viewportSize()!.width] : [1280, 1024, 768, 320];
+  for (const width of widths) {
     await page.setViewportSize({ width, height: 900 });
     await openMap(page);
-    const hint = page.locator('.maplibregl-cooperative-gesture-screen');
-    await page.locator('.maplibregl-canvas').hover({ position: { x: width / 2, y: 100 } });
-    // A wheel while the page still scrolls the map into view can miss it.
+    if (!isMobile)
+      await page.locator('.maplibregl-canvas').hover({ position: { x: width / 2, y: 100 } });
+    // The hint fades soon after the gesture, so it is read in one frame while fully shown. A
+    // gesture while the page still scrolls the map into view can miss it.
+    const read = () =>
+      page.evaluate(() => {
+        const box = (element: Element) => {
+          const { left, right, top, bottom } = element.getBoundingClientRect();
+          return { left, right, top, bottom };
+        };
+        const screen = document.querySelector('.maplibregl-cooperative-gesture-screen')!;
+        const pill = [...screen.children].find((child) => child.checkVisibility())!;
+        return {
+          opacity: getComputedStyle(screen).opacity,
+          ground: getComputedStyle(screen).backgroundColor,
+          text: pill.textContent,
+          pill: box(pill),
+          frame: box(document.querySelector('.map-frame')!),
+          controls: ['.map-panel', '.map-zoom', '.maplibregl-ctrl-attrib'].map((selector) =>
+            box(document.querySelector(selector)!),
+          ),
+        };
+      });
+    let seen!: Awaited<ReturnType<typeof read>>;
     await expect(async () => {
-      await page.mouse.wheel(0, 40);
-      await expect(hint).toHaveClass(/maplibregl-show/, { timeout: 1000 });
+      await (isMobile ? swipe(page) : page.mouse.wheel(0, 40));
+      seen = await read();
+      expect(seen.opacity).toBe('1');
     }).toPass();
-    await expect(hint).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
-    const pill = (await hint.locator('div:visible').boundingBox())!;
-    for (const control of ['.map-panel', '.map-zoom', '.maplibregl-ctrl-attrib']) {
-      const box = (await page.locator(control).boundingBox())!;
-      const apart =
-        pill.x + pill.width <= box.x ||
-        box.x + box.width <= pill.x ||
-        pill.y + pill.height <= box.y ||
-        box.y + box.height <= pill.y;
-      expect(apart, `the hint clear of ${control}`).toBe(true);
-    }
-    expect(pill.x).toBeGreaterThanOrEqual(0);
-    expect(pill.x + pill.width).toBeLessThanOrEqual(width);
-  });
-}
+    const { pill, frame, controls } = seen;
+    expect(seen.text).toMatch(isMobile ? /two fingers/ : /Ctrl/);
+    expect(seen.ground).toBe('rgba(0, 0, 0, 0)');
+    for (const box of controls)
+      expect(
+        pill.right <= box.left ||
+          box.right <= pill.left ||
+          pill.bottom <= box.top ||
+          box.bottom <= pill.top,
+        `the hint at ${width} px clear of ${JSON.stringify(box)}`,
+      ).toBe(true);
+    expect(pill.left).toBeGreaterThanOrEqual(frame.left);
+    expect(pill.right).toBeLessThanOrEqual(frame.right);
+    // A wide map has room for it in its middle beside the panel.
+    if (width === 1280)
+      expect(Math.abs(pill.left + pill.right - frame.left - frame.right)).toBeLessThan(2);
+  }
+});
 
 // Once the fold has finished: a view the fold moved would be moving by then.
 const folded = (page: Page) =>

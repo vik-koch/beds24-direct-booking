@@ -599,8 +599,8 @@ function flavor(p: ReturnType<typeof palette>): Flavor {
       outline-offset: -3px;
     }
 
-    /* The hint to zoom with Ctrl or move with two fingers: a pill above the attribution, from
-       48rem beside the panel, the map not dimmed. */
+    /* The hint to zoom with Ctrl or move with two fingers: a pill above the attribution, in the
+       map's middle, the map not dimmed. */
     .location-map .maplibregl-cooperative-gesture-screen {
       inset: auto 3rem 2.75rem;
       padding: 0;
@@ -611,8 +611,10 @@ function flavor(p: ReturnType<typeof palette>): Flavor {
       line-height: 1.25rem;
       text-align: center;
 
+      /* Its middle 34rem from the left at least, so that a pill of 20rem clears the panel's 23rem
+         by 1rem; on a wide map, the map's middle. */
       @media (min-width: 48rem) {
-        left: 26rem;
+        left: max(3rem, 71rem - 100%);
       }
 
       @media (prefers-reduced-motion: reduce) {
@@ -620,6 +622,7 @@ function flavor(p: ReturnType<typeof palette>): Flavor {
       }
 
       > div {
+        max-width: 20rem;
         padding: 0.5rem 1rem;
         border-radius: var(--radius-control);
         background: var(--color-surface);

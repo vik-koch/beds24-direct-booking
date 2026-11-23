@@ -452,8 +452,9 @@ keyboard. In the sheet the apartments are indented under their entry at weight 4
   buttons take the site's focus ring.
 - **Zoom:** plus and minus as the site's round buttons in a white pill, level with the panel's top.
 - **Hint:** a scroll over the map without Ctrl, or one finger on a phone, shows how to move it as a
-  white pill above the attribution, from 48rem in the middle of the map beside the panel. The map is
-  not dimmed, so the page can be scrolled past it as past a picture.
+  white pill above the attribution, in the map's middle; where the map is too narrow for that beside
+  the panel, it moves right of it. The map is not dimmed, so the page can be scrolled past it as
+  past a picture.
 - **Routes:** a dashed accent line with a white casing, its dashes as long at every zoom, from the
   chosen apartment's point to each place's, the router's line joined to both; once a place is
   chosen, its route solid and as close as it fits, a white dot ringed in the accent at each end
