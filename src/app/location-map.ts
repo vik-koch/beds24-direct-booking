@@ -19,67 +19,12 @@ import {
 import { Router } from '@angular/router';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import {
-  lucideBanknote,
-  lucideBeef,
-  lucideBeer,
-  lucideBike,
-  lucideBinoculars,
-  lucideBookOpen,
-  lucideBus,
-  lucideCableCar,
-  lucideCakeSlice,
-  lucideCandy,
-  lucideCarrot,
   lucideChevronDown,
-  lucideChurch,
-  lucideCigarette,
-  lucideClapperboard,
-  lucideCoffee,
-  lucideCroissant,
-  lucideDroplet,
-  lucideDumbbell,
-  lucideEgg,
-  lucideFish,
-  lucideFlagTriangleRight,
   lucideFocus,
-  lucideFuel,
-  lucideGift,
-  lucideGraduationCap,
   lucideHouse,
-  lucideIceCreamCone,
-  lucideInfo,
-  lucideLandmark,
-  lucideLibrary,
-  lucideMail,
-  lucideMilk,
   lucideMinus,
-  lucideMountain,
-  lucideMountainSnow,
-  lucideNewspaper,
-  lucidePill,
-  lucidePlugZap,
   lucidePlus,
-  lucideRecycle,
-  lucideSandwich,
-  lucideScissors,
-  lucideShirt,
-  lucideShoppingBasket,
-  lucideShoppingCart,
-  lucideSnowflake,
-  lucideSquareParking,
-  lucideStethoscope,
-  lucideStore,
-  lucideTent,
-  lucideToilet,
-  lucideToyBrick,
-  lucideTrainFront,
-  lucideTrash2,
   lucideTreePine,
-  lucideTrophy,
-  lucideUtensils,
-  lucideWashingMachine,
-  lucideWaves,
-  lucideWine,
 } from '@ng-icons/lucide';
 import { layers, namedFlavor, type Flavor } from '@protomaps/basemaps';
 import type {
@@ -91,8 +36,10 @@ import type {
 } from 'maplibre-gl';
 import { icons } from '../content/generated/icons';
 import lifts from '../content/generated/lifts';
+import { drawings } from '../content/generated/map-icons';
 import routes from '../content/generated/routes';
 import site from '../content/generated/site';
+import { groups } from '../content/map-kinds';
 import { lucideName } from '../content/names';
 import type { Route } from '../content/schema';
 import { handover } from './map-handover';
@@ -100,96 +47,9 @@ import { Season } from './season';
 import { address, LANGUAGE, TEXTS } from './texts';
 
 const map = site.map!;
-// The points of interest the map shows, by their kind in the tiles, each with its Lucide icon, in
-// groups that each have a colour in the theme. A kind not listed, such as the town's other places
-// to stay, is left out.
-const groups: Record<string, Record<string, string>> = {
-  food: {
-    restaurant: lucideUtensils,
-    fast_food: lucideSandwich,
-    cafe: lucideCoffee,
-    bakery: lucideCroissant,
-    bar: lucideBeer,
-    pub: lucideBeer,
-    ice_cream: lucideIceCreamCone,
-  },
-  shop: {
-    supermarket: lucideShoppingCart,
-    convenience: lucideStore,
-    kiosk: lucideStore,
-    marketplace: lucideShoppingBasket,
-    butcher: lucideBeef,
-    cheese: lucideMilk,
-    dairy: lucideMilk,
-    deli: lucideSandwich,
-    greengrocer: lucideCarrot,
-    farm: lucideEgg,
-    pastry: lucideCakeSlice,
-    chocolate: lucideCandy,
-    confectionery: lucideCandy,
-    wine: lucideWine,
-    alcohol: lucideWine,
-    seafood: lucideFish,
-    // Lucide has no ski: a snowy mountain for the shops that sell and rent them.
-    sports: lucideMountainSnow,
-    ski: lucideMountainSnow,
-    ski_rental: lucideMountainSnow,
-    bicycle: lucideBike,
-    outdoor: lucideTent,
-    tobacco: lucideCigarette,
-    newsagent: lucideNewspaper,
-    clothes: lucideShirt,
-    gift: lucideGift,
-    books: lucideBookOpen,
-    hairdresser: lucideScissors,
-  },
-  transport: {
-    parking: lucideSquareParking,
-    fuel: lucideFuel,
-    bus_stop: lucideBus,
-    // Not the tiles': the ends of a gondola or a cable car, where guests board.
-    lift_station: lucideCableCar,
-    bus_station: lucideBus,
-    charging_station: lucidePlugZap,
-    station: lucideTrainFront,
-    bicycle_rental: lucideBike,
-  },
-  service: {
-    pharmacy: lucidePill,
-    doctors: lucideStethoscope,
-    dentist: lucideStethoscope,
-    laundry: lucideWashingMachine,
-    dry_cleaning: lucideWashingMachine,
-    atm: lucideBanknote,
-    bank: lucideBanknote,
-    post_office: lucideMail,
-    information: lucideInfo,
-    toilets: lucideToilet,
-    drinking_water: lucideDroplet,
-    recycling: lucideRecycle,
-    waste_disposal: lucideTrash2,
-  },
-  culture: {
-    place_of_worship: lucideChurch,
-    museum: lucideLandmark,
-    townhall: lucideLandmark,
-    swimming_pool: lucideWaves,
-    water_park: lucideWaves,
-    fitness_centre: lucideDumbbell,
-    sports_centre: lucideTrophy,
-    ice_rink: lucideSnowflake,
-    ski_school: lucideGraduationCap,
-    cinema: lucideClapperboard,
-    library: lucideLibrary,
-    viewpoint: lucideBinoculars,
-    peak: lucideMountain,
-    miniature_golf: lucideFlagTriangleRight,
-    playground: lucideToyBrick,
-  },
-};
 const kinds = Object.fromEntries(
   Object.entries(groups).flatMap(([group, icons]) =>
-    Object.entries(icons).map(([kind, svg]) => [kind, { group, svg }]),
+    Object.entries(icons).map(([kind, icon]) => [kind, { group, svg: drawings[icon]! }]),
   ),
 );
 // A route from the apartment's point to the place's: the router's line starts and ends on the

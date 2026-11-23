@@ -1,4 +1,6 @@
 @import 'tailwindcss';
+/* The tests' Playwright selectors, such as [aria-selected=true]:visible, read as classes. */
+@source not '../e2e';
 @import 'tw-animate-css';
 @import '@spartan-ng/brain/hlm-tailwind-preset.css';
 @import './content/generated/theme.css';
