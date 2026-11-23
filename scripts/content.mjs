@@ -169,10 +169,10 @@ export function readContent(dir) {
   )?.[2];
   if (site.map && !(font && existsSync(join(dir, font))))
     throw new Error(`${join(dir, 'theme.css')}\n  @font-face: a map needs a .woff2 file in fonts/`);
-  // And its water, woods and places in the theme's map colours.
-  const theme = readFileSync(join(dir, 'theme.css'), 'utf8');
+  // And its water, woods and places in the theme's map colours, as declared, not in a comment.
+  const theme = readFileSync(join(dir, 'theme.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
   for (const name of mapColors)
-    if (site.map && !theme.includes(`--color-${name}:`))
+    if (site.map && !new RegExp(`--color-${name}\\s*:`).test(theme))
       throw new Error(`${join(dir, 'theme.css')}
   --color-${name}: a map needs it`);
   const map = site.map && { ...readMap(dir, site.map, apartments), font: `/${font}` };

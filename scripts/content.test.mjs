@@ -682,6 +682,16 @@ test('a map needs the theme to name its own colours', () => {
   assert.throws(() => readContent(dir), /theme\.css\n {2}--color-poi-shop: a map needs it/);
 });
 
+test('a map colour counts when declared, not in a comment, with any space before its colon', () => {
+  const dir = changed('site.json', () => undefined);
+  const file = join(dir, 'theme.css');
+  const theme = readFileSync(file, 'utf8');
+  writeFileSync(file, theme.replace(/(--color-poi-shop):/, '$1 :'));
+  assert.doesNotThrow(() => readContent(dir));
+  writeFileSync(file, theme.replace(/(--color-poi-shop:[^;]+;)/, '/* $1 */'));
+  assert.throws(() => readContent(dir), /--color-poi-shop: a map needs it/);
+});
+
 test('the lifts are taken for the box the map has now', () => {
   const lifts = changed('map/lifts.json', (file) => (file.box.east += 0.001));
   assert.throws(
