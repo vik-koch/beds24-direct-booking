@@ -855,10 +855,11 @@ export class LocationMap {
   protected readonly more = map.places.filter((place) => place.more);
   protected readonly maxZoom = 18;
   protected readonly minZoom = signal(0);
-  protected readonly zoom = signal(0);
+  protected readonly zoom = signal(handover.drawn?.getZoom() ?? 0);
   // Smaller pins while the map shows the whole town; decided by the zoom a move ends at, as fitting
-  // a view passes below 16 on its way from 16 to 16.
-  protected readonly far = signal(false);
+  // a view passes below 16 on its way from 16 to 16. A map taken over has its size from the first
+  // render: the pins would grow or shrink.
+  protected readonly far = signal(!!handover.drawn && this.zoom() < 16);
   protected readonly lucideName = lucideName;
   protected readonly chosen = signal(handover.chosen);
   protected readonly picked = signal(handover.picked);
