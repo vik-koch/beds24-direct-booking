@@ -38,6 +38,7 @@ import {
   lucideMountain,
   lucidePill,
   lucidePlus,
+  lucideRecycle,
   lucideSandwich,
   lucideScissors,
   lucideShirt,
@@ -48,6 +49,7 @@ import {
   lucideToilet,
   lucideToyBrick,
   lucideTrainFront,
+  lucideTrash2,
   lucideTreePine,
   lucideUtensils,
   lucideWaves,
@@ -107,6 +109,8 @@ const groups: Record<string, Record<string, string>> = {
     information: lucideInfo,
     toilets: lucideToilet,
     drinking_water: lucideDroplet,
+    recycling: lucideRecycle,
+    waste_disposal: lucideTrash2,
   },
   culture: {
     place_of_worship: lucideChurch,
@@ -190,6 +194,7 @@ const oklch = (color: string) => {
   ];
   return {
     lightness: 0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s,
+    chroma: Math.hypot(a, z),
     hue: Math.atan2(z, a),
   };
 };
@@ -219,17 +224,17 @@ const tint = (lightness: number, chroma: number, hue: number) => {
 // ground; names 4.5:1.
 function palette(c: (name: string) => string) {
   const [ground, accent, water] = [c('ground'), c('accent'), c('water')];
-  const { lightness } = oklch(ground);
+  const { lightness, chroma } = oklch(ground);
   const accentHue = oklch(accent).hue;
-  const land = tint(lightness - 0.005, 0.014, accentHue);
-  const wood = tint(lightness - 0.035, 0.022, accentHue);
+  const land = tint(lightness, chroma * 0.5, accentHue);
+  const wood = tint(lightness - 0.03, chroma * 1.5, accentHue);
   return {
     ground,
     land,
     wood,
     tree: tint(lightness - 0.13, 0.035, accentHue),
     pitch: c('pitch'),
-    building: mix(c('oak'), c('edge'), 0.2),
+    building: mix(c('oak'), c('edge'), 0.15),
     pedestrian: mix(ground, c('oak'), 0.5),
     road: c('surface'),
     casing: mix(land, c('ink-soft'), 0.85),
@@ -826,9 +831,13 @@ export class LocationMap {
           context.drawImage(image, 6, 6);
           context.drawImage(image, 38, 38);
         } else {
-          // Filled in the surface's white, so that each icon reads as a shape, not lines.
-          const svg = kinds[id]!.svg.replace('fill="none"', `fill="${color('surface')}"`);
-          const icon = await lucide(svg, size, color(`poi-${kinds[id]!.group}`), 2);
+          // Filled in the surface's white, so that each icon reads as a shape, not lines: every
+          // fill first, then every line, or a later shape's fill covers an earlier line.
+          const svg = kinds[id]!.svg.replace(
+            /(<svg[^>]*>)(.*)<\/svg>/,
+            `$1<g fill="${color('surface')}" stroke="none">$2</g>$2</svg>`,
+          );
+          const icon = await lucide(svg, size, color(`poi-${kinds[id]!.group}`), 1.5);
           context.drawImage(icon, 0, 0);
         }
         if (!drawn.hasImage(id))
@@ -1234,10 +1243,12 @@ export class LocationMap {
           id: 'route-casing',
           type: 'line',
           source: 'routes',
-          // Under the chosen route alone: the others' gaps show the map.
-          filter: ['get', 'picked'],
           layout: { 'line-cap': 'round', 'line-join': 'round' },
-          paint: { 'line-color': p.routeCasing, 'line-width': 7 },
+          // Around the chosen route; under the others, as wide as their dots, it whitens the gaps.
+          paint: {
+            'line-color': p.routeCasing,
+            'line-width': ['case', ['get', 'picked'], 7, 4.5],
+          },
         },
         {
           id: 'route',
