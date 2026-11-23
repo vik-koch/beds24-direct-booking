@@ -479,7 +479,7 @@ function flavor(p: ReturnType<typeof palette>): Flavor {
       </div>
       <!-- After the panel, so that the keyboard reaches the choices first, also on a phone, where
            the panel shows below the map. -->
-      <div class="map-frame" [class.map-far]="far()">
+      <div class="map-frame map-size" [class.map-far]="far()">
         <!-- Replaced by a map taken over, with its own element: no binding here. -->
         <div #canvas class="map-canvas"></div>
         <div class="map-zoom">
@@ -587,16 +587,9 @@ function flavor(p: ReturnType<typeof palette>): Flavor {
         margin-inline: auto;
       }
 
-      /* On a phone a square, so that the panel below it starts within the screen. */
       .map-frame {
         position: relative;
-        aspect-ratio: 1;
         background: var(--color-ground);
-
-        @media (min-width: 48rem) {
-          aspect-ratio: auto;
-          height: clamp(28rem, 70svh, 48rem);
-        }
       }
 
       /* Its own layers, such as the hint to zoom with Ctrl, stay under the panel. */

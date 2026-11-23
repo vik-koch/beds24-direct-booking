@@ -79,7 +79,7 @@ import { address, LANGUAGE, TEXTS } from './texts';
           @defer (on viewport; when handover.drawn; hydrate on viewport) {
             <app-location-map />
           } @placeholder {
-            <div class="aspect-square md:aspect-auto md:h-[clamp(28rem,70svh,48rem)]"></div>
+            <div class="map-size"></div>
           }
         </section>
       } @else {

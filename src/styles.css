@@ -605,6 +605,17 @@
     }
   }
 
+  /* The map, and its place until it loads: on a phone a square, so that the panel below it starts
+     within the screen. */
+  .map-size {
+    aspect-ratio: 1;
+
+    @media (min-width: 48rem) {
+      aspect-ratio: auto;
+      height: clamp(28rem, 70svh, 48rem);
+    }
+  }
+
   /* A card on the page's ground: the hero's text, the free weeks and the booking panel. */
   :is(.hero-copy, .sheet, .panel) {
     border-radius: var(--radius-card);
