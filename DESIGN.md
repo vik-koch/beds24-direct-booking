@@ -434,8 +434,9 @@ keyboard. In the sheet the apartments are indented under their entry at weight 4
   does; the places are lines that choose a place, the chosen one on the ground colour. An arrow at
   its foot unfolds the other places without moving the map. Without JavaScript it lists the places
   shown by default.
-- **Pins:** a teardrop whose tip stands on its point, its icon in the head and its label beside it:
-  an apartment white with an accent icon and outline, filled in the accent once chosen; a place the
+- **Pins:** a teardrop whose tip stands on its point, its icon in the head and its label beside it,
+  the head 1.5rem while the whole town shows and 1.75rem closer in, the icon three fifths of it: an
+  apartment white with an accent icon and outline, filled in the accent once chosen; a place the
   same in ink. The label is an apartment's name, a place's distance from the chosen apartment ("900
   m"), or a chosen place's name; a walking time depends on too much to promise. Pins and buttons
   take the site's focus ring.

@@ -562,12 +562,13 @@ function flavor(p: ReturnType<typeof palette>): Flavor {
         height: 100%;
       }
 
-      /* The pins' heads, smaller when the map shows the whole town. */
+      /* The pins' heads, smaller when the map shows the whole town; at 1.5rem still the 24px a
+         target needs. */
       .map-canvas {
-        --head: 2rem;
+        --head: 1.75rem;
 
         &.map-far {
-          --head: 1.75rem;
+          --head: 1.5rem;
         }
       }
 
@@ -578,12 +579,12 @@ function flavor(p: ReturnType<typeof palette>): Flavor {
         justify-items: center;
         width: var(--head);
         height: calc(var(--head) * 1.2071);
-        padding-top: calc(var(--head) / 4);
+        padding-top: calc(var(--head) / 5);
         /* Over every label; a chosen pin over the others. */
         z-index: 1;
         color: var(--color-accent);
         cursor: pointer;
-        --ng-icon__size: calc(var(--head) / 2);
+        --ng-icon__size: calc(var(--head) * 0.6);
         --pin: var(--color-surface);
         /* A white pin's outline stands out from the map at 3:1; a filled one needs none. */
         --outline: var(--color-accent);
