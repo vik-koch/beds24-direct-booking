@@ -196,13 +196,25 @@ const walk = ({ apartment, place, line }: Route): [number, number][] => {
   ];
   return [[from.lon!, from.lat!], ...line, [to.lon, to.lat]];
 };
-// What a guest looks for first shows two zooms before the tiles would show it.
-const early = ['parking', 'atm', 'bus_stop', 'supermarket', 'pharmacy', 'information'];
+// What a guest looks for first shows two zooms before the tiles would show it; culture, the other
+// services and bus stops one zoom after, so that food and shops lead.
+const early = ['parking', 'atm', 'supermarket', 'pharmacy', 'information'];
+const late = [
+  ...Object.keys(groups['culture']!),
+  ...Object.keys(groups['service']!),
+  'bus_stop',
+].filter((kind) => !early.includes(kind));
 const iconZoom: ExpressionSpecification = [
-  '-',
+  '+',
   ['get', 'min_zoom'],
-  ['match', ['get', 'kind'], early, 2, 0],
+  ['match', ['get', 'kind'], early, -2, late, 1, 0],
 ];
+// MapLibre lays a dash pattern out at the tile's whole zoom and stretches it up to twice as long
+// until the next: the routes' dashes shrink as much, in eighths, so that they keep their length.
+const dashes = (zoom: number) => {
+  const stretch = Math.round(2 ** (zoom % 1) * 8) / 8;
+  return [1 / stretch, 1.6 / stretch];
+};
 
 // A Lucide icon as an image in a colour, at a size in pixels, its lines as wide as given in its 24
 // units. An SVG drawn on a canvas needs its size in its own attributes.
@@ -934,7 +946,11 @@ export class LocationMap {
         if (!drawn.hasImage(id))
           drawn.addImage(id, context.getImageData(0, 0, size, size), { pixelRatio: 2 });
       });
-      drawn.on('zoom', () => this.zoom.set(drawn.getZoom()));
+      drawn.on('zoom', () => {
+        this.zoom.set(drawn.getZoom());
+        if (drawn.getLayer('route'))
+          drawn.setPaintProperty('route', 'line-dasharray', dashes(drawn.getZoom()));
+      });
       drawn.on('zoomend', () => this.far.set(drawn.getZoom() < 16));
       drawn.touchZoomRotate.disableRotation();
       drawn.keyboard.disableRotation();
@@ -1118,6 +1134,8 @@ export class LocationMap {
     // which no one finds from the map, are left out.
     const streets = ['living_street', 'pedestrian'];
     const p = palette(c);
+    // Beside a chosen apartment's routes the town's places step back.
+    const dim = this.chosen() ? 0.6 : 1;
     const base = layers('town', flavor(p), { lang: this.language.code })
       .filter((layer) => !/^roads_(oneway|tunnels_|other|bridges_other)/.test(layer.id))
       .map((layer): LayerSpecification => {
@@ -1142,6 +1160,15 @@ export class LocationMap {
         if (layer.type !== 'symbol') return layer;
         // A name along a line or over an area keeps its letters clear of what lies under it.
         const clear = { ...layer, paint: { ...layer.paint, 'text-halo-width': 2 } };
+        // The quarters' names smaller than Protomaps draws them, so that they stay in the back.
+        if (layer.id === 'places_subplace')
+          return {
+            ...clear,
+            layout: {
+              ...clear.layout,
+              'text-size': ['interpolate', ['linear'], ['zoom'], 13, 10, 16, 12, 18, 14],
+            },
+          };
         return layer.id === 'pois'
           ? {
               ...clear,
@@ -1183,6 +1210,8 @@ export class LocationMap {
                 ...clear.paint,
                 'text-color': p.inkSoft,
                 'text-halo-color': p.ground,
+                'icon-opacity': dim,
+                'text-opacity': dim,
               },
             }
           : clear;
@@ -1246,7 +1275,7 @@ export class LocationMap {
         layout: { 'line-cap': dashes[0] ? 'butt' : 'round' },
         paint: {
           'line-color': color,
-          'line-width': ['interpolate', ['linear'], ['zoom'], 12, 0.75, 16, 1.25, 18, 2],
+          'line-width': ['interpolate', ['linear'], ['zoom'], 13, 0.5, 15, 0.75, 16, 1.25, 18, 2],
           'line-dasharray': dashes,
         },
       }) as LayerSpecification;
@@ -1274,16 +1303,25 @@ export class LocationMap {
         ],
         paint: {
           'circle-radius': 2.5,
-          // Half seen while the map shows the whole town, so that the places' colours stay calm.
-          'circle-opacity': ['interpolate', ['linear'], ['zoom'], 15, 0.5, 16.5, 1],
+          // Half seen while the map shows the whole town, and dimmed beside a chosen apartment.
+          'circle-opacity': ['interpolate', ['linear'], ['zoom'], 15, 0.5 * dim, 16.5, dim],
+          // Grey while the whole town shows, in its group's colour closer in.
           'circle-color': [
-            'match',
-            ['get', 'kind'],
-            ...Object.entries(groups).flatMap(([group, icons]) => [
-              Object.keys(icons),
-              p.poi[group],
-            ]),
-            p.ink,
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            15.5,
+            p.inkSoft,
+            16.5,
+            [
+              'match',
+              ['get', 'kind'],
+              ...Object.entries(groups).flatMap(([group, icons]) => [
+                Object.keys(icons),
+                p.poi[group],
+              ]),
+              p.ink,
+            ],
           ] as unknown as ExpressionSpecification,
         },
       },
@@ -1401,7 +1439,7 @@ export class LocationMap {
           paint: {
             'line-color': this.picked() ? p.faded : p.route,
             'line-width': 3.5,
-            'line-dasharray': [1, 1.6],
+            'line-dasharray': dashes(untracked(this.zoom)),
           },
         },
         {

@@ -169,9 +169,12 @@ streets for walking are as wide, in the pedestrian areas' shade. Roads under gro
   lines of 2 in its 24 units, at least 3:1 against the ground, the land and a building: **Rust**
   (#c2410c) for food and drink, **Violet** (#9440b0) for shops, **Sign Blue** (#0068b4) for
   transport, **Crimson** (#c4283f) for services such as a pharmacy or a cash machine, **Walnut**
-  (#8a6234) for culture and leisure. Until its icon shows, a place is a dot in its colour, half seen
-  while the whole town shows. A gondola's or a cable car's stations show its icon in the transport
-  blue; a pin takes the place of the tiles' own entry or a station within a metre of it.
+  (#8a6234) for culture and leisure. Until its icon shows, a place is a dot, grey and half seen
+  while the whole town shows, in its colour closer in; culture, most services and bus stops show
+  their icons a zoom after food and shops, and all the town's places step back to 60% beside a
+  chosen apartment's routes. The quarters' names are smaller than Protomaps draws them, and paths
+  thinner while the whole town shows. A gondola's or a cable car's stations show its icon in the
+  transport blue; a pin takes the place of the tiles' own entry or a station within a metre of it.
 
 ### Named Rules
 
@@ -444,9 +447,10 @@ keyboard. In the sheet the apartments are indented under their entry at weight 4
   ("900 m"), or a chosen place's name; a walking time depends on too much to promise. Pins and
   buttons take the site's focus ring.
 - **Zoom:** plus and minus as the site's round buttons in a white pill, level with the panel's top.
-- **Routes:** a dashed accent line with a white casing, from the chosen apartment's point to each
-  place's, the router's line joined to both; once a place is chosen, its route solid, a white dot
-  ringed in the accent at each end under the pins' tips, and the others faded to 3:1.
+- **Routes:** a dashed accent line with a white casing, its dashes as long at every zoom, from the
+  chosen apartment's point to each place's, the router's line joined to both; once a place is
+  chosen, its route solid, a white dot ringed in the accent at each end under the pins' tips, and
+  the others faded to 3:1.
 - **Do** keep the ground light and let white surfaces and space do the separating.
 - **Do** use the season's accent for what a visitor can act on, and nothing else.
 - **Do** measure every colour pair of a new theme in both seasons before using it.
