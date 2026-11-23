@@ -28,6 +28,8 @@ import { lucideName } from '../content/names';
 import { BookingPanel } from './booking-panel';
 import { Choice } from './choice';
 import { Gallery } from './gallery';
+import { LocationMap } from './location-map';
+import { handover } from './map-handover';
 import { address, fill, LANGUAGE, TEXTS } from './texts';
 
 // A room or an area of amenities: its icon, its name and what it holds; a code shown alone has
@@ -45,7 +47,7 @@ type Fold = ReturnType<typeof fold>;
 @Component({
   encapsulation: ViewEncapsulation.None,
   selector: 'app-apartment',
-  imports: [NgIcon, HlmAccordionImports, BookingPanel, Gallery],
+  imports: [NgIcon, HlmAccordionImports, BookingPanel, Gallery, LocationMap],
   providers: [
     provideIcons({
       ...icons,
@@ -101,7 +103,14 @@ type Fold = ReturnType<typeof fold>;
                 }}
               </li>
               @if (listing.address) {
-                <li><ng-icon name="lucideMapPin" aria-hidden="true" />{{ listing.address }}</li>
+                <li>
+                  <ng-icon name="lucideMapPin" aria-hidden="true" />
+                  @if (hasMap) {
+                    <a [href]="choice.link(mapLink)">{{ listing.address }}</a>
+                  } @else {
+                    {{ listing.address }}
+                  }
+                </li>
               }
             </ul>
           }
@@ -226,18 +235,32 @@ type Fold = ReturnType<typeof fold>;
         }
       </div>
     </div>
+    <!-- As on the home page: the map runs edge to edge, its heading stays in the column. -->
+    @if (hasMap) {
+      <section class="apartment-location">
+        <h2 class="column" [id]="language.anchors.location">{{ texts.nav.location }}</h2>
+        @defer (on viewport; when handover.drawn; hydrate on viewport) {
+          <app-location-map [apartment]="apartment.slug" />
+        } @placeholder {
+          <div class="map-size"></div>
+        }
+      </section>
+    }
   `,
   styles: `
     @layer components {
       /* The apartment page: from 64rem the pictures and the content on the left, the right column
          free for the booking panel. */
       .apartment {
-        --size-heading: clamp(1.375rem, 1.2rem + 0.8vw, 1.75rem);
         padding-top: 1rem;
 
         h1 {
           margin-top: 0.5rem;
         }
+      }
+
+      :is(.apartment, .apartment-location) {
+        --size-heading: clamp(1.375rem, 1.2rem + 0.8vw, 1.75rem);
 
         h2 {
           margin-bottom: 1rem;
@@ -245,6 +268,10 @@ type Fold = ReturnType<typeof fold>;
           font-weight: 500;
           letter-spacing: -0.01em;
         }
+      }
+
+      .apartment-location {
+        padding-top: var(--space-section);
       }
 
       .back {
@@ -473,6 +500,9 @@ export class Apartment {
   })();
   protected readonly back = `${address(this.language, 'home')}#${this.language.anchors.apartments}`;
   protected readonly choice = inject(Choice);
+  protected readonly hasMap = !!site.map;
+  protected readonly handover = handover;
+  protected readonly mapLink = `${address(this.language, 'apartment', this.apartment.slug)}#${this.language.anchors.location}`;
 
   private readonly labels = this.texts.amenities;
   private readonly groups = this.listing?.features ?? [];

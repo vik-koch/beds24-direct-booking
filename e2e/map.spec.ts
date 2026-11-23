@@ -688,3 +688,67 @@ test('without JavaScript the panel names the places and their seasonal texts, an
   await expect(panel(page).getByRole('button', { name: 'More places' })).toBeHidden();
   await context.close();
 });
+
+test("an apartment's page shows its map with it alone, chosen for good", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await openMap(page, '/en/apartments/ahorn');
+  await expect.poll(() => accentPixels(page)).toBeGreaterThan(500);
+  await expect(panel(page).getByRole('radio')).toHaveCount(0);
+  await expect(panel(page)).not.toContainText('Routes from');
+  await expect(places(page).first()).toContainText('900 m');
+  // Its pin is no button, and the other apartments have none.
+  await expect(page.locator('.location-map').getByRole('img', { name: 'Ahorn' })).toBeVisible();
+  await expect(page.locator('.map-pin:not(.map-place)')).toHaveCount(1);
+  await page
+    .locator('.map-label')
+    .filter({ hasText: /^Ahorn$/ })
+    .click();
+  await expect(places(page).first()).toContainText('900 m');
+  await expect.poll(() => accentPixels(page)).toBeGreaterThan(500);
+  const results = await new AxeBuilder({ page }).include('app-location-map').analyze();
+  expect(results.violations.map((v) => v.id)).toEqual([]);
+});
+
+test("an apartment's address leads to its map, which then loads", async ({ page }) => {
+  const asked: string[] = [];
+  page.on('request', (request) => asked.push(request.url()));
+  await page.goto('/en/apartments/zirbe');
+  await expect(page.locator('html')).toHaveAttribute('data-started', '');
+  expect(asked.filter((url) => url.includes('/map/'))).toEqual([]);
+  await page.getByRole('link', { name: 'Musterweg' }).click();
+  await expect(page).toHaveURL(/\/en\/apartments\/zirbe#location$/);
+  await expect(page.getByRole('heading', { name: 'Location', exact: true })).toBeInViewport();
+  await expect(page.locator('link[href^="/map/maplibre-gl.css"]')).toHaveCount(1);
+});
+
+test("an apartment's map goes with a change of language, not to another page", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await countLost(page);
+  await openMap(page, '/en/apartments/laerche');
+  await page
+    .locator('.maplibregl-canvas')
+    .evaluate((canvas) => canvas.setAttribute('data-old', ''));
+  await toLanguage(page, 'Language: English', 'Deutsch');
+  await expect(page).toHaveURL(/\/de\/wohnungen\/laerche$/);
+  await expect(page.locator('.location-map[data-drawn] canvas[data-old]')).toBeVisible();
+  await expect(page.locator('.location-map').getByRole('img', { name: 'Lärche' })).toBeVisible();
+  expect(await lost(page)).toBe(0);
+  // Links to a home or an apartment's page load it in full: only another page and Back stay.
+  await page.locator('footer a[href^="/de/haeufige-fragen"]').click();
+  await expect(page).toHaveURL(/\/de\/haeufige-fragen/);
+  await expect.poll(() => lost(page)).toBe(1);
+  await page.goBack();
+  await scrollToMap(page);
+  await expect(page.locator('.location-map[data-drawn]')).toBeVisible({ timeout: 20000 });
+  await expect(page.locator('canvas[data-old]')).toHaveCount(0);
+  await expect(page.locator('.location-map').getByRole('img', { name: 'Lärche' })).toBeVisible();
+});
+
+test("an apartment's panel lists its distances in every engine, without the map too", async ({
+  page,
+}) => {
+  await page.goto('/en/apartments/ahorn');
+  await scrollToMap(page);
+  await expect(places(page)).toHaveText([/Schattberg X-press.*900 m/, /Kohlmaisbahn.*1.4 km/]);
+  await expect(panel(page).getByRole('radio')).toHaveCount(0);
+});
