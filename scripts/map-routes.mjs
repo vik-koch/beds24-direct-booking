@@ -5,19 +5,25 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { apartmentSchema, siteSchema } from '../src/content/schema.ts';
+import { checkPoints, waypoints } from './content.mjs';
 
 const dir = resolve(process.env.CONTENT_DIR || 'content/demo');
 const read = (file, schema) => schema.parse(JSON.parse(readFileSync(join(dir, file), 'utf8')));
 const site = read('site.json', siteSchema);
 if (!site.map) throw new Error(`${join(dir, 'site.json')} has no map`);
 
+const apartments = site.apartments.map((slug) => ({
+  slug,
+  ...read(`apartments/${slug}.json`, apartmentSchema),
+}));
+checkPoints(dir, site, apartments);
+
 const features = [];
-for (const slug of site.apartments) {
-  const { lat, lon, via = {} } = read(`apartments/${slug}.json`, apartmentSchema);
-  if (lat === undefined || lon === undefined)
-    throw new Error(`apartments/${slug}.json has no point`);
+for (const apartment of apartments) {
+  const { slug, lat, lon } = apartment;
   for (const place of site.map.places) {
-    const points = [{ lat, lon }, ...(via[place.key] ?? []), place];
+    const via = waypoints(apartment, place.key);
+    const points = [{ lat, lon }, ...via, place];
     const path = points.map((point) => `${point.lon},${point.lat}`).join(';');
     const response = await fetch(
       `https://routing.openstreetmap.de/routed-foot/route/v1/foot/${path}?overview=full&geometries=geojson`,
@@ -35,7 +41,7 @@ for (const slug of site.apartments) {
         minutes: Math.ceil(route.duration / 60),
         from: { lat, lon },
         to: { lat: place.lat, lon: place.lon },
-        ...(via[place.key] && { via: via[place.key] }),
+        ...(via.length > 0 && { via }),
       },
       geometry: route.geometry,
     });

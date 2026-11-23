@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import {
   cpSync,
   existsSync,
@@ -12,7 +13,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { after, test } from 'node:test';
 import { siteSchema } from '../src/content/schema.ts';
-import { readContent, writeContent } from './content.mjs';
+import { readContent, waypoints, writeContent } from './content.mjs';
 
 // Every folder a test makes, removed when the file's tests are done.
 const root = mkdtempSync(join(tmpdir(), 'content-test-'));
@@ -576,6 +577,22 @@ test("an apartment's route goes through points inside the box, to a place of the
     () => readContent(elsewhere),
     /zirbe\.json\n {2}via\.station: not a place of site\.json's map/,
   );
+  // The routes script checks them too, before it asks the router or writes a route.
+  const routes = readFileSync(join(elsewhere, 'map', 'routes.json'), 'utf8');
+  const run = spawnSync(process.execPath, ['scripts/map-routes.mjs'], {
+    env: { ...process.env, CONTENT_DIR: elsewhere },
+    encoding: 'utf8',
+  });
+  assert.notEqual(run.status, 0);
+  assert.match(run.stderr, /via\.station: not a place of site\.json's map/);
+  assert.equal(readFileSync(join(elsewhere, 'map', 'routes.json'), 'utf8'), routes);
+});
+
+test('a place called constructor has no waypoints unless an apartment gives them', () => {
+  assert.deepEqual(waypoints({}, 'constructor'), []);
+  assert.deepEqual(waypoints({ via: { schattberg: [] } }, 'constructor'), []);
+  const points = [{ lat: 47.39, lon: 12.64 }];
+  assert.equal(waypoints({ via: { constructor: points } }, 'constructor'), points);
 });
 
 test('the box is at most 0.1° each way, and each place inside it', () => {

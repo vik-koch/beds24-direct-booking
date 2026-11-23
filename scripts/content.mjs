@@ -44,6 +44,33 @@ const isSvg = (bytes) => {
   }
 };
 
+// With a map every apartment has its point inside the box; without one none has a point. Its
+// routes' points lie in the box too, on the way to a place of the map.
+export function checkPoints(dir, site, apartments) {
+  for (const { slug, lat, lon, via = {} } of apartments) {
+    const file = join(dir, 'apartments', `${slug}.json`);
+    const given = [lat, lon].filter((value) => value !== undefined).length;
+    if (given !== (site.map ? 2 : 0))
+      throw new Error(
+        `${file}\n  lat, lon: ${site.map ? 'both needed with a map' : 'no map in site.json'}`,
+      );
+    if (site.map && !inBox(site.map.box, { lat, lon }))
+      throw new Error(`${file}\n  lat, lon: outside the map's box`);
+    for (const [key, points] of Object.entries(via)) {
+      if (!site.map?.places.some((place) => place.key === key))
+        throw new Error(`${file}\n  via.${key}: not a place of site.json's map`);
+      points.forEach((point, index) => {
+        if (!inBox(site.map.box, point))
+          throw new Error(`${file}\n  via.${key}.${index}: outside the map's box`);
+      });
+    }
+  }
+}
+
+// The points an apartment's route to a place goes through, by an own key: a place may be called
+// constructor.
+export const waypoints = ({ via = {} }, key) => (Object.hasOwn(via, key) ? via[key] : []);
+
 export function readContent(dir) {
   const read = (file, schema) => {
     let value;
@@ -150,26 +177,7 @@ export function readContent(dir) {
       if (!Object.hasOwn(amenities.codes, code))
         throw new Error(`${join(dir, `texts.${tag}.json`)}\n  amenities.codes.${code}: missing`);
   }
-  // With a map every apartment has its point inside the box; without one none has a point. Its
-  // routes' points lie in the box too, on the way to a place of the map.
-  for (const { slug, lat, lon, via = {} } of apartments) {
-    const file = join(dir, 'apartments', `${slug}.json`);
-    const given = [lat, lon].filter((value) => value !== undefined).length;
-    if (given !== (site.map ? 2 : 0))
-      throw new Error(
-        `${file}\n  lat, lon: ${site.map ? 'both needed with a map' : 'no map in site.json'}`,
-      );
-    if (site.map && !inBox(site.map.box, { lat, lon }))
-      throw new Error(`${file}\n  lat, lon: outside the map's box`);
-    for (const [key, points] of Object.entries(via)) {
-      if (!site.map?.places.some((place) => place.key === key))
-        throw new Error(`${file}\n  via.${key}: not a place of site.json's map`);
-      points.forEach((point, index) => {
-        if (!inBox(site.map.box, point))
-          throw new Error(`${file}\n  via.${key}.${index}: outside the map's box`);
-      });
-    }
-  }
+  checkPoints(dir, site, apartments);
   if (!site.map && existsSync(join(dir, 'map')))
     throw new Error(`${join(dir, 'map')}\n  (folder): no map in site.json; delete the folder`);
   // The map draws its labels in the theme's typeface: the first WOFF2 file theme.css names.
@@ -290,7 +298,7 @@ function readMap(dir, map, apartments) {
   // One route for each apartment and place, from the points they have now.
   const routes = json('routes.json', 'map-routes.mjs').features.map((f) => f.properties);
   const same = (a, b) => a.lat === b.lat && a.lon === b.lon;
-  const sameVia = (a = [], b = []) => a.length === b.length && a.every((p, i) => same(p, b[i]));
+  const sameVia = (a = [], b) => a.length === b.length && a.every((p, i) => same(p, b[i]));
   for (const apartment of apartments)
     for (const place of map.places) {
       const pair = `${apartment.slug} to ${place.key}`;
@@ -299,7 +307,7 @@ function readMap(dir, map, apartments) {
       if (
         !same(route.from, apartment) ||
         !same(route.to, place) ||
-        !sameVia(route.via, apartment.via?.[place.key])
+        !sameVia(route.via, waypoints(apartment, place.key))
       )
         throw stale('routes.json', pair, 'computed before a point moved', 'map-routes.mjs');
     }
