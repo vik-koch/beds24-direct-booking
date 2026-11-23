@@ -1,8 +1,17 @@
 // Cuts the map's tiles, zoom 12 to 15 inside site.json's box, out of a Protomaps planet build into
 // the content folder's map/tiles/<build>/, and notes the build, the box and the count in
-// map/tiles.json. The old tiles stay until every new one has arrived.
+// map/tiles.json. The old tiles stay until every new one has arrived, and for good when the new
+// build's are the same.
 // node scripts/map-tiles.mjs [build, such as 20261122; the latest by default]
-import { mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  renameSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { join, resolve } from 'node:path';
 import { FetchSource, PMTiles } from 'pmtiles';
 import { siteSchema } from '../src/content/schema.ts';
@@ -42,10 +51,25 @@ for (let z = 12; z <= 15; z++) {
       );
   await Promise.all(jobs);
 }
+// Tiles equal to the committed ones keep their build: same address, so browsers keep their copies.
+const info = join(dir, 'map', 'tiles.json');
+const old = existsSync(info) && JSON.parse(readFileSync(info, 'utf8'));
+const same = (file) => {
+  const kept = join(out, old.build, file);
+  return existsSync(kept) && readFileSync(kept).equals(readFileSync(join(next, build, file)));
+};
+if (
+  old?.count === count &&
+  JSON.stringify(old.box) === JSON.stringify(map.box) &&
+  readdirSync(join(next, build), { recursive: true })
+    .filter((f) => f.endsWith('.mvt'))
+    .every(same)
+) {
+  rmSync(next, { recursive: true, force: true });
+  console.log(`build ${build} has the same ${count} tiles, so build ${old.build} stays`);
+  process.exit();
+}
 rmSync(out, { recursive: true, force: true });
 renameSync(next, out);
-writeFileSync(
-  join(dir, 'map', 'tiles.json'),
-  `${JSON.stringify({ build, box: map.box, count })}\n`,
-);
+writeFileSync(info, `${JSON.stringify({ build, box: map.box, count })}\n`);
 console.log(`${count} tiles of build ${build}, ${Math.round(bytes / 1000)} kB, in ${out}`);

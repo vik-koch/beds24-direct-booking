@@ -160,7 +160,8 @@ content. The application has no wording, no colour and no typeface of its own. T
   for a year. Cut them when the map gets a box, when the box changes, or when the map should show
   newer data: `node scripts/map-tiles.mjs` takes the latest build,
   `node scripts/map-tiles.mjs 20261122` that day's. The old tiles stay until every new one has
-  arrived. The demo's box is 62 tiles, 773 kB.
+  arrived, and keep their build when the newer build's tiles are the same. The demo's box is 62
+  tiles, 773 kB.
 - **The walking routes** are `map/routes.json`: one line from each apartment to each place, with its
   metres and minutes on foot, from OSRM's foot profile on
   [routing.openstreetmap.de](https://routing.openstreetmap.de/). Compute them with
@@ -185,6 +186,11 @@ content. The application has no wording, no colour and no typeface of its own. T
   lift's name is the one OpenStreetMap has, in the local language on every page.
 - **The three scripts** read the folder `CONTENT_DIR` names, the demo's without it, and write into
   its `map/`; commit what they write. A site that drops its map deletes the folder.
+- **Fresh map data every week:** the map data workflow runs the three scripts every Monday and
+  proposes any change in a pull request whose description names the tiles' build and each changed
+  route and lift ([ADR 15](adr/0015-map-data-in-a-weekly-pull-request.md)). Walk a changed route, or
+  check it on the map, before merging. A site of its own sets it up as
+  [`deploying-a-site.md`](deploying-a-site.md) says.
 - **The season's colours:** `theme.css` sets one season's accents on `:root` and, with two seasons,
   the other's under its attribute, as the demo does with
   `[data-season='summer'] { --color-accent: …; --color-accent-soft: …; }`.
