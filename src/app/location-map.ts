@@ -171,9 +171,9 @@ function flavor(c: (name: string) => string): Flavor {
   // The land in the season's tint, the village on the page's ground; a wood is a shade darker,
   // with its trees.
   const green = c('accent-soft');
-  // At least 3:1 against the land and the ground, as are the routes, the lifts and the pins'
+  // At least 3:1 against the land, a wood and the ground, as are the routes, the lifts and the pins'
   // outlines.
-  const casing = mix(green, c('ink-soft'), 0.8);
+  const casing = mix(green, c('ink-soft'), 0.85);
   const water = c('water');
   return {
     ...namedFlavor('light'),
@@ -192,7 +192,7 @@ function flavor(c: (name: string) => string): Flavor {
     water,
     // Rivers' and lakes' names, on a halo in the water's colour: at least 4.5:1.
     ocean_label: mix(water, c('ink'), 0.8),
-    buildings: mix(c('oak'), c('edge'), 0.15),
+    buildings: mix(c('oak'), c('edge'), 0.2),
     other: casing,
     minor_service: road,
     minor_a: road,
@@ -985,7 +985,7 @@ export class LocationMap {
       },
     );
     // A wood's trees over its green.
-    const wood = mix(c('accent-soft'), c('accent'), 0.15);
+    const wood = mix(c('accent-soft'), c('accent'), 0.1);
     base.splice(
       base.findIndex((layer) => layer.id === 'landuse_urban_green'),
       0,
@@ -995,7 +995,7 @@ export class LocationMap {
         source: 'town',
         'source-layer': 'landuse',
         filter: ['in', ['get', 'kind'], ['literal', ['forest', 'wood']]],
-        paint: { 'fill-pattern': `trees|${wood}|${mix(wood, c('accent'), 0.6)}` },
+        paint: { 'fill-pattern': `trees|${wood}|${mix(wood, c('accent'), 0.25)}` },
       },
     );
     // Paths and tracks, dashed in the trails' colour as hiking maps draw them.
@@ -1012,7 +1012,7 @@ export class LocationMap {
       ] as FilterSpecification,
       paint: {
         'line-color': c('trail'),
-        'line-width': ['interpolate', ['linear'], ['zoom'], 12, 1, 16, 2],
+        'line-width': ['interpolate', ['linear'], ['zoom'], 12, 0.75, 16, 1.25],
         'line-dasharray': [3, 1.5],
       },
     });
@@ -1026,7 +1026,7 @@ export class LocationMap {
         source: 'lifts',
         paint: {
           'line-color': c('ink'),
-          'line-width': ['interpolate', ['linear'], ['zoom'], 12, 1, 16, 2],
+          'line-width': ['interpolate', ['linear'], ['zoom'], 12, 1, 16, 1.5],
         },
       },
       // Short ticks across the line, as OpenStreetMap draws a lift's pylons.

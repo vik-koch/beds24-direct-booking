@@ -16,7 +16,7 @@ colors:
   summer-soft: '#deede8'
   on-accent: '#ffffff'
   water: '#b9d3e3'
-  trail: '#9a5a2b'
+  trail: '#827142'
   poi-food: '#b5542e'
   poi-shop: '#7b4f8e'
   poi-transport: '#2f6aa3'
@@ -157,8 +157,8 @@ the season's soft accent and the village, its houses and shops, the page's groun
 darker with small trees in a darker shade of the accent. Roads are outlined at 3:1 on both.
 
 - **Lake** (#b9d3e3): water. Its names are four fifths ink on it, above 5:1.
-- **Trail Brown** (#9a5a2b): paths and tracks, dashed, at least 3.5:1 on the ground, a park and a
-  wood.
+- **Trail Olive** (#827142): paths and tracks, thin and dashed, at least 3:1 on the ground, the
+  land, a wood and a building.
 - **The places' icons**, Lucide's in a group's colour with no circle, 18 px with lines of 2.5 in its
   24 units, at least 3:1 against the ground, the land and a building: **Terracotta** (#b5542e) for
   food and drink, **Plum** (#7b4f8e) for shops, **Harbour Blue** (#2f6aa3) for transport and
