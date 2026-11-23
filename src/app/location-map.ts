@@ -646,7 +646,6 @@ function flavor(p: ReturnType<typeof palette>): Flavor {
         /* Over every label; a chosen pin over the others. */
         z-index: 1;
         color: var(--color-accent);
-        cursor: pointer;
         --ng-icon__size: calc(var(--head) * 0.6);
         --pin: var(--color-surface);
         /* A white pin's outline stands out from the map at 3:1; a filled one needs none. */
@@ -667,6 +666,10 @@ function flavor(p: ReturnType<typeof palette>): Flavor {
           transition:
             background-color 0.2s,
             box-shadow 0.2s;
+        }
+
+        &:is(button) {
+          cursor: pointer;
         }
 
         &:is(button):hover::before {
