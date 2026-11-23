@@ -596,6 +596,34 @@ function flavor(p: ReturnType<typeof palette>): Flavor {
       outline-offset: -3px;
     }
 
+    /* The hint to zoom with Ctrl or move with two fingers: a pill above the attribution, from
+       48rem beside the panel, the map not dimmed. */
+    .location-map .maplibregl-cooperative-gesture-screen {
+      inset: auto 3rem 2.75rem;
+      padding: 0;
+      background: none;
+      color: var(--color-ink);
+      font-family: var(--font-sans);
+      font-size: 0.875rem;
+      line-height: 1.25rem;
+      text-align: center;
+
+      @media (min-width: 48rem) {
+        left: 26rem;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        transition: none;
+      }
+
+      > div {
+        padding: 0.5rem 1rem;
+        border-radius: var(--radius-control);
+        background: var(--color-surface);
+        box-shadow: var(--shadow-control);
+      }
+    }
+
     @layer components {
       /* On a phone the panel follows the map; from 48rem it lies over the map's left side. */
       .location-map {
@@ -717,7 +745,7 @@ function flavor(p: ReturnType<typeof palette>): Flavor {
         padding: 0.125rem 0.5rem;
         border-radius: var(--radius-control);
         background: var(--color-surface);
-        box-shadow: 0 0.25rem 0.75rem -0.25rem rgb(39 50 58 / 0.35);
+        box-shadow: var(--shadow-control);
         color: var(--color-ink);
         /* MapLibre sets its own font on the map; a label takes the theme's. */
         font-family: var(--font-sans);
@@ -831,7 +859,7 @@ function flavor(p: ReturnType<typeof palette>): Flavor {
       .map-pill {
         border-radius: var(--radius-control);
         background: var(--color-surface);
-        box-shadow: 0 0.25rem 0.75rem -0.25rem rgb(39 50 58 / 0.35);
+        box-shadow: var(--shadow-control);
       }
 
       /* A place's icon, its name with the distance at the end of the line, its text below. */

@@ -126,32 +126,36 @@ test('a second click on the chosen apartment clears the choice', async ({ page }
   await expect(panel(page).getByRole('radio', { name: 'Lärche' })).not.toBeChecked();
 });
 
-test("the map's hint to hold Ctrl while scrolling stays under the panel", async ({
-  page,
-  isMobile,
-}) => {
-  test.skip(
+for (const width of [1280, 320]) {
+  test(`at ${width} px the map's hint is a pill clear of its controls, the map not dimmed`, async ({
+    page,
     isMobile,
-    'A phone has no mouse wheel; the hint lies under the panel in every engine alike.',
-  );
-  await page.setViewportSize({ width: 1280, height: 900 });
-  await openMap(page);
-  const hint = page.locator('.maplibregl-cooperative-gesture-screen');
-  await page.locator('.maplibregl-canvas').hover({ position: { x: 800, y: 300 } });
-  // A wheel while the page still scrolls the map into view can miss it.
-  await expect(async () => {
-    await page.mouse.wheel(0, 40);
-    await expect(hint).toHaveClass(/maplibregl-show/, { timeout: 1000 });
-    // The hint fades away again soon: under load it may be gone before a later look.
-    await expect(hint).toHaveCSS('opacity', '1', { timeout: 1000 });
-  }).toPass();
-  // The panel's white ground stays white: the hint's dark veil lies only on the map.
-  const shot = await panel(page).screenshot();
-  const { data, info } = await sharp(shot).raw().toBuffer({ resolveWithObject: true });
-  // A pixel of the padding above the panel's first line, away from its round corners.
-  const at = (8 * info.width + Math.round(info.width / 2)) * info.channels;
-  expect(Math.min(...data.subarray(at, at + 3))).toBeGreaterThan(240);
-});
+  }) => {
+    test.skip(isMobile, 'A phone has no mouse wheel; its hint takes the same place.');
+    await page.setViewportSize({ width, height: 900 });
+    await openMap(page);
+    const hint = page.locator('.maplibregl-cooperative-gesture-screen');
+    await page.locator('.maplibregl-canvas').hover({ position: { x: width / 2, y: 100 } });
+    // A wheel while the page still scrolls the map into view can miss it.
+    await expect(async () => {
+      await page.mouse.wheel(0, 40);
+      await expect(hint).toHaveClass(/maplibregl-show/, { timeout: 1000 });
+    }).toPass();
+    await expect(hint).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+    const pill = (await hint.locator('div:visible').boundingBox())!;
+    for (const control of ['.map-panel', '.map-zoom', '.maplibregl-ctrl-attrib']) {
+      const box = (await page.locator(control).boundingBox())!;
+      const apart =
+        pill.x + pill.width <= box.x ||
+        box.x + box.width <= pill.x ||
+        pill.y + pill.height <= box.y ||
+        box.y + box.height <= pill.y;
+      expect(apart, `the hint clear of ${control}`).toBe(true);
+    }
+    expect(pill.x).toBeGreaterThanOrEqual(0);
+    expect(pill.x + pill.width).toBeLessThanOrEqual(width);
+  });
+}
 
 // Once the fold has finished: a view the fold moved would be moving by then.
 const folded = (page: Page) =>

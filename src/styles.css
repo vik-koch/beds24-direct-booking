@@ -44,6 +44,7 @@
   --radius-card: 1.5rem;
   --radius-menu: 1rem;
   --shadow-card: 0 1.5rem 3rem -1.5rem rgb(39 50 58 / 0.25);
+  --shadow-control: 0 0.25rem 0.75rem -0.25rem rgb(39 50 58 / 0.35);
   /* The focus ring of every control; each sets its own offset. */
   --focus-ring: 2px solid var(--color-accent);
   /* A text link is as tall as a control to be touched, but its ring as tall as a small one. */
