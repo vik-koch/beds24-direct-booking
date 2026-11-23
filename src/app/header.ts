@@ -98,7 +98,7 @@ import { address, LANGUAGE, TEXTS } from './texts';
         #menu="hlmSheet"
         side="right"
         class="header-narrow"
-        (stateChanged)="menuOpen.set($event === 'open')"
+        (stateChanged)="hold($event === 'open')"
         (closed)="settle()"
       >
         <button class="icon-button" hlmSheetTrigger [attr.aria-label]="texts.nav.menu">
@@ -201,12 +201,16 @@ export class Header {
   private followed = false;
   // A language chosen in the sheet, followed once the sheet has closed.
   private pending?: string;
+  // From the sheet's opening until it has closed, its scroll lock reads as the page's top.
+  private held = false;
 
   constructor() {
     const destroyRef = inject(DestroyRef);
     const navigation = this.router.currentNavigation();
     const arrival: { place?: Place | null } | undefined =
       navigation?.trigger === 'imperative' ? navigation.extras.state : undefined;
+    // The first render has the page at its top, before the place is put back.
+    if (arrival?.place) this.scrolled.set(true);
     afterNextRender(() => {
       const window = this.document.defaultView!;
       // Placed in the first render, before the router's fade takes the new page's picture.
@@ -218,7 +222,9 @@ export class Header {
           : this.document.querySelector<HTMLElement>('.header-narrow .icon-button');
         control?.focus({ preventScroll: true });
       }
-      const update = () => this.scrolled.set(window.scrollY > 0);
+      const update = () => {
+        if (!this.held) this.scrolled.set(window.scrollY > 0);
+      };
       update();
       window.addEventListener('scroll', update, { passive: true });
       destroyRef.onDestroy(() => window.removeEventListener('scroll', update));
@@ -237,6 +243,11 @@ export class Header {
     menu.close();
   }
 
+  protected hold(open: boolean) {
+    this.menuOpen.set(open);
+    this.held ||= open;
+  }
+
   protected follow(menu: { close: () => void }) {
     this.followed = true;
     menu.close();
@@ -244,6 +255,7 @@ export class Header {
 
   // The closing sheet puts the page back where it was opened: place it again after a link.
   protected settle() {
+    this.held = false;
     const pending = this.pending;
     this.pending = undefined;
     if (pending) return this.go(pending);
