@@ -243,6 +243,18 @@ const fitting = (width: number, height: number) =>
     ),
   );
 
+// The view the last map left, kept only in the browser: the next map the application draws, such
+// as the other language's after a change of language, opens as the visitor left this one. A page
+// the browser loads starts afresh.
+let left:
+  | {
+      chosen?: string;
+      picked?: string;
+      all: boolean;
+      camera?: { center: [number, number]; zoom: number };
+    }
+  | undefined;
+
 // The three channels of a colour in the form normal() gives: #rrggbb, or rgba() with an alpha.
 const channels = (color: string) =>
   color.startsWith('#')
@@ -858,16 +870,26 @@ export class LocationMap {
   // a view passes below 16 on its way from 16 to 16.
   protected readonly far = signal(false);
   protected readonly lucideName = lucideName;
-  protected readonly chosen = signal<string | undefined>(undefined);
-  protected readonly picked = signal<string | undefined>(undefined);
-  protected readonly all = signal(false);
+  protected readonly chosen = signal(left?.chosen);
+  protected readonly picked = signal(left?.picked);
+  protected readonly all = signal(left?.all ?? false);
   protected readonly shown = computed(() => map.places.filter((p) => this.all() || !p.more));
   protected readonly drawn = signal<MapLibre | undefined>(undefined);
   private readonly injector = inject(Injector);
 
   constructor() {
     const destroyed = inject(DestroyRef);
+    let camera = left?.camera;
     afterNextRender(async () => {
+      destroyed.onDestroy(() => {
+        const drawn = this.drawn();
+        left = {
+          chosen: this.chosen(),
+          picked: this.picked(),
+          all: this.all(),
+          camera: drawn && { center: drawn.getCenter().toArray(), zoom: drawn.getZoom() },
+        };
+      });
       const { LngLatBounds, Map, Marker, getVersion, setWorkerUrl } = await import('maplibre-gl');
       // Served beside the page's files; the version gives a new one a new address.
       setWorkerUrl(`/map/maplibre-gl-worker.mjs?v=${getVersion()}`);
@@ -884,6 +906,7 @@ export class LocationMap {
         drawn = new Map({
           container: this.canvas().nativeElement,
           style: this.style(),
+          ...camera,
           maxBounds: [map.box.west, map.box.south, map.box.east, map.box.north],
           maxZoom: this.maxZoom,
           maxPitch: 0,
@@ -990,6 +1013,8 @@ export class LocationMap {
           const lines = routes.filter(
             (r) => r.apartment === this.chosen() && shown.some((p) => p.key === r.place),
           );
+          // A view handed over stands until the next choice.
+          if (camera) return void (camera = undefined);
           const points: [number, number][] = lines.length
             ? lines.flatMap(walk)
             : [...(picked ? [] : this.apartments), ...shown].map(({ lon, lat }) => [lon!, lat!]);
@@ -1021,7 +1046,8 @@ export class LocationMap {
           if (zoom !== undefined) this.far.set(zoom < 16);
           drawn.fitBounds(bounds, {
             ...view,
-            animate: !matchMedia('(prefers-reduced-motion: reduce)').matches && !!this.drawn(),
+            animate:
+              !matchMedia('(prefers-reduced-motion: reduce)').matches && !!untracked(this.drawn),
           });
         },
         { injector: this.injector },

@@ -411,6 +411,49 @@ test('a change of season keeps the choice and shows the places in that season', 
   await expect(panel(page).getByRole('radio', { name: 'Lärche' })).toBeChecked();
 });
 
+test('a change of language keeps the view, the apartment and the places; a load starts afresh', async ({
+  page,
+}) => {
+  // Without motion the view stands still once reached.
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await openMap(page);
+  const pins = () =>
+    page.locator('.map-frame').evaluate((frame) => {
+      const { x, y } = frame.getBoundingClientRect();
+      return ['Ahorn', 'Lärche'].map((name) => {
+        const box = frame.querySelector(`.map-pin[aria-label="${name}"]`)!.getBoundingClientRect();
+        return [Math.round(box.x - x), Math.round(box.y - y)];
+      });
+    });
+  const first = await pins();
+  await panel(page).getByText('Lärche').click();
+  await panel(page).locator('.map-unfold').click();
+  await places(page).filter({ hasText: 'Supermarket' }).getByRole('button').click();
+  await page.getByRole('button', { name: 'Zoom out' }).click();
+  await expect.poll(pins).not.toEqual(first);
+  const left = await pins();
+  const menu = page.getByRole('button', { name: 'Language: English' });
+  await menu.focus();
+  await page.keyboard.press('Enter');
+  await page.getByRole('link', { name: 'Deutsch' }).click();
+  await expect(page).toHaveURL(/\/de$/);
+  await expect(page.locator('.location-map[data-drawn]')).toBeVisible({ timeout: 20000 });
+  await expect(panel(page).getByRole('radio', { name: 'Lärche' })).toBeChecked();
+  await expect(panel(page).locator('.map-unfold')).toHaveAttribute('aria-expanded', 'true');
+  await expect(places(page).filter({ hasText: 'Supermarkt' }).getByRole('button')).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  expect(await pins()).toEqual(left);
+  await page.reload();
+  await scrollToMap(page);
+  await expect(page.locator('.location-map[data-drawn]')).toBeVisible({ timeout: 20000 });
+  await expect(panel(page).getByRole('radio', { checked: true })).toHaveCount(0);
+  await expect(panel(page).locator('.map-unfold')).toHaveAttribute('aria-expanded', 'false');
+  await expect.poll(pins).toEqual(first);
+});
+
 test('without WebGL the panel stands alone and works', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(String(error)));
