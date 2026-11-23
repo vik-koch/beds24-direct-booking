@@ -8,6 +8,8 @@ import {
   ElementRef,
   inject,
   Injector,
+  input,
+  linkedSignal,
   signal,
   untracked,
   viewChild,
@@ -95,7 +97,7 @@ import { lucideName } from '../content/names';
 import type { Route } from '../content/schema';
 import { handover } from './map-handover';
 import { Season } from './season';
-import { LANGUAGE, TEXTS } from './texts';
+import { address, LANGUAGE, TEXTS } from './texts';
 
 const map = site.map!;
 // The points of interest the map shows, by their kind in the tiles, each with its Lucide icon, in
@@ -411,22 +413,24 @@ function flavor(p: ReturnType<typeof palette>): Flavor {
   template: `
     <div class="location-map" [attr.data-drawn]="drawn() ? '' : null">
       <div #panel class="map-panel">
-        <fieldset>
-          <legend class="label">{{ texts.from }}</legend>
-          <div class="map-choices">
-            @for (apartment of apartments; track apartment.slug) {
-              <label>
-                <input
-                  type="radio"
-                  name="map-apartment"
-                  [checked]="chosen() === apartment.slug"
-                  (click)="choose(apartment.slug)"
-                />
-                <span>{{ apartment.name }}</span>
-              </label>
-            }
-          </div>
-        </fieldset>
+        @if (!apartment()) {
+          <fieldset>
+            <legend class="label">{{ texts.from }}</legend>
+            <div class="map-choices">
+              @for (apartment of apartments(); track apartment.slug) {
+                <label>
+                  <input
+                    type="radio"
+                    name="map-apartment"
+                    [checked]="chosen() === apartment.slug"
+                    (click)="choose(apartment.slug)"
+                  />
+                  <span>{{ apartment.name }}</span>
+                </label>
+              }
+            </div>
+          </fieldset>
+        }
         <ul class="map-places">
           @for (place of defaults; track place.key) {
             <ng-container *ngTemplateOutlet="line; context: { $implicit: place }" />
@@ -479,7 +483,7 @@ function flavor(p: ReturnType<typeof palette>): Flavor {
       </div>
       <!-- After the panel, so that the keyboard reaches the choices first, also on a phone, where
            the panel shows below the map. -->
-      <div class="map-frame" [class.map-far]="far()">
+      <div class="map-frame map-size" [class.map-far]="far()">
         <!-- Replaced by a map taken over, with its own element: no binding here. -->
         <div #canvas class="map-canvas"></div>
         <div class="map-zoom">
@@ -514,10 +518,11 @@ function flavor(p: ReturnType<typeof palette>): Flavor {
         </div>
       </div>
       <!-- The map takes these as its markers; until it is drawn they stay out of sight. -->
-      @for (apartment of apartments; track apartment.slug) {
+      @for (apartment of apartments(); track apartment.slug) {
         <span
           #marker
           class="map-label"
+          [class.cursor-auto]="apartment.slug === this.apartment()"
           aria-hidden="true"
           [attr.data-anchor]="apartment.mapLabel === 'left' ? 'right' : 'left'"
           [attr.data-lat]="apartment.lat"
@@ -540,19 +545,33 @@ function flavor(p: ReturnType<typeof palette>): Flavor {
           >
         }
       }
-      @for (apartment of apartments; track apartment.slug) {
-        <button
-          #marker
-          type="button"
-          class="map-pin"
-          [attr.aria-label]="apartment.name"
-          [attr.data-lat]="apartment.lat"
-          [attr.data-lon]="apartment.lon"
-          [attr.aria-pressed]="chosen() === apartment.slug"
-          (click)="choose(apartment.slug)"
-        >
-          <ng-icon name="lucideHouse" aria-hidden="true" />
-        </button>
+      @for (apartment of apartments(); track apartment.slug) {
+        <!-- On its own page an apartment stays chosen: its pin is no button. -->
+        @if (this.apartment()) {
+          <span
+            #marker
+            class="map-pin"
+            role="img"
+            [attr.aria-label]="apartment.name"
+            [attr.data-lat]="apartment.lat"
+            [attr.data-lon]="apartment.lon"
+          >
+            <ng-icon name="lucideHouse" aria-hidden="true" />
+          </span>
+        } @else {
+          <button
+            #marker
+            type="button"
+            class="map-pin"
+            [attr.aria-label]="apartment.name"
+            [attr.data-lat]="apartment.lat"
+            [attr.data-lon]="apartment.lon"
+            [attr.aria-pressed]="chosen() === apartment.slug"
+            (click)="choose(apartment.slug)"
+          >
+            <ng-icon name="lucideHouse" aria-hidden="true" />
+          </button>
+        }
       }
       @for (place of shown(); track place.key) {
         <button
@@ -587,16 +606,9 @@ function flavor(p: ReturnType<typeof palette>): Flavor {
         margin-inline: auto;
       }
 
-      /* On a phone a square, so that the panel below it starts within the screen. */
       .map-frame {
         position: relative;
-        aspect-ratio: 1;
         background: var(--color-ground);
-
-        @media (min-width: 48rem) {
-          aspect-ratio: auto;
-          height: clamp(28rem, 70svh, 48rem);
-        }
       }
 
       /* Its own layers, such as the hint to zoom with Ctrl, stay under the panel. */
@@ -634,7 +646,6 @@ function flavor(p: ReturnType<typeof palette>): Flavor {
         /* Over every label; a chosen pin over the others. */
         z-index: 1;
         color: var(--color-accent);
-        cursor: pointer;
         --ng-icon__size: calc(var(--head) * 0.6);
         --pin: var(--color-surface);
         /* A white pin's outline stands out from the map at 3:1; a filled one needs none. */
@@ -657,7 +668,11 @@ function flavor(p: ReturnType<typeof palette>): Flavor {
             box-shadow 0.2s;
         }
 
-        &:hover::before {
+        &:is(button) {
+          cursor: pointer;
+        }
+
+        &:is(button):hover::before {
           box-shadow:
             0 0 0 1.5px var(--outline),
             0.375rem 0.375rem 1rem -0.25rem var(--color-ink);
@@ -672,7 +687,7 @@ function flavor(p: ReturnType<typeof palette>): Flavor {
           }
         }
 
-        &[aria-pressed='true'] {
+        &:is([aria-pressed='true'], span) {
           z-index: 2;
           color: var(--color-on-accent);
           --pin: var(--color-accent);
@@ -876,7 +891,11 @@ export class LocationMap {
   private readonly markers = viewChildren<ElementRef<HTMLElement>>('marker');
   private readonly panel = viewChild.required<ElementRef<HTMLElement>>('panel');
   protected readonly map = map;
-  protected readonly apartments = site.apartments;
+  // On an apartment's page, that apartment alone, chosen.
+  readonly apartment = input<string>();
+  protected readonly apartments = computed(() =>
+    site.apartments.filter(({ slug }) => !this.apartment() || slug === this.apartment()),
+  );
   protected readonly defaults = map.places.filter((place) => !place.more);
   protected readonly more = map.places.filter((place) => place.more);
   protected readonly maxZoom = 18;
@@ -887,7 +906,7 @@ export class LocationMap {
   // render: the pins would grow or shrink.
   protected readonly far = signal(!!handover.drawn && this.zoom() < 16);
   protected readonly lucideName = lucideName;
-  protected readonly chosen = signal(handover.chosen);
+  protected readonly chosen = linkedSignal(() => this.apartment() ?? handover.chosen);
   protected readonly picked = signal(handover.picked);
   protected readonly all = signal(handover.all ?? false);
   protected readonly shown = computed(() => map.places.filter((p) => this.all() || !p.more));
@@ -899,14 +918,15 @@ export class LocationMap {
   constructor() {
     const destroyed = inject(DestroyRef);
     afterNextRender(async () => {
-      // Only a home page takes the map and the choices over, as after a change of language or
+      // Only the same page takes the map and the choices over, as after a change of language or
       // Back; other pages let them go.
-      const home = () => {
+      const same = () => {
         const to = this.router.currentNavigation()?.finalUrl?.toString().split(/[?#]/)[0];
-        return site.languages.some(({ code }) => to === `/${code}`);
+        const slug = this.apartment();
+        return site.languages.some((l) => to === address(l, slug ? 'apartment' : 'home', slug));
       };
       destroyed.onDestroy(() => {
-        const kept = home();
+        const kept = same();
         handover.chosen = kept ? this.chosen() : undefined;
         handover.picked = kept ? this.picked() : undefined;
         handover.all = kept && this.all();
@@ -1053,7 +1073,7 @@ export class LocationMap {
         );
         const points: [number, number][] = lines.length
           ? lines.flatMap(walk)
-          : [...(picked ? [] : this.apartments), ...shown].map(({ lon, lat }) => [lon!, lat!]);
+          : [...(picked ? [] : this.apartments()), ...shown].map(({ lon, lat }) => [lon!, lat!]);
         const bounds = points.reduce(
           (box, point) => box.extend(point),
           new LngLatBounds(points[0], points[0]),
@@ -1065,7 +1085,8 @@ export class LocationMap {
         const view = {
           padding: {
             top: 64,
-            right: 96,
+            // Room for the controls and a distance's label beside a pin under them.
+            right: 144,
             bottom: 48,
             left: over ? panel.right - frame.left + 48 : 48,
           },
@@ -1104,7 +1125,7 @@ export class LocationMap {
       if (kept) ready();
       else drawn.once('load', ready);
       destroyed.onDestroy(() => {
-        if (!this.drawn() || !home()) return drawn.remove();
+        if (!this.drawn() || !same()) return drawn.remove();
         for (const marker of markers.values()) marker.remove();
         for (const listener of listeners) listener.unsubscribe();
         handover.drawn = drawn;
@@ -1123,9 +1144,10 @@ export class LocationMap {
     return routes.find((r) => r.apartment === this.chosen() && r.place === place);
   }
 
-  // A second click on the chosen apartment or place clears the choice.
+  // A second click on the chosen apartment or place clears the choice, but not on the apartment's
+  // own page.
   protected choose(slug: string) {
-    this.chosen.set(this.chosen() === slug ? undefined : slug);
+    if (!this.apartment()) this.chosen.set(this.chosen() === slug ? undefined : slug);
   }
 
   protected pick(place: string) {

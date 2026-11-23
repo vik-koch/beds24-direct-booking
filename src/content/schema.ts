@@ -4,8 +4,23 @@ import { letters, seasonNames, type SeasonName } from './names.ts';
 export { lucideName, seasonNames, type SeasonName } from './names.ts';
 
 const segment = z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/);
-// `#top` is the page's top, where the site name leads on the home page.
-const anchor = segment.refine((value) => value !== 'top', 'top is the page’s top');
+// `#top` is the page's top, where the site name leads on the home page; the other names are the
+// pages' own ids, which an anchor of the same name would lead to instead.
+const taken = [
+  'top',
+  'content',
+  'booking',
+  'booking-title',
+  'booking-season',
+  'guests-note',
+  'description',
+  'amenities',
+  'map-more',
+];
+const anchor = segment.refine(
+  (value) => !taken.includes(value) && !value.startsWith('month-'),
+  'taken by the pages: top, an id they hold, or month-…',
+);
 const text = z.string().refine((value) => value.trim() !== '', 'empty or only spaces');
 
 const unique = <T>(list: T[], key: (item: T) => unknown) =>

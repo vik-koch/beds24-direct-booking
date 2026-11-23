@@ -88,6 +88,10 @@ Top to bottom. Each section other than the hero has an anchor that the header li
 4. **Where it is:** a map with marked places, and the same places as a list.
 5. **Who we are:** a short text with contact, and a link to the company page.
 
+An apartment's page ends with the same map, under the same anchor, with that apartment alone and
+always chosen: its routes drawn and their distances in the list. Its address in the facts below the
+name leads there.
+
 ## Layout rules
 
 - **Height:** every section other than the hero is as tall as its content.

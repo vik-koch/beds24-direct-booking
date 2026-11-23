@@ -487,9 +487,13 @@ test('every tab stop on an apartment page shows a focus ring', async ({ page, br
   expect(cells).toHaveLength(8);
   expect(seen).toEqual([
     'a Alle Wohnungen',
+    'a Musterweg 7, Saalbach',
     ...cells,
     'button Anreise und Abreise',
     'button Hausordnung',
+    expect.stringMatching(/^button Schattberg X-press/),
+    expect.stringMatching(/^button Kohlmaisbahn/),
+    'button Weitere Orte',
   ]);
   // Between the pictures and the terms: the season, the view, the month, its weeks and the guests.
   expect(panel).toEqual(
