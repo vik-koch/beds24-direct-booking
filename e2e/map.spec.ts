@@ -392,7 +392,8 @@ test('the lifts are drawn in ink, and every point of interest finds its icon', a
   for (let i = 0; i < 2; i++) await page.getByRole('button', { name: 'Zoom in' }).click();
   await places(page).first().getByRole('button').click();
   await expect(page.getByRole('button', { name: 'Zoom out' })).toBeEnabled();
-  await page.waitForTimeout(2000);
+  // The restaurants beside the gondola draw their icons' rust: the places' icons are drawn.
+  await expect.poll(() => accentPixels(page, 'poi-food')).toBeGreaterThan(20);
   expect(missing).toEqual([]);
 });
 
