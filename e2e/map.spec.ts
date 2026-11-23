@@ -709,6 +709,36 @@ test("an apartment's page shows its map with it alone, chosen for good", async (
   expect(results.violations.map((v) => v.id)).toEqual([]);
 });
 
+for (const width of [320, 390])
+  test(`at ${width} px an apartment's map shows its pins and labels clear of the controls`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 844 });
+    await openMap(page, '/en/apartments/ahorn');
+    const hidden = await page.evaluate(() => {
+      const box = (element: Element) => element.getBoundingClientRect();
+      const frame = box(document.querySelector('.map-frame')!);
+      const controls = [...document.querySelectorAll('.map-zoom .map-pill')].map(box);
+      return [...document.querySelectorAll('.map-label, .map-pin')]
+        .filter((element) => {
+          const b = box(element);
+          const out =
+            b.left < frame.left ||
+            b.right > frame.right ||
+            b.top < frame.top ||
+            b.bottom > frame.bottom;
+          return (
+            out ||
+            controls.some(
+              (c) => b.left < c.right && b.right > c.left && b.top < c.bottom && b.bottom > c.top,
+            )
+          );
+        })
+        .map((element) => element.textContent!.trim() || element.getAttribute('aria-label'));
+    });
+    expect(hidden).toEqual([]);
+  });
+
 test("an apartment's address leads to its map, which then loads", async ({ page }) => {
   const asked: string[] = [];
   page.on('request', (request) => asked.push(request.url()));

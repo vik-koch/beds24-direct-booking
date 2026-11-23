@@ -1082,7 +1082,8 @@ export class LocationMap {
         const view = {
           padding: {
             top: 64,
-            right: 96,
+            // Room for the controls and a distance's label beside a pin under them.
+            right: 144,
             bottom: 48,
             left: over ? panel.right - frame.left + 48 : 48,
           },
