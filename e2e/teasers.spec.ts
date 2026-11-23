@@ -161,10 +161,6 @@ test(
   },
 );
 
-interface Probe {
-  gaps: { season: string; gap: number }[] | null;
-}
-
 test('the price keeps its space after “from” while the seasons cross-fade', async ({ page }) => {
   for (const path of ['/en', '/de']) {
     await page.goto(path);
@@ -175,35 +171,37 @@ test('the price keeps its space after “from” while the seasons cross-fade', 
     if (!(await page.locator(`.teaser-price > [data-for=${await season()}] strong`).count()))
       await toOtherSeason(page);
     const leaving = await season();
-    // Each frame, the gap between the word and the price on every line that is fading.
-    await page.evaluate(() => {
-      const probe = window as unknown as Probe;
-      const gaps = (probe.gaps = []) as Probe['gaps'];
-      const measure = () => {
-        for (const line of document.querySelectorAll<HTMLElement>('.teaser-price > span')) {
-          const price = line.querySelector('strong');
-          const word = price?.previousSibling;
-          const opacity = Number(getComputedStyle(line).opacity);
-          if (!price || !word || opacity === 0 || opacity === 1) continue;
-          const range = document.createRange();
-          range.selectNodeContents(word);
-          range.setEnd(word, word.textContent!.trimEnd().length);
-          const gap = price.getBoundingClientRect().left - range.getBoundingClientRect().right;
-          gaps.push({ season: line.dataset['for']!, gap });
+    // Each line's fade is held halfway as it starts, so a slow browser cannot pass it by.
+    await page.evaluate(() =>
+      document.addEventListener('transitionrun', ({ target }) => {
+        if (!(target as Element).matches('.teaser-price > span')) return;
+        for (const fade of (target as Element).getAnimations()) {
+          fade.pause();
+          fade.currentTime = 100;
         }
-        if (probe.gaps) requestAnimationFrame(measure);
-      };
-      requestAnimationFrame(measure);
-    });
-    await toOtherSeason(page);
-    const gaps = await page.evaluate(() => {
-      const probe = window as unknown as Probe;
-      const gaps = probe.gaps!;
-      probe.gaps = null;
-      return gaps;
-    });
+      }),
+    );
+    await page.locator('.other-season').click();
+    const held = page.locator(`.teaser-price > [data-for=${leaving}]`).first();
+    await expect
+      .poll(() => held.evaluate((line) => line.getAnimations().length))
+      .toBeGreaterThan(0);
+    // The gap between the word and the price on every line held in its fade.
+    const gaps = await page.evaluate(() =>
+      [...document.querySelectorAll<HTMLElement>('.teaser-price > span')].flatMap((line) => {
+        const price = line.querySelector('strong');
+        const word = price?.previousSibling;
+        if (!price || !word || !line.getAnimations().length) return [];
+        const range = document.createRange();
+        range.selectNodeContents(word);
+        range.setEnd(word, word.textContent!.trimEnd().length);
+        const gap = price.getBoundingClientRect().left - range.getBoundingClientRect().right;
+        return [{ season: line.dataset['for']!, gap }];
+      }),
+    );
     expect(gaps.filter((one) => one.season === leaving).length, path).toBeGreaterThan(0);
     expect(Math.min(...gaps.map((one) => one.gap)), path).toBeGreaterThan(2);
+    await page.evaluate(() => document.getAnimations().forEach((one) => one.finish()));
   }
 });
 
