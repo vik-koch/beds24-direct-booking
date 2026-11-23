@@ -690,6 +690,13 @@ test('a map colour counts when declared, not in a comment, with any space before
   assert.doesNotThrow(() => readContent(dir));
   writeFileSync(file, theme.replace(/(--color-poi-shop:[^;]+;)/, '/* $1 */'));
   assert.throws(() => readContent(dir), /--color-poi-shop: a map needs it/);
+  // Only in one season's rule, it would leave the other season without it.
+  const [declaration] = theme.match(/--color-poi-shop:[^;]+;/);
+  writeFileSync(
+    file,
+    theme.replace(declaration, '').replace(/(\[data-season='summer'\] \{)/, `$1 ${declaration}`),
+  );
+  assert.throws(() => readContent(dir), /--color-poi-shop: a map needs it/);
 });
 
 test('the lifts are taken for the box the map has now', () => {
