@@ -29,6 +29,19 @@ async function accentPixels(page: Page, color = 'accent') {
 }
 
 const panel = (page: Page) => page.locator('.map-panel');
+// A walk's distance as the English page writes it, from the committed routes, which the weekly map
+// data run may change.
+const walk = (apartment: string, place = 'schattberg') => {
+  const { features } = JSON.parse(readFileSync('content/demo/map/routes.json', 'utf8'));
+  const { meters } = features.find(
+    ({ properties: p }: { properties: Record<string, string> }) =>
+      p['apartment'] === apartment && p['place'] === place,
+  ).properties;
+  const [value, unit] = meters < 1000 ? [meters, 'meter'] : [meters / 1000, 'kilometer'];
+  return new Intl.NumberFormat('en-GB', { style: 'unit', unit, maximumFractionDigits: 1 }).format(
+    value,
+  );
+};
 // The places shown: folded ones are inert.
 const places = (page: Page) => panel(page).locator('.map-places:not([inert]) li');
 
@@ -81,15 +94,17 @@ test("a pin or the panel chooses an apartment, whose routes' distances show", as
   await page.getByRole('button', { name: 'Ahorn' }).click();
   await expect.poll(() => accentPixels(page)).toBeGreaterThan(500);
   await expect(panel(page).getByRole('radio', { name: 'Ahorn' })).toBeChecked();
-  await expect(places(page).first()).toContainText('900 m');
-  await expect(page.locator('.map-label').filter({ hasText: /^900 m$/ })).toBeVisible();
+  await expect(places(page).first()).toContainText(walk('ahorn'));
+  await expect(
+    page.locator('.map-label').filter({ hasText: new RegExp(`^${walk('ahorn')}$`) }),
+  ).toBeVisible();
   await panel(page).getByText('Zirbe').click();
   await expect(page.getByRole('button', { name: 'Zirbe' })).toHaveAttribute('aria-pressed', 'true');
   await expect(page.getByRole('button', { name: 'Ahorn' })).toHaveAttribute(
     'aria-pressed',
     'false',
   );
-  await expect(places(page).first()).toContainText('1.1 km');
+  await expect(places(page).first()).toContainText(walk('zirbe'));
 });
 
 test('a second click on the chosen apartment clears the choice', async ({ page }) => {
@@ -589,7 +604,7 @@ test('without WebGL the panel stands alone and works', async ({ page }) => {
   // what the site supports.
   await expect(page.locator('link[href^="/map/maplibre-gl.css"]')).toHaveCount(1);
   await panel(page).getByText('Ahorn').click();
-  await expect(places(page).first()).toContainText('900 m');
+  await expect(places(page).first()).toContainText(walk('ahorn'));
   await expect(page.locator('.location-map')).not.toHaveAttribute('data-drawn');
   await expect(page.locator('.map-pin').first()).toBeHidden();
   await expect(page.getByRole('button', { name: 'Zoom in' })).toBeHidden();
