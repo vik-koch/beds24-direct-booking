@@ -1089,11 +1089,7 @@ export class LocationMap {
         type: 'fill',
         source: 'town',
         'source-layer': 'landuse',
-        filter: [
-          'in',
-          ['get', 'kind'],
-          ['literal', ['pitch', 'playground', 'recreation_ground', 'garden']],
-        ],
+        filter: ['in', ['get', 'kind'], ['literal', ['pitch', 'playground', 'recreation_ground']]],
         paint: { 'fill-color': p.pitch },
       },
     );
