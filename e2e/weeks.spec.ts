@@ -513,6 +513,43 @@ test('the card moves to the new rows’ own height, so nothing jumps at the end'
   }
 });
 
+test('a switch above the list keeps the section below it still', async ({ page }) => {
+  for (const width of [1280, 320]) {
+    await page.setViewportSize({ width, height: 700 });
+    await page.goto('/en');
+    await expect(page.locator('html')).toHaveAttribute('data-started', '');
+    const heading = page.getByRole('heading', { name: 'Location' });
+    await heading.evaluate((element) =>
+      window.scrollTo({
+        top: element.getBoundingClientRect().top + scrollY - 300,
+        behavior: 'instant',
+      }),
+    );
+    for (const name of ['summer', 'winter']) {
+      // The heading's place on each frame until the change has settled.
+      const tops = heading.evaluate(
+        (element, name) =>
+          new Promise<number[]>((resolve) => {
+            const tops: number[] = [];
+            const measure = () => {
+              tops.push(element.getBoundingClientRect().top);
+              const done = document.documentElement.dataset['season'] === name;
+              if (done && !document.getAnimations().length) resolve(tops);
+              else requestAnimationFrame(measure);
+            };
+            requestAnimationFrame(measure);
+          }),
+        name,
+      );
+      // By the pointer: a locator's click would scroll the label into view first.
+      const box = (await page.locator(`.season-switch label[data-for=${name}]`).boundingBox())!;
+      await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+      const moved = await tops;
+      expect(Math.max(...moved) - Math.min(...moved), `${name} at ${width}`).toBeLessThan(0.5);
+    }
+  }
+});
+
 test('with reduced motion the season changes at once', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/en');

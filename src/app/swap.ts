@@ -14,7 +14,10 @@ export function swapper() {
   ) => {
     moves.forEach((one) => one.cancel());
     box.querySelectorAll('[data-leaving]').forEach((one) => one.removeAttribute('data-leaving'));
-    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return false;
+    // Above the view the box changes at once: the browser keeps what is read below in place, and
+    // step by step it would shake by a pixel on each step.
+    const above = box.getBoundingClientRect().bottom <= 0;
+    if (above || matchMedia('(prefers-reduced-motion: reduce)').matches) return false;
     old.setAttribute('data-leaving', '');
     const after = next.offsetHeight;
     const duration = direction ? 450 : 600;
