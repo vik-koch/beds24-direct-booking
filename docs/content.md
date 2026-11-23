@@ -15,7 +15,7 @@ content. The application has no wording, no colour and no typeface of its own. T
 | `theme.css` | The palette and the typeface as custom properties on `:root`, and the typeface's `@font-face`. |
 | `fonts/` | Optional: the font files `theme.css` refers to, as `fonts/<file>`. |
 | `pictures/` | The pictures `site.json` names, such as each season's hero photo. |
-| `map/` | With a map: its tiles and walking routes, written by the two map scripts and committed. |
+| `map/` | With a map: its tiles, walking routes and lifts, written by the three map scripts and committed. |
 
 - **Fonts are served at `/fonts/<file>`** under their own names, and every page preloads each
   `.woff2` file, so the font arrives with the stylesheet instead of after it. Browsers keep them for
@@ -139,12 +139,13 @@ content. The application has no wording, no colour and no typeface of its own. T
   `{ "key": "schattberg", "icon": "cable-car", "lat": 47.39031, "lon": 12.63528 }`. The icon is any
   Lucide icon and shows the place's kind; a place with `"more": true` is shown only once the map's
   list of more places is unfolded. With a map, every apartment's file gives `lat` and `lon`, the
-  point where a guest leaves the house; without one, none does. Every point lies inside the box.
-  Pins of points close together, such as two apartments 50 m apart, may overlap in the map's first
-  view on a phone: each pin's tip still marks its point, a chosen pin lies over the others, and
-  zooming in separates them. A texts file names each place under `map.places.<key>` with its `name`,
-  and optionally a text for each season the site lists, such as `"winter": "Gondola to the slopes"`.
-  How the map is built is [ADR 14](adr/0014-the-map.md).
+  point where a guest leaves the house; without one, none does. An apartment whose name would cover
+  a neighbour's pin can give `"mapLabel": "left"` to show it left of its pin. Every point lies
+  inside the box. Pins of points close together, such as two apartments 50 m apart, may overlap in
+  the map's first view on a phone: each pin's tip still marks its point, a chosen pin lies over the
+  others, and zooming in separates them. A texts file names each place under `map.places.<key>` with
+  its `name`, and optionally a text for each season the site lists, such as
+  `"winter": "Gondola to the slopes"`. How the map is built is [ADR 14](adr/0014-the-map.md).
 - **The map's wording** (`map` in a texts file, beside `places`): `label` names the map for screen
   readers; `from` heads the panel's choice of apartment and `more` labels its switch. The page
   writes each walk's distance in its own language, such as "900 m" or "1,4 km". `zoomIn`, `zoomOut`
@@ -166,14 +167,22 @@ content. The application has no wording, no colour and no typeface of its own. T
   `node scripts/map-routes.mjs` when a point is added, moved or removed; it asks for one route a
   second, as the service asks. The routes follow OpenStreetMap's ways, which do not say what is
   closed or a piste in winter: walk them before a site shows them.
-- **Both scripts** read the folder `CONTENT_DIR` names, the demo's without it, and write into its
-  `map/`; commit what they write. A site that drops its map deletes the folder.
+- **The lifts** are `map/lifts.json`: OpenStreetMap's aerial lifts inside the box, gondolas, cable
+  cars, chairlifts and drag lifts, each with its kind and its local name, taken through the
+  [Overpass API](https://overpass-api.de/) with the box they were taken for. Take them with
+  `node scripts/map-lifts.mjs` when the box changes or a lift is built or removed; the content build
+  refuses a file taken for another box. Magic carpets, zip lines and goods lifts are left out, and a
+  lift's name is the one OpenStreetMap has, in the local language on every page.
+- **The three scripts** read the folder `CONTENT_DIR` names, the demo's without it, and write into
+  its `map/`; commit what they write. A site that drops its map deletes the folder.
 - **The season's colours:** `theme.css` sets one season's accents on `:root` and, with two seasons,
   the other's under its attribute, as the demo does with
   `[data-season='summer'] { --color-accent: …; --color-accent-soft: …; }`.
 - **The theme's names** are the ones in [`DESIGN.md`](../DESIGN.md): `--font-sans` and the
-  `--color-*` properties of `content/demo/theme.css`. Every pair of text and ground is measured
-  before a theme is used.
+  `--color-*` properties of `content/demo/theme.css`. A site with a map also names the map's own
+  colours, which the content build requires: `--color-water`, `--color-trail`, `--color-pitch`, and
+  the colours of the places' icons, `--color-poi-food`, `-shop`, `-transport`, `-service` and
+  `-culture`. Every pair of text and ground is measured before a theme is used.
 
 ## Its boundaries
 

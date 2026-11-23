@@ -41,12 +41,18 @@ A spike (#254, branch `spike/254-map`, not merged) tried the decision below in t
    committed. A visitor's browser asks no routing service. OSRM was chosen over Valhalla and
    BRouter, whose routes were longer and took detours, in a
    [comparison on #254](https://github.com/vik-koch/beds24-direct-booking/issues/254#issuecomment-7080109602).
-5. **The places are content:** the coordinates of an apartment in its file, the places in
+5. **Lifts too are taken by a script** (#268): the aerial lifts inside the box, from OpenStreetMap
+   through the Overpass API, into a committed file. The tiles have none.
+6. **The places are content:** the coordinates of an apartment in its file, the places in
    `site.json` with a name per language, a kind, and a text per season. The gondolas show by
-   default, the others behind one switch.
-6. **A list beside the map carries the same facts** for keyboard and screen reader users and for a
+   default, the others once the list of more places is unfolded.
+7. **A list beside the map carries the same facts** for keyboard and screen reader users and for a
    browser that cannot draw the map. The map adds to the list; it never replaces it.
-7. **The attribution stays visible,** "© OpenStreetMap · Protomaps", with a link to OpenStreetMap's
+8. **Points of interest carry Lucide icons** (#268), in their group's theme colour, filled white,
+   drawn in the browser when a tile first needs one, for the kinds the map lists; others are left
+   out. Woods get a pattern of Lucide trees the same way. No sprite sheet is served, and the icons
+   match the site's own.
+9. **The attribution stays visible,** "© OpenStreetMap · Protomaps", with a link to OpenStreetMap's
    copyright page. It is the only link out, and nothing is fetched from there unless it is followed.
 
 ## Options
@@ -94,11 +100,13 @@ A spike (#254, branch `spike/254-map`, not merged) tried the decision below in t
   above; MapLibre, `pmtiles` and `@protomaps/basemaps` are under the BSD 3-Clause licence (their
   package files). routing.openstreetmap.de allows one request a second with a valid user agent
   ([its about page](https://routing.openstreetmap.de/about.html), read 2026-11-22), which the routes
-  script keeps.
-- **Not checked:** whether the computed routes take paths that are closed or groomed for skiing in
-  winter, which the tiles do not record, so the owner of a deployment has to walk them; points of
-  interest in the private deployment's town; the reading that a map loading nothing from a third
-  party needs no consent prompt in the EU, which is ours, not a lawyer's.
+  script keeps. The lifts script sends one query to overpass-api.de per run, with a user agent, and
+  waits 15 seconds before trying again when the server is busy.
+- **Not checked:** Overpass's usage policy, beyond one query per run; whether the computed routes
+  take paths that are closed or groomed for skiing in winter, which the tiles do not record, so the
+  owner of a deployment has to walk them; points of interest in the private deployment's town; the
+  reading that a map loading nothing from a third party needs no consent prompt in the EU, which is
+  ours, not a lawyer's.
 
 ## Consequences
 
@@ -108,7 +116,7 @@ A spike (#254, branch `spike/254-map`, not merged) tried the decision below in t
   script writes every zoom from 0 up, so the measured extract was
   `node scripts/map-tiles.mjs 20261122 12.6,47.375,12.67,47.405 15 <dir>` with zoom 0 to 11 deleted
   afterwards; the content slice's script takes the zoom range. Routes are computed again when a pin
-  moves.
+  moves, lifts taken again when the box changes.
 - **Firefox's e2e tests see no map,** so they cover the list and the page without the map; the map
   itself is tested in Chromium and WebKit.
 - **The map's chunk is large,** but loaded only by visitors who scroll to it.

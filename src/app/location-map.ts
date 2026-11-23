@@ -15,15 +15,78 @@ import {
   ViewEncapsulation,
 } from '@angular/core';
 import { NgIcon, provideIcons } from '@ng-icons/core';
-import { lucideChevronDown, lucideHouse, lucideMinus, lucidePlus } from '@ng-icons/lucide';
+import {
+  lucideBanknote,
+  lucideBeef,
+  lucideBeer,
+  lucideBike,
+  lucideBinoculars,
+  lucideBookOpen,
+  lucideBus,
+  lucideCableCar,
+  lucideCakeSlice,
+  lucideCandy,
+  lucideCarrot,
+  lucideChevronDown,
+  lucideChurch,
+  lucideCigarette,
+  lucideClapperboard,
+  lucideCoffee,
+  lucideCroissant,
+  lucideDroplet,
+  lucideDumbbell,
+  lucideEgg,
+  lucideFish,
+  lucideFlagTriangleRight,
+  lucideFuel,
+  lucideGift,
+  lucideGraduationCap,
+  lucideHouse,
+  lucideIceCreamCone,
+  lucideInfo,
+  lucideLandmark,
+  lucideLibrary,
+  lucideMail,
+  lucideMilk,
+  lucideMinus,
+  lucideMountain,
+  lucideMountainSnow,
+  lucideNewspaper,
+  lucidePill,
+  lucidePlugZap,
+  lucidePlus,
+  lucideRecycle,
+  lucideSandwich,
+  lucideScissors,
+  lucideShirt,
+  lucideShoppingBasket,
+  lucideShoppingCart,
+  lucideSnowflake,
+  lucideSquareParking,
+  lucideStethoscope,
+  lucideStore,
+  lucideTent,
+  lucideToilet,
+  lucideToyBrick,
+  lucideTrainFront,
+  lucideTrash2,
+  lucideTreePine,
+  lucideTrophy,
+  lucideUtensils,
+  lucideWashingMachine,
+  lucideWaves,
+  lucideWine,
+} from '@ng-icons/lucide';
 import { layers, namedFlavor, type Flavor } from '@protomaps/basemaps';
 import type {
+  ExpressionSpecification,
   FilterSpecification,
   LayerSpecification,
   Map as MapLibre,
   StyleSpecification,
 } from 'maplibre-gl';
 import { icons } from '../content/generated/icons';
+import lifts from '../content/generated/lifts';
 import routes from '../content/generated/routes';
 import site from '../content/generated/site';
 import { lucideName } from '../content/names';
@@ -32,8 +95,140 @@ import { Season } from './season';
 import { LANGUAGE, TEXTS } from './texts';
 
 const map = site.map!;
-// Points of interest the map leaves out: the town's other places to stay.
-const lodging = ['hotel', 'guest_house', 'apartment', 'hostel', 'motel', 'chalet', 'camp_site'];
+// The points of interest the map shows, by their kind in the tiles, each with its Lucide icon, in
+// groups that each have a colour in the theme. A kind not listed, such as the town's other places
+// to stay, is left out.
+const groups: Record<string, Record<string, string>> = {
+  food: {
+    restaurant: lucideUtensils,
+    fast_food: lucideSandwich,
+    cafe: lucideCoffee,
+    bakery: lucideCroissant,
+    bar: lucideBeer,
+    pub: lucideBeer,
+    ice_cream: lucideIceCreamCone,
+  },
+  shop: {
+    supermarket: lucideShoppingCart,
+    convenience: lucideStore,
+    kiosk: lucideStore,
+    marketplace: lucideShoppingBasket,
+    butcher: lucideBeef,
+    cheese: lucideMilk,
+    dairy: lucideMilk,
+    deli: lucideSandwich,
+    greengrocer: lucideCarrot,
+    farm: lucideEgg,
+    pastry: lucideCakeSlice,
+    chocolate: lucideCandy,
+    confectionery: lucideCandy,
+    wine: lucideWine,
+    alcohol: lucideWine,
+    seafood: lucideFish,
+    // Lucide has no ski: a snowy mountain for the shops that sell and rent them.
+    sports: lucideMountainSnow,
+    ski: lucideMountainSnow,
+    ski_rental: lucideMountainSnow,
+    bicycle: lucideBike,
+    outdoor: lucideTent,
+    tobacco: lucideCigarette,
+    newsagent: lucideNewspaper,
+    clothes: lucideShirt,
+    gift: lucideGift,
+    books: lucideBookOpen,
+    hairdresser: lucideScissors,
+  },
+  transport: {
+    parking: lucideSquareParking,
+    fuel: lucideFuel,
+    bus_stop: lucideBus,
+    // Not the tiles': the ends of a gondola or a cable car, where guests board.
+    lift_station: lucideCableCar,
+    bus_station: lucideBus,
+    charging_station: lucidePlugZap,
+    station: lucideTrainFront,
+    bicycle_rental: lucideBike,
+  },
+  service: {
+    pharmacy: lucidePill,
+    doctors: lucideStethoscope,
+    dentist: lucideStethoscope,
+    laundry: lucideWashingMachine,
+    dry_cleaning: lucideWashingMachine,
+    atm: lucideBanknote,
+    bank: lucideBanknote,
+    post_office: lucideMail,
+    information: lucideInfo,
+    toilets: lucideToilet,
+    drinking_water: lucideDroplet,
+    recycling: lucideRecycle,
+    waste_disposal: lucideTrash2,
+  },
+  culture: {
+    place_of_worship: lucideChurch,
+    museum: lucideLandmark,
+    townhall: lucideLandmark,
+    swimming_pool: lucideWaves,
+    water_park: lucideWaves,
+    fitness_centre: lucideDumbbell,
+    sports_centre: lucideTrophy,
+    ice_rink: lucideSnowflake,
+    ski_school: lucideGraduationCap,
+    cinema: lucideClapperboard,
+    library: lucideLibrary,
+    viewpoint: lucideBinoculars,
+    peak: lucideMountain,
+    miniature_golf: lucideFlagTriangleRight,
+    playground: lucideToyBrick,
+  },
+};
+const kinds = Object.fromEntries(
+  Object.entries(groups).flatMap(([group, icons]) =>
+    Object.entries(icons).map(([kind, svg]) => [kind, { group, svg }]),
+  ),
+);
+// A route from the apartment's point to the place's: the router's line starts and ends on the
+// nearest way, which may be across a yard or a road.
+const walk = ({ apartment, place, line }: Route): [number, number][] => {
+  const [from, to] = [
+    site.apartments.find(({ slug }) => slug === apartment)!,
+    map.places.find(({ key }) => key === place)!,
+  ];
+  return [[from.lon!, from.lat!], ...line, [to.lon, to.lat]];
+};
+// What a guest looks for first shows two zooms before the tiles would show it; culture, the other
+// services and bus stops one zoom after, so that food and shops lead.
+const early = ['parking', 'atm', 'supermarket', 'pharmacy', 'information'];
+const late = [
+  ...Object.keys(groups['culture']!),
+  ...Object.keys(groups['service']!),
+  'bus_stop',
+].filter((kind) => !early.includes(kind));
+const iconZoom: ExpressionSpecification = [
+  '+',
+  ['get', 'min_zoom'],
+  ['match', ['get', 'kind'], early, -2, late, 1, 0],
+];
+// MapLibre lays a dash pattern out at the tile's whole zoom and stretches it up to twice as long
+// until the next: the routes' dashes shrink as much, in eighths, so that they keep their length.
+const dashes = (zoom: number) => {
+  const stretch = Math.round(2 ** (zoom % 1) * 8) / 8;
+  return [1 / stretch, 1.6 / stretch];
+};
+
+// A Lucide icon as an image in a colour, at a size in pixels, its lines as wide as given in its 24
+// units. An SVG drawn on a canvas needs its size in its own attributes.
+async function lucide(svg: string, size: number, color: string, stroke: number) {
+  const image = new Image();
+  image.src = `data:image/svg+xml,${encodeURIComponent(
+    svg
+      .replace('<svg ', `<svg width="${size}" height="${size}" `)
+      .replace('currentColor', color)
+      .replace('var(--ng-icon__stroke-width, 2)', `${stroke}`),
+  )}`;
+  await image.decode();
+  return image;
+}
 
 // The least zoom at which a view of this size stays inside the box: below it the map would show
 // where it has no tiles. Web Mercator's world is 512 px wide at zoom 0.
@@ -61,26 +256,103 @@ const mix = (a: string, b: string, t: number) => {
   const [x, y] = [channels(a), channels(b)];
   return `rgb(${x.map((n, i) => Math.round(n * (1 - t) + y[i]! * t)).join(', ')})`;
 };
+// A colour's OKLCH lightness, chroma and hue, and a colour from them: unlike a mix, a tint keeps
+// its lightness when its hue changes.
+const oklch = (color: string) => {
+  const [r, g, b] = channels(color).map((v) =>
+    (v /= 255) <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4,
+  ) as [number, number, number];
+  const [l, m, s] = [
+    0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b,
+    0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b,
+    0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b,
+  ].map(Math.cbrt) as [number, number, number];
+  const [a, z] = [
+    1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s,
+    0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s,
+  ];
+  return {
+    lightness: 0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s,
+    chroma: Math.hypot(a, z),
+    hue: Math.atan2(z, a),
+  };
+};
+const tint = (lightness: number, chroma: number, hue: number) => {
+  const [a, b] = [chroma * Math.cos(hue), chroma * Math.sin(hue)];
+  const [l, m, s] = [
+    lightness + 0.3963377774 * a + 0.2158037573 * b,
+    lightness - 0.1055613458 * a - 0.0638541728 * b,
+    lightness - 0.0894841775 * a - 1.291485548 * b,
+  ].map((v) => v ** 3) as [number, number, number];
+  return `rgb(${[
+    4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
+    -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
+    -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s,
+  ]
+    .map((v) =>
+      Math.round(
+        255 * Math.min(1, Math.max(0, v <= 0.0031308 ? 12.92 * v : 1.055 * v ** (1 / 2.4) - 0.055)),
+      ),
+    )
+    .join(', ')})`;
+};
 
-// Protomaps' light flavour in the theme's colours.
-function flavor(c: (name: string) => string): Flavor {
-  const [ground, road] = [c('ground'), c('surface')];
-  const green = c('accent-soft');
-  const casing = mix(ground, c('edge'), 0.35);
-  const poi = c('ink-soft');
+// Every colour the map draws, from the theme's. The land, its woods and their trees take the
+// accent's hue a little below the ground's lightness, so the map stays as light as the page and the
+// season shows in its tint alone. Outlines and lines keep 3:1 against the land, a wood and the
+// ground; names 4.5:1.
+function palette(c: (name: string) => string) {
+  const [ground, accent, water] = [c('ground'), c('accent'), c('water')];
+  const { lightness, chroma } = oklch(ground);
+  const accentHue = oklch(accent).hue;
+  const land = tint(lightness, chroma * 0.5, accentHue);
+  const wood = tint(lightness - 0.03, chroma * 1.5, accentHue);
+  return {
+    ground,
+    land,
+    wood,
+    tree: tint(lightness - 0.13, 0.035, accentHue),
+    pitch: c('pitch'),
+    building: mix(c('oak'), c('edge'), 0.15),
+    pedestrian: mix(ground, c('oak'), 0.5),
+    road: c('surface'),
+    casing: mix(land, c('ink-soft'), 0.85),
+    water,
+    bank: mix(water, c('poi-transport'), 0.75),
+    waterName: mix(water, c('ink'), 0.8),
+    trail: c('trail'),
+    footway: c('ink-soft'),
+    cycleway: c('poi-transport'),
+    ink: c('ink'),
+    inkSoft: c('ink-soft'),
+    route: accent,
+    // Beside a chosen place's route the others fade, no further than 3:1 against the ground.
+    faded: mix(accent, c('surface'), 0.25),
+    routeCasing: c('surface'),
+    poi: Object.fromEntries(Object.keys(groups).map((group) => [group, c(`poi-${group}`)])),
+  };
+}
+
+// Protomaps' light flavour in the map's colours.
+function flavor(p: ReturnType<typeof palette>): Flavor {
+  const { ground, land, road, casing } = p;
   return {
     ...namedFlavor('light'),
-    background: ground,
-    earth: ground,
-    park_a: green,
-    park_b: green,
-    wood_a: green,
-    wood_b: mix(green, c('accent'), 0.08),
-    scrub_a: green,
-    scrub_b: green,
-    pedestrian: mix(ground, c('oak'), 0.5),
-    water: mix(ground, c('accent'), 0.35),
-    buildings: c('oak'),
+    background: land,
+    earth: land,
+    industrial: ground,
+    school: ground,
+    hospital: ground,
+    park_a: land,
+    park_b: land,
+    wood_a: land,
+    wood_b: land,
+    scrub_a: land,
+    scrub_b: land,
+    pedestrian: p.pedestrian,
+    water: p.water,
+    ocean_label: p.waterName,
+    buildings: p.building,
     other: casing,
     minor_service: road,
     minor_a: road,
@@ -92,36 +364,25 @@ function flavor(c: (name: string) => string): Flavor {
     minor_service_casing: casing,
     major_casing_early: casing,
     major_casing_late: casing,
-    roads_label_minor: c('ink-soft'),
+    roads_label_minor: p.inkSoft,
     roads_label_minor_halo: road,
-    roads_label_major: c('ink-soft'),
+    roads_label_major: p.inkSoft,
     roads_label_major_halo: road,
-    subplace_label: c('ink-soft'),
+    subplace_label: p.inkSoft,
     subplace_label_halo: ground,
-    city_label: c('ink'),
+    city_label: p.ink,
     city_label_halo: ground,
-    address_label: c('ink-soft'),
+    address_label: p.inkSoft,
     address_label_halo: ground,
-    // Every kind of place in one soft ink, so that only our pins carry colour.
-    pois: {
-      blue: poi,
-      green: poi,
-      lapis: poi,
-      pink: poi,
-      red: poi,
-      slategray: poi,
-      tangerine: poi,
-      turquoise: poi,
-    },
     // The coarse land cover of lower zooms, in the same two tones as the land use above it.
     landcover: {
-      grassland: green,
-      barren: ground,
+      grassland: land,
+      barren: land,
       urban_area: ground,
-      farmland: green,
+      farmland: land,
       glacier: ground,
-      scrub: green,
-      forest: green,
+      scrub: land,
+      forest: land,
     },
     regular: 'theme',
     bold: 'theme',
@@ -207,7 +468,7 @@ function flavor(c: (name: string) => string): Flavor {
       <!-- After the panel, so that the keyboard reaches the choices first, also on a phone, where
            the panel shows below the map. -->
       <div class="map-frame">
-        <div #canvas class="map-canvas"></div>
+        <div #canvas class="map-canvas" [class.map-far]="far()"></div>
         <div class="map-zoom">
           <button
             type="button"
@@ -235,7 +496,7 @@ function flavor(c: (name: string) => string): Flavor {
           #marker
           class="map-label"
           aria-hidden="true"
-          data-anchor="left"
+          [attr.data-anchor]="apartment.mapLabel === 'left' ? 'right' : 'left'"
           [attr.data-lat]="apartment.lat"
           [attr.data-lon]="apartment.lon"
           (click)="choose(apartment.slug)"
@@ -325,30 +586,48 @@ function flavor(c: (name: string) => string): Flavor {
         height: 100%;
       }
 
+      /* The pins' heads, smaller when the map shows the whole town; at 1.5rem still the 24px a
+         target needs. */
+      .map-canvas {
+        --head: 1.75rem;
+
+        @media (prefers-reduced-motion: no-preference) {
+          transition: --head 0.2s ease-out;
+        }
+
+        &.map-far {
+          --head: 1.5rem;
+        }
+      }
+
       /* A teardrop with its icon in the head, its tip on the place: the element is as tall as the
-         head turned on its corner, 2.25rem times (1 + sqrt 2) / 2. */
+         head turned on its corner, (1 + sqrt 2) / 2 heads. */
       .map-pin {
         display: none;
         justify-items: center;
-        width: 2.25rem;
-        height: 2.75rem;
-        padding-top: 0.5625rem;
+        width: var(--head);
+        height: calc(var(--head) * 1.2071);
+        padding-top: calc(var(--head) / 5);
         /* Over every label; a chosen pin over the others. */
         z-index: 1;
         color: var(--color-accent);
         cursor: pointer;
-        --ng-icon__size: 1.125rem;
+        --ng-icon__size: calc(var(--head) * 0.6);
         --pin: var(--color-surface);
+        /* A white pin's outline stands out from the map at 3:1; a filled one needs none. */
+        --outline: var(--color-accent);
 
         &::before {
           content: '';
           position: absolute;
           inset: 0 0 auto;
           z-index: -1;
-          height: 2.25rem;
+          height: var(--head);
           border-radius: 50% 50% 0;
           background: var(--pin);
-          box-shadow: 0.25rem 0.25rem 0.75rem -0.25rem rgb(39 50 58 / 0.45);
+          box-shadow:
+            0 0 0 1.5px var(--outline),
+            0.25rem 0.25rem 0.75rem -0.25rem rgb(39 50 58 / 0.45);
           rotate: 45deg;
           transition:
             background-color 0.2s,
@@ -356,7 +635,9 @@ function flavor(c: (name: string) => string): Flavor {
         }
 
         &:hover::before {
-          box-shadow: 0.375rem 0.375rem 1rem -0.25rem var(--color-ink);
+          box-shadow:
+            0 0 0 1.5px var(--outline),
+            0.375rem 0.375rem 1rem -0.25rem var(--color-ink);
         }
 
         &:focus-visible {
@@ -372,6 +653,8 @@ function flavor(c: (name: string) => string): Flavor {
           z-index: 2;
           color: var(--color-on-accent);
           --pin: var(--color-accent);
+          /* Outlined in white, so that a chosen pin stands out from its route. */
+          --outline: var(--color-surface);
         }
 
         [data-drawn] & {
@@ -382,6 +665,7 @@ function flavor(c: (name: string) => string): Flavor {
       /* The apartments in the accent, the places in ink. */
       .map-place {
         color: var(--color-ink);
+        --outline: var(--color-ink);
 
         &[aria-pressed='true'] {
           color: var(--color-surface);
@@ -403,6 +687,12 @@ function flavor(c: (name: string) => string): Flavor {
         font-weight: 500;
         white-space: nowrap;
         cursor: pointer;
+        /* Its near edge beside the pin's head, level with its middle. */
+        translate: calc(var(--head) * 0.67) calc(var(--head) * -0.71);
+
+        &[data-anchor='right'] {
+          translate: calc(var(--head) * -0.67) calc(var(--head) * -0.71);
+        }
 
         [data-drawn] & {
           display: block;
@@ -564,6 +854,9 @@ export class LocationMap {
   protected readonly maxZoom = 18;
   protected readonly minZoom = signal(0);
   protected readonly zoom = signal(0);
+  // Smaller pins while the map shows the whole town; decided by the zoom a move ends at, as fitting
+  // a view passes below 16 on its way from 16 to 16.
+  protected readonly far = signal(false);
   protected readonly lucideName = lucideName;
   protected readonly chosen = signal<string | undefined>(undefined);
   protected readonly picked = signal<string | undefined>(undefined);
@@ -618,7 +911,47 @@ export class LocationMap {
       };
       hold();
       drawn.on('resize', hold);
-      drawn.on('zoom', () => this.zoom.set(drawn.getZoom()));
+      // The images the style names, drawn at twice their size when a tile first needs one: a
+      // place's icon in its group's colour filled white, 18 px, and a wood's trees, whose
+      // two colours are in their name: they change with the season.
+      drawn.setMissingStyleImageResolver(async (id) => {
+        const [trees, wood, tree] = id.split('|');
+        if (trees !== 'trees' && !(id in kinds)) return;
+        const color = (name: string) =>
+          getComputedStyle(this.document.documentElement)
+            .getPropertyValue(`--color-${name}`)
+            .trim();
+        const size = trees === 'trees' ? 64 : 36;
+        const canvas = Object.assign(this.document.createElement('canvas'), {
+          width: size,
+          height: size,
+        });
+        const context = canvas.getContext('2d')!;
+        if (trees === 'trees') {
+          context.fillStyle = wood!;
+          context.fillRect(0, 0, size, size);
+          const image = await lucide(lucideTreePine, 20, tree!, 1);
+          context.drawImage(image, 6, 6);
+          context.drawImage(image, 38, 38);
+        } else {
+          // Filled in the surface's white, so that each icon reads as a shape, not lines: every
+          // fill first, then every line, or a later shape's fill covers an earlier line.
+          const svg = kinds[id]!.svg.replace(
+            /(<svg[^>]*>)(.*)<\/svg>/,
+            `$1<g fill="${color('surface')}" stroke="none">$2</g>$2</svg>`,
+          );
+          const icon = await lucide(svg, size, color(`poi-${kinds[id]!.group}`), 1.5);
+          context.drawImage(icon, 0, 0);
+        }
+        if (!drawn.hasImage(id))
+          drawn.addImage(id, context.getImageData(0, 0, size, size), { pixelRatio: 2 });
+      });
+      drawn.on('zoom', () => {
+        this.zoom.set(drawn.getZoom());
+        if (drawn.getLayer('route'))
+          drawn.setPaintProperty('route', 'line-dasharray', dashes(drawn.getZoom()));
+      });
+      drawn.on('zoomend', () => this.far.set(drawn.getZoom() < 16));
       drawn.touchZoomRotate.disableRotation();
       drawn.keyboard.disableRotation();
       const markers = new globalThis.Map<HTMLElement, InstanceType<typeof Marker>>();
@@ -635,13 +968,11 @@ export class LocationMap {
             }
           for (const element of elements) {
             if (markers.has(element)) continue;
-            const label = element.dataset['anchor'] === 'left';
             markers.set(
               element,
               new Marker({
                 element,
-                anchor: label ? 'left' : 'bottom',
-                offset: label ? [24, -26] : [0, 0],
+                anchor: (element.dataset['anchor'] as 'left' | 'right' | undefined) ?? 'bottom',
               })
                 .setLngLat([+element.dataset['lon']!, +element.dataset['lat']!])
                 .addTo(drawn),
@@ -660,7 +991,7 @@ export class LocationMap {
             (r) => r.apartment === this.chosen() && shown.some((p) => p.key === r.place),
           );
           const points: [number, number][] = lines.length
-            ? lines.flatMap((route) => route.line)
+            ? lines.flatMap(walk)
             : [...(picked ? [] : this.apartments), ...shown].map(({ lon, lat }) => [lon!, lat!]);
           const bounds = points.reduce(
             (box, point) => box.extend(point),
@@ -670,15 +1001,26 @@ export class LocationMap {
           const panel = this.panel().nativeElement.getBoundingClientRect();
           // From 48rem the panel lies over the map's left side, on a phone below it.
           const over = panel.top < frame.bottom;
-          drawn.fitBounds(bounds, {
+          const view = {
             padding: {
               top: 64,
               right: 96,
               bottom: 48,
               left: over ? panel.right - frame.left + 48 : 48,
             },
-            // A lone place keeps a closer zoom the visitor has chosen.
-            maxZoom: picked && !lines.length ? Math.max(16, untracked(this.zoom)) : 16,
+            // A chosen place's route as close as it fits, a short one too; a lone place keeps a
+            // closer zoom the visitor has chosen.
+            maxZoom: picked
+              ? lines.length
+                ? this.maxZoom
+                : Math.max(16, untracked(this.zoom))
+              : 16,
+          };
+          // The pins take the size of the zoom the map eases to as it starts.
+          const zoom = drawn.cameraForBounds(bounds, view)?.zoom;
+          if (zoom !== undefined) this.far.set(zoom < 16);
+          drawn.fitBounds(bounds, {
+            ...view,
             animate: !matchMedia('(prefers-reduced-motion: reduce)').matches && !!this.drawn(),
           });
         },
@@ -686,6 +1028,7 @@ export class LocationMap {
       );
       drawn.on('load', () => {
         this.zoom.set(drawn.getZoom());
+        this.far.set(drawn.getZoom() < 16);
         this.drawn.set(drawn);
       });
       destroyed.onDestroy(() => drawn.remove());
@@ -767,21 +1110,302 @@ export class LocationMap {
       .map((route) => ({
         type: 'Feature' as const,
         properties: { picked: route.place === this.picked() },
-        geometry: { type: 'LineString' as const, coordinates: route.line },
+        geometry: { type: 'LineString' as const, coordinates: walk(route) },
       }));
-    const base = layers('town', flavor(c), { lang: this.language.code }).map(
-      (layer): LayerSpecification =>
-        layer.id === 'pois' && layer.type === 'symbol'
+    // The tiles' own entry for a place a pin marks, and a station under one, give way to the pin:
+    // whatever lies within a metre of it.
+    const pinned = this.shown().map(({ lat, lon }) => {
+      const [y, x] = [1 / 110540, 1 / (111320 * Math.cos((lat! * Math.PI) / 180))];
+      return [
+        [
+          [lon! - x, lat! - y],
+          [lon! + x, lat! - y],
+          [lon! + x, lat! + y],
+          [lon! - x, lat! + y],
+          [lon! - x, lat! - y],
+        ],
+      ];
+    });
+    const unpinned: ExpressionSpecification[] = pinned.length
+      ? [['!', ['within', { type: 'MultiPolygon', coordinates: pinned }]]]
+      : [];
+    const point = (coordinates: number[]) => ({
+      type: 'Feature' as const,
+      properties: {},
+      geometry: { type: 'Point' as const, coordinates },
+    });
+    // The points of interest are ours, each kind beside its icon; the tiles' least zoom for each
+    // stays. Paths are ours too. One-way arrows, which only drivers need, and roads under ground,
+    // which no one finds from the map, are left out.
+    const streets = ['living_street', 'pedestrian'];
+    const p = palette(c);
+    const base = layers('town', flavor(p), { lang: this.language.code })
+      .filter((layer) => !/^roads_(oneway|tunnels_|other|bridges_other)/.test(layer.id))
+      .map((layer): LayerSpecification => {
+        // Streets that guests walk are as wide as a road, in the pedestrian areas' shade.
+        if (layer.type === 'line' && /^roads_minor(_casing)?$/.test(layer.id))
+          return {
+            ...layer,
+            filter: ['any', layer.filter, ['in', 'kind_detail', ...streets]] as FilterSpecification,
+            ...(layer.id === 'roads_minor' && {
+              paint: {
+                ...layer.paint,
+                'line-color': ['match', ['get', 'kind_detail'], streets, p.pedestrian, p.road],
+              },
+            }),
+          };
+        // Streams in a deeper blue than the water, as the lines along its banks.
+        if (layer.id === 'water_stream')
+          return {
+            ...layer,
+            paint: { ...layer.paint, 'line-color': p.bank },
+          } as LayerSpecification;
+        if (layer.type !== 'symbol') return layer;
+        // A name along a line or over an area keeps its letters clear of what lies under it.
+        const clear = { ...layer, paint: { ...layer.paint, 'text-halo-width': 2 } };
+        // The quarters' names smaller than Protomaps draws them, so that they stay in the back.
+        if (layer.id === 'places_subplace')
+          return {
+            ...clear,
+            layout: {
+              ...clear.layout,
+              'text-size': ['interpolate', ['linear'], ['zoom'], 13, 10, 16, 12, 18, 14],
+            },
+          };
+        return layer.id === 'pois'
           ? {
-              ...layer,
+              ...clear,
               filter: [
                 'all',
-                layer.filter!,
-                ['!', ['in', ['get', 'kind'], ['literal', lodging]]],
+                ['in', ['get', 'kind'], ['literal', Object.keys(kinds)]],
+                ['>=', ['zoom'], iconZoom],
+                ...unpinned,
               ] as FilterSpecification,
+              // Protomaps' font, size and name; the name's place is ours.
+              layout: {
+                'text-font': layer.layout!['text-font'],
+                'text-size': layer.layout!['text-size'],
+                'text-max-width': layer.layout!['text-max-width'],
+                'text-justify': 'auto',
+                'icon-image': ['get', 'kind'],
+                // Beside, above or below its icon, wherever the name finds room.
+                'text-variable-anchor-offset': [
+                  'left',
+                  [1.4, 0],
+                  'right',
+                  [-1.4, 0],
+                  'top',
+                  [0, 1.2],
+                  'bottom',
+                  [0, -1.2],
+                ],
+                // A bus stop's icon is enough: its name is the stop's, often a place's beside it.
+                'text-field': [
+                  'case',
+                  ['==', ['get', 'kind'], 'bus_stop'],
+                  '',
+                  layer.layout!['text-field'] as ExpressionSpecification,
+                ],
+              },
+              // Every kind's name in the soft ink: Protomaps leaves the kinds it does not group,
+              // such as information, nearly as light as the ground.
+              paint: {
+                ...clear.paint,
+                'text-color': p.inkSoft,
+                'text-halo-color': p.ground,
+              },
             }
-          : layer,
+          : clear;
+      });
+    // The village's houses and shops on the page's ground, under its parks.
+    base.splice(
+      base.findIndex((layer) => layer.id === 'landuse_park'),
+      0,
+      {
+        id: 'village',
+        type: 'fill',
+        source: 'town',
+        'source-layer': 'landuse',
+        filter: ['in', ['get', 'kind'], ['literal', ['residential', 'commercial', 'retail']]],
+        paint: { 'fill-color': p.ground },
+      },
     );
+    // Pitches and playgrounds in their green, whatever the season.
+    base.splice(
+      base.findIndex((layer) => layer.id === 'landuse_park'),
+      0,
+      {
+        id: 'leisure',
+        type: 'fill',
+        source: 'town',
+        'source-layer': 'landuse',
+        filter: ['in', ['get', 'kind'], ['literal', ['pitch', 'playground', 'recreation_ground']]],
+        paint: { 'fill-color': p.pitch },
+      },
+    );
+    base.splice(base.findIndex((layer) => layer.id === 'water') + 1, 0, {
+      id: 'water-edge',
+      type: 'line',
+      source: 'town',
+      'source-layer': 'water',
+      filter: ['==', '$type', 'Polygon'],
+      paint: { 'line-color': p.bank, 'line-width': 1 },
+    });
+    // A wood's trees over its green.
+    base.splice(
+      base.findIndex((layer) => layer.id === 'landuse_urban_green'),
+      0,
+      {
+        id: 'woods',
+        type: 'fill',
+        source: 'town',
+        'source-layer': 'landuse',
+        filter: ['in', ['get', 'kind'], ['literal', ['forest', 'wood']]],
+        paint: { 'fill-pattern': `trees|${p.wood}|${p.tree}` },
+      },
+    );
+    // Under the roads, as OpenStreetMap draws them: paths and tracks dashed in the trails' colour,
+    // footways and steps dotted, cycleways dashed in the transport blue.
+    const path = (id: string, details: string[], color: string, dashes: number[]) =>
+      ({
+        id,
+        type: 'line',
+        source: 'town',
+        'source-layer': 'roads',
+        filter: ['all', ['!has', 'is_tunnel'], ['in', 'kind_detail', ...details]],
+        layout: { 'line-cap': dashes[0] ? 'butt' : 'round' },
+        paint: {
+          'line-color': color,
+          'line-width': ['interpolate', ['linear'], ['zoom'], 13, 0.5, 15, 0.75, 16, 1.25, 18, 2],
+          'line-dasharray': dashes,
+        },
+      }) as LayerSpecification;
+    base.splice(
+      base.findIndex((layer) => layer.id === 'roads_minor_service_casing'),
+      0,
+      path('trails', ['path', 'track'], p.trail, [3, 1.5]),
+      path('footways', ['footway', 'steps', 'corridor'], p.footway, [0, 2]),
+      path('cycleways', ['cycleway'], p.cycleway, [3, 1.5]),
+    );
+    // Until its icon shows, a place is a dot in its group's colour.
+    base.splice(
+      base.findIndex((layer) => layer.id === 'pois'),
+      0,
+      {
+        id: 'dots',
+        type: 'circle',
+        source: 'town',
+        'source-layer': 'pois',
+        filter: [
+          'all',
+          ['in', ['get', 'kind'], ['literal', Object.keys(kinds)]],
+          ['<', ['zoom'], iconZoom],
+          ...unpinned,
+        ],
+        paint: {
+          'circle-radius': 2,
+          // Grey while the whole town shows, in its group's colour closer in.
+          'circle-color': [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            15.5,
+            p.inkSoft,
+            16.5,
+            [
+              'match',
+              ['get', 'kind'],
+              ...Object.entries(groups).flatMap(([group, icons]) => [
+                Object.keys(icons),
+                p.poi[group],
+              ]),
+              p.ink,
+            ],
+          ] as unknown as ExpressionSpecification,
+        },
+      },
+    );
+    // The lifts lie over the roads and under every label, their names along them. As
+    // OpenStreetMap draws them, a gondola or a cable car in ink, a chair lift in soft ink and
+    // thinner, both with ticks for their pylons, and a drag lift in soft ink, dashed.
+    const main: ExpressionSpecification = [
+      'in',
+      ['get', 'kind'],
+      ['literal', ['gondola', 'cable_car', 'mixed_lift']],
+    ];
+    const drag: FilterSpecification = [
+      'in',
+      ['get', 'kind'],
+      ['literal', ['drag_lift', 't-bar', 'j-bar', 'platter', 'rope_tow']],
+    ];
+    const color: ExpressionSpecification = ['case', main, p.ink, p.inkSoft];
+    base.splice(
+      base.findIndex((layer) => layer.id === 'address_label'),
+      0,
+      {
+        id: 'lifts',
+        type: 'line',
+        source: 'lifts',
+        filter: ['!', drag],
+        paint: {
+          'line-color': color,
+          'line-width': [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            12,
+            ['case', main, 1, 0.75],
+            16,
+            ['case', main, 1.5, 1],
+          ],
+        },
+      },
+      {
+        id: 'drag-lifts',
+        type: 'line',
+        source: 'lifts',
+        filter: drag,
+        paint: {
+          'line-color': p.inkSoft,
+          'line-width': ['interpolate', ['linear'], ['zoom'], 12, 0.75, 16, 1],
+          'line-dasharray': [4, 3],
+        },
+      },
+      {
+        id: 'lift-ticks',
+        type: 'line',
+        source: 'lifts',
+        filter: ['!', drag],
+        paint: {
+          'line-color': color,
+          'line-width': ['interpolate', ['linear'], ['zoom'], 12, 4, 16, 7],
+          'line-dasharray': [0.2, 5],
+        },
+      },
+      {
+        id: 'lift-names',
+        type: 'symbol',
+        source: 'lifts',
+        minzoom: 14,
+        layout: {
+          'symbol-placement': 'line',
+          'text-field': ['get', 'name'],
+          // Beside the line, not on it.
+          'text-offset': [0, 1],
+          'text-font': ['theme'],
+          'text-size': 12,
+        },
+        paint: { 'text-color': color, 'text-halo-color': p.ground, 'text-halo-width': 1.5 },
+      },
+      {
+        id: 'stations',
+        type: 'symbol',
+        source: 'stations',
+        filter: ['all', ...unpinned],
+        layout: { 'icon-image': 'lift_station' },
+      },
+    );
+    const labels = base.findIndex((layer) => layer.type === 'symbol');
     return {
       version: 8,
       'font-faces': { theme: map.font },
@@ -798,15 +1422,47 @@ export class LocationMap {
             '<a href="https://www.openstreetmap.org/copyright">© OpenStreetMap</a> · Protomaps',
         },
         routes: { type: 'geojson', data: { type: 'FeatureCollection', features: lines } },
+        // Both ends of the chosen place's route.
+        ends: {
+          type: 'geojson',
+          data: {
+            type: 'FeatureCollection',
+            features: routes
+              .filter((r) => r.apartment === this.chosen() && r.place === this.picked())
+              .map(walk)
+              .flatMap((line) => [point(line[0]!), point(line.at(-1)!)]),
+          },
+        },
+        stations: {
+          type: 'geojson',
+          data: {
+            type: 'FeatureCollection',
+            features: lifts
+              .filter(({ kind }) => kind === 'gondola' || kind === 'cable_car')
+              .flatMap(({ line }) => [point(line[0]!), point(line.at(-1)!)]),
+          },
+        },
+        lifts: {
+          type: 'geojson',
+          data: {
+            type: 'FeatureCollection',
+            features: lifts.map(({ kind, name, line }) => ({
+              type: 'Feature',
+              properties: { kind, name },
+              geometry: { type: 'LineString', coordinates: line },
+            })),
+          },
+        },
       },
+      // Under every name, so that a walk along a street leaves the street's name legible.
       layers: [
-        ...base,
+        ...base.slice(0, labels),
         {
           id: 'route-casing',
           type: 'line',
           source: 'routes',
           layout: { 'line-cap': 'round', 'line-join': 'round' },
-          paint: { 'line-color': c('surface'), 'line-width': 7 },
+          paint: { 'line-color': p.routeCasing, 'line-width': 7 },
         },
         {
           id: 'route',
@@ -815,10 +1471,9 @@ export class LocationMap {
           filter: ['!', ['get', 'picked']],
           layout: { 'line-cap': 'round', 'line-join': 'round' },
           paint: {
-            // Beside a chosen place's route the others fade.
-            'line-color': this.picked() ? mix(c('accent'), c('surface'), 0.6) : c('accent'),
+            'line-color': this.picked() ? p.faded : p.route,
             'line-width': 3.5,
-            'line-dasharray': [1, 1.6],
+            'line-dasharray': dashes(untracked(this.zoom)),
           },
         },
         {
@@ -827,8 +1482,21 @@ export class LocationMap {
           source: 'routes',
           filter: ['get', 'picked'],
           layout: { 'line-cap': 'round', 'line-join': 'round' },
-          paint: { 'line-color': c('accent'), 'line-width': 4.5 },
+          paint: { 'line-color': p.route, 'line-width': 4.5 },
         },
+        // A white dot ringed in the accent under a pin's tip, where the line starts or ends.
+        {
+          id: 'route-ends',
+          type: 'circle',
+          source: 'ends',
+          paint: {
+            'circle-radius': 4,
+            'circle-color': p.routeCasing,
+            'circle-stroke-color': p.route,
+            'circle-stroke-width': 2.5,
+          },
+        },
+        ...base.slice(labels),
       ],
     };
   }

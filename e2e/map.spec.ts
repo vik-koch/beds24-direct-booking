@@ -3,20 +3,20 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 import sharp from 'sharp';
 
-// The pixels the map itself draws in the accent colour, the routes', with pins, labels and panel
-// hidden.
-async function accentPixels(page: Page) {
+// The pixels the map itself draws in a theme colour, the accent of the routes by default, with
+// pins, labels and panel hidden.
+async function accentPixels(page: Page, color = 'accent') {
   const hide = await page.addStyleTag({
     content: '.map-pin, .map-label, .map-panel { visibility: hidden !important; }',
   });
-  const [r, g, b] = await page.evaluate(() => {
+  const [r, g, b] = await page.evaluate((color) => {
     const canvas = document.createElement('canvas').getContext('2d')!;
     canvas.fillStyle = getComputedStyle(document.documentElement).getPropertyValue(
-      '--color-accent',
+      `--color-${color}`,
     );
     const hex = String(canvas.fillStyle);
     return [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
-  });
+  }, color);
   const shot = await page.locator('.location-map').screenshot();
   await hide.evaluate((element) => element.remove());
   const { data, info } = await sharp(shot).raw().toBuffer({ resolveWithObject: true });
@@ -377,6 +377,24 @@ test('a chosen place among the other places is cleared when they fold', async ({
   await panel(page).locator('.map-unfold').click();
   await panel(page).locator('.map-unfold').click();
   await expect(line).toHaveAttribute('aria-pressed', 'false');
+});
+
+test('the lifts are drawn in ink, and every point of interest finds its icon', async ({ page }) => {
+  const missing: string[] = [];
+  page.on('console', (message) => {
+    if (message.text().includes('could not be loaded')) missing.push(message.text());
+  });
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await openMap(page);
+  // Without the lifts about 30 pixels are ink, with them over 700.
+  await expect.poll(() => accentPixels(page, 'ink')).toBeGreaterThan(300);
+  // Close enough for the points of interest, which show from zoom 16 or later.
+  for (let i = 0; i < 2; i++) await page.getByRole('button', { name: 'Zoom in' }).click();
+  await places(page).first().getByRole('button').click();
+  await expect(page.getByRole('button', { name: 'Zoom out' })).toBeEnabled();
+  // The restaurants beside the gondola draw their icons' rust: the places' icons are drawn.
+  await expect.poll(() => accentPixels(page, 'poi-food')).toBeGreaterThan(20);
+  expect(missing).toEqual([]);
 });
 
 test('a change of season keeps the choice and shows the places in that season', async ({

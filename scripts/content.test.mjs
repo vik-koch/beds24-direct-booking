@@ -675,6 +675,41 @@ test('one route for each apartment and place, from the points they have now', ()
   );
 });
 
+test('a map needs the theme to name its own colours', () => {
+  const dir = changed('site.json', () => undefined);
+  const file = join(dir, 'theme.css');
+  writeFileSync(file, readFileSync(file, 'utf8').replace(/--color-poi-shop:[^;]+;/, ''));
+  assert.throws(() => readContent(dir), /theme\.css\n {2}--color-poi-shop: a map needs it/);
+});
+
+test('a map colour counts when declared, not in a comment, with any space before its colon', () => {
+  const dir = changed('site.json', () => undefined);
+  const file = join(dir, 'theme.css');
+  const theme = readFileSync(file, 'utf8');
+  writeFileSync(file, theme.replace(/(--color-poi-shop):/, '$1 :'));
+  assert.doesNotThrow(() => readContent(dir));
+  writeFileSync(file, theme.replace(/(--color-poi-shop:[^;]+;)/, '/* $1 */'));
+  assert.throws(() => readContent(dir), /--color-poi-shop: a map needs it/);
+  // Only in one season's rule, it would leave the other season without it.
+  const [declaration] = theme.match(/--color-poi-shop:[^;]+;/);
+  writeFileSync(
+    file,
+    theme.replace(declaration, '').replace(/(\[data-season='summer'\] \{)/, `$1 ${declaration}`),
+  );
+  assert.throws(() => readContent(dir), /--color-poi-shop: a map needs it/);
+});
+
+test('the lifts are taken for the box the map has now', () => {
+  const lifts = changed('map/lifts.json', (file) => (file.box.east += 0.001));
+  assert.throws(
+    () => readContent(lifts),
+    /map\/lifts\.json\n {2}box: taken for another box than site\.json's; run scripts\/map-lifts\.mjs/,
+  );
+  const gone = changed('site.json', () => undefined);
+  rmSync(join(gone, 'map', 'lifts.json'));
+  assert.throws(() => readContent(gone), /map\/lifts\.json\n {2}\(file\): missing; run/);
+});
+
 test('the tiles are served by their build, and the site module names their address', async () => {
   const out = mkdtempSync(join(root, 'generated-'));
   await writeContent('content/demo', out, cache);
@@ -702,4 +737,13 @@ test('the routes go into a module of their own, for the map alone', async () => 
   const routes = readFileSync(join(out, 'routes.ts'), 'utf8');
   assert.match(routes, /"apartment": "zirbe",\s+"place": "schattberg",\s+"meters": 1090/);
   assert.doesNotMatch(readFileSync(join(out, 'site.ts'), 'utf8'), /"line"/);
+});
+
+test('the lifts go into a module of their own, for the map alone', async () => {
+  const out = mkdtempSync(join(root, 'generated-'));
+  await writeContent('content/demo', out, cache);
+  assert.match(
+    readFileSync(join(out, 'lifts.ts'), 'utf8'),
+    /"kind": "gondola",\s+"name": "Kohlmaisbahn I",\s+"line": \[/,
+  );
 });

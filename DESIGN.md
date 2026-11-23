@@ -15,6 +15,14 @@ colors:
   summer: '#2c7060'
   summer-soft: '#deede8'
   on-accent: '#ffffff'
+  water: '#b9d3e3'
+  trail: '#827142'
+  pitch: '#c5e5c9'
+  poi-food: '#c2410c'
+  poi-shop: '#9440b0'
+  poi-transport: '#0068b4'
+  poi-service: '#c4283f'
+  poi-culture: '#8a6234'
 typography:
   display:
     fontFamily: 'Jost, system-ui, sans-serif'
@@ -142,6 +150,30 @@ A neutral, slightly warm light palette with a single accent that changes with th
 - **Hairline** (#e9e3db): the line between two rows of a list.
 - **Edge** (#7c878f): the outline of a control that has no fill, at 3:1 against the ground.
 - **Navy Tint** (#e2e8f0) and **Emerald Tint** (#deede8): the hover behind a price.
+
+### Map
+
+The map's own colours stay the same in every season, so that water is always blue and pitches green.
+The land takes the accent's hue just below the ground's lightness, mixed in OKLCH so that it keeps
+the page's lightness, and the village, its houses and shops, the page's ground; woods are a shade
+darker with small trees in a darker shade of the same hue. Roads are outlined at 3:1 on both;
+streets for walking are as wide, in the pedestrian areas' shade. Roads under ground are left out.
+
+- **Lake** (#b9d3e3): water, its banks and streams in a deeper blue, three quarters of the way to
+  the transport blue, at least 3:1 against the land. Its names are four fifths ink on it, above 5:1.
+- **Pitch** (#c5e5c9): pitches and playgrounds.
+- **Trail Olive** (#827142): paths and tracks, thin and dashed, at least 3:1 on the ground, the
+  land, a wood and a building. Footways and steps are dotted in soft ink, cycleways dashed in the
+  transport blue.
+- **The places' icons**, Lucide's in a group's colour, filled white, with no circle, 18 px with
+  lines of 1.5 in its 24 units, at least 3:1 against the ground, the land and a building: **Rust**
+  (#c2410c) for food and drink, **Violet** (#9440b0) for shops, **Sign Blue** (#0068b4) for
+  transport, **Crimson** (#c4283f) for services such as a pharmacy or a cash machine, **Walnut**
+  (#8a6234) for culture and leisure. Until its icon shows, a place is a dot, grey while the whole
+  town shows, in its colour closer in; culture, most services and bus stops show their icons a zoom
+  after food and shops,. The quarters' names are smaller than Protomaps draws them, and paths
+  thinner while the whole town shows. A gondola's or a cable car's stations show its icon in the
+  transport blue; a pin takes the place of the tiles' own entry or a station within a metre of it.
 
 ### Named Rules
 
@@ -393,21 +425,32 @@ keyboard. In the sheet the apartments are indented under their entry at weight 4
 
 ### Map
 
-- **Size:** edge to edge up to 120rem, 70% of the screen's height between 28rem and 48rem; flat,
-  never turned or tilted.
-- **Colours:** the theme's: ground for land, the season's soft accent for green, oak for buildings,
-  white for roads, a mix of ground and accent for water. On a change of season it takes the new
-  colours as the page starts to fade into them.
-- **Panel:** a card over the map, at its upper left from 48rem, at its foot on a phone above the
-  attribution's line, scrolling inside when the places do not fit. Without JavaScript it lists the
-  places shown by default. The apartments are small outlined pills, the chosen one filled in ink;
-  the switch for more places is a track in the edge colour that turns to the accent.
-- **Pins:** an apartment is a white pill with a house and its name, filled in ink once chosen; a
-  place is a round accent pill with its icon, which adds the distance from the chosen apartment
-  ("900 m"); a walking time depends on too much to promise. Pins and buttons take the site's focus
-  ring.
-- **Routes:** a dashed accent line with a white casing, from the chosen apartment to each place
-  shown.
+- **Size:** edge to edge up to 120rem, 70% of the screen's height between 28rem and 48rem; a square
+  on a phone. Flat, never turned or tilted.
+- **Colours:** the theme's: ground for land, oak for buildings, white roads with casings at 3:1, and
+  the map's own colours above. On a change of season it takes the new colours as the page starts to
+  fade into them.
+- **Detail:** gondolas and cable cars as ink lines with ticks for their pylons, chair lifts the same
+  in soft ink and thinner, drag lifts dashed in soft ink, their names beside them; places of
+  interest as a Lucide icon in their group's colour, filled white, with their name, a bus stop
+  without its name. Every name has a halo of what it lies on.
+- **Panel:** a card over the map's upper left from 48rem, below the map on a phone, with no scroll
+  of its own. The apartments are accent text that becomes an accent pill once chosen, as a price
+  does; the places are lines that choose a place, the chosen one on the ground colour. An arrow at
+  its foot unfolds the other places without moving the map. Without JavaScript it lists the places
+  shown by default.
+- **Pins:** a teardrop whose tip stands on its point, its icon in the head and its label beside it,
+  the head 1.5rem while the whole town shows and 1.75rem closer in, easing between the two in 0.2 s,
+  the icon three fifths of it: an apartment white with an accent icon and outline, filled in the
+  accent and outlined in white once chosen; a place the same in ink. An apartment's name may stand
+  left of its pin. The label is an apartment's name, a place's distance from the chosen apartment
+  ("900 m"), or a chosen place's name; a walking time depends on too much to promise. Pins and
+  buttons take the site's focus ring.
+- **Zoom:** plus and minus as the site's round buttons in a white pill, level with the panel's top.
+- **Routes:** a dashed accent line with a white casing, its dashes as long at every zoom, from the
+  chosen apartment's point to each place's, the router's line joined to both; once a place is
+  chosen, its route solid and as close as it fits, a white dot ringed in the accent at each end
+  under the pins' tips, and the others faded to 3:1.
 
 ### Language menu
 

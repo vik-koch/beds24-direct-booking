@@ -20,6 +20,17 @@
   --color-accent: #3b587c;
   --color-accent-soft: #e2e8f0;
   --color-on-accent: #ffffff;
+
+  /* The map's own colours, the same in every season: its water, trails and pitches, and the icons
+     of each group of places. */
+  --color-water: #b9d3e3;
+  --color-trail: #827142;
+  --color-pitch: #c5e5c9;
+  --color-poi-food: #c2410c;
+  --color-poi-shop: #9440b0;
+  --color-poi-transport: #0068b4;
+  --color-poi-service: #c4283f;
+  --color-poi-culture: #8a6234;
 }
 
 /* Winter's accent is the default above; summer replaces it. */
