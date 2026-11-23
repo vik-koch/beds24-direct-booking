@@ -169,9 +169,9 @@ streets for walking are as wide, in the pedestrian areas' shade. Roads under gro
   lines of 2 in its 24 units, at least 3:1 against the ground, the land and a building: **Rust**
   (#c2410c) for food and drink, **Violet** (#9440b0) for shops, **Sign Blue** (#0068b4) for
   transport, **Crimson** (#c4283f) for services such as a pharmacy or a cash machine, **Walnut**
-  (#8a6234) for culture and leisure. Until its icon shows, a place is a dot in its colour. A
-  gondola's or a cable car's stations show its icon in the transport blue; a pin takes the place of
-  the tiles' own entry or a station within a metre of it.
+  (#8a6234) for culture and leisure. Until its icon shows, a place is a dot in its colour, half seen
+  while the whole town shows. A gondola's or a cable car's stations show its icon in the transport
+  blue; a pin takes the place of the tiles' own entry or a station within a metre of it.
 
 ### Named Rules
 
@@ -439,31 +439,14 @@ keyboard. In the sheet the apartments are indented under their entry at weight 4
 - **Pins:** a teardrop whose tip stands on its point, its icon in the head and its label beside it,
   the head 1.5rem while the whole town shows and 1.75rem closer in, easing between the two in 0.2 s,
   the icon three fifths of it: an apartment white with an accent icon and outline, filled in the
-  accent once chosen; a place the same in ink. The label is an apartment's name, a place's distance
-  from the chosen apartment ("900 m"), or a chosen place's name; a walking time depends on too much
-  to promise. Pins and buttons take the site's focus ring.
+  accent and outlined in white once chosen; a place the same in ink. An apartment's name may stand
+  left of its pin. The label is an apartment's name, a place's distance from the chosen apartment
+  ("900 m"), or a chosen place's name; a walking time depends on too much to promise. Pins and
+  buttons take the site's focus ring.
 - **Zoom:** plus and minus as the site's round buttons in a white pill, level with the panel's top.
-- **Routes:** a line of accent dots on a white line as wide, from the chosen apartment to each place
-  shown, as maps draw a walk; once a place is chosen, its route solid on a wider white casing, a
-  white dot ringed in the accent at each end under the pins' tips, and the others faded to 3:1.
-
-### Language menu
-
-One entry at the end of the header's line: a globe and the current language's name in its own
-language ("Deutsch"). It opens the same small menu as the apartments with the other languages, each
-a link to the same page in that language, so it takes any number of them. In the sheet the languages
-are indented below a label like the apartments, at weight 400, the current one in the accent. The
-label, a globe and "Sprache", is in soft ink at label size, so it does not look like an entry that
-can be followed. It is a menu, not a pill, so that the two switches are easy to tell apart.
-
-A change of language keeps the visitor's place: the element at the header's lower edge stays there,
-as far scrolled past as before, however long the other language's texts are. A chosen week stays
-chosen, and the focus is on the language entry, or the menu button where the header is folded.
-
-## Do's and Don'ts
-
-### Do:
-
+- **Routes:** a dashed accent line with a white casing, from the chosen apartment's point to each
+  place's, the router's line joined to both; once a place is chosen, its route solid, a white dot
+  ringed in the accent at each end under the pins' tips, and the others faded to 3:1.
 - **Do** keep the ground light and let white surfaces and space do the separating.
 - **Do** use the season's accent for what a visitor can act on, and nothing else.
 - **Do** measure every colour pair of a new theme in both seasons before using it.

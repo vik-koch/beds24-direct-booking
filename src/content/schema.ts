@@ -218,6 +218,8 @@ export const apartmentSchema = z.strictObject({
   // Where a guest leaves the house; given with a map and only then.
   lat: latitude.optional(),
   lon: longitude.optional(),
+  // Its name on the map left of its pin, for one that would cover a neighbour's.
+  mapLabel: z.literal('left').optional(),
   name: text.refine((value) => letters(value) <= 20, 'at most 20 characters'),
   pictures: z
     .array(

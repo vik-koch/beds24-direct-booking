@@ -484,7 +484,7 @@ function flavor(p: ReturnType<typeof palette>): Flavor {
           #marker
           class="map-label"
           aria-hidden="true"
-          data-anchor="left"
+          [attr.data-anchor]="apartment.mapLabel === 'left' ? 'right' : 'left'"
           [attr.data-lat]="apartment.lat"
           [attr.data-lon]="apartment.lon"
           (click)="choose(apartment.slug)"
@@ -641,7 +641,8 @@ function flavor(p: ReturnType<typeof palette>): Flavor {
           z-index: 2;
           color: var(--color-on-accent);
           --pin: var(--color-accent);
-          --outline: var(--pin);
+          /* Outlined in white, so that a chosen pin stands out from its route. */
+          --outline: var(--color-surface);
         }
 
         [data-drawn] & {
@@ -674,8 +675,12 @@ function flavor(p: ReturnType<typeof palette>): Flavor {
         font-weight: 500;
         white-space: nowrap;
         cursor: pointer;
-        /* Its left edge beside the pin's head, level with its middle. */
+        /* Its near edge beside the pin's head, level with its middle. */
         translate: calc(var(--head) * 0.67) calc(var(--head) * -0.71);
+
+        &[data-anchor='right'] {
+          translate: calc(var(--head) * -0.67) calc(var(--head) * -0.71);
+        }
 
         [data-drawn] & {
           display: block;
@@ -837,8 +842,8 @@ export class LocationMap {
   protected readonly maxZoom = 18;
   protected readonly minZoom = signal(0);
   protected readonly zoom = signal(0);
-  // Smaller pins while the map shows the whole town; decided once a zoom ends, as fitting a view
-  // passes below 16 on its way from 16 to 16.
+  // Smaller pins while the map shows the whole town; decided by the zoom a move ends at, as fitting
+  // a view passes below 16 on its way from 16 to 16.
   protected readonly far = signal(false);
   protected readonly lucideName = lucideName;
   protected readonly chosen = signal<string | undefined>(undefined);
@@ -947,12 +952,11 @@ export class LocationMap {
             }
           for (const element of elements) {
             if (markers.has(element)) continue;
-            const label = element.dataset['anchor'] === 'left';
             markers.set(
               element,
               new Marker({
                 element,
-                anchor: label ? 'left' : 'bottom',
+                anchor: (element.dataset['anchor'] as 'left' | 'right' | undefined) ?? 'bottom',
               })
                 .setLngLat([+element.dataset['lon']!, +element.dataset['lat']!])
                 .addTo(drawn),
@@ -981,7 +985,7 @@ export class LocationMap {
           const panel = this.panel().nativeElement.getBoundingClientRect();
           // From 48rem the panel lies over the map's left side, on a phone below it.
           const over = panel.top < frame.bottom;
-          drawn.fitBounds(bounds, {
+          const view = {
             padding: {
               top: 64,
               right: 96,
@@ -990,6 +994,12 @@ export class LocationMap {
             },
             // A lone place keeps a closer zoom the visitor has chosen.
             maxZoom: picked && !lines.length ? Math.max(16, untracked(this.zoom)) : 16,
+          };
+          // The pins take the size of the zoom the map eases to as it starts.
+          const zoom = drawn.cameraForBounds(bounds, view)?.zoom;
+          if (zoom !== undefined) this.far.set(zoom < 16);
+          drawn.fitBounds(bounds, {
+            ...view,
             animate: !matchMedia('(prefers-reduced-motion: reduce)').matches && !!this.drawn(),
           });
         },
@@ -1264,6 +1274,8 @@ export class LocationMap {
         ],
         paint: {
           'circle-radius': 2.5,
+          // Half seen while the map shows the whole town, so that the places' colours stay calm.
+          'circle-opacity': ['interpolate', ['linear'], ['zoom'], 15, 0.5, 16.5, 1],
           'circle-color': [
             'match',
             ['get', 'kind'],
@@ -1378,11 +1390,7 @@ export class LocationMap {
           type: 'line',
           source: 'routes',
           layout: { 'line-cap': 'round', 'line-join': 'round' },
-          // Around the chosen route; under the others, as wide as their dots, it whitens the gaps.
-          paint: {
-            'line-color': p.routeCasing,
-            'line-width': ['case', ['get', 'picked'], 7, 4.5],
-          },
+          paint: { 'line-color': p.routeCasing, 'line-width': 7 },
         },
         {
           id: 'route',
@@ -1392,9 +1400,8 @@ export class LocationMap {
           layout: { 'line-cap': 'round', 'line-join': 'round' },
           paint: {
             'line-color': this.picked() ? p.faded : p.route,
-            'line-width': 4.5,
-            // Dots: round caps on dashes of no length.
-            'line-dasharray': [0, 2.4],
+            'line-width': 3.5,
+            'line-dasharray': [1, 1.6],
           },
         },
         {

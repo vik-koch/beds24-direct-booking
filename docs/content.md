@@ -139,12 +139,13 @@ content. The application has no wording, no colour and no typeface of its own. T
   `{ "key": "schattberg", "icon": "cable-car", "lat": 47.39031, "lon": 12.63528 }`. The icon is any
   Lucide icon and shows the place's kind; a place with `"more": true` is shown only once the map's
   list of more places is unfolded. With a map, every apartment's file gives `lat` and `lon`, the
-  point where a guest leaves the house; without one, none does. Every point lies inside the box.
-  Pins of points close together, such as two apartments 50 m apart, may overlap in the map's first
-  view on a phone: each pin's tip still marks its point, a chosen pin lies over the others, and
-  zooming in separates them. A texts file names each place under `map.places.<key>` with its `name`,
-  and optionally a text for each season the site lists, such as `"winter": "Gondola to the slopes"`.
-  How the map is built is [ADR 14](adr/0014-the-map.md).
+  point where a guest leaves the house; without one, none does. An apartment whose name would cover
+  a neighbour's pin can give `"mapLabel": "left"` to show it left of its pin. Every point lies
+  inside the box. Pins of points close together, such as two apartments 50 m apart, may overlap in
+  the map's first view on a phone: each pin's tip still marks its point, a chosen pin lies over the
+  others, and zooming in separates them. A texts file names each place under `map.places.<key>` with
+  its `name`, and optionally a text for each season the site lists, such as
+  `"winter": "Gondola to the slopes"`. How the map is built is [ADR 14](adr/0014-the-map.md).
 - **The map's wording** (`map` in a texts file, beside `places`): `label` names the map for screen
   readers; `from` heads the panel's choice of apartment and `more` labels its switch. The page
   writes each walk's distance in its own language, such as "900 m" or "1,4 km". `zoomIn`, `zoomOut`
