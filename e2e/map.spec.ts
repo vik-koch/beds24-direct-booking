@@ -369,6 +369,52 @@ test('choosing a place keeps a closer zoom the visitor has chosen', async ({ pag
   expect(Math.abs((await gondolas()) / nearer - 1)).toBeLessThan(0.05);
 });
 
+test("the reset button returns to the view of the choices, a chosen place's too", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await openMap(page);
+  const pin = page.getByRole('button', { name: 'Ahorn' });
+  const reset = page.getByRole('button', { name: 'Show the whole view' });
+  const gondolas = () => spread(page, 'Kohlmaisbahn', 'Schattberg X-press');
+  const first = (await pin.boundingBox())!;
+  const far = await gondolas();
+  await page.getByRole('button', { name: 'Zoom in' }).click();
+  await expect.poll(gondolas).toBeGreaterThan(far * 1.9);
+  await reset.focus();
+  await page.keyboard.press('Enter');
+  await expect.poll(gondolas).toBeCloseTo(far, 0);
+  await expect.poll(async () => (await pin.boundingBox())!.x).toBeCloseTo(first.x, 0);
+  const line = places(page).nth(1).getByRole('button');
+  await line.click();
+  await expect.poll(gondolas).toBeGreaterThan(far * 1.5);
+  const near = await gondolas();
+  const gondola = page.getByRole('button', { name: 'Kohlmaisbahn', exact: true });
+  const at = (await gondola.boundingBox())!;
+  await page.getByRole('button', { name: 'Zoom in' }).click();
+  await expect.poll(gondolas).toBeGreaterThan(near * 1.9);
+  // Dragged away from the place, too.
+  const dragged = (await gondola.boundingBox())!;
+  const frame = (await page.locator('.map-canvas').boundingBox())!;
+  await page.mouse.move(frame.x + frame.width / 2, frame.y + frame.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(frame.x + frame.width / 2 + 150, frame.y + frame.height / 2 + 100, {
+    steps: 5,
+  });
+  await page.mouse.up();
+  await expect.poll(async () => (await gondola.boundingBox())!.x - dragged.x).toBeCloseTo(150, -1);
+  await reset.click();
+  await expect.poll(gondolas).toBeCloseTo(near, 0);
+  await expect
+    .poll(async () => {
+      const box = (await gondola.boundingBox())!;
+      return Math.hypot(box.x - at.x, box.y - at.y);
+    })
+    .toBeLessThan(1);
+  await expect(line).toHaveAttribute('aria-pressed', 'true');
+});
+
 test('a chosen place among the other places is cleared when they fold', async ({ page }) => {
   await openMap(page);
   await panel(page).locator('.map-unfold').click();
@@ -597,6 +643,7 @@ test('every tab stop in the map shows a focus ring', async ({ page, browserName 
       'button More places',
       'button Zoom in',
       'button Zoom out',
+      'button Show the whole view',
       'button Ahorn',
       'button Schattberg X-press',
     ]),

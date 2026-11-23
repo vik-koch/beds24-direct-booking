@@ -201,6 +201,7 @@
     "more": "More places",
     "zoomIn": "Zoom in",
     "zoomOut": "Zoom out",
+    "reset": "Show the whole view",
     "attribution": "Map sources",
     "gestures": {
       "windows": "Hold Ctrl and scroll to zoom the map",
