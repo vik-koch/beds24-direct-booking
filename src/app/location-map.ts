@@ -1241,6 +1241,8 @@ export class LocationMap {
           id: 'route-casing',
           type: 'line',
           source: 'routes',
+          // Under the chosen route alone: the others' gaps show the map.
+          filter: ['get', 'picked'],
           layout: { 'line-cap': 'round', 'line-join': 'round' },
           paint: { 'line-color': p.routeCasing, 'line-width': 7 },
         },
@@ -1252,8 +1254,9 @@ export class LocationMap {
           layout: { 'line-cap': 'round', 'line-join': 'round' },
           paint: {
             'line-color': this.picked() ? p.faded : p.route,
-            'line-width': 3.5,
-            'line-dasharray': [1, 1.6],
+            'line-width': 4.5,
+            // Dots: round caps on dashes of no length.
+            'line-dasharray': [0, 2.4],
           },
         },
         {

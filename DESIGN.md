@@ -441,8 +441,8 @@ keyboard. In the sheet the apartments are indented under their entry at weight 4
   m"), or a chosen place's name; a walking time depends on too much to promise. Pins and buttons
   take the site's focus ring.
 - **Zoom:** plus and minus as the site's round buttons in a white pill, level with the panel's top.
-- **Routes:** a dashed accent line with a white casing, from the chosen apartment to each place
-  shown; once a place is chosen, its route solid and the others faded to 3:1.
+- **Routes:** a line of accent dots, from the chosen apartment to each place shown, as maps draw a
+  walk; once a place is chosen, its route solid on a white casing and the others faded to 3:1.
 
 ### Language menu
 
