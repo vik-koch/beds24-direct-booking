@@ -1303,7 +1303,7 @@ export class LocationMap {
           ...unpinned,
         ],
         paint: {
-          'circle-radius': 2.5,
+          'circle-radius': 2,
           // Grey while the whole town shows, in its group's colour closer in.
           'circle-color': [
             'interpolate',
