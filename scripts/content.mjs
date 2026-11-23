@@ -436,7 +436,11 @@ export async function writeContent(dir, out, cache) {
   const drawings = Object.fromEntries(
     Object.values(groups)
       .flatMap(Object.values)
-      .map((icon) => [icon, lucide[lucideName(icon)]]),
+      .map((icon) => {
+        if (!(lucideName(icon) in lucide))
+          throw new Error(`src/content/map-kinds.ts\n  ${icon} is not a Lucide icon`);
+        return [icon, lucide[lucideName(icon)]];
+      }),
   );
   writeFileSync(
     join(out, 'map-icons.ts'),
