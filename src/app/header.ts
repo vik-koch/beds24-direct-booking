@@ -12,7 +12,8 @@ import { SeasonSwitch } from './season-switch';
 import { address, LANGUAGE, pageLinks, TEXTS } from './texts';
 
 // Links to the home page and the apartments' pages load them in full: in the browser, only the
-// server's answer carries their data (ADR 6), until the availability route exists.
+// server's answer carries their data (ADR 6), until the availability route exists. A wide
+// header's link without `active` would be the current page while hovered (spartan).
 @Component({
   selector: 'app-header',
   imports: [
@@ -37,7 +38,9 @@ import { address, LANGUAGE, pageLinks, TEXTS } from './texts';
       <nav hlmNavigationMenu class="header-wide flex-none" [attr.aria-label]="texts.nav.label">
         <ul hlmNavigationMenuList>
           <li hlmNavigationMenuItem>
-            <a hlmNavigationMenuLink [href]="choice.link(weeks.href)">{{ weeks.text }}</a>
+            <a hlmNavigationMenuLink active="false" [href]="choice.link(weeks.href)">{{
+              weeks.text
+            }}</a>
           </li>
           <li hlmNavigationMenuItem>
             <button hlmNavigationMenuTrigger>{{ texts.nav.apartments }}</button>
@@ -63,7 +66,9 @@ import { address, LANGUAGE, pageLinks, TEXTS } from './texts';
             </hlm-navigation-menu-content>
           </li>
           <li hlmNavigationMenuItem>
-            <a hlmNavigationMenuLink [href]="choice.link(location.href)">{{ location.text }}</a>
+            <a hlmNavigationMenuLink active="false" [href]="choice.link(location.href)">{{
+              location.text
+            }}</a>
           </li>
           @for (page of pages; track page.path) {
             <li hlmNavigationMenuItem>

@@ -171,6 +171,17 @@ test('the header links to the content pages site.json lists, after its own, and 
   );
 });
 
+test('a hovered header link is not announced as the current page', async ({ page }) => {
+  await page.goto('/de/impressum');
+  test.skip(await folded(page), 'the wide header only');
+  await expect(page.locator('html')).toHaveAttribute('data-started', '');
+  const nav = page.locator('.header-wide');
+  for (const name of ['Freie Wochen', 'Lage', 'Über uns']) {
+    await nav.getByRole('link', { name }).hover();
+    await expect(nav.locator('[aria-current]')).toHaveCount(0);
+  }
+});
+
 // Where an element stands against the header's lower edge, in pixels.
 const fromEdge = (target: Locator) =>
   target.evaluate(
