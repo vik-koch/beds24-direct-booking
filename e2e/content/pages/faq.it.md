@@ -2,7 +2,7 @@
 
 Non trovate la risposta? Guardate [gli appartamenti](/it#appartamenti).
 
-## Arrivo
+## Il giorno dell'arrivo
 
 <details id="arrivo">
 <summary>Quando posso arrivare?</summary>
