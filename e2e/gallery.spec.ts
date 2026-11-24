@@ -155,12 +155,12 @@ test('a picture opens full screen, and the buttons, the keys and the thumbnails 
   const next = await box(viewer(page).locator('.viewer-next'));
   expect(frame.x - previous.x - previous.width).toBeCloseTo(16, -1);
   expect(next.x - frame.x - frame.width).toBeCloseTo(16, -1);
-  // The count and the close button stand right over them, not in the screen's corners.
+  // The count and the close button stand in the screen's top corners, inside its padding.
   const counter = await box(count);
   const close = await box(viewer(page).locator('.viewer-close'));
-  expect(counter.x).toBeCloseTo(previous.x, 0);
-  expect(close.x + close.width).toBeCloseTo(next.x + next.width, 0);
-  expect(close.y + close.height).toBeCloseTo(frame.y - 12, 0);
+  const room = await box(viewer(page));
+  expect([counter.x, counter.y]).toEqual([16, 12]);
+  expect([room.width - close.x - close.width, close.y]).toEqual([16, 12]);
 
   await viewer(page).getByRole('button', { name: 'Nächstes Bild' }).click();
   await expect(count).toHaveText('Bild 4 von 9');
@@ -711,8 +711,21 @@ test('the switch keeps the picture, and leaves itself and the close button where
   await expect(viewer(page).locator('.viewer-count')).toHaveText('Bild 3 von 5');
   const places = async () =>
     Promise.all(['.viewer-views', '.viewer-close'].map((part) => box(viewer(page).locator(part))));
+  // Also at the end of its scale: fixed, they would stand inside the frame until it ends.
+  await viewer(page).evaluate((dialog) =>
+    dialog.getAnimations().forEach((animation) => {
+      animation.pause();
+      animation.currentTime = 299.99;
+    }),
+  );
+  const scaling = await places();
+  await viewer(page).evaluate((dialog) => dialog.getAnimations().forEach((one) => one.finish()));
   await settled(page);
   const before = await places();
+  for (const [index, { x, y }] of scaling.entries()) {
+    expect(Math.abs(x - before[index].x)).toBeLessThan(0.5);
+    expect(Math.abs(y - before[index].y)).toBeLessThan(0.5);
+  }
   await viewer(page).getByTitle('Grundriss').click();
   await expect(viewer(page).locator('.viewer-count')).toHaveText('Bild 3 von 5');
   await named(page).toEqual(['Stockbettzimmer']);
@@ -725,6 +738,14 @@ test('the switch keeps the picture, and leaves itself and the close button where
   await expect(viewer(page).locator('.caption-in')).toHaveText(/Bad mit weißer Badewanne/);
   await named(page).toEqual([]);
   expect(await places()).toEqual(before);
+  // Without a plan the close button is where it is with one, and the count in the switch's corner.
+  await page.keyboard.press('Escape');
+  await page.goto('/de/wohnungen/ahorn');
+  await tile(page).first().click();
+  await settled(page);
+  expect(await box(viewer(page).locator('.viewer-close'))).toEqual(before[1]);
+  const count = await box(viewer(page).locator('.viewer-count'));
+  expect([count.x, count.y, count.height]).toEqual([before[0].x, before[0].y, before[0].height]);
 });
 
 test('on a phone the plan stands above the picture, its buttons and its text', async ({ page }) => {
@@ -735,13 +756,25 @@ test('on a phone the plan stands above the picture, its buttons and its text', a
   await named(page).toEqual(['Wohnküche']);
   // Measured at once, after the viewer has scrolled its text into view.
   await viewer(page).locator('.viewer-caption').scrollIntoViewIfNeeded();
-  const [plan, frame, button, caption, overflow] = (await viewer(page).evaluate((dialog) => [
-    ...['.plan-box', '.viewer-track', '.viewer-next', '.viewer-caption'].map((part) => {
-      const { left, right, top, bottom } = dialog.querySelector(part)!.getBoundingClientRect();
-      return { left, right, top, bottom };
-    }),
-    dialog.scrollWidth - dialog.clientWidth,
-  ])) as [DOMRect, DOMRect, DOMRect, DOMRect, number];
+  const [plan, frame, button, caption, previous, count, overflow] = (await viewer(page).evaluate(
+    (dialog) => [
+      ...[
+        '.plan-box',
+        '.viewer-track',
+        '.viewer-next',
+        '.viewer-caption',
+        '.viewer-previous',
+        '.viewer-count',
+      ].map((part) => {
+        const { left, right, top, bottom } = dialog.querySelector(part)!.getBoundingClientRect();
+        return { left, right, top, bottom };
+      }),
+      dialog.scrollWidth - dialog.clientWidth,
+    ],
+  )) as [DOMRect, DOMRect, DOMRect, DOMRect, DOMRect, DOMRect, number];
+  // Centred between the buttons, though the switch above widens the first column.
+  expect(Math.abs(count.left + count.right - previous.left - button.right)).toBeLessThan(1);
+  expect(Math.abs(count.top + count.bottom - previous.top - previous.bottom)).toBeLessThan(1);
   expect(plan.left).toBeGreaterThanOrEqual(0);
   expect(plan.right).toBeLessThanOrEqual(320);
   expect(frame.top).toBeGreaterThan(plan.bottom);

@@ -495,55 +495,54 @@ import { fill, LANGUAGE, TEXTS } from './texts';
         }
       }
 
-      /* The count and the close button stand over the picture and its buttons, not in the screen's
-         far corners; all of them are centred together. */
+      /* The pictures, their buttons and the plan centred together below a row kept for the count.
+         The stage is the corners' box: as fixed, they would follow the opening scale's box. */
       .viewer-stage {
+        position: relative;
         display: grid;
-        grid-template-columns: repeat(3, auto);
+        grid-template: var(--size-control) auto / repeat(3, auto);
         place-content: center;
         align-items: center;
         row-gap: 0.75rem;
         container-type: size;
+
+        > * {
+          grid-row: 2;
+        }
       }
 
       .viewer-count {
         grid-area: 1 / 1 / 2 / -1;
+        justify-self: center;
         font-size: 0.9375rem;
-      }
-
-      .viewer-close {
-        grid-area: 1 / 1 / 2 / -1;
-        justify-self: end;
       }
 
       .viewer-views {
         background: var(--color-surface);
       }
 
-      /* With a plan the switch and the close button stand in the screen's corners, where the two
-         views leave them; the count between them, over the pictures. On a phone they stay in the
+      /* The switch and the close button in the screen's top corners, the same in every viewer; the
+         count between them, or in the switch's corner without a plan. On a phone they stay in the
          bar, which both views share. */
-      .viewer[data-plan] {
-        .viewer-stage {
-          grid-template-rows: var(--size-control) auto;
+      @media (width >= 48rem) {
+        /* Without a grid area, so that their box is the stage's, not a cell's. */
+        .viewer :is(.viewer-views, .viewer-close),
+        .viewer:not([data-plan]) .viewer-count {
+          position: absolute;
+          top: 0;
+          grid-area: auto;
         }
 
-        :is(.viewer-views, .viewer-close) {
-          position: fixed;
-          top: 0.75rem;
-          z-index: 1;
-        }
-
-        .viewer-views {
-          left: 1rem;
-        }
-
-        .viewer-close {
-          right: 1rem;
+        .viewer :is(.viewer-views, .viewer-count) {
+          left: 0;
         }
 
         .viewer-count {
-          justify-self: center;
+          line-height: var(--size-control);
+        }
+
+        .viewer .viewer-close {
+          right: 0;
         }
       }
 
@@ -766,17 +765,6 @@ import { fill, LANGUAGE, TEXTS } from './texts';
           grid-area: 1 / 3;
         }
 
-        .viewer[data-plan] {
-          .viewer-views {
-            position: relative;
-            inset: auto;
-          }
-
-          .viewer-close {
-            position: static;
-          }
-        }
-
         .viewer-views {
           grid-area: 1 / 1;
         }
@@ -806,9 +794,10 @@ import { fill, LANGUAGE, TEXTS } from './texts';
           grid-area: 4 / 1;
         }
 
+        /* Across the row, under the buttons: the switch would widen the first column. */
         .viewer-count {
-          grid-area: 4 / 2;
-          text-align: center;
+          grid-area: 4 / 1 / 5 / -1;
+          align-self: center;
         }
 
         .viewer-next {

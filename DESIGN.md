@@ -472,9 +472,11 @@ the count. The viewer opens on the plan from there, and on a picture from a pict
 - **Two views of the same pictures:** a toggle like the booking panel's, a white pill with the
   pictures' and the plan's icons, switches between the pictures alone and the plan beside them. The
   picture, its buttons, its text and the thumbnails stay where they are and keep the visitor's
-  place; the plan only takes half the room, left of the picture from 48rem, above it on a phone.
-  With a plan, the toggle and the close button stand in the screen's top corners in both views, and
-  the count between them.
+  place; the plan only takes half the room, left of the picture from 48rem, above it on a phone. The
+  toggle and the close button stand in the screen's top corners in both views, and the count between
+  them; in a viewer without a plan the count takes the toggle's corner, so the close button is in
+  one place in every viewer. On a phone the toggle and the close button share the bar above, and the
+  count stands under the picture between its buttons, centred on the screen.
 - **Rooms:** the shown picture's room has an accent frame on the plan, 2.5 px at any size, and an
   18% accent fill; a room under the pointer only a 10% fill. A frame, because a fill alone would not
   set the room off at 3:1. A click on a room shows its first picture, arriving as a step or a jump
