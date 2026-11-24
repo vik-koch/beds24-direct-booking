@@ -68,6 +68,20 @@ test('a question the address names is open, below the header, also when the addr
   expect(await keys.evaluate((d) => d.getBoundingClientRect().top)).toBeGreaterThanOrEqual(header);
   await page.evaluate(() => (location.hash = 'arrivo'));
   await expect(arrival).toHaveAttribute('open');
+  // A link to the question the address already names opens it, though the address stays.
+  const link = arrival.getByRole('link', { name: 'dove trovarle' });
+  await link.click();
+  await expect(page).toHaveURL(/#chiavi$/);
+  await keys.locator('summary').click();
+  await expect(keys).not.toHaveAttribute('open');
+  await link.click();
+  await expect(keys).toHaveAttribute('open');
+  // Followed into a new tab, it leaves this tab's question as it is.
+  await keys.locator('summary').click();
+  const opened = page.context().waitForEvent('page');
+  await link.click({ modifiers: ['ControlOrMeta'] });
+  await (await opened).close();
+  await expect(keys).not.toHaveAttribute('open');
   // A question opens and closes by keyboard.
   await arrival.locator('summary').focus();
   await page.keyboard.press('Enter');
@@ -95,4 +109,36 @@ test("the company page's picture is converted, fits a phone, and is credited", a
     'href',
     'https://commons.wikimedia.org/wiki/File:Saalbach_from_above.jpg',
   );
+});
+
+test("the FAQ's list leads to its groups and a question's address opens it, below the header", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 640 });
+  const below = (target: ReturnType<typeof page.locator>) =>
+    expect
+      .poll(async () => {
+        const header = await page
+          .locator('app-header')
+          .evaluate((h) => h.getBoundingClientRect().bottom);
+        const top = await target.evaluate((t) => t.getBoundingClientRect().top);
+        return top >= header && top < header + 48;
+      })
+      .toBe(true);
+  await page.goto('/en/faq?adults=3');
+  await expect(page.locator('html')).toHaveAttribute('data-started', '');
+  const link = page.getByRole('link', { name: 'Getting here' });
+  await expect(link).toHaveAttribute('href', '/en/faq?adults=3#getting-here');
+  await link.click();
+  await expect(page).toHaveURL(/\/en\/faq\?adults=3#getting-here$/);
+  await below(page.getByRole('heading', { level: 2, name: 'Getting here' }));
+  // By keyboard too.
+  await page.getByRole('link', { name: 'Arrival' }).focus();
+  await page.keyboard.press('Enter');
+  await below(page.getByRole('heading', { level: 2, name: 'Arrival' }));
+  await page.goto('/de/haeufige-fragen#parking');
+  const parking = page.locator('details#parking');
+  await expect(parking).toHaveAttribute('open');
+  await below(parking);
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
 });

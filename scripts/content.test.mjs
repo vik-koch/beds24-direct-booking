@@ -42,6 +42,13 @@ test('the demo and the test site are valid', () => {
   assert.deepEqual(Object.keys(readContent('e2e/content').texts), ['it', 'nl']);
 });
 
+test("the demo's questions have the same ids in both languages", () => {
+  const { pages } = readContent('content/demo');
+  const ids = (html) => [...html.matchAll(/<details id="([^"]+)"/g)].map((match) => match[1]);
+  assert.ok(ids(pages.en.faq.html).length > 0);
+  assert.deepEqual(ids(pages.de.faq.html), ids(pages.en.faq.html));
+});
+
 test('a key missing in one language is named', () => {
   const dir = changed('texts.en-GB.json', (texts) => delete texts.nav.weeks);
   assert.throws(() => readContent(dir), /texts\.en-GB\.json\n {2}nav\.weeks/);
@@ -1079,7 +1086,16 @@ test('a content page opens with its title and holds only what a page shows', () 
     ['# Title\n\n<p class="x">Text</p>', /has class on <p>/],
     ['# Title\n\n[Here](javascript:alert(1))', /links to javascript:alert\(1\)/],
     ['# Title\n\n[Here](//other.example)', /links to \/\/other\.example/],
-    ['# Title\n\n[Here](#part)', /links to #part/],
+    ['# Title\n\n[Here](#part)', /links to #part, which no heading or question on the page has/],
+    [
+      '# Title\n\n## Content',
+      /a ## heading whose text gives no id, or one the pages use: Content \(content\)/,
+    ],
+    ['# Title\n\n## ?', /a ## heading whose text gives no id, or one the pages use: \? \(\)/],
+    [
+      '# Title\n\n## Arrival\n\n<details id="arrival">\n<summary>Q</summary>\n\nA.\n\n</details>',
+      /the id arrival twice/,
+    ],
     ['# Title\n\n<details id="a">\n\nNo summary.\n\n</details>', /does not open with a <summary>/],
     ['# Title\n\n<details>\n<summary>Q</summary>\n\nA.\n\n</details>', /without an id/],
     [
@@ -1104,7 +1120,7 @@ test('a content page opens with its title and holds only what a page shows', () 
   ];
   for (const [markdown, reason] of refused)
     assert.throws(
-      () => readPage('page.md', markdown),
+      () => readPage('page.md', markdown, '/en/faq'),
       new RegExp(`page\\.md\\n {2}.*${reason.source}`),
       markdown,
     );
@@ -1125,6 +1141,18 @@ test("a content page's title is its heading, and its tables scroll in a frame", 
     page.html,
     /<details id="arrival">\n<summary>When\?<\/summary><p>From 4 pm\.<\/p>\n<\/details>$/,
   );
+});
+
+test("a page's ## headings take an id from their text, and a link to an id leads to it at the page's path", () => {
+  const page = readPage(
+    'page.md',
+    '# FAQ\n\n- [Über die Anreise](#uber-die-anreise)\n- [Keys](#keys)\n\n## Über die Anreise\n\n### Straße\n\n<details id="keys">\n<summary>Keys?</summary>\n\nBy the door.\n\n</details>\n',
+    '/de/fragen',
+  );
+  assert.match(page.html, /<a href="\/de\/fragen#uber-die-anreise">Über die Anreise<\/a>/);
+  assert.match(page.html, /<a href="\/de\/fragen#keys">Keys<\/a>/);
+  assert.match(page.html, /<h2 id="uber-die-anreise">Über die Anreise<\/h2>/);
+  assert.match(page.html, /<h3>Straße<\/h3>/);
 });
 
 test("a page's picture exists, and a credit is for a picture a page shows", () => {

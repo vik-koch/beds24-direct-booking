@@ -2,12 +2,12 @@
 
 Non trovate la risposta? Guardate [gli appartamenti](/it#appartamenti).
 
-## Arrivo
+## Il giorno dell'arrivo
 
 <details id="arrivo">
 <summary>Quando posso arrivare?</summary>
 
-Dalle 16 in poi, ogni sabato.
+Dalle 16 in poi, ogni sabato. Per le chiavi, vedete [dove trovarle](#chiavi).
 
 </details>
 

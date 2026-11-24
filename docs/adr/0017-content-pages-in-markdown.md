@@ -30,9 +30,9 @@ the choice:
    route loads its own module, as the texts are loaded, so neither the parser nor another page's
    text reaches the browser.
 3. **What a page would not style is refused, not dropped:** headings, paragraphs, lists, quotes,
-   rules, links to `http`, `https`, `mailto`, `tel` and the site's own paths, tables, and
-   `<details>` with its `<summary>` and an `id`. Anything else stops the build with the file and the
-   reason. The files are the deployment's own, so a mistake is fixed where it was made.
+   rules, links to `http`, `https`, `mailto`, `tel`, the site's own paths and an `id` on the page,
+   tables, and `<details>` with its `<summary>` and an `id`. Anything else stops the build with the
+   file and the reason. The files are the deployment's own, so a mistake is fixed where it was made.
 4. **One component shows every content page,** with the description's typography from
    `src/styles.css`. A `<details>` looks like the apartment page's accordion and opens when the
    address names its `id`; a table wider than the column scrolls in a frame of its own.

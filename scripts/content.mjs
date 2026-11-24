@@ -109,6 +109,16 @@ const parse = (html) => {
   return template;
 };
 
+// A heading's id from its text: its letters and digits without accents, joined by hyphens.
+const idOf = (text) =>
+  text
+    .normalize('NFKD')
+    .replace(/\p{M}/gu, '')
+    .toLowerCase()
+    .replace(/ß/g, 'ss')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+
 // The elements a content page styles, with the attributes each may have.
 const pageElements = {
   ...Object.fromEntries(
@@ -127,8 +137,9 @@ const pageElements = {
 
 // A content page from its Markdown: the title of the one # heading it opens with, the rest as HTML
 // of the elements the page styles, and the files of its pictures. The file is the deployment's
-// own, so what the page would not style is refused rather than dropped.
-export function readPage(file, markdown) {
+// own, so what the page would not style is refused rather than dropped. A ## heading gets an id
+// from its text, and a link to an id on the page leads to it at the page's path.
+export function readPage(file, markdown, path) {
   const fail = (reason) => new Error(`${file}\n  ${reason}`);
   const tokens = marked.lexer(markdown);
   const first = tokens.find((token) => token.type !== 'space');
@@ -146,9 +157,9 @@ export function readPage(file, markdown) {
     for (const { name: attribute, value } of element.attributes)
       if (!pageElements[name].includes(attribute))
         throw fail(`has ${attribute} on <${name}>, which a page does not take`);
-      else if (attribute === 'href' && !/^(https?:|mailto:|tel:|\/(?!\/))/.test(value))
+      else if (attribute === 'href' && !/^(https?:|mailto:|tel:|#|\/(?!\/))/.test(value))
         throw fail(
-          `links to ${value}: give a path from the root, or an http(s), mailto or tel link`,
+          `links to ${value}: give a path from the root, an id on the page, or an http(s), mailto or tel link`,
         );
     const parent = element.parentElement;
     if (name === 'img') {
@@ -165,17 +176,26 @@ export function readPage(file, markdown) {
       (parent?.localName !== 'details' || element !== parent.firstElementChild)
     )
       throw fail('has a <summary> that does not open a <details>');
-    if (name === 'details') {
+    if (name === 'details' && element.firstElementChild?.localName !== 'summary')
+      throw fail('has a <details> that does not open with a <summary>');
+    if (name === 'h2') element.id = idOf(element.textContent);
+    if (name === 'details' || name === 'h2') {
       const id = element.id;
-      if (element.firstElementChild?.localName !== 'summary')
-        throw fail('has a <details> that does not open with a <summary>');
       if (!anchor.safeParse(id).success)
         throw fail(
-          `has a <details> without an id of lower-case words, or one the pages use: ${id}`,
+          name === 'h2'
+            ? `has a ## heading whose text gives no id, or one the pages use: ${element.textContent} (${id})`
+            : `has a <details> without an id of lower-case words, or one the pages use: ${id}`,
         );
       if (ids.has(id)) throw fail(`has the id ${id} twice`);
       ids.add(id);
     }
+  }
+  for (const link of body.querySelectorAll('a[href^="#"]')) {
+    const id = link.getAttribute('href').slice(1);
+    if (!ids.has(id)) throw fail(`links to #${id}, which no heading or question on the page has`);
+    // Against the base address, a fragment alone would lead to the home page.
+    link.setAttribute('href', `${path}#${id}`);
   }
   const text = title.textContent.trim();
   if (!text) throw fail('has a title without text');
@@ -430,7 +450,7 @@ export function readContent(dir) {
       site.pages.map((key) => {
         const page = join(dir, 'pages', `${key}.${tag}.md`);
         if (!existsSync(page)) throw new Error(`${page}\n  (file): missing`);
-        const read = readPage(page, readFileSync(page, 'utf8'));
+        const read = readPage(page, readFileSync(page, 'utf8'), `/${prefix(tag)}/${paths[key]}`);
         for (const file of read.pictures)
           if (!existsSync(join(dir, file)))
             throw new Error(`${page}\n  shows ${file}, which does not exist`);

@@ -45,8 +45,15 @@ content. The application has no wording, no colour and no typeface of its own. T
   `book`, `confirmation`, `credits`. The file opens with its title as a `#` heading, which the page
   and its tab show; the link text can be shorter, such as "FAQ". It may hold `##` to `####`
   headings, paragraphs, lists, quotes, rules, **bold** and _italic_, tables, and links to `http`,
-  `https`, `mailto` and `tel` addresses and to the site's own paths, such as `/en/faq`. A question
-  that folds open is written as HTML, with a blank line after the `<summary>` line and before
+  `https`, `mailto` and `tel` addresses and to the site's own paths, such as `/en/faq`. A `##`
+  heading takes an `id` from its text, its letters and digits without accents joined by hyphens:
+  "Getting here" becomes `getting-here`, "Über uns" `uber-uns`, "5. Cancellation" `5-cancellation`.
+  Only the letters a to z and the digits stay, so "Łódź" gives `odz`, and a heading written wholly
+  in another script, such as Greek, gives no `id` and stops the build. A link to an `id` on the same
+  page is written with the `#` alone, `[Getting here](#getting-here)`, and leads there at the page's
+  address; a list of such links at the top leads to the page's groups. Another page's heading is
+  linked by its path, `/en/terms#5-cancellation`, which the build does not check. A question that
+  folds open is written as HTML, with a blank line after the `<summary>` line and before
   `</details>`:
 
   ```markdown
@@ -58,10 +65,13 @@ content. The application has no wording, no colour and no typeface of its own. T
   </details>
   ```
 
-  Its `id` is lower-case words joined by hyphens, once on the page and not one the pages hold (see
-  the address parts), and the page's address with it, `/en/faq#check-in`, opens the question:
-  printed in a QR code, it must not change. A table wider than the column scrolls on its own. How a
-  page is built is [ADR 17](adr/0017-content-pages-in-markdown.md).
+  Its `id` is lower-case words joined by hyphens, once on the page beside the questions' and the
+  headings' ids and not one the pages hold (see the address parts), and kept the same in every
+  language. The page's address with it, `/en/faq#check-in`, opens the question: printed in a QR
+  code, it must not change. The address names its language, so a code opens the page in that
+  language; the page in another language holds the same `id` at its own path, and the language
+  switch does not carry the `id` along. A table wider than the column scrolls on its own. How a page
+  is built is [ADR 17](adr/0017-content-pages-in-markdown.md).
 
   A picture stands in a paragraph of its own, written with its alternative text in the page's
   language: `![The village in summer, seen from a trail above it](pictures/saalbach-summer.webp)`.
@@ -333,12 +343,13 @@ a `.woff2` font in `theme.css`, a route missing, left over or computed before a 
 content page without its file, address or link text in a language, a page file `site.json` does not
 list, a header or footer link to no page, a footer link the header has, two pages at one address, a
 page that does not open with its title or holds an element, an attribute, a link or a question's
-`id` the pages do not take, a page's picture without its file or alternative text or beside other
-text, a credited picture no page shows, and a part beyond its boundary stop the build with the file
-and the key named; for the tiles and the routes, with the script to run. The schema, not the demo's
-files, defines the keys, so the compiler checks every template against the same keys for every site.
-Every language has the same keys, so every language renders the same elements and a change of
-language finds the reader's place.
+`id` the pages do not take, a `##` heading whose text gives no `id` or one the page has already, a
+`#` link to no `id` on its page, a page's picture without its file or alternative text or beside
+other text, a credited picture no page shows, and a part beyond its boundary stop the build with the
+file and the key named; for the tiles and the routes, with the script to run. The schema, not the
+demo's files, defines the keys, so the compiler checks every template against the same keys for
+every site. Every language has the same keys, so every language renders the same elements and a
+change of language finds the reader's place.
 
 ## Another folder
 
