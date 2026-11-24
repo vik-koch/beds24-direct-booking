@@ -3,9 +3,9 @@
 > Firn & Farn ist erfunden: Diese Website ist eine Demo, und das Unternehmen, seine Wohnungen und
 > seine Kontaktdaten sind Beispiele.
 
-Die Firn & Farn Appartements GmbH besitzt ein Haus in Saalbach und vermietet seine drei Wohnungen
-selbst. Wir haben das Haus 2014 übernommen und Stock für Stock umgebaut, mit Holz aus der Region:
-Zirbe, Lärche und Ahorn geben den Wohnungen ihre Namen.
+Die Firn & Farn Appartements GmbH besitzt zwei Häuser in Saalbach, Haus Firn und Haus Farn, und
+vermietet drei Wohnungen darin selbst. Wir haben die Häuser 2014 übernommen und Stock für Stock
+umgebaut, mit Holz aus der Region: Zirbe, Lärche und Ahorn geben den Wohnungen ihre Namen.
 
 ![Saalbach im Sommer, von einem Wanderweg am Kohlmaiskopf aus: vorn eine Wiese mit einer Heuhütte, im Tal das Dorf, dahinter bewaldete Berge mit Almwiesen unter blauem Himmel](pictures/saalbach-summer.webp)
 
@@ -16,8 +16,8 @@ Zirbe, Lärche und Ahorn geben den Wohnungen ihre Namen.
 - **Immer aktuell:** Freie Wochen und Preise kommen direkt aus unserem Buchungssystem.
 - **Samstag bis Samstag:** Eine Woche ist unser Rhythmus, im Winter wie im Sommer.
 
-Wir kümmern uns selbst um das Haus. Bei der Ankunft und während Ihres Aufenthalts erreichen Sie uns
-persönlich.
+Wir kümmern uns selbst um die Häuser. Bei der Ankunft und während Ihres Aufenthalts erreichen Sie
+uns persönlich.
 
 ## Kontakt
 
