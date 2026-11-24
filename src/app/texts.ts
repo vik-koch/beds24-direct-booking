@@ -6,8 +6,8 @@ import type { Language, Texts } from '../content/schema';
 export const TEXTS = new InjectionToken<Texts>('texts');
 export const LANGUAGE = new InjectionToken<Language>('language');
 
-export type Page =
-  'home' | 'apartment' | 'notFound' | Exclude<keyof Language['paths'], 'apartments'>;
+// A page of the application, or a content page by its key.
+export type Page = 'home' | 'apartment' | 'notFound' | 'book' | 'confirmation' | 'credits' | string;
 
 export function address(language: Language, page: Page, slug?: string): string {
   const paths = language.paths;

@@ -24,6 +24,10 @@ slug is the same in both languages and comes from the deployment's content.
 | Rental terms | `/de/agb` | `/en/terms` |
 | Picture credits | `/de/bildnachweis` | `/en/picture-credits` |
 
+- **The application's own pages** are the home page, an apartment's page, the booking step, the
+  confirmation and the picture credits. Every other page is a content page: its key, address and
+  text come from the deployment's content ([`content.md`](content.md)). The demo's are the FAQ, the
+  company page, the imprint, the privacy page and the rental terms.
 - **The demo's apartments** have the slugs `zirbe`, `laerche` and `ahorn`.
 - **The address without a prefix** (`/`) redirects to the home page in the browser's language if the
   deployment has it, and in the deployment's first language otherwise.
@@ -61,9 +65,8 @@ decided in the design round.
 On every page:
 
 - Contact: the business's name, address, telephone number and e-mail address.
-- A link to the FAQ.
-- Links to the imprint, the privacy page and the terms.
-- A link to the picture credits.
+- The links `site.json` lists in `footer`, in their order. The demo's: the FAQ, the imprint, the
+  privacy page, the terms and the picture credits.
 
 ## Home page
 

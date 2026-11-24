@@ -9,9 +9,10 @@ content. The application has no wording, no colour and no typeface of its own. T
 <!-- prettier-ignore -->
 | File | What it holds |
 |---|---|
-| `site.json` | The site's name, its languages in order as language tags, the apartments' slugs in their order, the seasons, the hero's features, the apartment page's rooms and amenities, the age up to which a guest is a child, and the contact. |
+| `site.json` | The site's name, its languages in order as language tags, the apartments' slugs in their order, the seasons, the hero's features, the apartment page's rooms and amenities, the age up to which a guest is a child, the contact, the content pages and the footer's links. |
 | `apartments/<slug>.json` | One apartment: its Beds24 room ID, its name, its pictures and optionally its floor plan. One file for each slug `site.json` lists, and no other. |
 | `texts.<tag>.json` | Everything one language says: the wording, the address parts and the anchors. One file per language listed in `site.json`, such as `texts.en-GB.json`. |
+| `pages/<key>.<tag>.md` | A content page in one language, such as `pages/faq.en-GB.md`: one file for each page and language `site.json` lists, and no other. |
 | `theme.css` | The palette and the typeface as custom properties on `:root`, and the typeface's `@font-face`. |
 | `fonts/` | Optional: the font files `theme.css` refers to, as `fonts/<file>`. |
 | `pictures/` | The pictures `site.json` names, such as each season's hero photo, and the apartments' pictures and plans. |
@@ -35,7 +36,35 @@ content. The application has no wording, no colour and no typeface of its own. T
   home page's section anchors, also on an apartment's page for its map, never `top`, which is the
   page's top, nor an id the pages hold (`content`, `booking`, `booking-title`, `booking-season`,
   `guests-note`, `description`, `amenities`, `map-more`, `month-…`). An apartment's slug is the same
-  in every language.
+  in every language. Each content page has its address there too, by its key; no two pages share
+  one.
+- **A content page** is a page of text the deployment adds, such as the FAQ, the imprint or a guest
+  guide: `site.json` lists its key in `pages`, each texts file gives its address under `paths.<key>`
+  and the text of a link to it under `pages.<key>`, and `pages/<key>.<tag>.md` holds it in each
+  language. A key is not one of the application's own pages: `home`, `apartment`, `apartments`,
+  `book`, `confirmation`, `credits`. The file opens with its title as a `#` heading, which the page
+  and its tab show; the link text can be shorter, such as "FAQ". It may hold `##` to `####`
+  headings, paragraphs, lists, quotes, rules, **bold** and _italic_, tables, and links to `http`,
+  `https`, `mailto` and `tel` addresses and to the site's own paths, such as `/en/faq`. A question
+  that folds open is written as HTML, with a blank line after the `<summary>` line and before
+  `</details>`:
+
+  ```markdown
+  <details id="check-in">
+  <summary>How do I get into the apartment?</summary>
+
+  The answer, in **Markdown**.
+
+  </details>
+  ```
+
+  Its `id` is lower-case words joined by hyphens, once on the page and not one the pages hold (see
+  the address parts), and the page's address with it, `/en/faq#check-in`, opens the question:
+  printed in a QR code, it must not change. A table wider than the column scrolls on its own. How a
+  page is built is [ADR 17](adr/0017-content-pages-in-markdown.md).
+
+- **The footer's links** (`footer` in `site.json`) are content pages or `credits`, the picture
+  credits page, in their order.
 - **An apartment** is a file of its own, named by its slug: `site.json` lists
   `"apartments": ["zirbe", "laerche"]`, and `apartments/zirbe.json` holds
 
@@ -252,6 +281,7 @@ beyond a limit fails its build, with the limit named.
 | Hero features | Up to 5 | The hero's card | The schema |
 | An apartment's picture | Square to 2:1, landscape, with 1% to spare | The gallery's frames; tested with 1:1, 4:3 and 3:2 | The content script; the demo has 3:2, the e2e test site 1:1 and 4:3 |
 | An apartment's floor plan | One drawing, all floors in it | The gallery shows one plan | The schema |
+| A content page | Its title, then headings, paragraphs, lists, quotes, rules, links, tables and folded questions; no pictures yet | The elements the page styles | The content script |
 | The map's box | At most 0.1° each way, within 85° of latitude | The tiles grow with the area, and the repository and the image carry them; the demo's 0.07° by 0.03° is 773 kB | The schema |
 | The map's places | 1 to 10 | One route for each apartment and place, and the map's list of places | The schema |
 
@@ -280,11 +310,14 @@ missing in a language, an apartment without its file or a file in `apartments/` 
 does not list, a point outside the map's box or an apartment's point without a map, a waypoint on
 the way to no place of the map, a place without its name or with a text for a season the site does
 not list, tiles cut for another box or a tile missing, a `map/` folder without a map, a map without
-a `.woff2` font in `theme.css`, a route missing, left over or computed before a point moved, and a
-part beyond its boundary stop the build with the file and the key named; for the tiles and the
-routes, with the script to run. The schema, not the demo's files, defines the keys, so the compiler
-checks every template against the same keys for every site. Every language has the same keys, so
-every language renders the same elements and a change of language finds the reader's place.
+a `.woff2` font in `theme.css`, a route missing, left over or computed before a point moved, a
+content page without its file, address or link text in a language, a page file `site.json` does not
+list, a footer link to no page, two pages at one address, a page that does not open with its title
+or holds an element, an attribute, a link or a question's `id` the pages do not take, and a part
+beyond its boundary stop the build with the file and the key named; for the tiles and the routes,
+with the script to run. The schema, not the demo's files, defines the keys, so the compiler checks
+every template against the same keys for every site. Every language has the same keys, so every
+language renders the same elements and a change of language finds the reader's place.
 
 ## Another folder
 

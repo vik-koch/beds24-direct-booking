@@ -13,7 +13,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { after, test } from 'node:test';
 import { siteSchema } from '../src/content/schema.ts';
-import { readContent, waypoints, writeContent } from './content.mjs';
+import { readContent, readPage, waypoints, writeContent } from './content.mjs';
 
 // Every folder a test makes, removed when the file's tests are done.
 const root = mkdtempSync(join(tmpdir(), 'content-test-'));
@@ -1010,5 +1010,109 @@ test('the lifts go into a module of their own, for the map alone', async () => {
   assert.match(
     readFileSync(join(out, 'lifts.ts'), 'utf8'),
     /"kind": "gondola",\s+"name": "Kohlmaisbahn I",\s+"line": \[/,
+  );
+});
+
+test('a content page needs its file, its address and its link text in every language', () => {
+  const noFile = changed('site.json', () => undefined);
+  rmSync(join(noFile, 'pages', 'faq.en-GB.md'));
+  assert.throws(() => readContent(noFile), /pages\/faq\.en-GB\.md\n {2}\(file\): missing/);
+  for (const part of ['paths', 'pages']) {
+    const dir = changed('texts.de-AT.json', (texts) => delete texts[part].imprint);
+    assert.throws(
+      () => readContent(dir),
+      new RegExp(`texts\\.de-AT\\.json\\n {2}${part}\\.imprint: missing`),
+    );
+  }
+  const unlisted = changed('site.json', (site) => {
+    site.pages = site.pages.filter((key) => key !== 'about');
+  });
+  assert.throws(
+    () => readContent(unlisted),
+    /texts\.de-AT\.json\n {2}paths\.about: a page site\.json does not list/,
+  );
+});
+
+test('a page file that no page lists is refused', () => {
+  const dir = changed('site.json', () => undefined);
+  writeFileSync(join(dir, 'pages', 'guide.en-GB.md'), '# Guide\n');
+  assert.throws(() => readContent(dir), /guide\.en-GB\.md\n {2}\(file\): not a page/);
+});
+
+test('the footer links only to pages, and a page key is not one of the fixed pages', () => {
+  const footer = changed('site.json', (site) => site.footer.push('guide'));
+  assert.throws(() => readContent(footer), /site\.json\n {2}footer\.5: guide is not a page/);
+  for (const key of ['credits', 'home', 'apartment']) {
+    const fixed = changed('site.json', (site) => site.pages.push(key));
+    assert.throws(() => readContent(fixed), /site\.json\n {2}pages\.5: taken by a page/, key);
+  }
+});
+
+test('two pages may not share an address', () => {
+  const dir = changed('texts.en-GB.json', (texts) => (texts.paths.terms = 'privacy'));
+  assert.throws(
+    () => readContent(dir),
+    /texts\.en-GB\.json\n {2}paths\.(privacy|terms): privacy is another/,
+  );
+});
+
+test('a content page opens with its title and holds only what a page shows', () => {
+  const refused = [
+    ['Text first.\n\n# Title', /starts with its title/],
+    ['## Title', /starts with its title/],
+    ['# Title\n\n# Again', /a second # heading/],
+    ['<h1>Title</h1>', /starts with its title/],
+    ['# Title\n\n<a>Contact</a>', /a link without an address/],
+    ['# Title\n\nA <span>word</span>.', /has <span>/],
+    ['# Title\n\n![A bed](pictures/bed.webp)', /has <img>/],
+    ['# Title\n\n```\ncode\n```', /has <pre>/],
+    ['# Title\n\n<p class="x">Text</p>', /has class on <p>/],
+    ['# Title\n\n[Here](javascript:alert(1))', /links to javascript:alert\(1\)/],
+    ['# Title\n\n[Here](//other.example)', /links to \/\/other\.example/],
+    ['# Title\n\n[Here](#part)', /links to #part/],
+    ['# Title\n\n<details id="a">\n\nNo summary.\n\n</details>', /does not open with a <summary>/],
+    ['# Title\n\n<details>\n<summary>Q</summary>\n\nA.\n\n</details>', /without an id/],
+    [
+      '# Title\n\n<details id="content">\n<summary>Q</summary>\n\nA.\n\n</details>',
+      /one the pages use: content/,
+    ],
+    [
+      '# Title\n\n<details id="a">\n<summary>Q</summary>\n\nA.\n\n</details>\n\n<details id="a">\n<summary>R</summary>\n\nB.\n\n</details>',
+      /the id a twice/,
+    ],
+    [
+      '# Title\n\n<details id="a">\n<summary>Q</summary>\nAnswer\n</details>',
+      /text outside a paragraph: Answer; leave a blank line/,
+    ],
+    ['# Title\n\n<p>Text <summary>Q</summary></p>', /a <summary> that does not open a <details>/],
+    ['# Title\n\n<summary>Q</summary>', /a <summary> that does not open a <details>/],
+    ['# ![A bed](pictures/bed.webp)', /has <img>/],
+    ['# <span></span>', /has <span>/],
+    ['# <strong> </strong>', /a title without text/],
+    ['<style>p { color: red }</style>\n\n# Title', /starts with its title/],
+    ['# Title\n\n<style>p { color: red }</style>', /has <style>/],
+  ];
+  for (const [markdown, reason] of refused)
+    assert.throws(
+      () => readPage('page.md', markdown),
+      new RegExp(`page\\.md\\n {2}.*${reason.source}`),
+      markdown,
+    );
+});
+
+test("a content page's title is its heading, and its tables scroll in a frame", () => {
+  const page = readPage(
+    'page.md',
+    '# Our *terms*\n\nSee [the FAQ](/en/faq) or [mail us](mailto:a@b.example).\n\n| A | B |\n|---|--:|\n| 1 | 2 |\n\n<details id="arrival">\n<summary>When?</summary>\n\nFrom 4 pm.\n\n</details>\n',
+  );
+  assert.equal(page.title, 'Our terms');
+  assert.match(page.html, /^<p>See <a href="\/en\/faq">the FAQ<\/a>/);
+  assert.match(
+    page.html,
+    /<div class="table-frame"><table>[\s\S]*<th align="right">B<\/th>[\s\S]*<\/table><\/div>/,
+  );
+  assert.match(
+    page.html,
+    /<details id="arrival">\n<summary>When\?<\/summary><p>From 4 pm\.<\/p>\n<\/details>$/,
   );
 });

@@ -32,6 +32,8 @@
         try {
           target = document.getElementById(decodeURIComponent(location.hash.slice(1)));
         } catch {} // A fragment such as "#50%" cannot be decoded and names no section.
+        // A content page's question is shown open.
+        if (target instanceof HTMLDetailsElement) target.open = true;
         target?.scrollIntoView();
         if (scrollY > 0) document.querySelector('app-header')?.removeAttribute('data-over');
         // A jump the visitor asks for before the application starts is smooth all the same.

@@ -35,5 +35,7 @@
   "contact": {
     "name": "Casa Prova",
     "email": "ciao@casa-prova.example"
-  }
+  },
+  "pages": ["about", "faq", "imprint", "privacy", "terms"],
+  "footer": ["faq", "imprint", "privacy", "terms", "credits"]
 }

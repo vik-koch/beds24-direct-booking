@@ -91,19 +91,25 @@
 
 /* The accordion: rows on a white sheet, a hairline between them. The content starts where the
    trigger's text does, after its icon. */
-.spartan-accordion {
+.spartan-accordion,
+.prose details {
   --row-padding: 1.25rem;
   --row-icon: 1.25rem;
   --row-gap: 0.75rem;
-  border-radius: var(--radius-card);
   background: var(--color-surface);
 }
 
-.spartan-accordion-item + .spartan-accordion-item {
+.spartan-accordion {
+  border-radius: var(--radius-card);
+}
+
+.spartan-accordion-item + .spartan-accordion-item,
+.prose details + details {
   border-top: 1px solid var(--color-line);
 }
 
-.spartan-accordion-trigger {
+.spartan-accordion-trigger,
+.prose summary {
   align-items: center;
   gap: var(--row-gap);
   min-height: 3.5rem;

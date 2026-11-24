@@ -1,6 +1,7 @@
 import { DOCUMENT } from '@angular/common';
 import { inject, REQUEST_CONTEXT } from '@angular/core';
 import { Routes } from '@angular/router';
+import { loadPage } from '../content/generated/pages';
 import site from '../content/generated/site';
 import { loadTexts } from '../content/generated/texts';
 import type { Language } from '../content/schema';
@@ -11,19 +12,10 @@ import { listing } from './listing';
 import { NotFound } from './not-found';
 import { Placeholder } from './placeholder';
 import { Shell } from './shell';
+import { TextPage } from './text-page';
 import { LANGUAGE, TEXTS } from './texts';
 
-export const simplePages = [
-  'confirmation',
-  'faq',
-  'about',
-  'imprint',
-  'privacy',
-  'terms',
-  'credits',
-] as const;
-
-const pages = ({ paths }: Language): Routes => [
+const pages = ({ code, paths }: Language): Routes => [
   { path: '', component: Home, resolve: { weeks }, data: { page: 'home' } },
   {
     path: `${paths.apartments}/:slug`,
@@ -39,9 +31,12 @@ const pages = ({ paths }: Language): Routes => [
       { path: paths.book, component: Placeholder, data: { page: 'book' } },
     ],
   },
-  ...simplePages.map((page) => ({
+  { path: paths.confirmation, component: Placeholder, data: { page: 'confirmation' } },
+  { path: paths.credits, component: Credits, data: { page: 'credits' } },
+  ...site.pages.map((page) => ({
     path: paths[page],
-    component: page === 'credits' ? Credits : Placeholder,
+    component: TextPage,
+    resolve: { content: () => loadPage[code][page]() },
     data: { page },
   })),
   { path: '**', component: NotFound, data: { page: 'notFound' } },

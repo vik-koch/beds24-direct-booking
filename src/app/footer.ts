@@ -31,16 +31,18 @@ import { address, LANGUAGE, TEXTS } from './texts';
           </address>
         </div>
       }
-      <nav [attr.aria-label]="texts.footer.more">
-        <h2 class="label text-ink-soft">{{ texts.footer.more }}</h2>
-        <ul class="mt-2">
-          @for (link of links; track link.path) {
-            <li>
-              <a [routerLink]="link.path" [queryParams]="choice.params()">{{ link.text }}</a>
-            </li>
-          }
-        </ul>
-      </nav>
+      @if (links.length) {
+        <nav [attr.aria-label]="texts.footer.more">
+          <h2 class="label text-ink-soft">{{ texts.footer.more }}</h2>
+          <ul class="mt-2">
+            @for (link of links; track link.path) {
+              <li>
+                <a [routerLink]="link.path" [queryParams]="choice.params()">{{ link.text }}</a>
+              </li>
+            }
+          </ul>
+        </nav>
+      }
     </footer>
   `,
   host: { class: 'block' },
@@ -50,7 +52,8 @@ export class Footer {
   protected readonly contact = site.contact;
   protected readonly choice = inject(Choice);
   private readonly language = inject(LANGUAGE);
-  protected readonly links = (['faq', 'imprint', 'privacy', 'terms', 'credits'] as const).map(
-    (page) => ({ text: this.texts.pages[page], path: address(this.language, page) }),
-  );
+  protected readonly links = site.footer.map((page) => ({
+    text: this.texts.pages[page],
+    path: address(this.language, page),
+  }));
 }

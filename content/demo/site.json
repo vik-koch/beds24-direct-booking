@@ -93,5 +93,7 @@
         "more": true
       }
     ]
-  }
+  },
+  "pages": ["about", "faq", "imprint", "privacy", "terms"],
+  "footer": ["faq", "imprint", "privacy", "terms", "credits"]
 }
