@@ -89,9 +89,10 @@ content. The application has no wording, no colour and no typeface of its own. T
   each language, its polygon's corners as `[x, y]` pairs, at least three, and the `label` point
   `[x, y]` its name is centred on, both in the drawing's coordinates and inside its `viewBox`. A
   picture names the zones it is a picture of, `"zones": ["kitchen", "dining"]`, or none, not a zone
-  seen only through a door or at its edge, since choosing a zone shows its pictures; every zone is
-  shown by at least one picture. The drawing is served at `/pictures/apartments/` under a name that
-  changes with it.
+  seen only through a door or at its edge, since choosing a zone shows its pictures; in each season
+  the site lists, every zone is shown by at least one picture, and a picture without a season counts
+  in every season. The drawing is served at `/pictures/apartments/` under a name that changes with
+  it.
 
 - **The apartment page** (`apartment` in a texts file) is the page's wording: its headings, the
   facts line (`guests` and `bedrooms` take `{count}`, with a `one` and an `other` form), and the

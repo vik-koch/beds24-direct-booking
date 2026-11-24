@@ -1006,8 +1006,8 @@
     }
   }
 
-  /* Names chosen as words, a pill once chosen: the map's apartments, the floor plan's rooms. */
-  :is(.map-choices, .zone-choices) {
+  /* Names chosen as words, a pill once chosen: the map's apartments. */
+  .map-choices {
     display: flex;
     flex-wrap: wrap;
     gap: 0.25rem;
@@ -1021,9 +1021,8 @@
     }
   }
 
-  /* An apartment or a room chosen among pills: the week sheet's tabs, the map's routes, the floor
-     plan's rooms. */
-  :is(.room-tabs, .map-choices, .zone-choices) {
+  /* An apartment chosen among pills: the week sheet's tabs, the map's routes. */
+  :is(.room-tabs, .map-choices) {
     input {
       position: absolute;
       opacity: 0;
@@ -1265,8 +1264,8 @@
   }
 
   /* Accent text that a click chooses, an accent pill once chosen: a week's price, an apartment
-     on the map, a room of the floor plan. */
-  :is(.price, .map-choices span, .zone-choices span) {
+     on the map. */
+  :is(.price, .map-choices span) {
     color: var(--color-accent);
     font-weight: 500;
     cursor: pointer;
@@ -1279,7 +1278,7 @@
     }
   }
 
-  :is(.stay.chosen .price, :is(.map-choices, .zone-choices) :checked + span) {
+  :is(.stay.chosen .price, .map-choices :checked + span) {
     background: var(--color-accent);
     color: var(--color-on-accent);
   }

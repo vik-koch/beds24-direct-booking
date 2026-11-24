@@ -286,8 +286,8 @@ downwards, so it reads as lying on the page rather than floating.
   own: buttons, tabs, icon buttons, menu entries, the season switch, the home page's guest pills,
   the back link and the text buttons. `--size-control-small`, 2.125rem (34 px), inside a dense card:
   the prices and weeks of both week lists, the booking panel's guest pills, the view toggles of the
-  booking panel and the picture viewer, the map's apartments, the floor plan's rooms, and the season
-  switch's inner pill. A new control takes one of them, not a number.
+  booking panel and the picture viewer, the map's apartments, and the season switch's inner pill. A
+  new control takes one of them, not a number.
 - **Shape:** pill (999px), 1.5rem of padding at the sides.
 - **Primary:** accent fill, white text at weight 500.
 - **Hover / Focus:** a soft shadow in the accent on hover (underlined instead where the button
