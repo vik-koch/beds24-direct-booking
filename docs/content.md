@@ -9,7 +9,7 @@ content. The application has no wording, no colour and no typeface of its own. T
 <!-- prettier-ignore -->
 | File | What it holds |
 |---|---|
-| `site.json` | The site's name, its languages in order as language tags, the apartments' slugs in their order, the seasons, the hero's features, the apartment page's rooms and amenities, the age up to which a guest is a child, the contact, the content pages and the header's and the footer's links. |
+| `site.json` | The site's name, its languages in order as language tags, the apartments' slugs in their order, the seasons, the hero's features, the apartment page's rooms and amenities, the age up to which a guest is a child, the contact, the credits of the pages' pictures, the content pages and the header's and the footer's links. |
 | `apartments/<slug>.json` | One apartment: its Beds24 room ID, its name, its pictures and optionally its floor plan. One file for each slug `site.json` lists, and no other. |
 | `texts.<tag>.json` | Everything one language says: the wording, the address parts and the anchors. One file per language listed in `site.json`, such as `texts.en-GB.json`. |
 | `pages/<key>.<tag>.md` | A content page in one language, such as `pages/faq.en-GB.md`: one file for each page and language `site.json` lists, and no other. |
@@ -62,6 +62,20 @@ content. The application has no wording, no colour and no typeface of its own. T
   the address parts), and the page's address with it, `/en/faq#check-in`, opens the question:
   printed in a QR code, it must not change. A table wider than the column scrolls on its own. How a
   page is built is [ADR 17](adr/0017-content-pages-in-markdown.md).
+
+  A picture stands in a paragraph of its own, written with its alternative text in the page's
+  language: `![The village in summer, seen from a trail above it](pictures/saalbach-summer.webp)`.
+  It is a file in `pictures/`, from square to 2:1 like an apartment's, and the build converts it the
+  same way, once for all pages, at `/pictures/pages/`. The page shows it across the column. Who to
+  credit for it is said once for every language, in `site.json`:
+
+  ```json
+  "pictures": [{ "file": "pictures/saalbach-summer.webp", "credit": { "title": "…", … } }]
+  ```
+
+  with the credit as a hero's (see a picture below). A picture that needs no credit is not listed;
+  one listed that no page shows stops the build. A picture made by an image model belongs to an
+  apartment's pictures, which label it: a page has no such label.
 
 - **The header's links** (`header` in `site.json`) are up to two content pages, in their order,
   after the header's own links to the free weeks, the apartments and the location. The page shown is
@@ -285,7 +299,7 @@ beyond a limit fails its build, with the limit named.
 | Hero features | Up to 5 | The hero's card | The schema |
 | An apartment's picture | Square to 2:1, landscape, with 1% to spare | The gallery's frames; tested with 1:1, 4:3 and 3:2 | The content script; the demo has 3:2, the e2e test site 1:1 and 4:3 |
 | An apartment's floor plan | One drawing, all floors in it | The gallery shows one plan | The schema |
-| A content page | Its title, then headings, paragraphs, lists, quotes, rules, links, tables and folded questions; no pictures yet | The elements the page styles | The content script |
+| A content page | Its title, then headings, paragraphs, lists, quotes, rules, links, tables, folded questions and pictures | The elements the page styles | The content script |
 | The map's box | At most 0.1° each way, within 85° of latitude | The tiles grow with the area, and the repository and the image carry them; the demo's 0.07° by 0.03° is 773 kB | The schema |
 | The map's places | 1 to 10 | One route for each apartment and place, and the map's list of places | The schema |
 
@@ -318,11 +332,12 @@ a `.woff2` font in `theme.css`, a route missing, left over or computed before a 
 content page without its file, address or link text in a language, a page file `site.json` does not
 list, a header or footer link to no page, a footer link the header has, two pages at one address, a
 page that does not open with its title or holds an element, an attribute, a link or a question's
-`id` the pages do not take, and a part beyond its boundary stop the build with the file and the key
-named; for the tiles and the routes, with the script to run. The schema, not the demo's files,
-defines the keys, so the compiler checks every template against the same keys for every site. Every
-language has the same keys, so every language renders the same elements and a change of language
-finds the reader's place.
+`id` the pages do not take, a page's picture without its file or alternative text or beside other
+text, a credited picture no page shows, and a part beyond its boundary stop the build with the file
+and the key named; for the tiles and the routes, with the script to run. The schema, not the demo's
+files, defines the keys, so the compiler checks every template against the same keys for every site.
+Every language has the same keys, so every language renders the same elements and a change of
+language finds the reader's place.
 
 ## Another folder
 

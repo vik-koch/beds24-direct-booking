@@ -9,7 +9,7 @@ import {
   rmSync,
   writeFileSync,
 } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { basename, join, resolve } from 'node:path';
 import * as lucide from '@ng-icons/lucide';
 import { JSDOM } from 'jsdom';
 import { marked } from 'marked';
@@ -25,7 +25,7 @@ import {
   siteSchema,
   textsSchema,
 } from '../src/content/schema.ts';
-import { convertHero, convertPictures } from './pictures.mjs';
+import { convertHero, convertPicture, convertPictures } from './pictures.mjs';
 
 // Every key one of two texts has and the other lacks, and whether the second lacks it.
 function differences(a, b, path = []) {
@@ -102,6 +102,13 @@ function readPlan(dir, file, plan) {
   return viewBox;
 }
 
+// HTML parsed in a template, where no element moves to a document's head and drops out of sight.
+const parse = (html) => {
+  const template = parser.parseFromString('<template></template>', 'text/html').head.firstChild;
+  template.innerHTML = html;
+  return template;
+};
+
 // The elements a content page styles, with the attributes each may have.
 const pageElements = {
   ...Object.fromEntries(
@@ -113,22 +120,21 @@ const pageElements = {
   th: ['align'],
   td: ['align'],
   a: ['href'],
+  img: ['src', 'alt'],
   details: ['id'],
   summary: [],
 };
 
-// A content page from its Markdown: the title of the one # heading it opens with, and the rest
-// as HTML of the elements the page styles. The file is the deployment's own, so what the page
-// would not style is refused rather than dropped.
+// A content page from its Markdown: the title of the one # heading it opens with, the rest as HTML
+// of the elements the page styles, and the files of its pictures. The file is the deployment's
+// own, so what the page would not style is refused rather than dropped.
 export function readPage(file, markdown) {
   const fail = (reason) => new Error(`${file}\n  ${reason}`);
   const tokens = marked.lexer(markdown);
   const first = tokens.find((token) => token.type !== 'space');
   if (first?.type !== 'heading' || first.depth !== 1)
     throw fail('starts with its title, a # heading');
-  // Parsed in a template, where no element moves to a document's head and drops out of sight.
-  const template = parser.parseFromString('<template></template>', 'text/html').head.firstChild;
-  template.innerHTML = marked.parser(tokens);
+  const template = parse(marked.parser(tokens));
   const body = template.content;
   const title = body.firstElementChild;
   const ids = new Set();
@@ -145,6 +151,14 @@ export function readPage(file, markdown) {
           `links to ${value}: give a path from the root, or an http(s), mailto or tel link`,
         );
     const parent = element.parentElement;
+    if (name === 'img') {
+      if (!/^pictures\/[\w.-]+$/.test(element.getAttribute('src')))
+        throw fail(`shows ${element.getAttribute('src')}: give a file in pictures/`);
+      if (!element.getAttribute('alt')?.trim())
+        throw fail(`shows ${element.getAttribute('src')} without an alternative text`);
+      if (parent?.localName !== 'p' || parent.childNodes.length !== 1)
+        throw fail(`shows ${element.getAttribute('src')} outside a paragraph of its own`);
+    }
     if (
       name === 'summary' &&
       (parent?.localName !== 'details' || element !== parent.firstElementChild)
@@ -179,7 +193,8 @@ export function readPage(file, markdown) {
     table.replaceWith(frame);
     frame.append(table);
   }
-  return { title: text, html: template.innerHTML.trim() };
+  const pictures = [...body.querySelectorAll('img')].map((img) => img.getAttribute('src'));
+  return { title: text, html: template.innerHTML.trim(), pictures };
 }
 
 // With a map every apartment has its point inside the box; without one none has a point. Its
@@ -414,10 +429,22 @@ export function readContent(dir) {
       site.pages.map((key) => {
         const page = join(dir, 'pages', `${key}.${tag}.md`);
         if (!existsSync(page)) throw new Error(`${page}\n  (file): missing`);
-        return [key, readPage(page, readFileSync(page, 'utf8'))];
+        const read = readPage(page, readFileSync(page, 'utf8'));
+        for (const file of read.pictures)
+          if (!existsSync(join(dir, file)))
+            throw new Error(`${page}\n  shows ${file}, which does not exist`);
+        return [key, read];
       }),
     );
   }
+  // A credit is for a picture a page shows.
+  const shown = Object.values(pages).flatMap((list) =>
+    Object.values(list).flatMap(({ pictures }) => pictures),
+  );
+  site.pictures?.forEach(({ file }, index) => {
+    if (!shown.includes(file))
+      throw new Error(`${join(dir, 'site.json')}\n  pictures.${index}: ${file} is on no page`);
+  });
   if (existsSync(join(dir, 'pages')))
     for (const file of readdirSync(join(dir, 'pages')))
       if (!site.pages.some((key) => site.languages.some((tag) => file === `${key}.${tag}.md`)))
@@ -438,8 +465,12 @@ export function readContent(dir) {
       );
   }
   // Every change a credit lists is named in every language.
-  for (const name of listed)
-    for (const change of site.seasons[name].hero.credit?.changes ?? [])
+  const credits = [
+    ...listed.map((name) => site.seasons[name].hero.credit),
+    ...(site.pictures ?? []).map(({ credit }) => credit),
+  ];
+  for (const credit of credits)
+    for (const change of credit?.changes ?? [])
       for (const tag of site.languages)
         if (!texts[prefix(tag)].credits.changes?.[change])
           throw new Error(
@@ -561,6 +592,38 @@ export async function writeContent(dir, out, cache) {
     converted += files.converted;
     seasons[name] = { ...season, hero: { credit: season.hero.credit, ...files.hero } };
   }
+  // The pages' pictures, each file once for all pages and languages; a page shows its files.
+  const shown = {};
+  for (const list of Object.values(pages))
+    for (const { pictures: files } of Object.values(list))
+      for (const file of files.filter((file) => !shown[file])) {
+        const name = basename(file).replace(/\.[^.]*$/, '');
+        const page = await convertPicture(
+          dir,
+          file,
+          name,
+          join(out, 'pictures', 'pages'),
+          '/pictures/pages',
+          cache,
+        ).catch((error) => {
+          throw new Error(`${join(dir, file)}\n  ${error.message}`);
+        });
+        converted += page.converted;
+        shown[file] = page.picture;
+      }
+  const withFiles = ({ title, html }) => {
+    const template = parse(html);
+    for (const img of template.content.querySelectorAll('img')) {
+      const { width, height, sources } = shown[img.getAttribute('src')];
+      img.setAttribute('src', sources[0].url);
+      img.setAttribute('srcset', sources.map(({ url, width }) => `${url} ${width}w`).join(', '));
+      img.setAttribute('sizes', '(min-width: 44rem) 40rem, 100vw');
+      img.setAttribute('width', width);
+      img.setAttribute('height', height);
+      img.setAttribute('loading', 'lazy');
+    }
+    return { title, html: template.innerHTML };
+  };
   // Texts by address prefix, as the texts are; the routes' points stay with the routes. A plan is
   // served under a name that changes with it, as a converted picture is.
   const byPrefix = (texts) =>
@@ -623,7 +686,7 @@ export async function writeContent(dir, out, cache) {
   // A module per content page and language, which only its page loads.
   for (const [code, list] of Object.entries(pages))
     for (const [key, page] of Object.entries(list))
-      writeFileSync(join(out, `page.${code}.${key}.ts`), module('ContentPage', page));
+      writeFileSync(join(out, `page.${code}.${key}.ts`), module('ContentPage', withFiles(page)));
   const pageLoaders = Object.entries(pages).map(
     ([code, list]) =>
       `  ${code}: {\n${Object.keys(list)

@@ -1421,6 +1421,17 @@
       font-weight: 600;
     }
 
+    /* A picture stands in a paragraph of its own (the content script), across the column. */
+    p:has(> img) {
+      margin-block: 1.25rem;
+    }
+
+    img {
+      width: 100%;
+      height: auto;
+      border-radius: var(--radius-card);
+    }
+
     a {
       color: var(--color-accent);
       font-weight: 500;
