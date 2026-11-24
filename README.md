@@ -4,19 +4,20 @@ A direct-booking website for holiday apartments that are rented by the week. Bed
 management system: it holds availability, prices and listing texts, and takes the booking and the
 payment. The site shows the free weeks with their prices and hands over to the Beds24 guest form.
 
-**Status:** `0.4.0` is the current release. The home page shows the two seasons, each with its hero
+**Status:** `0.5.0` is the current release. The home page shows the two seasons, each with its hero
 picture and tab icon, the free weeks of every apartment with their prices from Beds24, and each
 apartment as a card. Every apartment has its own page with its pictures, the facts and texts of its
-Beds24 listing, and a booking panel to choose a week and the guests. The home page and every
-apartment page show a map of the place from the site's own tiles, with walking routes from the
-apartments to the places guests look for; a weekly workflow proposes newer map data as a pull
-request. The other pages of the site map stand in both languages, with the header, the footer and
-the demo notice, all from a deployment's [content folder](docs/content.md); apart from the picture
-credits they are placeholders until their slice. A site of its own is deployed from a release, also
-beside another one on the same machine and closed with a password while it is under test. The demo
-is live at <https://beds24.vikkoch.com/> and follows `main`. This repository carries a fictional
-demo only: _Firn & Farn_, an invented business in Saalbach in Austria, in German and English. Its
-Beds24 is a [simulator](sim/README.md).
+Beds24 listing, and a booking panel to choose a week and the guests. An apartment with a floor plan
+shows it in its gallery: each picture's room is framed on the plan, and a room chosen on the plan
+opens its pictures. The home page and every apartment page show a map of the place from the site's
+own tiles, with walking routes from the apartments to the places guests look for; a weekly workflow
+proposes newer map data as a pull request. The other pages of the site map stand in both languages,
+with the header, the footer and the demo notice, all from a deployment's
+[content folder](docs/content.md); apart from the picture credits they are placeholders until their
+slice. A site of its own is deployed from a release, also beside another one on the same machine and
+closed with a password while it is under test. The demo is live at <https://beds24.vikkoch.com/> and
+follows `main`. This repository carries a fictional demo only: _Firn & Farn_, an invented business
+in Saalbach in Austria, in German and English. Its Beds24 is a [simulator](sim/README.md).
 
 ## Documents
 
