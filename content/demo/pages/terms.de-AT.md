@@ -1,4 +1,4 @@
-# Allgemeine Geschäftsbedingungen
+# Allgemeine Geschäfts&shy;bedingungen
 
 > Firn & Farn ist erfunden: Diese Website ist eine Demo, und diese Bedingungen sind ein Beispiel
 > dafür, was ein österreichischer Vermieter von Ferienwohnungen hier regelt. Sie sind keine Vorlage
