@@ -12,6 +12,7 @@ What is built, for whom, and where its boundaries are.
 | ADR | Decision | Status |
 |---|---|---|
 | [1](0001-beds24-and-an-own-website.md) | Beds24 holds the bookings, an own website shows them | Accepted |
+| [16](0016-the-floor-plan.md) | The floor plan: one drawing without text shown as a picture, its zones and their names in the apartment's file | Accepted |
 
 ## Stack
 
