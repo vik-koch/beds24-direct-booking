@@ -1061,6 +1061,8 @@ test('a content page opens with its title and holds only what a page shows', () 
     ['Text first.\n\n# Title', /starts with its title/],
     ['## Title', /starts with its title/],
     ['# Title\n\n# Again', /a second # heading/],
+    ['<h1>Title</h1>', /starts with its title/],
+    ['# Title\n\n<a>Contact</a>', /a link without an address/],
     ['# Title\n\nA <span>word</span>.', /has <span>/],
     ['# Title\n\n![A bed](pictures/bed.webp)', /has <img>/],
     ['# Title\n\n```\ncode\n```', /has <pre>/],

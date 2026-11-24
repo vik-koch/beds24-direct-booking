@@ -122,17 +122,21 @@ const pageElements = {
 // would not style is refused rather than dropped.
 export function readPage(file, markdown) {
   const fail = (reason) => new Error(`${file}\n  ${reason}`);
+  const tokens = marked.lexer(markdown);
+  const first = tokens.find((token) => token.type !== 'space');
+  if (first?.type !== 'heading' || first.depth !== 1)
+    throw fail('starts with its title, a # heading');
   // Parsed in a template, where no element moves to a document's head and drops out of sight.
   const template = parser.parseFromString('<template></template>', 'text/html').head.firstChild;
-  template.innerHTML = marked.parse(markdown);
+  template.innerHTML = marked.parser(tokens);
   const body = template.content;
   const title = body.firstElementChild;
-  if (title?.localName !== 'h1') throw fail('starts with its title, a # heading');
   const ids = new Set();
   for (const element of body.querySelectorAll('*')) {
     const name = element.localName;
     if (name === 'h1' && element !== title) throw fail('has a second # heading');
     if (!Object.hasOwn(pageElements, name)) throw fail(`has <${name}>, which a page does not show`);
+    if (name === 'a' && !element.hasAttribute('href')) throw fail('has a link without an address');
     for (const { name: attribute, value } of element.attributes)
       if (!pageElements[name].includes(attribute))
         throw fail(`has ${attribute} on <${name}>, which a page does not take`);

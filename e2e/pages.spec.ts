@@ -42,13 +42,17 @@ test('a table wider than the column scrolls in its frame, reached by keyboard', 
   await expect(frame).not.toHaveAttribute('tabindex');
 });
 
-test("a link to the site's own page carries the chosen guests", async ({ page }) => {
-  await page.goto(`${other}/it/domande?adults=3`);
-  const link = page.getByRole('link', { name: 'gli appartamenti' });
-  await expect(link).toHaveAttribute('href', '/it?adults=3#appartamenti');
-  await link.click();
-  await expect(page).toHaveURL(`${other}/it?adults=3#appartamenti`);
-});
+test(
+  "a link to the site's own page carries the chosen guests",
+  { tag: '@any-engine' },
+  async ({ page }) => {
+    await page.goto(`${other}/it/domande?adults=3`);
+    const link = page.getByRole('link', { name: 'gli appartamenti' });
+    await expect(link).toHaveAttribute('href', '/it?adults=3#appartamenti');
+    await link.click();
+    await expect(page).toHaveURL(`${other}/it?adults=3#appartamenti`);
+  },
+);
 
 test('a question the address names is open, below the header, also when the address changes', async ({
   page,
