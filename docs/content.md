@@ -10,11 +10,11 @@ content. The application has no wording, no colour and no typeface of its own. T
 | File | What it holds |
 |---|---|
 | `site.json` | The site's name, its languages in order as language tags, the apartments' slugs in their order, the seasons, the hero's features, the apartment page's rooms and amenities, the age up to which a guest is a child, and the contact. |
-| `apartments/<slug>.json` | One apartment: its Beds24 room ID, its name and its pictures. One file for each slug `site.json` lists, and no other. |
+| `apartments/<slug>.json` | One apartment: its Beds24 room ID, its name, its pictures and optionally its floor plan. One file for each slug `site.json` lists, and no other. |
 | `texts.<tag>.json` | Everything one language says: the wording, the address parts and the anchors. One file per language listed in `site.json`, such as `texts.en-GB.json`. |
 | `theme.css` | The palette and the typeface as custom properties on `:root`, and the typeface's `@font-face`. |
 | `fonts/` | Optional: the font files `theme.css` refers to, as `fonts/<file>`. |
-| `pictures/` | The pictures `site.json` names, such as each season's hero photo. |
+| `pictures/` | The pictures `site.json` names, such as each season's hero photo, and the apartments' pictures and plans. |
 | `map/` | With a map: its tiles, walking routes and lifts, written by the three map scripts and committed. |
 
 - **Fonts are served at `/fonts/<file>`** under their own names, and every page preloads each
@@ -62,6 +62,36 @@ content. The application has no wording, no colour and no typeface of its own. T
   picture made by an image model is marked `"generated": true`, and the page puts a label on it in
   the words of `apartment.generated`, such as "AI image": an image model's terms may ask for a
   disclosure no viewer could miss.
+- **An apartment's floor plan** (`plan` in its file, optional) is a drawing and the zones a visitor
+  chooses on it ([ADR 16](adr/0016-the-floor-plan.md)):
+
+  ```json
+  "plan": {
+    "file": "pictures/laerche-plan.svg",
+    "alt": { "de-AT": "…", "en-GB": "…" },
+    "zones": [
+      {
+        "key": "kitchen",
+        "name": { "de-AT": "Küche", "en-GB": "Kitchen" },
+        "points": [[0, 0], [325, 0], [325, 110], [0, 110]],
+        "label": [160, 55]
+      }
+    ]
+  }
+  ```
+
+  The drawing is one SVG file in `pictures/` per apartment, shared by all languages, with a
+  `viewBox`: it has no text, since the page writes the zones' names in the theme's typeface, no
+  script and no reference to another file. It styles itself with attributes or a `<style>` element
+  inside it, never with an `<?xml-stylesheet?>` line, which the build refuses. Its background is
+  transparent, and its colours are its own, not the theme's. An apartment on two floors draws them
+  side by side. `alt` says in each language what the plan shows. Each zone has a key, its `name` in
+  each language, its polygon's corners as `[x, y]` pairs, at least three, and the `label` point
+  `[x, y]` its name is centred on, both in the drawing's coordinates and inside its `viewBox`. A
+  picture names the zones it shows, `"zones": ["kitchen", "dining"]`, or none; every zone is shown
+  by at least one picture. The drawing is served at `/pictures/apartments/` under a name that
+  changes with it.
+
 - **The apartment page** (`apartment` in a texts file) is the page's wording: its headings, the
   facts line (`guests` and `bedrooms` take `{count}`, with a `one` and an `other` form), and the
   arrival and departure times as Beds24's `HH:MM`: `checkIn.both` takes `{from}` and `{until}`,
@@ -218,6 +248,7 @@ beyond a limit fails its build, with the limit named.
 | A room's guests in Beds24 | `maxAdult` empty or equal to `maxPeople`; `maxChildren` empty, 0 or at least `maxPeople − 1` | The site takes a room by its total: any guest may be an adult, and with one adult required the children's limit never applies on its own | Not the build: the server logs a warning when it loads a room beyond this, and treats it by its total |
 | Hero features | Up to 5 | The hero's card | The schema |
 | An apartment's picture | Square to 2:1, landscape, with 1% to spare | The gallery's frames; tested with 1:1, 4:3 and 3:2 | The content script; the demo has 3:2, the e2e test site 1:1 and 4:3 |
+| An apartment's floor plan | One drawing, all floors in it | The gallery shows one plan | The schema |
 | The map's box | At most 0.1° each way, within 85° of latitude | The tiles grow with the area, and the repository and the image carry them; the demo's 0.07° by 0.03° is 773 kB | The schema |
 | The map's places | 1 to 10 | One route for each apartment and place, and the map's list of places | The schema |
 
@@ -239,16 +270,18 @@ the texts but not in `site.json` or the other way round, a feature without its t
 without its feature, an amenity's or a room's icon that is not Lucide's, a code listed twice, an
 area or a room without its name or a name without its area or room, a listed code without its label,
 a missing picture, an apartment picture that is not one, does not answer, is portrait or wider than
-2:1 or lacks its alternative text in a language, an apartment without its file or a file in
-`apartments/` that `site.json` does not list, a point outside the map's box or an apartment's point
-without a map, a waypoint on the way to no place of the map, a place without its name or with a text
-for a season the site does not list, tiles cut for another box or a tile missing, a `map/` folder
-without a map, a map without a `.woff2` font in `theme.css`, a route missing, left over or computed
-before a point moved, and a part beyond its boundary stop the build with the file and the key named;
-for the tiles and the routes, with the script to run. The schema, not the demo's files, defines the
-keys, so the compiler checks every template against the same keys for every site. Every language has
-the same keys, so every language renders the same elements and a change of language finds the
-reader's place.
+2:1 or lacks its alternative text in a language, a plan's drawing that is no SVG document, has no
+`viewBox`, has text, a script or a reference to another file, a zone or its label outside the
+`viewBox`, a zone no picture shows or a picture's zone the plan lacks, a plan's or a zone's text
+missing in a language, an apartment without its file or a file in `apartments/` that `site.json`
+does not list, a point outside the map's box or an apartment's point without a map, a waypoint on
+the way to no place of the map, a place without its name or with a text for a season the site does
+not list, tiles cut for another box or a tile missing, a `map/` folder without a map, a map without
+a `.woff2` font in `theme.css`, a route missing, left over or computed before a point moved, and a
+part beyond its boundary stop the build with the file and the key named; for the tiles and the
+routes, with the script to run. The schema, not the demo's files, defines the keys, so the compiler
+checks every template against the same keys for every site. Every language has the same keys, so
+every language renders the same elements and a change of language finds the reader's place.
 
 ## Another folder
 

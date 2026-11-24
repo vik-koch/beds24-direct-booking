@@ -50,8 +50,8 @@ const day = z
 // What was done to a credited picture; each language's texts name them.
 export const changeNames = ['cropped', 'scaled'] as const;
 
-// The browser tab's icon while the season is shown.
-const icon = z.string().regex(/^pictures\/[\w.-]+\.svg$/, 'not an SVG file in pictures/');
+// An SVG file, such as the browser tab's icon while the season is shown.
+const svg = z.string().regex(/^pictures\/[\w.-]+\.svg$/, 'not an SVG file in pictures/');
 
 // A file in the content folder's pictures/, and who to credit for it.
 const picture = z.strictObject({
@@ -128,8 +128,8 @@ const map = z
 const seasons = z
   .strictObject(
     {
-      winter: z.strictObject({ start: day.optional(), hero: picture, icon }).optional(),
-      summer: z.strictObject({ start: day.optional(), hero: picture, icon }).optional(),
+      winter: z.strictObject({ start: day.optional(), hero: picture, icon: svg }).optional(),
+      summer: z.strictObject({ start: day.optional(), hero: picture, icon: svg }).optional(),
     },
     {
       error: (issue) =>
@@ -224,10 +224,32 @@ export const siteSchema = z.strictObject({
   map: map.optional(),
 });
 
+// An apartment's floor plan: an SVG drawing in pictures/, its alternative text in each of the
+// site's languages by tag, and the zones a visitor chooses on it. A zone has its name in each
+// language, its polygon's corners and the point its name is centred on, each as [x, y] in the
+// drawing's coordinates; the content script checks the drawing, the languages and the points.
+const point = z.tuple([z.number(), z.number()]);
+const plan = z.strictObject({
+  file: svg,
+  alt: z.record(z.string(), text),
+  zones: z
+    .array(
+      z.strictObject({
+        key: segment,
+        name: z.record(z.string(), text),
+        points: z.array(point).min(3, 'at least three points'),
+        label: point,
+      }),
+    )
+    .min(1, 'at least one zone')
+    .refine((list) => unique(list, (zone) => zone.key), 'a zone key is listed twice'),
+});
+
 // An apartment's pictures in their order: a file in the content folder's pictures/ or an https
 // address, such as a Beds24 picture's, and its alternative text in each of the site's languages
 // by tag; the content script checks the languages and converts the pictures. A picture with a
-// season shows in that season only; each season's gallery is the list without the other's.
+// season shows in that season only; each season's gallery is the list without the other's. A
+// picture names the plan's zones it shows.
 export const apartmentSchema = z.strictObject({
   roomId: z.number().int(),
   // Where a guest leaves the house; given with a map and only then.
@@ -253,9 +275,15 @@ export const apartmentSchema = z.strictObject({
         // Made by an image model: the page labels it so.
         generated: z.literal(true).optional(),
         season: z.enum(seasonNames).optional(),
+        zones: z
+          .array(segment)
+          .min(1)
+          .refine((list) => unique(list, (key) => key), 'a zone is listed twice')
+          .optional(),
       }),
     )
     .min(1, 'at least one picture'),
+  plan: plan.optional(),
 });
 
 export const textsSchema = z.strictObject({
@@ -452,6 +480,7 @@ export interface Picture {
   alt: Record<string, string>;
   generated?: true;
   season?: SeasonName;
+  zones?: string[];
   width: number;
   height: number;
   sources: { width: number; url: string }[];
@@ -464,9 +493,22 @@ export type Hero = Files & {
   portrait?: Files;
   credit?: NonNullable<Seasons['winter']>['hero']['credit'];
 };
-export type Apartment = { slug: string; pictures: Picture[] } & Omit<
+// A floor plan as the page draws it: its file's address, its viewBox as [x, y, width, height],
+// and its texts by address prefix.
+export interface Plan {
+  url: string;
+  viewBox: [number, number, number, number];
+  alt: Record<string, string>;
+  zones: {
+    key: string;
+    name: Record<string, string>;
+    points: [number, number][];
+    label: [number, number];
+  }[];
+}
+export type Apartment = { slug: string; pictures: Picture[]; plan?: Plan } & Omit<
   z.infer<typeof apartmentSchema>,
-  'pictures' | 'via'
+  'pictures' | 'via' | 'plan'
 >;
 type Map = NonNullable<z.infer<typeof siteSchema>['map']>;
 // A walking route as the map draws it: its line as [longitude, latitude] pairs.

@@ -104,7 +104,7 @@ export async function convertPictures(dir, apartments, out, cache) {
   const pictures = {};
   for (const { slug, pictures: list } of apartments) {
     pictures[slug] = [];
-    for (const [index, { file, alt, generated, season }] of list.entries()) {
+    for (const [index, { file, alt, generated, season, zones }] of list.entries()) {
       try {
         const { bytes, keep } = await read(dir, file, cache);
         const size = await measure(bytes, file);
@@ -119,6 +119,7 @@ export async function convertPictures(dir, apartments, out, cache) {
           alt,
           ...(generated && { generated }),
           ...(season && { season }),
+          ...(zones && { zones }),
           ...files.picture,
         });
       } catch (error) {
