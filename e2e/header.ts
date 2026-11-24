@@ -23,7 +23,6 @@ export async function toLanguage(page: Page, current: string, other: string) {
   } else await open(page, current);
   const from = page.url();
   await page.getByRole('link', { name: other }).click();
-  // With a map in view the change takes seconds in headless WebKit, whose WebGL is drawn in
-  // software, and longer under CI's load (#165).
+  // With a map in view the change took up to 7.7 s in headless WebKit under load (#165).
   await page.waitForURL((url) => url.href !== from, { timeout: 15000 });
 }
