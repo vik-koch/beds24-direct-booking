@@ -684,11 +684,16 @@ test('the plan’s view frames the shown picture’s room, and a room on the pla
   expect(violations).toEqual([]);
   await page.keyboard.press('Escape');
   await expect(page.locator('.plan-tile')).toBeFocused();
-  // A picture of two rooms is the first of the plan's; a room of two pictures frames both.
+  // A picture of two rooms is the first of the plan's, or the one chosen on the plan; a room of two
+  // pictures frames both.
   await page.goto('http://localhost:4002/it/appartamenti/zonneterras');
   await tile(page).nth(1).click();
   await viewer(page).getByTitle('Planimetria').click();
   await named(page).toEqual(['Soggiorno']);
+  await viewer(page).locator('.plan-box polygon').nth(1).click();
+  await expect(viewer(page).locator('.viewer-count')).toHaveText('Immagine 2 di 20');
+  await named(page).toEqual(['Giardino']);
+  await expect(viewer(page).locator('.plan-box polygon').nth(1)).toHaveAttribute('data-chosen', '');
   await page.goto('/de/wohnungen/zirbe');
   await page.locator('.plan-tile').click();
   for (const count of ['Bild 1 von 3', 'Bild 2 von 3']) {

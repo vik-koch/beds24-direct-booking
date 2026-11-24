@@ -851,11 +851,15 @@ export class Gallery {
   });
 
   // The viewer shows the pictures alone, or the plan beside them: the same pictures in the same
-  // order, each in the plan's view named by its room, the first of the plan's it shows.
+  // order, each in the plan's view named by its room: the one chosen on the plan if it shows it,
+  // or else the first of the plan's it shows.
   protected readonly views = ['photos', 'plan'] as const;
   protected readonly view = signal<(typeof this.views)[number]>('photos');
-  protected readonly roomIn = (picture: Picture) =>
-    this.plan()?.zones.find(({ key }) => picture.zones?.includes(key));
+  private readonly chosen = signal<string | undefined>(undefined);
+  protected readonly roomIn = (picture: Picture) => {
+    const rooms = this.plan()?.zones.filter(({ key }) => picture.zones?.includes(key));
+    return rooms?.find(({ key }) => key === this.chosen()) ?? rooms?.[0];
+  };
   protected readonly roomOf = (index: number) => this.roomIn(this.seen(index));
   private readonly changes = inject(ChangeDetectorRef);
   protected readonly strip = signal(0);
@@ -928,6 +932,7 @@ export class Gallery {
     view: (typeof this.views)[number] = 'photos',
   ) {
     this.view.set(view);
+    this.chosen.set(undefined);
     this.from.set(index);
     this.index.set(index);
     this.opener = opener as HTMLElement;
@@ -952,6 +957,7 @@ export class Gallery {
 
   // A room chosen on the plan: its first picture arrives as a step or a jump does.
   protected choose(key: string) {
+    this.chosen.set(key);
     const first = this.places().findIndex((_, index) => this.seen(index).zones?.includes(key));
     if (first < 0 || first === this.index()) return;
     this.go(first, Math.sign(first - this.index()));
