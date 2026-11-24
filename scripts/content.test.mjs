@@ -496,8 +496,9 @@ test('the generated site gives a plan its own address, its viewBox and its texts
   });
   assert.deepEqual(pictures[2].zones, ['kitchenette']);
   // An apartment without a plan has none, and its pictures no zones.
-  assert.ok(!('plan' in value.apartments[1]));
-  assert.ok(value.apartments[1].pictures.every((picture) => !('zones' in picture)));
+  const ahorn = value.apartments.find((apartment) => apartment.slug === 'ahorn');
+  assert.ok(!('plan' in ahorn));
+  assert.ok(ahorn.pictures.every((picture) => !('zones' in picture)));
 });
 
 test('an anchor the pages already use is refused', () => {
