@@ -152,7 +152,8 @@ export function readPage(file, markdown) {
         );
     const parent = element.parentElement;
     if (name === 'img') {
-      if (!/^pictures\/[\w.-]+$/.test(element.getAttribute('src')))
+      // A name that starts with a dot is a hidden file, which the server does not serve.
+      if (!/^pictures\/\w[\w.-]*$/.test(element.getAttribute('src')))
         throw fail(`shows ${element.getAttribute('src')}: give a file in pictures/`);
       if (!element.getAttribute('alt')?.trim())
         throw fail(`shows ${element.getAttribute('src')} without an alternative text`);
@@ -564,8 +565,15 @@ export async function writeContent(dir, out, cache) {
   const { site, texts, pages } = readContent(dir);
   rmSync(out, { recursive: true, force: true });
   mkdirSync(out, { recursive: true });
-  // The apartments' pictures, plans and the heroes are served only as their converted files,
-  // unless a season's icon is the same file.
+  // The apartments' and the pages' pictures, plans and the heroes are served only as their
+  // converted files, unless a season's icon is the same file.
+  const pageFiles = [
+    ...new Set(
+      Object.values(pages).flatMap((list) =>
+        Object.values(list).flatMap(({ pictures }) => pictures),
+      ),
+    ),
+  ];
   const tabIcons = Object.values(site.seasons).map(({ icon }) => icon);
   const sources = new Set(
     [
@@ -574,6 +582,7 @@ export async function writeContent(dir, out, cache) {
         ...(plan ? [plan.file] : []),
       ]),
       ...Object.values(site.seasons).map(({ hero }) => hero.file),
+      ...pageFiles,
     ]
       .filter((file) => !tabIcons.includes(file))
       .map((file) => join(dir, file)),
@@ -594,23 +603,21 @@ export async function writeContent(dir, out, cache) {
   }
   // The pages' pictures, each file once for all pages and languages; a page shows its files.
   const shown = {};
-  for (const list of Object.values(pages))
-    for (const { pictures: files } of Object.values(list))
-      for (const file of files.filter((file) => !shown[file])) {
-        const name = basename(file).replace(/\.[^.]*$/, '');
-        const page = await convertPicture(
-          dir,
-          file,
-          name,
-          join(out, 'pictures', 'pages'),
-          '/pictures/pages',
-          cache,
-        ).catch((error) => {
-          throw new Error(`${join(dir, file)}\n  ${error.message}`);
-        });
-        converted += page.converted;
-        shown[file] = page.picture;
-      }
+  for (const file of pageFiles) {
+    const name = basename(file).replace(/\.[^.]*$/, '');
+    const page = await convertPicture(
+      dir,
+      file,
+      name,
+      join(out, 'pictures', 'pages'),
+      '/pictures/pages',
+      cache,
+    ).catch((error) => {
+      throw new Error(`${join(dir, file)}\n  ${error.message}`);
+    });
+    converted += page.converted;
+    shown[file] = page.picture;
+  }
   const withFiles = ({ title, html }) => {
     const template = parse(html);
     for (const img of template.content.querySelectorAll('img')) {

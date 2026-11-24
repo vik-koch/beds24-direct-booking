@@ -1072,6 +1072,7 @@ test('a content page opens with its title and holds only what a page shows', () 
     ['# Title\n\nA <span>word</span>.', /has <span>/],
     ['# Title\n\n![](pictures/bed.webp)', /shows pictures\/bed\.webp without an alternative text/],
     ['# Title\n\n![A bed](https://x.example/bed.webp)', /give a file in pictures\//],
+    ['# Title\n\n![A bed](pictures/.bed.webp)', /give a file in pictures\//],
     ['# Title\n\n![A bed](pictures/bed.webp "Bed")', /has title on <img>/],
     ['# Title\n\nSee ![A bed](pictures/bed.webp).', /outside a paragraph of its own/],
     ['# Title\n\n```\ncode\n```', /has <pre>/],
@@ -1160,12 +1161,14 @@ test("a page's picture is converted once, and the page names its files", async (
   const dir = changed('site.json', () => undefined);
   writeFileSync(
     join(dir, 'pages/faq.en-GB.md'),
-    '# FAQ\n\n![The village](pictures/saalbach-summer.webp)\n',
+    '# FAQ\n\n![The village](pictures/saalbach-summer.webp)\n\n![Again](pictures/saalbach-summer.webp)\n',
   );
   const out = mkdtempSync(join(root, 'generated-'));
   await writeContent(dir, out, cache);
   const files = readdirSync(join(out, 'pictures', 'pages'));
   assert.equal(files.length, 4);
+  // Served only as its conversions.
+  assert.ok(!existsSync(join(out, 'pictures', 'saalbach-summer.webp')));
   const page = readFileSync(join(out, 'page.en.faq.ts'), 'utf8');
   assert.match(
     page,
