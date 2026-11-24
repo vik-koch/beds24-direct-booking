@@ -69,8 +69,8 @@ and on a touch screen, all but the wordmark and the season switch fold into a sh
 On every page:
 
 - Contact: the business's name, address, telephone number and e-mail address.
-- The links `site.json` lists in `footer`, in their order. The demo's: the FAQ, the imprint, the
-  privacy page, the terms and the picture credits.
+- The links `site.json` lists in `footer`, in their order. The demo's: the imprint, the privacy
+  page, the terms and the picture credits. A page the header links to is not repeated here.
 
 ## Home page
 

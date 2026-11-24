@@ -1042,7 +1042,7 @@ test('a page file that no page lists is refused', () => {
 
 test('the header and the footer link only to pages, and a page key is not one of the fixed pages', () => {
   const footer = changed('site.json', (site) => site.footer.push('guide'));
-  assert.throws(() => readContent(footer), /site\.json\n {2}footer\.5: guide is not a page/);
+  assert.throws(() => readContent(footer), /site\.json\n {2}footer\.4: guide is not a page/);
   const header = changed('site.json', (site) => site.header.push('credits'));
   assert.throws(() => readContent(header), /site\.json\n {2}header\.2: credits is not a page/);
   for (const key of ['credits', 'home', 'apartment']) {
