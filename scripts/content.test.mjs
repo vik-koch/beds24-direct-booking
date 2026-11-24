@@ -1042,8 +1042,10 @@ test('a page file that no page lists is refused', () => {
 test('the footer links only to pages, and a page key is not one of the fixed pages', () => {
   const footer = changed('site.json', (site) => site.footer.push('guide'));
   assert.throws(() => readContent(footer), /site\.json\n {2}footer\.5: guide is not a page/);
-  const fixed = changed('site.json', (site) => site.pages.push('credits'));
-  assert.throws(() => readContent(fixed), /site\.json\n {2}pages\.5: taken by a page/);
+  for (const key of ['credits', 'home', 'apartment']) {
+    const fixed = changed('site.json', (site) => site.pages.push(key));
+    assert.throws(() => readContent(fixed), /site\.json\n {2}pages\.5: taken by a page/, key);
+  }
 });
 
 test('two pages may not share an address', () => {
@@ -1081,6 +1083,12 @@ test('a content page opens with its title and holds only what a page shows', () 
       /text outside a paragraph: Answer; leave a blank line/,
     ],
     ['# Title\n\n<p>Text <summary>Q</summary></p>', /a <summary> that does not open a <details>/],
+    ['# Title\n\n<summary>Q</summary>', /a <summary> that does not open a <details>/],
+    ['# ![A bed](pictures/bed.webp)', /has <img>/],
+    ['# <span></span>', /has <span>/],
+    ['# <strong> </strong>', /a title without text/],
+    ['<style>p { color: red }</style>\n\n# Title', /starts with its title/],
+    ['# Title\n\n<style>p { color: red }</style>', /has <style>/],
   ];
   for (const [markdown, reason] of refused)
     assert.throws(

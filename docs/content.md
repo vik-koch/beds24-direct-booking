@@ -41,12 +41,13 @@ content. The application has no wording, no colour and no typeface of its own. T
 - **A content page** is a page of text the deployment adds, such as the FAQ, the imprint or a guest
   guide: `site.json` lists its key in `pages`, each texts file gives its address under `paths.<key>`
   and the text of a link to it under `pages.<key>`, and `pages/<key>.<tag>.md` holds it in each
-  language. A key is not one of the application's own pages: `apartments`, `book`, `confirmation`,
-  `credits`. The file opens with its title as a `#` heading, which the page and its tab show; the
-  link text can be shorter, such as "FAQ". It may hold `##` to `####` headings, paragraphs, lists,
-  quotes, rules, **bold** and _italic_, tables, and links to `http`, `https`, `mailto` and `tel`
-  addresses and to the site's own paths, such as `/en/faq`. A question that folds open is written as
-  HTML, with a blank line after the `<summary>` line and before `</details>`:
+  language. A key is not one of the application's own pages: `home`, `apartment`, `apartments`,
+  `book`, `confirmation`, `credits`. The file opens with its title as a `#` heading, which the page
+  and its tab show; the link text can be shorter, such as "FAQ". It may hold `##` to `####`
+  headings, paragraphs, lists, quotes, rules, **bold** and _italic_, tables, and links to `http`,
+  `https`, `mailto` and `tel` addresses and to the site's own paths, such as `/en/faq`. A question
+  that folds open is written as HTML, with a blank line after the `<summary>` line and before
+  `</details>`:
 
   ```markdown
   <details id="check-in">

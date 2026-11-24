@@ -1,5 +1,7 @@
 # Veelgestelde vragen
 
+Geen antwoord gevonden? Bekijk [de appartementen](/nl#appartementen).
+
 ## Aankomst
 
 <details id="arrivo">

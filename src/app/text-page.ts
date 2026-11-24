@@ -11,6 +11,7 @@ import {
 import { DomSanitizer } from '@angular/platform-browser';
 import { ActivatedRoute } from '@angular/router';
 import type { ContentPage } from '../content/schema';
+import { Choice } from './choice';
 
 // A content page from the deployment's Markdown.
 @Component({
@@ -46,6 +47,7 @@ export class TextPage {
   constructor() {
     const document = inject(DOCUMENT);
     const destroyRef = inject(DestroyRef);
+    const choice = inject(Choice);
     afterNextRender(() => {
       const window = document.defaultView!;
       // The question an address names is open, also when the address changes on the page.
@@ -66,7 +68,11 @@ export class TextPage {
       window.addEventListener('hashchange', open);
       // A table wider than the column is reached by keyboard to scroll it; Safari does not make
       // a scrolling box focusable by itself.
-      const frames = [...this.prose().nativeElement.querySelectorAll<HTMLElement>('.table-frame')];
+      const prose = this.prose().nativeElement;
+      // The site's own links carry the visitor's choice, as every link between the pages does.
+      for (const link of prose.querySelectorAll('a'))
+        link.setAttribute('href', choice.link(link.getAttribute('href')!));
+      const frames = [...prose.querySelectorAll<HTMLElement>('.table-frame')];
       const observer = new ResizeObserver(() =>
         frames.forEach((frame) => {
           if (frame.scrollWidth > frame.clientWidth) frame.tabIndex = 0;

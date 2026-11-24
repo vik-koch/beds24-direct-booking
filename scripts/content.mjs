@@ -105,7 +105,7 @@ function readPlan(dir, file, plan) {
 // The elements a content page styles, with the attributes each may have.
 const pageElements = {
   ...Object.fromEntries(
-    'p h2 h3 h4 ul li blockquote hr br strong em table thead tbody tr'
+    'h1 p h2 h3 h4 ul li blockquote hr br strong em table thead tbody tr'
       .split(' ')
       .map((name) => [name, []]),
   ),
@@ -122,17 +122,17 @@ const pageElements = {
 // would not style is refused rather than dropped.
 export function readPage(file, markdown) {
   const fail = (reason) => new Error(`${file}\n  ${reason}`);
-  const body = parser.parseFromString(marked.parse(markdown), 'text/html').body;
+  // Parsed in a template, where no element moves to a document's head and drops out of sight.
+  const template = parser.parseFromString('<template></template>', 'text/html').head.firstChild;
+  template.innerHTML = marked.parse(markdown);
+  const body = template.content;
   const title = body.firstElementChild;
   if (title?.localName !== 'h1') throw fail('starts with its title, a # heading');
-  title.remove();
   const ids = new Set();
   for (const element of body.querySelectorAll('*')) {
     const name = element.localName;
-    if (!Object.hasOwn(pageElements, name))
-      throw fail(
-        name === 'h1' ? 'has a second # heading' : `has <${name}>, which a page does not show`,
-      );
+    if (name === 'h1' && element !== title) throw fail('has a second # heading');
+    if (!Object.hasOwn(pageElements, name)) throw fail(`has <${name}>, which a page does not show`);
     for (const { name: attribute, value } of element.attributes)
       if (!pageElements[name].includes(attribute))
         throw fail(`has ${attribute} on <${name}>, which a page does not take`);
@@ -140,7 +140,11 @@ export function readPage(file, markdown) {
         throw fail(
           `links to ${value}: give a path from the root, or an http(s), mailto or tel link`,
         );
-    if (name === 'summary' && element !== element.parentElement.firstElementChild)
+    const parent = element.parentElement;
+    if (
+      name === 'summary' &&
+      (parent?.localName !== 'details' || element !== parent.firstElementChild)
+    )
       throw fail('has a <summary> that does not open a <details>');
     if (name === 'details') {
       const id = element.id;
@@ -154,6 +158,9 @@ export function readPage(file, markdown) {
       ids.add(id);
     }
   }
+  const text = title.textContent.trim();
+  if (!text) throw fail('has a title without text');
+  title.remove();
   // Markdown inside an HTML block needs a blank line before it, or it stays bare text.
   for (const parent of [body, ...body.querySelectorAll('details')])
     for (const node of parent.childNodes)
@@ -168,7 +175,7 @@ export function readPage(file, markdown) {
     table.replaceWith(frame);
     frame.append(table);
   }
-  return { title: title.textContent.trim(), html: body.innerHTML.trim() };
+  return { title: text, html: template.innerHTML.trim() };
 }
 
 // With a map every apartment has its point inside the box; without one none has a point. Its

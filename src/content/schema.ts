@@ -162,8 +162,8 @@ const seasons = z
       });
   });
 
-// The pages the application has, beside the home page and the apartments' pages.
-export const fixedPages = ['apartments', 'book', 'confirmation', 'credits'];
+// The names of the application's own pages, which a content page cannot take.
+export const fixedPages = ['home', 'apartment', 'apartments', 'book', 'confirmation', 'credits'];
 
 // The limits docs/content.md lists, each with its reason there.
 export const siteSchema = z.strictObject({

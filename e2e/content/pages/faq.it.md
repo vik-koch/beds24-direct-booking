@@ -1,5 +1,7 @@
 # Domande frequenti
 
+Non trovate la risposta? Guardate [gli appartamenti](/it#appartamenti).
+
 ## Arrivo
 
 <details id="arrivo">
