@@ -94,6 +94,21 @@
       }
     ]
   },
+  "pictures": [
+    {
+      "file": "pictures/saalbach-summer.webp",
+      "credit": {
+        "title": "Saalbach from above.jpg",
+        "author": "Felix König",
+        "source": "https://commons.wikimedia.org/wiki/File:Saalbach_from_above.jpg",
+        "licence": {
+          "name": "CC BY-SA 3.0",
+          "url": "https://creativecommons.org/licenses/by-sa/3.0"
+        },
+        "changes": ["scaled"]
+      }
+    }
+  ],
   "pages": ["about", "faq", "imprint", "privacy", "terms"],
   "header": ["about", "faq"],
   "footer": ["imprint", "privacy", "terms", "credits"]
