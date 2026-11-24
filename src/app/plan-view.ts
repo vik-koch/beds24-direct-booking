@@ -21,14 +21,27 @@ import { LANGUAGE } from './texts';
   host: { class: 'viewer-plan' },
   imports: [Files],
   template: `
-    <div #box class="plan-box" [style.--ratio]="plan().viewBox[2] / plan().viewBox[3]">
+    <div
+      #box
+      class="plan-box"
+      [style.--ratio]="plan().viewBox[2] / plan().viewBox[3]"
+      [style.--unit]="1 / scale()"
+    >
       <img [appFiles]="{ src: plan().url }" [alt]="plan().alt[language.code]" />
-      <svg [attr.viewBox]="plan().viewBox.join(' ')" aria-hidden="true">
+      <!-- Each room a button by its name, the shown picture's current; the names drawn on the plan
+           stay hidden, as some do not fit. -->
+      <svg [attr.viewBox]="plan().viewBox.join(' ')" role="group">
         @for (zone of plan().zones; track zone.key) {
           <polygon
+            tabindex="0"
+            role="button"
             [attr.points]="corners(zone)"
+            [attr.aria-label]="zone.name[language.code]"
+            [attr.aria-current]="zone.key === room() ? 'true' : null"
             [attr.data-chosen]="zone.key === room() ? '' : null"
             (click)="choose.emit(zone.key)"
+            (keydown.enter)="choose.emit(zone.key)"
+            (keydown.space)="$event.preventDefault(); choose.emit(zone.key)"
           />
         }
       </svg>
@@ -91,6 +104,13 @@ import { LANGUAGE } from './texts';
           fill-opacity: 0.18;
           stroke-opacity: 1;
         }
+
+        /* In the plan's units, as an outline on its shapes is; inside the room, clear of its
+           frame: outside it would lie on the dark wall. */
+        &:focus-visible {
+          outline-width: calc(2px * var(--unit));
+          outline-offset: calc(-6px * var(--unit));
+        }
       }
 
       .plan-label {
@@ -124,6 +144,8 @@ export class PlanView {
   protected readonly language = inject(LANGUAGE);
   // The rooms whose names fit inside them, either side of their points, as the plan is drawn.
   protected readonly fits = signal<string[]>([]);
+  // Pixels to a unit of the plan, as it is drawn.
+  protected readonly scale = signal(1);
   protected readonly corners = (zone: Plan['zones'][number]) =>
     zone.points.map((point) => point.join(',')).join(' ');
   private readonly box = viewChild.required<ElementRef<HTMLElement>>('box');
@@ -134,6 +156,7 @@ export class PlanView {
       const plan = this.plan();
       const observer = new ResizeObserver(() => {
         const scale = box.clientWidth / plan.viewBox[2];
+        this.scale.set(scale);
         const labels = box.querySelectorAll<HTMLElement>('.plan-label');
         this.fits.set(
           plan.zones.flatMap(({ key, points, label }, index) =>

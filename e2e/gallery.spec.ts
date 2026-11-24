@@ -552,11 +552,13 @@ test('every tab stop in the viewer shows a focus ring, in both views', async ({
     'Bild 2 von 3',
     'Bild 3 von 3',
   ]);
-  // A radio group is one stop, at its chosen radio; the plan adds none.
+  // A radio group is one stop, at its chosen radio; the plan adds its rooms.
   await viewer(page).getByTitle('Grundriss').click();
   expect(await walk()).toEqual([
     'Grundriss',
     'Schließen',
+    'Wohnraum',
+    'Duschbad',
     'Voriges Bild',
     'Bilder',
     'Nächstes Bild',
@@ -663,6 +665,15 @@ test('the plan’s view frames the shown picture’s room, and a room on the pla
   await expect(viewer(page).locator('.viewer-count')).toHaveText('Bild 4 von 5');
   await expect(viewer(page).locator('.caption-in')).toHaveText(/Bad mit weißer Badewanne/);
   await named(page).toEqual(['Bad']);
+  // By keys too: each room is a button by its name, the shown picture's current.
+  const bedroom = viewer(page).getByRole('button', { name: 'Schlafzimmer', exact: true });
+  await bedroom.focus();
+  await page.keyboard.press('Enter');
+  await expect(viewer(page).locator('.viewer-count')).toHaveText('Bild 2 von 5');
+  await expect(bedroom).toHaveAttribute('aria-current', 'true');
+  await viewer(page).getByRole('button', { name: 'Bad' }).focus();
+  await page.keyboard.press(' ');
+  await expect(viewer(page).locator('.viewer-count')).toHaveText('Bild 4 von 5');
   // A picture of no room: nothing framed, nothing named.
   await viewer(page).getByRole('button', { name: 'Nächstes Bild' }).click();
   await expect(viewer(page).locator('.viewer-count')).toHaveText('Bild 5 von 5');

@@ -480,7 +480,9 @@ the count. The viewer opens on the plan from there, and on a picture from a pict
 - **Rooms:** the shown picture's room has an accent frame on the plan, 2.5 px at any size, and an
   18% accent fill; a room under the pointer only a 10% fill. A frame, because a fill alone would not
   set the room off at 3:1. A click on a room shows its first picture, arriving as a step or a jump
-  does. A picture of no room frames none.
+  does. A picture of no room frames none. Each room is a button by its name, a tab stop after the
+  close button, the shown picture's marked current; its focus ring lies 6 px inside it, since
+  outside it would fall on the dark wall.
 - **Names:** each room's name in a small white pill at its point on the plan, the framed one's in
   the accent, shown only where it fits inside the room on both sides of its point; and the shown
   picture's room in a small label on its corner, as the strip's count is.
