@@ -76,6 +76,12 @@ test('a question the address names is open, below the header, also when the addr
   await expect(keys).not.toHaveAttribute('open');
   await link.click();
   await expect(keys).toHaveAttribute('open');
+  // Followed into a new tab, it leaves this tab's question as it is.
+  await keys.locator('summary').click();
+  const opened = page.context().waitForEvent('page');
+  await link.click({ modifiers: ['ControlOrMeta'] });
+  await (await opened).close();
+  await expect(keys).not.toHaveAttribute('open');
   // A question opens and closes by keyboard.
   await arrival.locator('summary').focus();
   await page.keyboard.press('Enter');
