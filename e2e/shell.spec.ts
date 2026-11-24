@@ -965,7 +965,7 @@ test('a loading picture hides its alternative text, a failed one shows it', asyn
   // The held pictures keep the page from its load event.
   await page.goto('/en/apartments/zirbe', { waitUntil: 'domcontentloaded' });
   const [failed, loading] = [0, 1].map((at) =>
-    page.locator('.tile').nth(at).locator('img:visible'),
+    page.locator('.tile:not(.plan-tile)').nth(at).locator('img:visible'),
   );
   await expect(failed).toHaveAttribute('data-broken', '');
   await expect(failed).not.toHaveCSS('color', 'rgba(0, 0, 0, 0)');

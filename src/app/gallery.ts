@@ -10,10 +10,18 @@ import {
   ViewEncapsulation,
 } from '@angular/core';
 import { NgIcon, provideIcons } from '@ng-icons/core';
-import { lucideChevronLeft, lucideChevronRight, lucideSparkles, lucideX } from '@ng-icons/lucide';
-import { placesOf, srcset, type Shown } from '../content/names';
-import type { Picture } from '../content/schema';
+import {
+  lucideChevronLeft,
+  lucideChevronRight,
+  lucideImages,
+  lucideLayoutDashboard,
+  lucideSparkles,
+  lucideX,
+} from '@ng-icons/lucide';
+import { placesOf, seenIn, srcset, type Shown } from '../content/names';
+import type { Picture, Plan } from '../content/schema';
 import { Files } from './files';
+import { PlanView } from './plan-view';
 import { Season } from './season';
 import { fill, LANGUAGE, TEXTS } from './texts';
 
@@ -21,16 +29,25 @@ import { fill, LANGUAGE, TEXTS } from './texts';
   encapsulation: ViewEncapsulation.None,
   selector: 'app-gallery',
   host: { '(document:keydown)': 'key($event)' },
-  imports: [Files, NgIcon],
-  providers: [provideIcons({ lucideChevronLeft, lucideChevronRight, lucideSparkles, lucideX })],
+  imports: [Files, NgIcon, PlanView],
+  providers: [
+    provideIcons({
+      lucideChevronLeft,
+      lucideChevronRight,
+      lucideImages,
+      lucideLayoutDashboard,
+      lucideSparkles,
+      lucideX,
+    }),
+  ],
   template: `
     <section class="gallery" [attr.aria-label]="texts.gallery.name" [attr.data-shown]="shown()">
-      <div class="tiles" (scroll)="stripped($event)">
+      <div #tiles class="tiles" (scroll)="stripped($event)">
         @for (place of places(); track $index; let first = $first) {
           <button
             type="button"
             class="tile"
-            [attr.data-beyond]="$index < shown() ? null : ''"
+            [attr.data-beyond]="cell($index) < shown() ? null : ''"
             (click)="open($index, $event.currentTarget)"
           >
             <!-- A season's picture, and its label, are fetched and shown in their season only:
@@ -60,12 +77,28 @@ import { fill, LANGUAGE, TEXTS } from './texts';
                 >
               }
             }
-            @if ($index === shown() - 1 && places().length > shown()) {
+            @if (cell($index) === shown() - 1 && rest() > 0) {
               <span class="more">{{ more() }}</span>
             }
           </button>
+          @if (first && mosaicPlan()) {
+            <button type="button" class="tile plan-tile" (click)="openPlan($event.currentTarget)">
+              <img [appFiles]="{ src: plan()!.url }" alt="" />
+              <span class="more">{{ texts.gallery.plan }}</span>
+            </button>
+          }
         }
       </div>
+      @if (plan()) {
+        <button
+          type="button"
+          class="plan-pill"
+          [attr.data-mosaic]="mosaicPlan() ? '' : null"
+          (click)="openPlan($event.currentTarget)"
+        >
+          <ng-icon name="lucideLayoutDashboard" aria-hidden="true" />{{ texts.gallery.plan }}
+        </button>
+      }
       @if (places().length > 1) {
         <p class="strip-count" aria-hidden="true">{{ strip() + 1 }} / {{ places().length }}</p>
       }
@@ -76,11 +109,37 @@ import { fill, LANGUAGE, TEXTS } from './texts';
       #dialog
       class="viewer"
       tabindex="-1"
+      [attr.data-view]="view()"
       [attr.aria-label]="texts.gallery.name"
       (cancel)="close($event)"
       (close)="closed()"
     >
       <div class="viewer-stage">
+        @if (plan()) {
+          <div
+            class="views viewer-views"
+            role="radiogroup"
+            [attr.aria-label]="texts.gallery.name"
+            [attr.data-view]="view()"
+          >
+            <span class="views-knob" aria-hidden="true"></span>
+            @for (name of views; track name) {
+              <label [title]="texts.gallery[name]">
+                <input
+                  type="radio"
+                  name="gallery-view"
+                  [checked]="view() === name"
+                  (change)="show(name)"
+                  [attr.aria-label]="texts.gallery[name]"
+                />
+                <ng-icon
+                  [name]="name === 'photos' ? 'lucideImages' : 'lucideLayoutDashboard'"
+                  aria-hidden="true"
+                />
+              </label>
+            }
+          </div>
+        }
         <p class="viewer-count" aria-live="polite">{{ position(index()) }}</p>
         <button
           class="icon-button viewer-close"
@@ -138,6 +197,9 @@ import { fill, LANGUAGE, TEXTS } from './texts';
           >
             <ng-icon name="lucideChevronRight" aria-hidden="true" />
           </button>
+        }
+        @if (view() === 'plan' && plan(); as plan) {
+          <app-plan-view [plan]="plan" [places]="places()" [start]="planStart()" />
         }
       </div>
       <p class="viewer-caption" aria-live="polite">
@@ -249,6 +311,45 @@ import { fill, LANGUAGE, TEXTS } from './texts';
         }
       }
 
+      /* The plan's cell: the whole plan on a shade below the surface, so that the cell keeps its
+         square. Not in the strip, where the pill stands for it. */
+      .plan-tile {
+        display: none;
+        background: color-mix(in srgb, var(--color-surface) 94%, var(--color-ink));
+
+        img {
+          padding: 0.5rem 0.5rem 3rem;
+          object-fit: contain;
+        }
+      }
+
+      /* Opposite the strip's count, and on a mosaic of one picture. */
+      .plan-pill {
+        position: absolute;
+        bottom: 0.75rem;
+        left: 0.75rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        min-height: var(--size-control-small);
+        padding: 0 0.875rem 0 0.625rem;
+        border-radius: var(--radius-control);
+        background: var(--color-surface);
+        font-size: 0.9375rem;
+        font-weight: 500;
+        box-shadow: var(--shadow-card);
+        cursor: pointer;
+        transition: color 0.2s;
+
+        &:hover {
+          color: var(--color-accent);
+        }
+
+        ng-icon {
+          --ng-icon__size: 1rem;
+        }
+      }
+
       /* Beside a 4:3 picture, columns of two squares. The picture's width is solved from the
          gallery's, so that a square plus a gap is half its height. Square cells, so that a ring
          around one fits it; the gaps leave it room. */
@@ -317,6 +418,14 @@ import { fill, LANGUAGE, TEXTS } from './texts';
         }
 
         .strip-count {
+          display: none;
+        }
+
+        .plan-tile {
+          display: block;
+        }
+
+        .plan-pill[data-mosaic] {
           display: none;
         }
       }
@@ -399,6 +508,31 @@ import { fill, LANGUAGE, TEXTS } from './texts';
       .viewer-close {
         grid-area: 1 / 1 / 2 / -1;
         justify-self: end;
+      }
+
+      .viewer-views {
+        grid-area: 1 / 1 / 2 / -1;
+        justify-self: start;
+        background: var(--color-surface);
+      }
+
+      /* Beside the switch: two narrow slots and the padding round them, one control's height. */
+      .viewer-views ~ .viewer-count {
+        padding-left: calc(var(--size-control-small) + var(--size-control) + 0.75rem);
+      }
+
+      /* The plan's view: the plan and its rooms on the left, the chosen room's picture, its steps
+         and its text on the right, filling the room below the bar. */
+      .viewer[data-view='plan']
+        :is(
+          .viewer-count,
+          .viewer-previous,
+          .viewer-next,
+          .viewer-track,
+          .viewer-caption,
+          .viewer-thumbs
+        ) {
+        display: none;
       }
 
       .viewer-previous {
@@ -504,19 +638,6 @@ import { fill, LANGUAGE, TEXTS } from './texts';
         }
       }
 
-      .ai-note {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.3125rem;
-        margin-left: 0.25rem;
-        white-space: nowrap;
-
-        /* Only the icon is soft, as beside other text; the note's words keep the caption's ink. */
-        ng-icon {
-          --ng-icon__color: var(--color-ink-soft);
-        }
-      }
-
       /* In rows, two at most in view and the rest scrolled to; the padding keeps a ring inside. */
       .viewer-thumbs {
         grid-column: 1 / -1;
@@ -591,6 +712,19 @@ import { fill, LANGUAGE, TEXTS } from './texts';
           grid-area: 1 / 3;
         }
 
+        .viewer-views {
+          grid-area: 1 / 1;
+        }
+
+        .viewer-views ~ .viewer-count {
+          padding-left: 0;
+        }
+
+        /* The plan's view below the bar, scrolled as one. */
+        .viewer[data-view='plan'][open] {
+          grid-template: auto minmax(0, 1fr) / auto 1fr auto;
+        }
+
         /* Stretched by hand: a grid item with a ratio would otherwise take its content's width. */
         .viewer-track {
           grid-area: 3 / 1 / 4 / -1;
@@ -626,26 +760,42 @@ import { fill, LANGUAGE, TEXTS } from './texts';
 })
 export class Gallery {
   readonly pictures = input.required<Picture[]>();
+  readonly plan = input<Plan>();
   private readonly season = inject(Season);
   // Each place's pictures, one for both seasons or one per season, which the page's season
   // attribute shows; the caption takes the shown one's text.
   protected readonly places = computed(() => placesOf(this.pictures(), this.season.names));
   protected readonly shows = ({ season }: Shown) => !season || season === this.season.current();
-  protected readonly seen = (index: number) => this.places()[index].find(this.shows)!.picture;
+  protected readonly seen = (index: number) => seenIn(this.places()[index], this.season.current());
   protected readonly texts = inject(TEXTS);
   protected readonly language = inject(LANGUAGE);
   protected readonly srcset = srcset;
 
-  // The mosaic's cells: 8, 5, 3 or the first alone; its last cell counts the pictures beyond.
+  // The mosaic's cells: 8, 5, 3 or the first alone; its last cell counts the pictures beyond. A
+  // plan takes the first square, beside the first picture, where the mosaic has squares; a
+  // mosaic of one picture, and the strip, have the plan's pill instead.
   protected readonly shown = computed(() => {
-    const count = this.places().length;
+    const count = this.places().length + (this.plan() ? 1 : 0);
     return [8, 5, 3].find((cells) => count >= cells) ?? 1;
   });
+  protected readonly mosaicPlan = computed(() => !!this.plan() && this.shown() >= 3);
+  protected readonly cell = (index: number) => (index && this.mosaicPlan() ? index + 1 : index);
+  protected readonly rest = computed(
+    () => this.places().length - this.shown() + (this.mosaicPlan() ? 1 : 0),
+  );
   protected readonly more = computed(() => {
-    const rest = this.places().length - this.shown();
-    const plural = new Intl.PluralRules(this.language.tag).select(rest);
-    return fill(this.texts.gallery.more[plural === 'one' ? 'one' : 'other'], { count: rest });
+    const plural = new Intl.PluralRules(this.language.tag).select(this.rest());
+    return fill(this.texts.gallery.more[plural === 'one' ? 'one' : 'other'], {
+      count: this.rest(),
+    });
   });
+
+  // The viewer shows the pictures one by one, or the plan beside a room's pictures, opened on
+  // the place it is given.
+  protected readonly views = ['photos', 'plan'] as const;
+  protected readonly view = signal<(typeof this.views)[number]>('photos');
+  protected readonly planStart = signal(0);
+  private readonly planView = viewChild(PlanView);
   protected readonly strip = signal(0);
   protected readonly index = signal(0);
   // The picture shown before, whose text fades out.
@@ -665,6 +815,7 @@ export class Gallery {
   private readonly dialog = viewChild.required<ElementRef<HTMLDialogElement>>('dialog');
   private readonly track = viewChild.required<ElementRef<HTMLElement>>('track');
   private readonly thumbs = viewChild<ElementRef<HTMLElement>>('thumbs');
+  private readonly tiles = viewChild.required<ElementRef<HTMLElement>>('tiles');
 
   constructor() {
     afterRenderEffect((onCleanup) => {
@@ -710,14 +861,45 @@ export class Gallery {
   }
 
   protected open(index: number, opener: EventTarget | null) {
-    this.opener = opener as HTMLElement;
+    this.view.set('photos');
     this.from.set(index);
     this.index.set(index);
+    this.reveal(opener);
+    this.go(index, 0);
+  }
+
+  // On the plan's first room and its first picture.
+  protected openPlan(opener: EventTarget | null) {
+    const first = this.plan()!.zones[0].key;
+    this.planStart.set(
+      this.places().findIndex((place) =>
+        place.some(({ picture }) => picture.zones?.includes(first)),
+      ),
+    );
+    this.view.set('plan');
+    this.reveal(opener);
+  }
+
+  private reveal(opener: EventTarget | null) {
+    this.opener = opener as HTMLElement;
     this.opened.set(true);
     const dialog = this.dialog().nativeElement;
     dialog.showModal();
     dialog.focus();
-    this.go(index, 0);
+  }
+
+  // The switch keeps the visitor's place: the plan opens on the shown picture, the pictures go on
+  // from the one the plan shows.
+  protected show(view: (typeof this.views)[number]) {
+    if (view === 'plan') this.planStart.set(this.index());
+    else {
+      const index = this.planView()!.shown();
+      this.from.set(index);
+      this.index.set(index);
+      // The track, shown again, scrolls there once it has its width.
+      this.target = index;
+    }
+    this.view.set(view);
   }
 
   // A neighbour slides in. A jump, over the ends too, is instant, and the picture arrives from
@@ -725,10 +907,12 @@ export class Gallery {
   protected go(index: number, direction: number) {
     const count = this.places().length;
     const track = this.track().nativeElement;
-    // Its own width, not clientWidth: a 4:3 frame is often a fraction of a pixel wider.
+    // Its own width, not clientWidth: a 4:3 frame is often a fraction of a pixel wider. A track
+    // the plan's view hides has none, and scrolls there once shown.
     const width = this.measure(track);
-    this.start = Math.round(track.scrollLeft / width);
     this.target = (index + count) % count;
+    if (!width) return;
+    this.start = Math.round(track.scrollLeft / width);
     const far = index !== this.target || Math.abs(this.target - this.start) > 1;
     track.scrollTo({
       left: this.target * width,
@@ -752,7 +936,7 @@ export class Gallery {
 
   protected slid() {
     const track = this.track().nativeElement;
-    if (this.measure(track) !== this.width) return;
+    if (!this.width || this.measure(track) !== this.width) return;
     const index = Math.round(track.scrollLeft / this.width);
     if (index !== this.index()) {
       this.from.set(this.index());
@@ -781,21 +965,26 @@ export class Gallery {
   // A fade the browser cut short must not close the viewer once opened again. A picture the
   // strip opened may be one the mosaic, widened meanwhile, leaves out: its +N cell stands for it.
   protected closed() {
-    // Closed, its pictures wait again: a change of season would fetch the new ones at once.
+    // Closed, its pictures wait again: a change of season would fetch the new ones at once. The
+    // plan's view goes, with its keys.
     this.opened.set(false);
+    this.view.set('photos');
     for (const fade of this.fades) fade.cancel();
     this.fades = [];
     const opener = this.opener!;
-    const more = opener.parentElement!.children[this.shown() - 1] as HTMLElement;
+    const more = this.tiles().nativeElement.children[this.shown() - 1] as HTMLElement;
     (opener.checkVisibility() ? opener : more).focus();
   }
 
-  // Plain arrows only: with a modifier they are the browser's, such as Alt+Left for back. From a
-  // thumbnail the focus follows the picture.
+  // Plain arrows only: with a modifier they are the browser's, such as Alt+Left for back; on a
+  // radio they choose among its group. The plan's view has its own. From a thumbnail the focus
+  // follows the picture.
   protected key(event: KeyboardEvent) {
     const by = { ArrowLeft: -1, ArrowRight: 1 }[event.key];
     const modified = event.altKey || event.ctrlKey || event.metaKey || event.shiftKey;
-    if (!by || modified || !this.dialog().nativeElement.open || this.places().length < 2) return;
+    const radio = (event.target as Element).matches('input[type=radio]');
+    const open = this.dialog().nativeElement.open && this.view() === 'photos';
+    if (!by || modified || radio || !open || this.places().length < 2) return;
     event.preventDefault();
     this.step(by);
     const thumbs = this.thumbs()?.nativeElement;

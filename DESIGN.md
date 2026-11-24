@@ -285,8 +285,9 @@ downwards, so it reads as lying on the page rather than floating.
 - **Two heights for controls:** `--size-control`, 2.75rem (44 px), for a control that stands on its
   own: buttons, tabs, icon buttons, menu entries, the season switch, the home page's guest pills,
   the back link and the text buttons. `--size-control-small`, 2.125rem (34 px), inside a dense card:
-  the prices and weeks of both week lists, the booking panel's guest pills and view toggle, and the
-  season switch's inner pill. A new control takes one of them, not a number.
+  the prices and weeks of both week lists, the booking panel's guest pills, the view toggles of the
+  booking panel and the picture viewer, the map's apartments, the floor plan's rooms, and the season
+  switch's inner pill. A new control takes one of them, not a number.
 - **Shape:** pill (999px), 1.5rem of padding at the sides.
 - **Primary:** accent fill, white text at weight 500.
 - **Hover / Focus:** a soft shadow in the accent on hover (underlined instead where the button
@@ -459,6 +460,27 @@ keyboard. In the sheet the apartments are indented under their entry at weight 4
   chosen apartment's point to each place's, the router's line joined to both; once a place is
   chosen, its route solid and as close as it fits, a white dot ringed in the accent at each end
   under the pins' tips, and the others faded to 3:1.
+
+### Floor plan
+
+An apartment with a floor plan shows it in the mosaic's first square, beside the first picture: the
+whole plan on a shade below the surface (6% ink in white), so that the square stands on the page's
+ground, its name in a white pill at its foot as the "+N" cell has. In the strip of a phone, and on a
+mosaic of one picture, a white pill with an icon and the name stands at the picture's lower left,
+opposite the count. The viewer opens on the plan from there, and on a picture from a picture; a
+toggle like the booking panel's, a white pill with the pictures' and the plan's icons, switches
+between the two in the viewer's bar and keeps the visitor's place: a picture's room, a room's
+picture.
+
+- **Plan's view:** from 48rem the plan on the left above its rooms, the chosen room's picture on the
+  right with its steps and its text below; on a phone the plan above, at most about half the
+  screen's height, then the rooms and the picture, scrolled as one.
+- **Rooms:** chosen as the map's apartments are, accent text that becomes an accent pill, a radio
+  group under the plan. On the plan the chosen room has an accent frame, 2.5 px at any size, and an
+  18% accent fill; a room under the pointer only a 10% fill. A frame, because a fill alone would not
+  set the room off at 3:1.
+- **Names on the plan:** each room's name in a small white pill at its point, the chosen one's in
+  the accent, shown only where it fits inside the room's width; the rooms' radios name them all.
 
 ### Language menu
 

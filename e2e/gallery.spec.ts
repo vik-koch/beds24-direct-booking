@@ -1,5 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Locator, type Page } from '@playwright/test';
+import { phoneWidth } from './phone';
 
 const box = async (locator: Locator) => (await locator.boundingBox())!;
 const viewer = (page: Page) => page.locator('dialog.viewer');
@@ -9,15 +10,20 @@ const settled = async (page: Page) =>
     Promise.all(dialog.getAnimations().map(({ finished }) => finished)),
   );
 
+// A picture's cell, not the plan's.
+const tile = (page: Page) => page.locator('.tile:not(.plan-tile)');
+
 test('the mosaic shows the first picture at 4:3 and the others square, eight at most', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
+  // A plan takes a cell: Lärche's five pictures and its plan fill five, Zirbe's three and its plan
+  // three.
   for (const [path, cells, more] of [
     ['/de/wohnungen/ahorn', 8, '+1 Bild'],
-    ['/de/wohnungen/laerche', 5, null],
-    ['/de/wohnungen/zirbe', 3, null],
-    ['http://localhost:4002/it/appartamenti/zonneterras', 8, '+12 immagini'],
+    ['/de/wohnungen/laerche', 5, '+1 Bild'],
+    ['/de/wohnungen/zirbe', 3, '+1 Bild'],
+    ['http://localhost:4002/it/appartamenti/zonneterras', 8, '+13 immagini'],
     ['http://localhost:4002/it/appartamenti/vista', 1, '+1 immagine'],
     ['http://localhost:4002/it/appartamenti/castagno', 1, null],
   ] as const) {
@@ -113,7 +119,7 @@ test('each season shows its own pictures, and a change fades to them in place', 
 
   // A bathroom without a view serves both seasons: its place has one picture.
   await page.goto('/de/wohnungen/zirbe?season=winter');
-  await expect(page.locator('.tile').nth(2).locator('img')).toHaveCount(1);
+  await expect(tile(page).nth(2).locator('img')).toHaveCount(1);
   expect(await shownAlt(page.locator('.tile').first())).toEqual([
     expect.stringMatching(/^Zirbenstube im Winter/),
   ]);
@@ -494,35 +500,50 @@ for (const path of ['/de/wohnungen/ahorn', '/en/apartments/ahorn'])
     },
   );
 
-test('every tab stop in the viewer shows a focus ring', async ({ page, browserName }) => {
+test('every tab stop in the viewer shows a focus ring, in both views', async ({
+  page,
+  browserName,
+}) => {
   test.skip(browserName === 'webkit', 'Safari tabs only to fields unless told otherwise');
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto('/de/wohnungen/zirbe');
-  await page.locator('.tile').first().focus();
-  await page.keyboard.press('Enter');
-  await expect(viewer(page)).toBeFocused();
-  await page.keyboard.press('Tab');
-  const seen: string[] = [];
-  for (let i = 0; i < 10; i++) {
-    const stop = await page.evaluate(() => {
-      const element = document.activeElement as HTMLElement;
-      // The pictures' row rings its picture, so that the ring fits it.
-      const ringed = element.matches('.viewer-track')
-        ? element.querySelectorAll('img')[0]
-        : element;
-      const style = getComputedStyle(ringed);
-      return {
-        name: element.getAttribute('aria-label') ?? element.tagName,
-        ring: style.outlineStyle !== 'none' && parseFloat(style.outlineWidth) >= 2,
-      };
-    });
-    // After the last thumbnail Tab leaves for the browser's own controls.
-    if (stop.name === 'BODY') break;
-    seen.push(stop.name);
-    expect(stop.ring, stop.name).toBe(true);
-    await page.keyboard.press('Tab');
-  }
-  expect(seen).toEqual([
+  // The tab stops from the dialog on, until Tab leaves for the browser's own controls.
+  const walk = async () => {
+    await viewer(page).focus();
+    const seen: string[] = [];
+    for (let i = 0; i < 12; i++) {
+      await page.keyboard.press('Tab');
+      const stop = await page.evaluate(() => {
+        const element = document.activeElement as HTMLElement;
+        // The pictures' row rings its picture, so that the ring fits it; a switch's radio its
+        // label, a room's its word.
+        const ringed = element.matches('.viewer-track')
+          ? element.querySelectorAll('img')[0]
+          : element.matches('input')
+            ? element.nextElementSibling?.matches('span')
+              ? element.nextElementSibling
+              : element.closest('label')!
+            : element;
+        const style = getComputedStyle(ringed);
+        return {
+          name:
+            element.getAttribute('aria-label') ??
+            (element.matches('input')
+              ? element.closest('label')!.textContent!.trim()
+              : element.tagName),
+          body: element === document.body,
+          ring: style.outlineStyle !== 'none' && parseFloat(style.outlineWidth) >= 2,
+        };
+      });
+      if (stop.body) break;
+      seen.push(stop.name);
+      expect(stop.ring, stop.name).toBe(true);
+    }
+    return seen;
+  };
+  await tile(page).first().click();
+  expect(await walk()).toEqual([
+    'Fotos',
     'Schließen',
     'Voriges Bild',
     'Bilder',
@@ -531,4 +552,157 @@ test('every tab stop in the viewer shows a focus ring', async ({ page, browserNa
     'Bild 2 von 3',
     'Bild 3 von 3',
   ]);
+  // A radio group is one stop, at its chosen radio.
+  await viewer(page).getByTitle('Grundriss').click();
+  expect(await walk()).toEqual(['Grundriss', 'Schließen', 'Wohnraum']);
+});
+
+// The plan's view: its rooms' radios, by name.
+const room = (page: Page, name: string) => viewer(page).getByRole('radio', { name, exact: true });
+
+test('a floor plan takes the mosaic’s first square; the strip and a lone picture have its pill', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/de/wohnungen/laerche');
+  const square = page.locator('.plan-tile');
+  await expect(square).toHaveText('Grundriss');
+  const lead = await box(tile(page).first());
+  const cell = await box(square);
+  expect(Math.abs(cell.y - lead.y)).toBeLessThan(1);
+  expect(cell.x).toBeGreaterThan(lead.x + lead.width);
+  // A shade below the surface, so that the square shows on the page's ground.
+  await expect(square).not.toHaveCSS('background-color', 'rgb(255, 255, 255)');
+  await expect(page.locator('.plan-pill')).toBeHidden();
+  await page.goto('/de/wohnungen/ahorn');
+  await expect(page.locator('.plan-tile, .plan-pill')).toHaveCount(0);
+  // A mosaic of one picture has no square: the pill stands on the picture.
+  await page.goto('http://localhost:4002/it/appartamenti/castagno');
+  await expect(page.locator('.plan-tile')).toHaveCount(0);
+  const pill = await box(page.locator('.plan-pill'));
+  const only = await box(tile(page).first());
+  expect(pill.y + pill.height).toBeLessThan(only.y + only.height);
+  // In the strip the pill stands opposite the count.
+  await phoneWidth(page, 320, 640);
+  await page.goto('/de/wohnungen/laerche');
+  await expect(page.locator('.plan-tile')).toBeHidden();
+  const [left, right] = [
+    await box(page.locator('.plan-pill')),
+    await box(page.locator('.strip-count')),
+  ];
+  expect(left.x + left.width).toBeLessThan(right.x);
+  expect(Math.abs(left.y + left.height - (right.y + right.height))).toBeLessThan(6);
+});
+
+test('the plan’s view shows a room chosen by its name or on the plan, with its pictures', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/de/wohnungen/laerche?season=summer');
+  await page.locator('.plan-tile').click();
+  await expect(viewer(page)).toHaveAttribute('data-view', 'plan');
+  await expect(viewer(page).locator('.plan-box img')).toHaveAttribute(
+    'alt',
+    /^Grundriss der Lärche/,
+  );
+  await expect(
+    viewer(page).getByRole('radiogroup', { name: 'Räume' }).getByRole('radio'),
+  ).toHaveCount(5);
+  await expect(room(page, 'Wohnküche')).toBeChecked();
+  await expect(viewer(page).locator('.plan-box polygon[data-chosen]')).toHaveCount(1);
+  const caption = viewer(page).locator('.plan-caption');
+  await expect(caption).toHaveText(/Wohnküche aus Lärche mit Tisch/);
+  // One picture a room: no steps.
+  await expect(viewer(page).locator('.plan-steps')).toHaveCount(0);
+  // By the keys, as any radio group.
+  await room(page, 'Wohnküche').focus();
+  await page.keyboard.press('ArrowRight');
+  await expect(room(page, 'Schlafzimmer')).toBeChecked();
+  await expect(caption).toHaveText(/Doppelzimmer mit Kopfteil/);
+  // On the plan: the bathroom's room, its name and its frame.
+  await viewer(page).locator('.plan-box polygon').nth(3).click();
+  await expect(room(page, 'Bad')).toBeChecked();
+  await expect(caption).toHaveText(/Bad mit weißer Badewanne/);
+  await expect(viewer(page).locator('.plan-box polygon').nth(3)).toHaveCSS('stroke-opacity', '1');
+  // A name shows on the plan only where it fits inside its room.
+  for (const label of await viewer(page).locator('.plan-label[data-fits]').all()) {
+    const index = await label.evaluate((element) =>
+      [...element.parentElement!.querySelectorAll('.plan-label')].indexOf(element as HTMLElement),
+    );
+    const zone = await box(viewer(page).locator('.plan-box polygon').nth(index));
+    expect((await box(label)).width).toBeLessThanOrEqual(zone.width);
+  }
+  await expect(viewer(page).locator('.plan-label[data-fits]')).not.toHaveCount(0);
+  const { violations } = await new AxeBuilder({ page }).include('dialog.viewer').analyze();
+  expect(violations).toEqual([]);
+  // Closed, the focus goes back to the plan's square.
+  await page.keyboard.press('Escape');
+  await expect(page.locator('.plan-tile')).toBeFocused();
+});
+
+test('the switch keeps the place: a picture opens its room, a room goes on with its picture', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/de/wohnungen/laerche');
+  await tile(page).nth(2).click();
+  await expect(viewer(page).locator('.viewer-count')).toHaveText('Bild 3 von 5');
+  await viewer(page).getByTitle('Grundriss').click();
+  await expect(room(page, 'Stockbettzimmer')).toBeChecked();
+  await expect(viewer(page).locator('.plan-caption')).toHaveText(/Zweites Schlafzimmer/);
+  await viewer(page).locator('.zone-choices').getByText('Balkon').click();
+  await viewer(page).getByTitle('Fotos').click();
+  await expect(viewer(page)).toHaveAttribute('data-view', 'photos');
+  await expect(viewer(page).locator('.viewer-count')).toHaveText('Bild 5 von 5');
+  await expect(viewer(page).locator('.caption-in')).toHaveText(/Holzbalkon/);
+  // A room of three pictures steps through them, by its buttons and the keys; a picture of two
+  // rooms opens the first; a picture of none, the plan's first room.
+  await page.goto('http://localhost:4002/it/appartamenti/zonneterras');
+  await tile(page).nth(1).click();
+  await viewer(page).getByTitle('Planimetria').click();
+  await expect(room(page, 'Soggiorno')).toBeChecked();
+  const steps = viewer(page).locator('.plan-steps');
+  await expect(steps).toHaveText('Immagine 2 di 3');
+  await steps.getByLabel('Immagine successiva').click();
+  await expect(steps).toHaveText('Immagine 3 di 3');
+  await expect(viewer(page).locator('.plan-caption')).toHaveText('Immagine di prova 3');
+  await page.keyboard.press('ArrowRight');
+  await expect(steps).toHaveText('Immagine 1 di 3');
+  await viewer(page).locator('.zone-choices').getByText('Giardino').click();
+  await expect(steps).toHaveText('Immagine 1 di 2');
+  await expect(viewer(page).locator('.plan-caption')).toHaveText('Immagine di prova 2');
+  await viewer(page).getByTitle('Foto', { exact: true }).click();
+  await expect(viewer(page).locator('.viewer-count')).toHaveText('Immagine 2 di 20');
+  await page.keyboard.press('Escape');
+  await tile(page).nth(5).click();
+  await viewer(page).getByTitle('Planimetria').click();
+  await expect(room(page, 'Soggiorno')).toBeChecked();
+  await expect(steps).toHaveText('Immagine 1 di 3');
+});
+
+test('on a phone the plan stands above its rooms and the picture, each room’s name tall enough', async ({
+  page,
+}) => {
+  await phoneWidth(page, 320, 640);
+  await page.goto('/de/wohnungen/laerche?season=winter');
+  await page.locator('.plan-pill').click();
+  await expect(viewer(page)).toHaveAttribute('data-view', 'plan');
+  const plan = await box(viewer(page).locator('.plan-box'));
+  const width = await page.evaluate(() => innerWidth);
+  expect(plan.x).toBeGreaterThanOrEqual(0);
+  expect(plan.x + plan.width).toBeLessThanOrEqual(width);
+  for (const name of await viewer(page).locator('.zone-choices span').all())
+    expect((await box(name)).height).toBeGreaterThanOrEqual(24);
+  const rooms = await box(viewer(page).locator('.zone-choices'));
+  expect(rooms.y).toBeGreaterThan(plan.y + plan.height);
+  // The picture below them, scrolled to; the season's own.
+  const picture = viewer(page).locator('.plan-frame img:visible');
+  await picture.scrollIntoViewIfNeeded();
+  expect((await box(picture)).y).toBeGreaterThan(rooms.y);
+  await expect(viewer(page).locator('.plan-caption')).toHaveText(
+    /Wohnküche aus Lärche mit anthrazit/,
+  );
+  await expect
+    .poll(() => viewer(page).evaluate((dialog) => dialog.scrollWidth - dialog.clientWidth))
+    .toBe(0);
 });
