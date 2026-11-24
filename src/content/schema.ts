@@ -311,7 +311,6 @@ export const textsSchema = z.strictObject({
     weeks: anchor,
     apartments: anchor,
     location: anchor,
-    about: anchor,
   }),
   skip: text,
   // A link within the site is a path from its root, which carries the visitor's choices; any
@@ -336,7 +335,6 @@ export const textsSchema = z.strictObject({
     apartments: text,
     allApartments: text,
     location: text,
-    about: text,
     language: text,
     menu: text,
     close: text,

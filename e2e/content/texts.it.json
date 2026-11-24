@@ -13,8 +13,7 @@
   "anchors": {
     "weeks": "settimane-libere",
     "apartments": "appartamenti",
-    "location": "posizione",
-    "about": "chi-siamo"
+    "location": "posizione"
   },
   "skip": "Vai al contenuto",
   "nav": {
@@ -23,7 +22,6 @@
     "apartments": "Appartamenti",
     "allApartments": "Tutti in breve",
     "location": "Posizione",
-    "about": "Chi siamo",
     "language": "Lingua",
     "menu": "Menu",
     "close": "Chiudi"
