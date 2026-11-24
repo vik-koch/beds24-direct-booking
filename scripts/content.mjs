@@ -79,8 +79,12 @@ function readPlan(dir, file, plan) {
   const [x, y, width, height] = viewBox;
   const within = ([px, py]) => px >= x && px <= x + width && py >= y && py <= y + height;
   plan.zones.forEach(({ points, label }, index) => {
-    if (!points.split(' ').every((point) => within(point.split(',').map(Number))))
-      throw new Error(`${file}\n  plan.zones.${index}.points: outside the drawing's viewBox`);
+    points.forEach((point, at) => {
+      if (!within(point))
+        throw new Error(
+          `${file}\n  plan.zones.${index}.points.${at}: outside the drawing's viewBox`,
+        );
+    });
     if (!within(label))
       throw new Error(`${file}\n  plan.zones.${index}.label: outside the drawing's viewBox`);
   });

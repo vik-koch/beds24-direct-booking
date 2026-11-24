@@ -73,7 +73,7 @@ content. The application has no wording, no colour and no typeface of its own. T
       {
         "key": "kitchen",
         "name": { "de-AT": "Küche", "en-GB": "Kitchen" },
-        "points": "0,0 325,0 325,110 0,110",
+        "points": [[0, 0], [325, 0], [325, 110], [0, 110]],
         "label": [160, 55]
       }
     ]
@@ -84,11 +84,11 @@ content. The application has no wording, no colour and no typeface of its own. T
   text, since the page writes the zones' names in the theme's typeface, no script and no reference
   to another file. Its background is transparent, and its colours are its own, not the theme's. An
   apartment on two floors draws them side by side. `alt` says in each language what the plan shows.
-  Each zone has a key, its `name` in each language, its polygon as `x,y` pairs parted by spaces, and
-  the `label` point its name is centred on, both in the drawing's coordinates and inside its
-  `viewBox`. A picture names the zones it shows, `"zones": ["kitchen", "dining"]`, or none; every
-  zone is shown by at least one picture. The drawing is served at `/pictures/apartments/` under a
-  name that changes with it.
+  Each zone has a key, its `name` in each language, its polygon's corners as `[x, y]` pairs, at
+  least three, and the `label` point `[x, y]` its name is centred on, both in the drawing's
+  coordinates and inside its `viewBox`. A picture names the zones it shows,
+  `"zones": ["kitchen", "dining"]`, or none; every zone is shown by at least one picture. The
+  drawing is served at `/pictures/apartments/` under a name that changes with it.
 
 - **The apartment page** (`apartment` in a texts file) is the page's wording: its headings, the
   facts line (`guests` and `bedrooms` take `{count}`, with a `one` and an `other` form), and the

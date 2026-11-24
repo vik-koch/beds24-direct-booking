@@ -28,10 +28,10 @@ language. What weighs on the choice:
    or cleans outside markup. The drawing keeps its own colours, as a photo does; only the chosen
    zone takes the theme's accent. Its background is transparent, so the page decides the ground
    under it.
-3. **The zones are in the apartment's file:** each has a key, a name per language, a polygon as SVG
-   writes one, and the point its name is centred on. A picture names the zones it shows
-   (`"zones": ["dining", "kitchen"]`), so one picture can show two zones, and the gallery's order
-   stays the only order.
+3. **The zones are in the apartment's file:** each has a key, a name per language, its polygon's
+   corners and the point its name is centred on, each as `[x, y]`. A picture names the zones it
+   shows (`"zones": ["dining", "kitchen"]`), so one picture can show two zones, and the gallery's
+   order stays the only order.
 4. **The build checks the plan:** the drawing is an SVG document with a `viewBox`, without text,
    script or a reference to another file. Each zone and its label lie inside the `viewBox`, each
    zone is shown by a picture, and each picture names only zones of the plan. The texts are given in

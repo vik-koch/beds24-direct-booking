@@ -316,19 +316,34 @@ function planned(change = () => {}, svg = drawing) {
         {
           key: 'room',
           name: names('Room', 'Stube'),
-          points: '0,0 400,0 400,400 0,400',
+          points: [
+            [0, 0],
+            [400, 0],
+            [400, 400],
+            [0, 400],
+          ],
           label: [200, 200],
         },
         {
           key: 'kitchenette',
           name: names('Kitchenette', 'Küchenzeile'),
-          points: '400,0 600,0 600,200 400,200',
+          points: [
+            [400, 0],
+            [600, 0],
+            [600, 200],
+            [400, 200],
+          ],
           label: [500, 100],
         },
         {
           key: 'bathroom',
           name: names('Bathroom', 'Bad'),
-          points: '400,200 600,200 600,400 400,400',
+          points: [
+            [400, 200],
+            [600, 200],
+            [600, 400],
+            [400, 400],
+          ],
           label: [500, 300],
         },
       ],
@@ -367,8 +382,9 @@ test("a plan's keys are checked: its zones, their keys, points and label", () =>
     [(a) => (a.plan.zones = []), /plan\.zones: at least one zone/],
     [(a) => (a.plan.zones[1].key = 'room'), /plan\.zones: a zone key is listed twice/],
     [(a) => (a.plan.zones[0].key = 'Room'), /plan\.zones\.0\.key/],
-    [(a) => (a.plan.zones[0].points = '0,0 400,0'), /plan\.zones\.0\.points: not three points/],
-    [(a) => (a.plan.zones[0].points = '0,0, 400,0 4,4'), /plan\.zones\.0\.points: not three/],
+    [(a) => a.plan.zones[0].points.splice(2), /plan\.zones\.0\.points: at least three points/],
+    [(a) => (a.plan.zones[0].points[1] = [400, 0, 1]), /plan\.zones\.0\.points\.1/],
+    [(a) => (a.plan.zones[0].points[1] = ['400', '0']), /plan\.zones\.0\.points\.1\.0/],
     [(a) => (a.plan.zones[0].label = [1]), /plan\.zones\.0\.label/],
     [(a) => (a.pictures[0].zones = []), /pictures\.0\.zones/],
     [(a) => (a.pictures[0].zones = ['room', 'room']), /pictures\.0\.zones: a zone is listed twice/],
@@ -433,9 +449,8 @@ test("a plan's drawing is an SVG file with a viewBox, no text, no script and no 
 
 test("a plan's zones and their labels lie within the drawing's viewBox", () => {
   assert.throws(
-    () =>
-      readContent(planned((a) => (a.plan.zones[2].points = '400,200 600,200 600,400.5 400,400'))),
-    /zirbe\.json\n {2}plan\.zones\.2\.points: outside the drawing's viewBox$/,
+    () => readContent(planned((a) => (a.plan.zones[2].points[2] = [600, 400.5]))),
+    /zirbe\.json\n {2}plan\.zones\.2\.points\.2: outside the drawing's viewBox$/,
   );
   assert.throws(
     () => readContent(planned((a) => (a.plan.zones[0].label = [-1, 200]))),
@@ -458,7 +473,12 @@ test('the generated site gives a plan its own address, its viewBox and its texts
   assert.deepEqual(plan.zones[1], {
     key: 'kitchenette',
     name: { de: 'Küchenzeile', en: 'Kitchenette' },
-    points: '400,0 600,0 600,200 400,200',
+    points: [
+      [400, 0],
+      [600, 0],
+      [600, 200],
+      [400, 200],
+    ],
     label: [500, 100],
   });
   assert.deepEqual(pictures[2].zones, ['kitchenette']);

@@ -226,9 +226,9 @@ export const siteSchema = z.strictObject({
 
 // An apartment's floor plan: an SVG drawing in pictures/, its alternative text in each of the
 // site's languages by tag, and the zones a visitor chooses on it. A zone has its name in each
-// language, a polygon as SVG writes one and the point its name is centred on, both in the
+// language, its polygon's corners and the point its name is centred on, each as [x, y] in the
 // drawing's coordinates; the content script checks the drawing, the languages and the points.
-const coordinate = String.raw`-?\d+(\.\d+)?`;
+const point = z.tuple([z.number(), z.number()]);
 const plan = z.strictObject({
   file: svg,
   alt: z.record(z.string(), text),
@@ -237,13 +237,8 @@ const plan = z.strictObject({
       z.strictObject({
         key: segment,
         name: z.record(z.string(), text),
-        points: z
-          .string()
-          .regex(
-            new RegExp(`^${coordinate},${coordinate}( ${coordinate},${coordinate}){2,}$`),
-            'not three points or more as x,y x,y …',
-          ),
-        label: z.tuple([z.number(), z.number()]),
+        points: z.array(point).min(3, 'at least three points'),
+        label: point,
       }),
     )
     .min(1, 'at least one zone')
@@ -504,7 +499,12 @@ export interface Plan {
   url: string;
   viewBox: [number, number, number, number];
   alt: Record<string, string>;
-  zones: { key: string; name: Record<string, string>; points: string; label: [number, number] }[];
+  zones: {
+    key: string;
+    name: Record<string, string>;
+    points: [number, number][];
+    label: [number, number];
+  }[];
 }
 export type Apartment = { slug: string; pictures: Picture[]; plan?: Plan } & Omit<
   z.infer<typeof apartmentSchema>,
