@@ -1157,7 +1157,7 @@ test("a page's picture exists, and a credit is for a picture a page shows", () =
   );
 });
 
-test("a page's picture is converted once, and the page names its files", async () => {
+test("a page's picture is converted, and the page names its files wherever it shows it", async () => {
   const dir = changed('site.json', () => undefined);
   writeFileSync(
     join(dir, 'pages/faq.en-GB.md'),
@@ -1166,10 +1166,11 @@ test("a page's picture is converted once, and the page names its files", async (
   const out = mkdtempSync(join(root, 'generated-'));
   await writeContent(dir, out, cache);
   const files = readdirSync(join(out, 'pictures', 'pages'));
+  const page = readFileSync(join(out, 'page.en.faq.ts'), 'utf8');
   assert.equal(files.length, 4);
+  assert.equal(page.match(/ srcset=/g).length, 2);
   // Served only as its conversions.
   assert.ok(!existsSync(join(out, 'pictures', 'saalbach-summer.webp')));
-  const page = readFileSync(join(out, 'page.en.faq.ts'), 'utf8');
   assert.match(
     page,
     /<img src=\\"\/pictures\/pages\/saalbach-summer-480\.[0-9a-f]{8}\.webp\\" alt=\\"The village\\" srcset=\\"[^"]* 1920w\\" sizes=\\"\(min-width: 44rem\) 40rem, 100vw\\" width=\\"1920\\" height=\\"1440\\" loading=\\"lazy\\">/,
