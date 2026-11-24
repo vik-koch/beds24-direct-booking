@@ -12,7 +12,8 @@
       "alt": {
         "de-AT": "Zirbenstube mit Doppelbett, moosgrüner Decke, rundem Tisch für zwei und grau gepolsterter Fensterbank mit Blick auf einen bewaldeten Hang.",
         "en-GB": "Stone pine studio with a double bed, moss green blanket, round table for two and a grey cushioned window seat overlooking a forested slope."
-      }
+      },
+      "zones": ["room"]
     },
     {
       "file": "pictures/zirbe-1-winter.webp",
@@ -21,7 +22,8 @@
       "alt": {
         "de-AT": "Zirbenstube im Winter mit ausgebreiteter moosgrüner Decke, grauem Plaid auf der Fensterbank und Blick auf verschneiten Wald.",
         "en-GB": "Stone pine studio in winter with a spread moss green blanket, a grey throw on the window seat and a view of snowy forest."
-      }
+      },
+      "zones": ["room"]
     },
     {
       "file": "pictures/zirbe-2.webp",
@@ -30,7 +32,8 @@
       "alt": {
         "de-AT": "Küchenzeile aus Zirbe mit zwei Kochplatten, Spüle, offenem Regal, elfenbeinfarbenem Wasserkocher und einem Teil der grauen Fensterbank.",
         "en-GB": "Stone pine kitchenette with a two-ring hob, sink, open shelf, plain ivory kettle and part of the grey window seat."
-      }
+      },
+      "zones": ["kitchenette"]
     },
     {
       "file": "pictures/zirbe-2-winter.webp",
@@ -39,7 +42,8 @@
       "alt": {
         "de-AT": "Küchenzeile aus Zirbe mit Teekanne und zwei Tassen, moosgrünen Polstern auf der Fensterbank und Blick auf den verschneiten Hang.",
         "en-GB": "Stone pine kitchenette with a teapot and two cups, moss green window-seat cushions and a view of the snowy slope."
-      }
+      },
+      "zones": ["kitchenette"]
     },
     {
       "file": "pictures/zirbe-3.webp",
@@ -47,7 +51,54 @@
       "alt": {
         "de-AT": "Bad mit schwebendem Waschtisch aus Zirbe, rundem Spiegel, bodenebener Regendusche und Milchglasfenster.",
         "en-GB": "Bathroom with a floating stone pine vanity, round mirror, walk-in rain shower and frosted window."
-      }
+      },
+      "zones": ["bathroom"]
     }
-  ]
+  ],
+  "plan": {
+    "file": "pictures/zirbe-plan.svg",
+    "alt": {
+      "de-AT": "Grundriss der Zirbe: ein Raum mit Doppelbett, Fensterbank, rundem Tisch und Küchenzeile, dazu ein Vorraum mit Garderobe und ein Duschbad.",
+      "en-GB": "Floor plan of Zirbe: one room with a double bed, a window seat, a round table and a kitchenette, plus a hall with a wardrobe and a shower room."
+    },
+    "zones": [
+      {
+        "key": "room",
+        "name": { "de-AT": "Wohnraum", "en-GB": "Room" },
+        "points": [
+          [0, 0],
+          [480, 0],
+          [480, 70],
+          [380, 70],
+          [380, 350],
+          [480, 350],
+          [480, 440],
+          [0, 440]
+        ],
+        "label": [200, 330]
+      },
+      {
+        "key": "kitchenette",
+        "name": { "de-AT": "Küchenzeile", "en-GB": "Kitchenette" },
+        "points": [
+          [380, 70],
+          [480, 70],
+          [480, 350],
+          [380, 350]
+        ],
+        "label": [425, 210]
+      },
+      {
+        "key": "bathroom",
+        "name": { "de-AT": "Duschbad", "en-GB": "Shower room" },
+        "points": [
+          [242, 452],
+          [480, 452],
+          [480, 652],
+          [242, 652]
+        ],
+        "label": [420, 512]
+      }
+    ]
+  }
 }

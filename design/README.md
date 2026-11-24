@@ -87,3 +87,14 @@ The sheets in `screenshots/` show the page on a phone and on a desktop, in both 
 apartments' pictures; [`generated/`](generated/) holds a note per apartment on its generated
 pictures, which are in [`content/demo/pictures/`](../content/demo/pictures/). They are AI-generated,
 see [`licenses/README.md`](../licenses/README.md).
+
+## Floor plans
+
+Zirbe's and Lärche's floor plans are drawn by a script each in [`plans/`](plans/), from rooms and
+furniture given in centimetres: `node design/plans/laerche.mjs` writes
+`content/demo/pictures/laerche-plan.svg`, and the zones' corners and label points into the plan in
+`content/demo/apartments/laerche.json`, whose zone names and alternative text are written there by
+hand. A changed measurement is a changed number, run again. The rooms follow
+[`apartment-pictures.md`](apartment-pictures.md) and the pictures; where they say nothing, the sizes
+are invented, plausible and consistent with each other. Ahorn has no plan, so the demo also shows an
+apartment without one.

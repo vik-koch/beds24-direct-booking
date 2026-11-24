@@ -11,7 +11,8 @@
       "alt": {
         "de-AT": "Wohnküche aus Lärche mit Tisch und vier Stühlen, anthrazitfarbenem Sofa, rostroten Polstern und Glastüren zu einem sonnigen Holzbalkon.",
         "en-GB": "Larch kitchen-living room with a table and four chairs, charcoal sofa, rust cushions and glass doors to a sunny wooden balcony."
-      }
+      },
+      "zones": ["living"]
     },
     {
       "file": "pictures/laerche-1-winter.webp",
@@ -20,7 +21,8 @@
       "alt": {
         "de-AT": "Wohnküche aus Lärche mit anthrazitfarbener Decke auf dem Sofa und verschneitem Balkon hinter den Glastüren.",
         "en-GB": "Larch kitchen-living room with a charcoal throw on the sofa and a snowy balcony beyond the glass doors."
-      }
+      },
+      "zones": ["living"]
     },
     {
       "file": "pictures/laerche-2.webp",
@@ -29,7 +31,8 @@
       "alt": {
         "de-AT": "Doppelzimmer mit Kopfteil aus Lärche, rostroter Wolldecke, Leselampen am Bett und Einbauschrank.",
         "en-GB": "Double bedroom with a larch headboard, rust wool throw, bedside reading lamps and a built-in wardrobe."
-      }
+      },
+      "zones": ["bedroom"]
     },
     {
       "file": "pictures/laerche-2-winter.webp",
@@ -38,7 +41,8 @@
       "alt": {
         "de-AT": "Doppelzimmer aus Lärche mit anthrazitfarbener Wolldecke, Filzpantoffeln am Bett und Blick auf verschneiten Wald.",
         "en-GB": "Larch double bedroom with a charcoal wool throw, felt slippers by the bed and a view of snowy forest."
-      }
+      },
+      "zones": ["bedroom"]
     },
     {
       "file": "pictures/laerche-3.webp",
@@ -47,7 +51,8 @@
       "alt": {
         "de-AT": "Zweites Schlafzimmer aus Lärche mit Stockbett und Leiter, Schreibtisch unter dem Fenster und Wandhaken aus Holz.",
         "en-GB": "Larch bunk bedroom with a ladder, desk under the window and wooden wall hooks."
-      }
+      },
+      "zones": ["bunk-room"]
     },
     {
       "file": "pictures/laerche-3-winter.webp",
@@ -56,7 +61,8 @@
       "alt": {
         "de-AT": "Zweites Schlafzimmer aus Lärche mit Stockbett, rostroten Decken, Strickjacke am Wandhaken und Schreibtisch am verschneiten Fenster.",
         "en-GB": "Larch bunk bedroom with rust blankets, a cardigan on a hook and a desk by the snowy window."
-      }
+      },
+      "zones": ["bunk-room"]
     },
     {
       "file": "pictures/laerche-4.webp",
@@ -64,7 +70,8 @@
       "alt": {
         "de-AT": "Bad mit weißer Badewanne und Handbrause, Waschtisch aus Lärche, Milchglasfenster und rostroten und cremeweißen Handtüchern.",
         "en-GB": "Bathroom with a white bath tub and hand shower, larch vanity, frosted window and rust and off-white towels."
-      }
+      },
+      "zones": ["bathroom"]
     },
     {
       "file": "pictures/laerche-5.webp",
@@ -73,7 +80,8 @@
       "alt": {
         "de-AT": "Sonniger Holzbalkon mit Klapptisch und zwei Stühlen mit rostroten Polstern, Blick über Dächer des Orts und einen bewaldeten Berghang.",
         "en-GB": "Sunny wooden balcony with a folding table and two rust-cushioned chairs overlooking village roofs and a forested mountain slope."
-      }
+      },
+      "zones": ["balcony"]
     },
     {
       "file": "pictures/laerche-5-winter.webp",
@@ -82,7 +90,74 @@
       "alt": {
         "de-AT": "Überdachter Holzbalkon im Winter mit leerem Klapptisch, zusammengeklappten Stühlen und Blick über verschneite Dächer und Wald.",
         "en-GB": "Covered wooden balcony in winter with a bare folding table, folded chairs and a view over snowy roofs and forest."
-      }
+      },
+      "zones": ["balcony"]
     }
-  ]
+  ],
+  "plan": {
+    "file": "pictures/laerche-plan.svg",
+    "alt": {
+      "de-AT": "Grundriss der Lärche: Vom Flur gehen das Schlafzimmer mit Doppelbett, das Zimmer mit Stockbett, das Bad mit Wanne und die Wohnküche ab, die sich auf den Südbalkon öffnet.",
+      "en-GB": "Floor plan of Lärche: the hall leads to the double bedroom, the bunk bedroom, the bathroom with a tub and the kitchen-living room, which opens onto the south-facing balcony."
+    },
+    "zones": [
+      {
+        "key": "living",
+        "name": { "de-AT": "Wohnküche", "en-GB": "Kitchen-living room" },
+        "points": [
+          [532, 242],
+          [772, 242],
+          [772, 0],
+          [1000, 0],
+          [1000, 580],
+          [532, 580]
+        ],
+        "label": [830, 500]
+      },
+      {
+        "key": "bedroom",
+        "name": { "de-AT": "Schlafzimmer", "en-GB": "Double bedroom" },
+        "points": [
+          [0, 0],
+          [360, 0],
+          [360, 310],
+          [0, 310]
+        ],
+        "label": [250, 245]
+      },
+      {
+        "key": "bunk-room",
+        "name": { "de-AT": "Stockbettzimmer", "en-GB": "Bunk bedroom" },
+        "points": [
+          [0, 322],
+          [360, 322],
+          [360, 580],
+          [0, 580]
+        ],
+        "label": [230, 470]
+      },
+      {
+        "key": "bathroom",
+        "name": { "de-AT": "Bad", "en-GB": "Bathroom" },
+        "points": [
+          [532, 0],
+          [760, 0],
+          [760, 230],
+          [532, 230]
+        ],
+        "label": [630, 170]
+      },
+      {
+        "key": "balcony",
+        "name": { "de-AT": "Balkon", "en-GB": "Balcony" },
+        "points": [
+          [600, 610],
+          [960, 610],
+          [960, 770],
+          [600, 770]
+        ],
+        "label": [880, 700]
+      }
+    ]
+  }
 }
