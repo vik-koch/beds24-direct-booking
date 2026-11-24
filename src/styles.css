@@ -283,6 +283,62 @@
     border-radius: var(--radius-control);
   }
 
+  /* Two icons in a pill, the second chosen by the track's data-view; the accent part glides to
+     the chosen one, as in the season switch. The booking panel's list and calendar, the viewer's
+     photos and floor plan. */
+  .views {
+    grid-template-columns: repeat(2, var(--narrow));
+
+    label {
+      z-index: 1;
+      display: grid;
+      place-items: center;
+      border-radius: var(--radius-control);
+      color: var(--color-ink-soft);
+      cursor: pointer;
+      transition: color 0.3s ease;
+    }
+
+    ng-icon {
+      --ng-icon__size: 1.125rem;
+    }
+
+    &:not([data-view='calendar'], [data-view='plan']) label:first-of-type,
+    &:is([data-view='calendar'], [data-view='plan']) label:last-of-type {
+      color: var(--color-on-accent);
+    }
+
+    /* The radios are the labels round them, which draw their rings. */
+    input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    label:has(:focus-visible) {
+      outline: var(--focus-ring);
+      outline-offset: 4px;
+    }
+  }
+
+  .views-knob {
+    position: absolute;
+    inset-block: var(--pad);
+    left: var(--pad);
+    width: var(--narrow);
+    border-radius: var(--radius-control);
+    background: var(--color-accent);
+    transition: translate 0.32s cubic-bezier(0.65, 0, 0.35, 1);
+
+    :is([data-view='calendar'], [data-view='plan']) > & {
+      translate: 100% 0;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
+  }
+
   .season-switch {
     grid-template-columns: var(--narrow) auto;
     background: var(--color-surface);
@@ -717,6 +773,20 @@
     }
   }
 
+  /* A caption's note that its picture was generated, in the viewer and the plan's view. */
+  .ai-note {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3125rem;
+    margin-left: 0.25rem;
+    white-space: nowrap;
+
+    /* Only the icon is soft, as beside other text; the note's words keep the caption's ink. */
+    ng-icon {
+      --ng-icon__color: var(--color-ink-soft);
+    }
+  }
+
   /* The free-weeks list, the booking panel and the map's places: both seasons are in the page and
      the page's season shows one. Parts that are leaving stay in view until their move has ended, and the
      versions in a stack keep their place, unseen. */
@@ -935,8 +1005,24 @@
     }
   }
 
-  /* An apartment chosen among pills: the week sheet's tabs, the map's routes. */
-  :is(.room-tabs, .map-choices) {
+  /* Names chosen as words, a pill once chosen: the map's apartments, the floor plan's rooms. */
+  :is(.map-choices, .zone-choices) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+
+    span {
+      display: grid;
+      place-items: center;
+      min-height: var(--size-control-small);
+      padding: 0 0.75rem;
+      border-radius: var(--radius-control);
+    }
+  }
+
+  /* An apartment or a room chosen among pills: the week sheet's tabs, the map's routes, the floor
+     plan's rooms. */
+  :is(.room-tabs, .map-choices, .zone-choices) {
     input {
       position: absolute;
       opacity: 0;
@@ -1178,8 +1264,8 @@
   }
 
   /* Accent text that a click chooses, an accent pill once chosen: a week's price, an apartment
-     on the map. */
-  :is(.price, .map-choices span) {
+     on the map, a room of the floor plan. */
+  :is(.price, .map-choices span, .zone-choices span) {
     color: var(--color-accent);
     font-weight: 500;
     cursor: pointer;
@@ -1192,7 +1278,7 @@
     }
   }
 
-  :is(.stay.chosen .price, .map-choices :checked + span) {
+  :is(.stay.chosen .price, :is(.map-choices, .zone-choices) :checked + span) {
     background: var(--color-accent);
     color: var(--color-on-accent);
   }
