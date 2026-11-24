@@ -13,7 +13,7 @@ Zirbe, Lärche und Ahorn geben den Wohnungen ihre Namen.
 
 - **Ohne Portalprovision:** Sie zahlen den Preis, den wir verlangen, und keinen Aufschlag für eine
   Plattform.
-- **Was Sie sehen, ist frei:** Freie Wochen und Preise kommen direkt aus unserem Buchungssystem.
+- **Immer aktuell:** Freie Wochen und Preise kommen direkt aus unserem Buchungssystem.
 - **Samstag bis Samstag:** Eine Woche ist unser Rhythmus, im Winter wie im Sommer.
 
 Wir kümmern uns selbst um das Haus. Bei der Ankunft und während Ihres Aufenthalts erreichen Sie uns

@@ -12,7 +12,7 @@ maple give the apartments their names.
 ## Why book with us directly
 
 - **No booking site commission:** you pay the price we ask, with nothing added for a platform.
-- **What you see is free:** the free weeks and prices come straight from our booking system.
+- **Always up to date:** the free weeks and prices come straight from our booking system.
 - **Saturday to Saturday:** a week is our rhythm, in winter as in summer.
 
 We look after the house ourselves. When you arrive and during your stay, you reach us in person.
