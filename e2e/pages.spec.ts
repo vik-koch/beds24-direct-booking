@@ -68,6 +68,14 @@ test('a question the address names is open, below the header, also when the addr
   expect(await keys.evaluate((d) => d.getBoundingClientRect().top)).toBeGreaterThanOrEqual(header);
   await page.evaluate(() => (location.hash = 'arrivo'));
   await expect(arrival).toHaveAttribute('open');
+  // A link to the question the address already names opens it, though the address stays.
+  const link = arrival.getByRole('link', { name: 'dove trovarle' });
+  await link.click();
+  await expect(page).toHaveURL(/#chiavi$/);
+  await keys.locator('summary').click();
+  await expect(keys).not.toHaveAttribute('open');
+  await link.click();
+  await expect(keys).toHaveAttribute('open');
   // A question opens and closes by keyboard.
   await arrival.locator('summary').focus();
   await page.keyboard.press('Enter');

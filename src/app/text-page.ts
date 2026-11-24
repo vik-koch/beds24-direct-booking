@@ -66,9 +66,14 @@ export class TextPage {
       };
       open();
       window.addEventListener('hashchange', open);
+      const prose = this.prose().nativeElement;
+      // A link to the question the address already names changes no address, so no hashchange.
+      prose.addEventListener('click', (event) => {
+        const link = (event.target as Element).closest('a');
+        if (link?.hash && link.pathname === window.location.pathname) setTimeout(open);
+      });
       // A table wider than the column is reached by keyboard to scroll it; Safari does not make
       // a scrolling box focusable by itself.
-      const prose = this.prose().nativeElement;
       // The site's own links carry the visitor's choice, as every link between the pages does.
       for (const link of prose.querySelectorAll('a'))
         link.setAttribute('href', choice.link(link.getAttribute('href')!));
