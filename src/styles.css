@@ -1483,6 +1483,9 @@
 
     /* Questions as the accordion's rows (ui.css), one sheet for each run of them. */
     details {
+      /* Holds the answer's last margin inside the row's sheet. */
+      display: flow-root;
+
       &:not(details + details) {
         margin-top: 0.625rem;
         border-top-left-radius: var(--radius-card);
