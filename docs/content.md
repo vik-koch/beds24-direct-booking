@@ -300,6 +300,7 @@ beyond a limit fails its build, with the limit named.
 | An apartment's picture | Square to 2:1, landscape, with 1% to spare | The gallery's frames; tested with 1:1, 4:3 and 3:2 | The content script; the demo has 3:2, the e2e test site 1:1 and 4:3 |
 | An apartment's floor plan | One drawing, all floors in it | The gallery shows one plan | The schema |
 | A content page | Its title, then headings, paragraphs, lists, quotes, rules, links, tables, folded questions and pictures | The elements the page styles | The content script |
+| A content page's title | Its longest word fits the column from 340 px; at 320 px a longer one runs into the right gutter | Headlines are not hyphenated. The demo's "Geschäftsbedingungen" ends 11 px short of the screen's edge at 320 px, and the page does not scroll sideways | Not checked: a deployment looks at its titles at 320 px |
 | The map's box | At most 0.1° each way, within 85° of latitude | The tiles grow with the area, and the repository and the image carry them; the demo's 0.07° by 0.03° is 773 kB | The schema |
 | The map's places | 1 to 10 | One route for each apartment and place, and the map's list of places | The schema |
 
