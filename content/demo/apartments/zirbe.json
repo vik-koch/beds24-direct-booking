@@ -33,7 +33,7 @@
         "de-AT": "Küchenzeile aus Zirbe mit zwei Kochplatten, Spüle, offenem Regal, elfenbeinfarbenem Wasserkocher und einem Teil der grauen Fensterbank.",
         "en-GB": "Stone pine kitchenette with a two-ring hob, sink, open shelf, plain ivory kettle and part of the grey window seat."
       },
-      "zones": ["kitchenette"]
+      "zones": ["room"]
     },
     {
       "file": "pictures/zirbe-2-winter.webp",
@@ -43,7 +43,7 @@
         "de-AT": "Küchenzeile aus Zirbe mit Teekanne und zwei Tassen, moosgrünen Polstern auf der Fensterbank und Blick auf den verschneiten Hang.",
         "en-GB": "Stone pine kitchenette with a teapot and two cups, moss green window-seat cushions and a view of the snowy slope."
       },
-      "zones": ["kitchenette"]
+      "zones": ["room"]
     },
     {
       "file": "pictures/zirbe-3.webp",
@@ -68,25 +68,10 @@
         "points": [
           [0, 0],
           [500, 0],
-          [500, 70],
-          [380, 70],
-          [380, 350],
-          [500, 350],
           [500, 480],
           [0, 480]
         ],
         "label": [300, 360]
-      },
-      {
-        "key": "kitchenette",
-        "name": { "de-AT": "Küchenzeile", "en-GB": "Kitchenette" },
-        "points": [
-          [380, 70],
-          [500, 70],
-          [500, 350],
-          [380, 350]
-        ],
-        "label": [440, 210]
       },
       {
         "key": "bathroom",

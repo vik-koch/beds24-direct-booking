@@ -366,7 +366,12 @@ test('a plan is optional, and each of its zones is shown by a picture of the pla
   );
   assert.throws(
     () => readContent(planned((a) => delete a.pictures[4].zones)),
-    /zirbe\.json\n {2}plan\.zones\.2: no picture names bathroom$/,
+    /zirbe\.json\n {2}plan\.zones\.2: no picture in winter names bathroom$/,
+  );
+  // A room shown in one season only: its picture's twin names another.
+  assert.throws(
+    () => readContent(planned((a) => (a.pictures[1].zones = ['kitchenette']))),
+    /zirbe\.json\n {2}plan\.zones\.0: no picture in winter names room$/,
   );
   // A picture may show two zones, or none.
   readContent(

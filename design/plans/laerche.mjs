@@ -137,5 +137,4 @@ write('laerche', svg, {
   bedroom: { points: corners(bedroom), label: [255, 200] },
   'bunk-room': { points: corners(bunkRoom), label: [240, 440] },
   bathroom: { points: corners(bathroom), label: [498, 570] },
-  balcony: { points: corners(balcony), label: [830, 785] },
 });

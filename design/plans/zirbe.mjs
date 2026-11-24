@@ -33,8 +33,6 @@ const loden = { fill: '#b9bfba', line: '#8e978f' };
 const room = [0, 0, 500, 480];
 const hall = [0, 492, 240, 200];
 const bathroom = [252, 492, 248, 200];
-// The kitchenette's part of the room, along the east wall.
-const kitchenette = [380, 70, 120, 280];
 
 const svg = drawing(
   [-50, -50, 600, 792],
@@ -88,22 +86,7 @@ const svg = drawing(
   ],
 );
 
-const [x, y, width, depth] = room;
-const [kx, ky, kw, kd] = kitchenette;
 write('zirbe', svg, {
-  room: {
-    points: [
-      [x, y],
-      [x + width, y],
-      [x + width, ky],
-      [kx, ky],
-      [kx, ky + kd],
-      [x + width, ky + kd],
-      [x + width, y + depth],
-      [x, y + depth],
-    ],
-    label: [300, 360],
-  },
-  kitchenette: { points: corners(kitchenette), label: [kx + kw / 2, ky + kd / 2] },
+  room: { points: corners(room), label: [300, 360] },
   bathroom: { points: corners(bathroom), label: [320, 625] },
 });
