@@ -21,5 +21,8 @@ export async function toLanguage(page: Page, current: string, other: string) {
     const box = (await menu.boundingBox())!;
     await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
   } else await open(page, current);
+  const from = page.url();
   await page.getByRole('link', { name: other }).click();
+  // With a map in view the change took up to 7.7 s in headless WebKit under load (#165).
+  await page.waitForURL((url) => url.href !== from, { timeout: 15000 });
 }
