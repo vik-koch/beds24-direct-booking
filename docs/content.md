@@ -80,13 +80,13 @@ content. The application has no wording, no colour and no typeface of its own. T
   }
   ```
 
-  The drawing is an SVG file in `pictures/` with a `viewBox`, one for every language: it has no
-  text, since the page writes the zones' names in the theme's typeface, no script and no reference
-  to another file. Its background is transparent, and its colours are its own, not the theme's. An
-  apartment on two floors draws them side by side. `alt` says in each language what the plan shows.
-  Each zone has a key, its `name` in each language, its polygon's corners as `[x, y]` pairs, at
-  least three, and the `label` point `[x, y]` its name is centred on, both in the drawing's
-  coordinates and inside its `viewBox`. A picture names the zones it shows,
+  The drawing is one SVG file in `pictures/` per apartment, shared by all languages, with a
+  `viewBox`: it has no text, since the page writes the zones' names in the theme's typeface, no
+  script and no reference to another file. Its background is transparent, and its colours are its
+  own, not the theme's. An apartment on two floors draws them side by side. `alt` says in each
+  language what the plan shows. Each zone has a key, its `name` in each language, its polygon's
+  corners as `[x, y]` pairs, at least three, and the `label` point `[x, y]` its name is centred on,
+  both in the drawing's coordinates and inside its `viewBox`. A picture names the zones it shows,
   `"zones": ["kitchen", "dining"]`, or none; every zone is shown by at least one picture. The
   drawing is served at `/pictures/apartments/` under a name that changes with it.
 

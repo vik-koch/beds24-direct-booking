@@ -55,17 +55,24 @@ function readPlan(dir, file, plan) {
   if (!existsSync(join(dir, plan.file))) throw fail('does not exist');
   const root = svgRoot(readFileSync(join(dir, plan.file)));
   if (!root) throw fail('is not an SVG document in UTF-8');
-  const viewBox = (root.getAttribute('viewBox') ?? '')
-    .trim()
-    .split(/[\s,]+/)
-    .map(Number);
+  // Numbers parted by a comma, spaces or both, as SVG writes them: a browser ignores any other
+  // viewBox, and the drawing would no longer lie under its zones.
+  const parts = (root.getAttribute('viewBox') ?? '').trim().split(/\s*,\s*|\s+/);
+  const viewBox = parts.map(Number);
   if (
-    viewBox.length !== 4 ||
-    !viewBox.every(Number.isFinite) ||
+    parts.length !== 4 ||
+    !parts.every((part) => /^[-+]?(\d+\.?\d*|\.\d+)(e[-+]?\d+)?$/i.test(part)) ||
     !(viewBox[2] > 0 && viewBox[3] > 0)
   )
     throw fail('has no viewBox of four numbers');
-  const outside = /url\(\s*['"]?(?!#)|@import/;
+  if (
+    [...root.ownerDocument.childNodes].some(
+      (node) =>
+        node.nodeType === node.PROCESSING_INSTRUCTION_NODE && node.target === 'xml-stylesheet',
+    )
+  )
+    throw fail('refers to another file in a stylesheet');
+  const outside = /url\((?!\s*['"]?#)|@import/i;
   for (const element of [root, ...root.querySelectorAll('*')]) {
     if (element.localName === 'text') throw fail("has text: the page writes the zones' names");
     if (element.localName === 'script') throw fail('has a script');

@@ -399,6 +399,10 @@ test("a plan's alternative text and its zones' names are given in exactly the si
     /zirbe\.json\n {2}plan\.alt\.de-AT: missing$/,
   );
   assert.throws(
+    () => readContent(planned((a) => delete a.plan.zones[0].name['en-GB'])),
+    /zirbe\.json\n {2}plan\.zones\.0\.name\.en-GB: missing$/,
+  );
+  assert.throws(
     () => readContent(planned((a) => (a.plan.zones[1].name.it = 'Cucina'))),
     /zirbe\.json\n {2}plan\.zones\.1\.name\.it: a language site\.json does not list$/,
   );
@@ -420,6 +424,9 @@ test("a plan's drawing is an SVG file with a viewBox, no text, no script and no 
   refused('<svg>', 'is not an SVG document in UTF-8');
   refused(svg('').replace(' viewBox="0 0 600 400"', ''), 'has no viewBox of four numbers');
   refused(svg('', '0 0 600'), 'has no viewBox of four numbers');
+  refused(svg('', '0 0 600,,400'), 'has no viewBox of four numbers');
+  refused(svg('', '0 0 600 400,'), 'has no viewBox of four numbers');
+  refused(svg('', '0 0 0x10 400'), 'has no viewBox of four numbers');
   refused(svg('', '0 0 0 400'), 'has no viewBox of four numbers');
   refused(svg('<text x="1" y="1">KITCHEN</text>'), "has text: the page writes the zones' names");
   refused(svg('<script>alert(1)</script>'), 'has a script');
@@ -431,6 +438,11 @@ test("a plan's drawing is an SVG file with a viewBox, no text, no script and no 
     'refers to another file in style',
   );
   refused(svg('<style>@import "other.css";</style>'), 'refers to another file');
+  refused(svg('<style>rect { fill: URL(other.svg#p) }</style>'), 'refers to another file');
+  refused(
+    `<?xml-stylesheet href="other.css"?>${svg('')}`,
+    'refers to another file in a stylesheet',
+  );
   const gone = planned();
   rmSync(join(gone, 'pictures', 'zirbe-plan.svg'));
   assert.throws(() => readContent(gone), /plan\.file: pictures\/zirbe-plan\.svg does not exist$/);
@@ -440,8 +452,8 @@ test("a plan's drawing is an SVG file with a viewBox, no text, no script and no 
     planned(
       undefined,
       svg(
-        '<defs><pattern id="wood" width="4" height="4"/></defs><rect id="r" width="9" height="9" fill="url(#wood)"/><use href="#r"/><use xlink:href="#r"/>',
-        '-28,-28 656 456',
+        `<defs><pattern id="wood" width="4" height="4"/></defs><rect id="r" width="9" height="9" fill="url(#wood)"/><rect width="9" height="9" fill="url('#wood')" style='fill: URL( "#wood")'/><use href="#r"/><use xlink:href="#r"/>`,
+        '-28, -28 656 4.56e2',
       ),
     ),
   );
