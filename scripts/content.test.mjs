@@ -1087,8 +1087,11 @@ test('a content page opens with its title and holds only what a page shows', () 
     ['# Title\n\n[Here](javascript:alert(1))', /links to javascript:alert\(1\)/],
     ['# Title\n\n[Here](//other.example)', /links to \/\/other\.example/],
     ['# Title\n\n[Here](#part)', /links to #part, which no heading or question on the page has/],
-    ['# Title\n\n## Content', /a ## heading whose text gives no id, or one the pages use: content/],
-    ['# Title\n\n## ?', /a ## heading whose text gives no id, or one the pages use: $/],
+    [
+      '# Title\n\n## Content',
+      /a ## heading whose text gives no id, or one the pages use: Content \(content\)/,
+    ],
+    ['# Title\n\n## ?', /a ## heading whose text gives no id, or one the pages use: \? \(\)/],
     [
       '# Title\n\n## Arrival\n\n<details id="arrival">\n<summary>Q</summary>\n\nA.\n\n</details>',
       /the id arrival twice/,

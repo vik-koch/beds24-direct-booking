@@ -48,11 +48,13 @@ content. The application has no wording, no colour and no typeface of its own. T
   `https`, `mailto` and `tel` addresses and to the site's own paths, such as `/en/faq`. A `##`
   heading takes an `id` from its text, its letters and digits without accents joined by hyphens:
   "Getting here" becomes `getting-here`, "Über uns" `uber-uns`, "5. Cancellation" `5-cancellation`.
-  A link to an `id` on the same page is written with the `#` alone, `[Getting here](#getting-here)`,
-  and leads there at the page's address; a list of such links at the top leads to the page's groups.
-  Another page's heading is linked by its path, `/en/terms#5-cancellation`, which the build does not
-  check. A question that folds open is written as HTML, with a blank line after the `<summary>` line
-  and before `</details>`:
+  Only the letters a to z and the digits stay, so "Łódź" gives `odz`, and a heading written wholly
+  in another script, such as Greek, gives no `id` and stops the build. A link to an `id` on the same
+  page is written with the `#` alone, `[Getting here](#getting-here)`, and leads there at the page's
+  address; a list of such links at the top leads to the page's groups. Another page's heading is
+  linked by its path, `/en/terms#5-cancellation`, which the build does not check. A question that
+  folds open is written as HTML, with a blank line after the `<summary>` line and before
+  `</details>`:
 
   ```markdown
   <details id="check-in">
@@ -65,9 +67,11 @@ content. The application has no wording, no colour and no typeface of its own. T
 
   Its `id` is lower-case words joined by hyphens, once on the page beside the questions' and the
   headings' ids and not one the pages hold (see the address parts), and kept the same in every
-  language so that one QR code fits them all. The page's address with it, `/en/faq#check-in`, opens
-  the question: printed in a QR code, it must not change. A table wider than the column scrolls on
-  its own. How a page is built is [ADR 17](adr/0017-content-pages-in-markdown.md).
+  language. The page's address with it, `/en/faq#check-in`, opens the question: printed in a QR
+  code, it must not change. The address names its language, so a code opens the page in that
+  language; the page in another language holds the same `id` at its own path, and the language
+  switch does not carry the `id` along. A table wider than the column scrolls on its own. How a page
+  is built is [ADR 17](adr/0017-content-pages-in-markdown.md).
 
   A picture stands in a paragraph of its own, written with its alternative text in the page's
   language: `![The village in summer, seen from a trail above it](pictures/saalbach-summer.webp)`.

@@ -184,7 +184,7 @@ export function readPage(file, markdown, path) {
       if (!anchor.safeParse(id).success)
         throw fail(
           name === 'h2'
-            ? `has a ## heading whose text gives no id, or one the pages use: ${id}`
+            ? `has a ## heading whose text gives no id, or one the pages use: ${element.textContent} (${id})`
             : `has a <details> without an id of lower-case words, or one the pages use: ${id}`,
         );
       if (ids.has(id)) throw fail(`has the id ${id} twice`);
