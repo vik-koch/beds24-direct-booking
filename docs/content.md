@@ -276,7 +276,7 @@ beyond a limit fails its build, with the limit named.
 | Varies | Limit | Why | Enforced by |
 |---|---|---|---|
 | Site name | 15 characters | The narrow header keeps one row at 320 px: the name shrinks from 24 px where its room runs short, to about 15.5 px for 15 letters | The schema; an e2e test puts a 15-letter name into the demo's header |
-| The header's links | Their text beside the name and the season switch on one line from 68rem | From 68rem, with a pointer that hovers, the header shows its links in one line; below, they are in the menu's sheet. The demo's German links fit there with the name at full size, and a longer text or another page shrinks the name | Not the build: a deployment checks its header at 1,088 px in each language, and keeps a link's text short, such as "FAQ" |
+| The header's links | Their text beside the name, the language's code and the season switch on one line from 66rem | From 66rem, with a pointer that hovers, the header shows its links in one line; below, they are in the menu's sheet. The demo's German links fit there with the name at full size, and from 72rem with the language's name too. A longer text or another page shrinks the name | Not the build: a deployment checks its header at 1,056 and 1,152 px in each language, and keeps a link's text short, such as "FAQ" |
 | Apartments | 1 to 4 | From 48rem the free-weeks list has a column for each, and four fill the card | The schema; the e2e test site has four |
 | Apartment name | 20 characters | The list's column headers and the phone's tabs | The schema; the e2e test site's names |
 | Languages | Exactly 2 | The language menu and the address prefixes have not been tried with a third | The schema |

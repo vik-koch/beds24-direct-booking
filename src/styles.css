@@ -236,13 +236,13 @@
   }
 
   /* The menus of the wide header open on hover, which a touch screen does not have: there,
-     and below 68rem, where the German links and a full wordmark do not fit, the header folds
-     into the sheet. */
+     and below 66rem, where the German links, the language's code and a full wordmark do not
+     fit, the header folds into the sheet. */
   .header-wide {
     display: none;
   }
 
-  @media (min-width: 68rem) and (hover: hover) {
+  @media (min-width: 66rem) and (hover: hover) {
     .header-wide {
       display: flex;
     }

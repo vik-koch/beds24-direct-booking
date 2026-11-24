@@ -645,8 +645,8 @@ test('a page without the map lets it go with its choices: Back opens the first v
   await openMap(page);
   await panel(page).getByText('Lärche').click();
   await expect(panel(page).getByRole('radio', { name: 'Lärche' })).toBeChecked();
-  await page.locator('footer a[href^="/en/faq"]').click();
-  await expect(page).toHaveURL(/\/en\/faq/);
+  await page.locator('footer a[href^="/en/imprint"]').click();
+  await expect(page).toHaveURL(/\/en\/imprint/);
   await expect.poll(() => lost(page)).toBe(1);
   await page.goBack();
   await scrollToMap(page);
@@ -829,8 +829,8 @@ test("an apartment's map goes with a change of language, not to another page", a
   await expect(page.locator('.location-map').getByRole('img', { name: 'Lärche' })).toBeVisible();
   expect(await lost(page)).toBe(0);
   // Links to a home or an apartment's page load it in full: only another page and Back stay.
-  await page.locator('footer a[href^="/de/haeufige-fragen"]').click();
-  await expect(page).toHaveURL(/\/de\/haeufige-fragen/);
+  await page.locator('footer a[href^="/de/impressum"]').click();
+  await expect(page).toHaveURL(/\/de\/impressum/);
   await expect.poll(() => lost(page)).toBe(1);
   await page.goBack();
   await scrollToMap(page);

@@ -19,7 +19,7 @@ const pages = [
 
 const axe = async (page: Page) => (await new AxeBuilder({ page }).analyze()).violations;
 
-// The header is folded where there is no hover or less than 68rem of width.
+// The header is folded where there is no hover or less than 66rem of width.
 const folded = (page: Page) => page.getByRole('button', { name: 'Menü' }).isVisible();
 
 test(
@@ -149,26 +149,35 @@ test('the header links to the content pages site.json lists, after its own, and 
     await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
   };
   await menu();
-  await expect(nav.locator(':scope > ul > li > :is(a, button)')).toHaveText([
+  await expect(nav.locator(':scope > ul > li > :is(a, button):not([data-language])')).toHaveText([
     'Freie Wochen',
     'Wohnungen',
     'Lage',
     'Über uns',
-    'Häufige Fragen',
-    ...(wide ? ['Sprache: Deutsch'] : []),
+    'FAQ',
   ]);
-  await expect(nav.getByRole('link', { name: 'Häufige Fragen' })).toHaveAttribute(
-    'aria-current',
-    'page',
-  );
+  await expect(nav.getByRole('link', { name: 'FAQ' })).toHaveAttribute('aria-current', 'page');
   await nav.getByRole('link', { name: 'Über uns' }).click();
   await expect(page).toHaveURL('/de/ueber-uns');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Über uns');
   await menu();
   await expect(nav.getByRole('link', { name: 'Über uns' })).toHaveAttribute('aria-current', 'page');
-  await expect(nav.getByRole('link', { name: 'Häufige Fragen' })).not.toHaveAttribute(
-    'aria-current',
-  );
+  await expect(nav.getByRole('link', { name: 'FAQ' })).not.toHaveAttribute('aria-current');
+});
+
+test('the language button shows the code, and the name where there is room', async ({ page }) => {
+  await page.goto('/de');
+  test.skip(await folded(page), 'the wide header only');
+  const button = page.locator('[data-language]');
+  const name = button.getByText('Deutsch');
+  await page.setViewportSize({ width: 1056, height: 800 });
+  await expect(button.getByText('DE', { exact: true })).toBeVisible();
+  expect((await name.boundingBox())!.width).toBeLessThanOrEqual(1);
+  await expect(button).toHaveAccessibleName('Sprache: Deutsch');
+  await page.setViewportSize({ width: 1152, height: 800 });
+  await expect(button.getByText('DE', { exact: true })).toBeHidden();
+  expect((await name.boundingBox())!.width).toBeGreaterThan(20);
+  await expect(button).toHaveAccessibleName('Sprache: Deutsch');
 });
 
 test('a hovered header link is not announced as the current page', async ({ page }) => {
@@ -223,7 +232,7 @@ test('a language change keeps the place and the chosen week, and focuses the lan
     const before = await fromEdge(stay);
 
     // The focus moves once the place is put back, so it is waited for first.
-    const control = page.locator(width < 1088 ? '.header-narrow .icon-button' : '[data-language]');
+    const control = page.locator(width < 1056 ? '.header-narrow .icon-button' : '[data-language]');
     await toLanguage(page, 'Language: English', 'Deutsch');
     await expect(page.locator('html')).toHaveAttribute('lang', 'de-AT');
     await expect(control).toBeFocused();
@@ -798,8 +807,9 @@ test('a site name of 15 wide letters fits the header beside the season switch', 
     wordmark.style.setProperty('--letters', String(name.length));
     wordmark.querySelector('a')!.textContent = name;
   }, name);
-  // 320 px shows the switch's icons, 384 px its label; the wide header starts at 1,088 px.
-  for (const width of [320, 384, 1088])
+  // 320 px shows the switch's icons, 384 px its label; the wide header starts at 1,056 px with
+  // the language's code, and shows its name from 1,152 px.
+  for (const width of [320, 384, 1056, 1152])
     for (const season of ['winter', 'summer']) {
       await page.setViewportSize({ width, height: 800 });
       await page.evaluate(

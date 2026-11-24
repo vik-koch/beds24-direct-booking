@@ -84,12 +84,15 @@ import { address, LANGUAGE, pageLinks, TEXTS } from './texts';
             </li>
           }
           <li hlmNavigationMenuItem class="ml-1.5">
-            <button hlmNavigationMenuTrigger align="end" class="language-button" data-language>
+            <!-- The language's code, and its name where there is room; a screen reader hears
+                 the name. -->
+            <button hlmNavigationMenuTrigger align="end" data-language>
               <ng-icon name="lucideGlobe" aria-hidden="true" />
-              <span class="sr-only"
-                >{{ texts.nav.language }}:
-                <span [attr.lang]="language.tag">{{ language.name }}</span></span
-              >
+              <span class="sr-only">{{ texts.nav.language }}:</span>
+              <span class="min-[72rem]:hidden" aria-hidden="true">{{ code }}</span>
+              <span class="sr-only min-[72rem]:not-sr-only" [attr.lang]="language.tag">{{
+                language.name
+              }}</span>
             </button>
             <hlm-navigation-menu-content
               *hlmNavigationMenuPortal
@@ -234,6 +237,7 @@ export class Header {
     name,
     path: address(this.language, 'apartment', slug),
   }));
+  protected readonly code = this.language.code.toUpperCase();
   protected readonly pages = pageLinks(this.texts, this.language, site.header);
   private readonly document = inject(DOCUMENT);
   private readonly scroller = inject(ViewportScroller);
