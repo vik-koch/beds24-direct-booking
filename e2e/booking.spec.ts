@@ -894,11 +894,8 @@ test(
     expect(cookie.value).toBe('calendar');
     expect((cookie.expires * 1000 - Date.now()) / 864e5).toBeCloseTo(30, 0);
     // By a link that carries only the guests, then an apartment's from the header.
-    await page
-      .getByRole('contentinfo')
-      .getByRole('link', { name: 'Frequently asked questions' })
-      .click();
-    await expect(page).toHaveURL(/\/en\/faq$/);
+    await page.getByRole('contentinfo').getByRole('link', { name: 'Imprint' }).click();
+    await expect(page).toHaveURL(/\/en\/imprint$/);
     const [response] = await Promise.all([
       page.waitForResponse(/\/en\/apartments\/ahorn$/),
       page.getByRole('button', { name: 'Apartments' }).click(),

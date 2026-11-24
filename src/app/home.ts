@@ -101,7 +101,7 @@ export class Home {
   protected readonly anchors = this.language.anchors;
   protected readonly lucideName = lucideName;
   protected readonly features = site.features;
-  protected readonly sections = ['apartments', 'location', 'about'] as const;
+  protected readonly sections = ['apartments', 'location'] as const;
   protected readonly hasMap = !!site.map;
   protected readonly handover = handover;
   protected readonly weeksLink = `${address(this.language, 'home')}#${this.anchors.weeks}`;

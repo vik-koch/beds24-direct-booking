@@ -49,28 +49,33 @@ slug is the same in both languages and comes from the deployment's content.
 
 ## Header
 
-Sticky on every page. How its items are arranged, and what folds into a menu on a narrow screen, is
-decided in the design round.
+Sticky on every page. From 66rem, with a pointer that hovers, its items stand in one line; below,
+and on a touch screen, all but the wordmark and the season switch fold into a sheet.
 
 - **The wordmark,** linking to the home page.
-- **Links to the home page's sections:** free weeks, apartments, where it is, who we are. On another
-  page they lead to the home page and its section.
+- **Links to the home page's sections:** free weeks, apartments, where it is. On another page they
+  lead to the home page and its section.
 - **The apartments entry opens a menu:** the section on the home page first, then each apartment's
   page.
+- **The content pages `site.json` lists in `header`,** after them, in their order. The demo's: the
+  company page and the FAQ. The page shown is marked as the current one.
+- **The language switch,** a globe with the language's code ("EN"), and its name ("English") from
+  72rem. Its menu ticks the page's language and leads to the same page in the other one. Its name
+  for a screen reader is "Language: English".
 - **The season switch,** if the deployment has more than one season.
-- **The language switch,** leading to the same page in the other language.
 
 ## Footer
 
 On every page:
 
 - Contact: the business's name, address, telephone number and e-mail address.
-- The links `site.json` lists in `footer`, in their order. The demo's: the FAQ, the imprint, the
-  privacy page, the terms and the picture credits.
+- The links `site.json` lists in `footer`, in their order. The demo's: the imprint, the privacy
+  page, the terms and the picture credits. A page the header links to is not repeated here.
 
 ## Home page
 
-Top to bottom. Each section other than the hero has an anchor that the header links to.
+Top to bottom. Each section other than the hero has an anchor that the header links to. Who the
+business is, is told on the company page, which the header lists in the demo.
 
 <!-- prettier-ignore -->
 | Section | German anchor | English anchor |
@@ -79,7 +84,6 @@ Top to bottom. Each section other than the hero has an anchor that the header li
 | Free weeks | `#freie-wochen` | `#free-weeks` |
 | The apartments | `#wohnungen` | `#apartments` |
 | Where it is | `#lage` | `#location` |
-| Who we are | `#ueber-uns` | `#about` |
 
 1. **Hero:** a season photo edge to edge, a headline that says what and where, three features with
    icons, and a button to the free weeks. It fills the first screen, with the header over its top.
@@ -89,7 +93,6 @@ Top to bottom. Each section other than the hero has an anchor that the header li
 3. **The apartments:** a teaser each, with a link to the apartment's page and a link to its free
    weeks in the list.
 4. **Where it is:** a map with marked places, and the same places as a list.
-5. **Who we are:** a short text with contact, and a link to the company page.
 
 An apartment's page ends with the same map, under the same anchor, with that apartment alone and
 always chosen: its routes drawn and their distances in the list. Its address in the facts below the

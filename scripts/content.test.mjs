@@ -151,6 +151,7 @@ test('a content folder beyond a limit fails, and the message names the limit', (
     [(site) => (site.languages = ['de-AT', 'en-GB', 'it']), /languages: exactly two languages/],
     [(site) => (site.apartments = []), /apartments: at least one apartment/],
     [(site) => site.apartments.push('d', 'e'), /apartments: at most four apartments/],
+    [(site) => site.header.push('terms'), /header: at most two pages/],
     [
       (site) =>
         (site.map.places = Array.from({ length: 11 }, (_, i) => ({
@@ -1026,6 +1027,7 @@ test('a content page needs its file, its address and its link text in every lang
   }
   const unlisted = changed('site.json', (site) => {
     site.pages = site.pages.filter((key) => key !== 'about');
+    site.header = site.header.filter((key) => key !== 'about');
   });
   assert.throws(
     () => readContent(unlisted),
@@ -1039,9 +1041,13 @@ test('a page file that no page lists is refused', () => {
   assert.throws(() => readContent(dir), /guide\.en-GB\.md\n {2}\(file\): not a page/);
 });
 
-test('the footer links only to pages, and a page key is not one of the fixed pages', () => {
+test('the header and the footer link only to pages, and a page key is not one of the fixed pages', () => {
   const footer = changed('site.json', (site) => site.footer.push('guide'));
-  assert.throws(() => readContent(footer), /site\.json\n {2}footer\.5: guide is not a page/);
+  assert.throws(() => readContent(footer), /site\.json\n {2}footer\.4: guide is not a page/);
+  const header = changed('site.json', (site) => (site.header = ['about', 'credits']));
+  assert.throws(() => readContent(header), /site\.json\n {2}header\.1: credits is not a page/);
+  const both = changed('site.json', (site) => site.footer.push('faq'));
+  assert.throws(() => readContent(both), /site\.json\n {2}footer\.4: faq is in the header too/);
   for (const key of ['credits', 'home', 'apartment']) {
     const fixed = changed('site.json', (site) => site.pages.push(key));
     assert.throws(() => readContent(fixed), /site\.json\n {2}pages\.5: taken by a page/, key);

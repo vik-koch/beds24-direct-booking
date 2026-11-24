@@ -243,9 +243,10 @@ amounts can be compared down a column.
   inside the application and on a full load alike; with reduced motion it changes at once.
 - **Header:** sticky, a light frosted bar (the ground colour at 72% with a blur). Over the hero at
   the top of the home page it has no ground of its own until the page scrolls or the menu opens.
-  Below 64rem, and on a screen without hover such as a tablet, it holds the wordmark, the season
+  Below 66rem, and on a screen without hover such as a tablet, it holds the wordmark, the season
   switch and a menu button that opens a sheet from the right with the links and the languages. From
-  64rem up with a pointer that hovers, everything is in one line.
+  66rem up with a pointer that hovers, everything is in one line, measured with the demo's German
+  links and the name at full size. The page shown is in the accent among the links.
 - **List:** from 48rem up one price column per apartment. Below that one apartment at a time, chosen
   with tabs above the list.
 - **Low windows:** under 30rem of height, bars that stay in view go back into the page.
@@ -489,12 +490,15 @@ the count. The viewer opens on the plan from there, and on a picture from a pict
 
 ### Language menu
 
-One entry at the end of the header's line: a globe and the current language's name in its own
-language ("Deutsch"). It opens the same small menu as the apartments with the other languages, each
-a link to the same page in that language, so it takes any number of them. In the sheet the languages
-are indented below a label like the apartments, at weight 400, the current one in the accent. The
-label, a globe and "Sprache", is in soft ink at label size, so it does not look like an entry that
-can be followed. It is a menu, not a pill, so that the two switches are easy to tell apart.
+One entry at the end of the header's line: a globe and the current language's code ("DE"), and from
+72rem, where the header has its full width, the language's name in its own language ("Deutsch"). A
+screen reader hears the name at every width. It opens the same small menu as the apartments with
+every language: the current one with a tick in the accent, as the guest counts tick theirs, and not
+a link; each other one a link to the same page in that language, so it takes any number of them. In
+the sheet the languages are indented below a label like the apartments, at weight 400, ticked the
+same way. The label, a globe and "Sprache", is in soft ink at label size, so it does not look like
+an entry that can be followed. It is a menu, not a pill, so that the two switches are easy to tell
+apart.
 
 A change of language keeps the visitor's place: the element at the header's lower edge stays there,
 as far scrolled past as before, however long the other language's texts are. A chosen week stays

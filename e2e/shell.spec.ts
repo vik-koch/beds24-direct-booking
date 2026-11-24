@@ -19,7 +19,7 @@ const pages = [
 
 const axe = async (page: Page) => (await new AxeBuilder({ page }).analyze()).violations;
 
-// The header is folded where there is no hover or less than 64rem of width.
+// The header is folded where there is no hover or less than 66rem of width.
 const folded = (page: Page) => page.getByRole('button', { name: 'Menü' }).isVisible();
 
 test(
@@ -114,13 +114,14 @@ test('the home page comes from the server with the apartments, the notice and th
 
 test('the language menu leads to the same page in the other language', async ({ page }) => {
   await page.goto('/de/wohnungen/laerche');
-  if (await folded(page)) {
-    await page.getByRole('button', { name: 'Menü' }).click();
-    await expect(page.getByRole('link', { name: 'Deutsch' })).toHaveAttribute('aria-current');
-    expect(await axe(page)).toEqual([]);
-  } else {
-    await open(page, 'Sprache: Deutsch');
-    expect(await axe(page)).toEqual([]);
+  const wide = !(await folded(page));
+  if (wide) await open(page, 'Sprache: Deutsch');
+  else await page.getByRole('button', { name: 'Menü' }).click();
+  // The page's language is ticked, not a link.
+  await expect(page.locator('[aria-current="true"]:visible')).toHaveText('Deutsch');
+  await expect(page.getByRole('link', { name: 'Deutsch' })).toHaveCount(0);
+  expect(await axe(page)).toEqual([]);
+  if (wide) {
     // Firefox 159 crashes on the fade that follows axe's run over the open menu, a state no
     // visitor's page is in: the change starts from a fresh page.
     await page.reload();
@@ -133,6 +134,58 @@ test('the language menu leads to the same page in the other language', async ({ 
   // Inside the app: the server's answer carried every language's texts.
   await expect(page.locator('.prose')).toContainText('on the second floor');
   await expect(page.locator('.rooms h3').first()).toHaveText('Bedroom 1');
+});
+
+test('the header links to the content pages site.json lists, after its own, and marks the one shown', async ({
+  page,
+}) => {
+  await page.goto('/de/haeufige-fragen');
+  const wide = !(await folded(page));
+  const nav = page.locator(wide ? '.header-wide' : '.sheet-nav');
+  // At the page's top, so a locator's click, which waits for the button to take it, moves nothing.
+  const menu = () => (wide ? undefined : page.locator('.header-narrow .icon-button').click());
+  await expect(page.locator('html')).toHaveAttribute('data-started', '');
+  await menu();
+  await expect(nav.locator(':scope > ul > li > :is(a, button):not([data-language])')).toHaveText([
+    'Freie Wochen',
+    'Wohnungen',
+    'Lage',
+    'Über uns',
+    'FAQ',
+  ]);
+  await expect(nav.getByRole('link', { name: 'FAQ' })).toHaveAttribute('aria-current', 'page');
+  await nav.getByRole('link', { name: 'Über uns' }).click();
+  await expect(page).toHaveURL('/de/ueber-uns');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Über uns');
+  await menu();
+  await expect(nav.getByRole('link', { name: 'Über uns' })).toHaveAttribute('aria-current', 'page');
+  await expect(nav.getByRole('link', { name: 'FAQ' })).not.toHaveAttribute('aria-current');
+});
+
+test('the language button shows the code, and the name where there is room', async ({ page }) => {
+  await page.goto('/de');
+  test.skip(await folded(page), 'the wide header only');
+  const button = page.locator('[data-language]');
+  const name = button.getByText('Deutsch');
+  await page.setViewportSize({ width: 1056, height: 800 });
+  await expect(button.getByText('DE', { exact: true })).toBeVisible();
+  expect((await name.boundingBox())!.width).toBeLessThanOrEqual(1);
+  await expect(button).toHaveAccessibleName('Sprache: Deutsch');
+  await page.setViewportSize({ width: 1152, height: 800 });
+  await expect(button.getByText('DE', { exact: true })).toBeHidden();
+  expect((await name.boundingBox())!.width).toBeGreaterThan(20);
+  await expect(button).toHaveAccessibleName('Sprache: Deutsch');
+});
+
+test('a hovered header link is not announced as the current page', async ({ page }) => {
+  await page.goto('/de/impressum');
+  test.skip(await folded(page), 'the wide header only');
+  await expect(page.locator('html')).toHaveAttribute('data-started', '');
+  const nav = page.locator('.header-wide');
+  for (const name of ['Freie Wochen', 'Lage', 'Über uns']) {
+    await nav.getByRole('link', { name }).hover();
+    await expect(nav.locator('[aria-current]')).toHaveCount(0);
+  }
 });
 
 // Where an element stands against the header's lower edge, in pixels.
@@ -176,7 +229,7 @@ test('a language change keeps the place and the chosen week, and focuses the lan
     const before = await fromEdge(stay);
 
     // The focus moves once the place is put back, so it is waited for first.
-    const control = page.locator(width < 1024 ? '.header-narrow .icon-button' : '[data-language]');
+    const control = page.locator(width < 1056 ? '.header-narrow .icon-button' : '[data-language]');
     await toLanguage(page, 'Language: English', 'Deutsch');
     await expect(page.locator('html')).toHaveAttribute('lang', 'de-AT');
     await expect(control).toBeFocused();
@@ -751,8 +804,9 @@ test('a site name of 15 wide letters fits the header beside the season switch', 
     wordmark.style.setProperty('--letters', String(name.length));
     wordmark.querySelector('a')!.textContent = name;
   }, name);
-  // 320 px shows the switch's icons, 384 px its label; the wide header starts at 1,024 px.
-  for (const width of [320, 384, 1024])
+  // 320 px shows the switch's icons, 384 px its label; the wide header starts at 1,056 px with
+  // the language's code, and shows its name from 1,152 px.
+  for (const width of [320, 384, 1056, 1152])
     for (const season of ['winter', 'summer']) {
       await page.setViewportSize({ width, height: 800 });
       await page.evaluate(

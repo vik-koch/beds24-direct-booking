@@ -37,5 +37,6 @@
     "email": "ciao@casa-prova.example"
   },
   "pages": ["about", "faq", "imprint", "privacy", "terms"],
-  "footer": ["faq", "imprint", "privacy", "terms", "credits"]
+  "header": ["about", "faq"],
+  "footer": ["imprint", "privacy", "terms", "credits"]
 }

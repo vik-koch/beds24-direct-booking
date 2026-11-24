@@ -13,8 +13,7 @@
   "anchors": {
     "weeks": "free-weeks",
     "apartments": "apartments",
-    "location": "location",
-    "about": "about"
+    "location": "location"
   },
   "skip": "Skip to the content",
   "notice": {
@@ -26,7 +25,6 @@
     "apartments": "Apartments",
     "allApartments": "All at a glance",
     "location": "Location",
-    "about": "About us",
     "language": "Language",
     "menu": "Menu",
     "close": "Close"
@@ -53,7 +51,7 @@
   "pages": {
     "book": "Book",
     "confirmation": "Booking confirmation",
-    "faq": "Frequently asked questions",
+    "faq": "FAQ",
     "about": "About us",
     "imprint": "Imprint",
     "privacy": "Privacy",

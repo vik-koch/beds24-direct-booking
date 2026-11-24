@@ -13,8 +13,7 @@
   "anchors": {
     "weeks": "vrije-weken",
     "apartments": "appartementen",
-    "location": "ligging",
-    "about": "over-ons"
+    "location": "ligging"
   },
   "skip": "Naar de inhoud",
   "nav": {
@@ -23,7 +22,6 @@
     "apartments": "Appartementen",
     "allApartments": "Alle in het kort",
     "location": "Ligging",
-    "about": "Over ons",
     "language": "Taal",
     "menu": "Menu",
     "close": "Sluiten"

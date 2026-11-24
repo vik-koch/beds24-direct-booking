@@ -226,7 +226,8 @@ export const siteSchema = z.strictObject({
     .optional(),
   map: map.optional(),
   // The content pages, each with a file per language in pages/, its address and its link text in
-  // the texts; and the footer's links in their order: content pages or the picture credits.
+  // the texts; the header's links after its own, in their order, to content pages; and the
+  // footer's links in their order: content pages or the picture credits.
   pages: z
     .array(
       segment.refine(
@@ -234,6 +235,10 @@ export const siteSchema = z.strictObject({
         `taken by a page of the site: ${fixedPages.join(', ')}`,
       ),
     )
+    .refine((list) => unique(list, (key) => key), 'a page is listed twice'),
+  header: z
+    .array(segment)
+    .max(2, 'at most two pages')
     .refine((list) => unique(list, (key) => key), 'a page is listed twice'),
   footer: z.array(segment).refine((list) => unique(list, (key) => key), 'a page is listed twice'),
 });
@@ -309,7 +314,6 @@ export const textsSchema = z.strictObject({
     weeks: anchor,
     apartments: anchor,
     location: anchor,
-    about: anchor,
   }),
   skip: text,
   // A link within the site is a path from its root, which carries the visitor's choices; any
@@ -334,7 +338,6 @@ export const textsSchema = z.strictObject({
     apartments: text,
     allApartments: text,
     location: text,
-    about: text,
     language: text,
     menu: text,
     close: text,
