@@ -236,12 +236,13 @@
   }
 
   /* The menus of the wide header open on hover, which a touch screen does not have: there,
-     and below 64rem, the header folds into the sheet. */
+     and below 68rem, where the German links and a full wordmark do not fit, the header folds
+     into the sheet. */
   .header-wide {
     display: none;
   }
 
-  @media (min-width: 64rem) and (hover: hover) {
+  @media (min-width: 68rem) and (hover: hover) {
     .header-wide {
       display: flex;
     }
@@ -264,8 +265,31 @@
     font-weight: 400;
   }
 
-  .sheet-nav [aria-current] {
+  :is(.sheet-nav, .header-wide) [aria-current='page'] {
     color: var(--color-accent);
+  }
+
+  /* The language menu ticks the page's language, as the guest counts tick theirs, and leads to
+     the others. */
+  .language-current {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+
+    ng-icon {
+      --ng-icon__size: 1rem;
+      --ng-icon__color: var(--color-accent);
+    }
+
+    .spartan-navigation-menu-popup & {
+      padding: 0.5rem 0.75rem;
+    }
+
+    .sheet-nav & {
+      justify-content: flex-start;
+      padding: 0.375rem 0 0.375rem 1rem;
+    }
   }
 
   /* The season switch: a white pill with the chosen season's label in the accent. Both names

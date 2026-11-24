@@ -384,11 +384,12 @@ export function readContent(dir) {
       );
   });
   // Each content page has its address, its link text and its file in every language, and the
-  // footer links only to pages the site has.
-  site.footer.forEach((key, index) => {
-    if (key !== 'credits' && !site.pages.includes(key))
-      throw new Error(`${join(dir, 'site.json')}\n  footer.${index}: ${key} is not a page`);
-  });
+  // header and the footer link only to pages the site has.
+  for (const part of ['header', 'footer'])
+    site[part].forEach((key, index) => {
+      if (!site.pages.includes(key) && !(part === 'footer' && key === 'credits'))
+        throw new Error(`${join(dir, 'site.json')}\n  ${part}.${index}: ${key} is not a page`);
+    });
   const pages = {};
   for (const tag of site.languages) {
     const file = join(dir, `texts.${tag}.json`);

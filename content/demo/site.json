@@ -95,5 +95,6 @@
     ]
   },
   "pages": ["about", "faq", "imprint", "privacy", "terms"],
+  "header": ["about", "faq"],
   "footer": ["faq", "imprint", "privacy", "terms", "credits"]
 }

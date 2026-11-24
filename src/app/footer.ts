@@ -2,7 +2,7 @@ import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import site from '../content/generated/site';
 import { Choice } from './choice';
-import { address, LANGUAGE, TEXTS } from './texts';
+import { LANGUAGE, pageLinks, TEXTS } from './texts';
 
 @Component({
   selector: 'app-footer',
@@ -51,9 +51,5 @@ export class Footer {
   protected readonly texts = inject(TEXTS);
   protected readonly contact = site.contact;
   protected readonly choice = inject(Choice);
-  private readonly language = inject(LANGUAGE);
-  protected readonly links = site.footer.map((page) => ({
-    text: this.texts.pages[page],
-    path: address(this.language, page),
-  }));
+  protected readonly links = pageLinks(this.texts, inject(LANGUAGE), site.footer);
 }

@@ -24,6 +24,10 @@ export function address(language: Language, page: Page, slug?: string): string {
 }
 
 // Changes the address's query in place, keeping its fragment and the history entry's state.
+// Links to the pages a list in site.json names, such as the header's or the footer's.
+export const pageLinks = (texts: Texts, language: Language, pages: Page[]) =>
+  pages.map((page) => ({ text: texts.pages[page], path: address(language, page) }));
+
 export function replaceQuery(location: Location, change: (params: URLSearchParams) => void) {
   const [rest, hash] = location.path(true).split('#');
   const [path, query = ''] = rest.split('?');

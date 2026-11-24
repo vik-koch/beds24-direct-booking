@@ -1,22 +1,29 @@
 import { DOCUMENT, ViewportScroller } from '@angular/common';
 import { afterNextRender, Component, DestroyRef, inject, input, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { NgIcon, provideIcons } from '@ng-icons/core';
-import { lucideGlobe, lucideMenu } from '@ng-icons/lucide';
+import { lucideCheck, lucideGlobe, lucideMenu } from '@ng-icons/lucide';
 import { HlmNavigationMenuImports } from '@spartan-ng/helm/navigation-menu';
 import { HlmSheetImports } from '@spartan-ng/helm/sheet';
 import site from '../content/generated/site';
 import { letters } from '../content/names';
 import { Choice } from './choice';
 import { SeasonSwitch } from './season-switch';
-import { address, LANGUAGE, TEXTS } from './texts';
+import { address, LANGUAGE, pageLinks, TEXTS } from './texts';
 
 // Links to the home page and the apartments' pages load them in full: in the browser, only the
 // server's answer carries their data (ADR 6), until the availability route exists.
 @Component({
   selector: 'app-header',
-  imports: [NgIcon, HlmNavigationMenuImports, HlmSheetImports, SeasonSwitch],
-  providers: [provideIcons({ lucideGlobe, lucideMenu })],
+  imports: [
+    NgIcon,
+    HlmNavigationMenuImports,
+    HlmSheetImports,
+    RouterLink,
+    RouterLinkActive,
+    SeasonSwitch,
+  ],
+  providers: [provideIcons({ lucideCheck, lucideGlobe, lucideMenu })],
   template: `
     <header class="column flex min-h-[4.5rem] items-center gap-3">
       <div class="wordmark" [style.--letters]="letters">
@@ -30,9 +37,7 @@ import { address, LANGUAGE, TEXTS } from './texts';
       <nav hlmNavigationMenu class="header-wide flex-none" [attr.aria-label]="texts.nav.label">
         <ul hlmNavigationMenuList>
           <li hlmNavigationMenuItem>
-            <a hlmNavigationMenuLink [href]="choice.link(sections[0].href)">{{
-              sections[0].text
-            }}</a>
+            <a hlmNavigationMenuLink [href]="choice.link(weeks.href)">{{ weeks.text }}</a>
           </li>
           <li hlmNavigationMenuItem>
             <button hlmNavigationMenuTrigger>{{ texts.nav.apartments }}</button>
@@ -57,16 +62,29 @@ import { address, LANGUAGE, TEXTS } from './texts';
               </ul>
             </hlm-navigation-menu-content>
           </li>
-          @for (section of sections.slice(1); track section.href) {
+          <li hlmNavigationMenuItem>
+            <a hlmNavigationMenuLink [href]="choice.link(location.href)">{{ location.text }}</a>
+          </li>
+          @for (page of pages; track page.path) {
             <li hlmNavigationMenuItem>
-              <a hlmNavigationMenuLink [href]="choice.link(section.href)">{{ section.text }}</a>
+              <a
+                hlmNavigationMenuLink
+                [routerLink]="page.path"
+                [queryParams]="choice.params()"
+                routerLinkActive
+                #current="routerLinkActive"
+                [active]="current.isActive"
+                >{{ page.text }}</a
+              >
             </li>
           }
-          <li hlmNavigationMenuItem class="ml-3">
-            <button hlmNavigationMenuTrigger align="end" data-language>
+          <li hlmNavigationMenuItem class="ml-1.5">
+            <button hlmNavigationMenuTrigger align="end" class="language-button" data-language>
               <ng-icon name="lucideGlobe" aria-hidden="true" />
-              <span class="sr-only">{{ texts.nav.language }}:</span>
-              <span [attr.lang]="language.tag">{{ language.name }}</span>
+              <span class="sr-only"
+                >{{ texts.nav.language }}:
+                <span [attr.lang]="language.tag">{{ language.name }}</span></span
+              >
             </button>
             <hlm-navigation-menu-content
               *hlmNavigationMenuPortal
@@ -74,16 +92,22 @@ import { address, LANGUAGE, TEXTS } from './texts';
               [attr.aria-label]="texts.nav.language"
             >
               <ul>
-                @for (other of others; track other.code) {
+                @for (item of site.languages; track item.code) {
                   <li>
-                    <a
-                      hlmNavigationMenuLink
-                      [href]="alternates()[other.code]"
-                      (click)="change($event, alternates()[other.code])"
-                      [attr.lang]="other.tag"
-                      [attr.hreflang]="other.tag"
-                      >{{ other.name }}</a
-                    >
+                    @if (item.code === language.code) {
+                      <span class="language-current" aria-current="true" [attr.lang]="item.tag"
+                        >{{ item.name }}<ng-icon name="lucideCheck" aria-hidden="true"
+                      /></span>
+                    } @else {
+                      <a
+                        hlmNavigationMenuLink
+                        [href]="alternates()[item.code]"
+                        (click)="change($event, alternates()[item.code])"
+                        [attr.lang]="item.tag"
+                        [attr.hreflang]="item.tag"
+                        >{{ item.name }}</a
+                      >
+                    }
                   </li>
                 }
               </ul>
@@ -109,9 +133,7 @@ import { address, LANGUAGE, TEXTS } from './texts';
           <nav class="sheet-nav" [attr.aria-label]="texts.nav.label">
             <ul>
               <li>
-                <a (click)="follow(menu)" [href]="choice.link(sections[0].href)">{{
-                  sections[0].text
-                }}</a>
+                <a (click)="follow(menu)" [href]="choice.link(weeks.href)">{{ weeks.text }}</a>
               </li>
               <li>
                 <a (click)="follow(menu)" [href]="choice.link(allApartments)">{{
@@ -127,11 +149,21 @@ import { address, LANGUAGE, TEXTS } from './texts';
                   }
                 </ul>
               </li>
-              @for (section of sections.slice(1); track section.href) {
+              <li>
+                <a (click)="follow(menu)" [href]="choice.link(location.href)">{{
+                  location.text
+                }}</a>
+              </li>
+              @for (page of pages; track page.path) {
                 <li>
-                  <a (click)="follow(menu)" [href]="choice.link(section.href)">{{
-                    section.text
-                  }}</a>
+                  <a
+                    (click)="follow(menu)"
+                    [routerLink]="page.path"
+                    [queryParams]="choice.params()"
+                    routerLinkActive
+                    ariaCurrentWhenActive="page"
+                    >{{ page.text }}</a
+                  >
                 </li>
               }
               <li>
@@ -143,14 +175,19 @@ import { address, LANGUAGE, TEXTS } from './texts';
                 <ul>
                   @for (item of site.languages; track item.code) {
                     <li>
-                      <a
-                        [href]="alternates()[item.code]"
-                        (click)="change($event, alternates()[item.code], menu)"
-                        [attr.lang]="item.tag"
-                        [attr.hreflang]="item.tag"
-                        [attr.aria-current]="item.code === language.code ? 'true' : null"
-                        >{{ item.name }}</a
-                      >
+                      @if (item.code === language.code) {
+                        <span class="language-current" aria-current="true" [attr.lang]="item.tag"
+                          >{{ item.name }}<ng-icon name="lucideCheck" aria-hidden="true"
+                        /></span>
+                      } @else {
+                        <a
+                          [href]="alternates()[item.code]"
+                          (click)="change($event, alternates()[item.code], menu)"
+                          [attr.lang]="item.tag"
+                          [attr.hreflang]="item.tag"
+                          >{{ item.name }}</a
+                        >
+                      }
                     </li>
                   }
                 </ul>
@@ -186,15 +223,13 @@ export class Header {
   protected readonly letters = letters(site.name);
   protected readonly home = address(this.language, 'home');
   protected readonly allApartments = `${this.home}#${this.language.anchors.apartments}`;
-  protected readonly sections = (['weeks', 'location', 'about'] as const).map((key) => ({
-    text: this.texts.nav[key],
-    href: `${this.home}#${this.language.anchors[key]}`,
-  }));
+  protected readonly weeks = this.section('weeks');
+  protected readonly location = this.section('location');
   protected readonly apartments = site.apartments.map(({ name, slug }) => ({
     name,
     path: address(this.language, 'apartment', slug),
   }));
-  protected readonly others = site.languages.filter(({ code }) => code !== this.language.code);
+  protected readonly pages = pageLinks(this.texts, this.language, site.header);
   private readonly document = inject(DOCUMENT);
   private readonly scroller = inject(ViewportScroller);
   private readonly router = inject(Router);
@@ -229,6 +264,10 @@ export class Header {
       window.addEventListener('scroll', update, { passive: true });
       destroyRef.onDestroy(() => window.removeEventListener('scroll', update));
     });
+  }
+
+  private section(key: 'weeks' | 'location') {
+    return { text: this.texts.nav[key], href: `${this.home}#${this.language.anchors[key]}` };
   }
 
   // The other language inside the application, where the visitor was. A modifier key, or no

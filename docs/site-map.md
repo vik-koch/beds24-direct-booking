@@ -49,16 +49,20 @@ slug is the same in both languages and comes from the deployment's content.
 
 ## Header
 
-Sticky on every page. How its items are arranged, and what folds into a menu on a narrow screen, is
-decided in the design round.
+Sticky on every page. From 68rem, with a pointer that hovers, its items stand in one line; below,
+and on a touch screen, all but the wordmark and the season switch fold into a sheet.
 
 - **The wordmark,** linking to the home page.
-- **Links to the home page's sections:** free weeks, apartments, where it is, who we are. On another
-  page they lead to the home page and its section.
+- **Links to the home page's sections:** free weeks, apartments, where it is. On another page they
+  lead to the home page and its section. "Who we are" is not among them: the section has its own
+  link to the company page, which the demo's header lists.
 - **The apartments entry opens a menu:** the section on the home page first, then each apartment's
   page.
+- **The content pages `site.json` lists in `header`,** after them, in their order. The demo's: the
+  company page and the FAQ. The page shown is marked as the current one.
+- **The language switch,** a globe whose menu ticks the page's language and leads to the same page
+  in the other one. Its name for a screen reader is "Language: English".
 - **The season switch,** if the deployment has more than one season.
-- **The language switch,** leading to the same page in the other language.
 
 ## Footer
 
@@ -70,7 +74,7 @@ On every page:
 
 ## Home page
 
-Top to bottom. Each section other than the hero has an anchor that the header links to.
+Top to bottom. Each section other than the hero has an anchor; the header links to the first three.
 
 <!-- prettier-ignore -->
 | Section | German anchor | English anchor |

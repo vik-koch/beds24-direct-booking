@@ -272,7 +272,7 @@ test('the apartment page is styled from its first frame, on a full load and in t
     }).toPass();
   await page.goto('/en/apartments/zirbe');
   await styled();
-  await page.getByRole('link', { name: 'Frequently asked questions' }).click();
+  await page.getByRole('contentinfo').getByRole('link', { name: 'FAQ' }).click();
   await expect(page).toHaveURL('/en/faq');
   // Off the page its rules are gone, so the way back adds them again.
   expect(

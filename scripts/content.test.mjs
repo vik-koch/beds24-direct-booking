@@ -1026,6 +1026,7 @@ test('a content page needs its file, its address and its link text in every lang
   }
   const unlisted = changed('site.json', (site) => {
     site.pages = site.pages.filter((key) => key !== 'about');
+    site.header = site.header.filter((key) => key !== 'about');
   });
   assert.throws(
     () => readContent(unlisted),
@@ -1039,9 +1040,11 @@ test('a page file that no page lists is refused', () => {
   assert.throws(() => readContent(dir), /guide\.en-GB\.md\n {2}\(file\): not a page/);
 });
 
-test('the footer links only to pages, and a page key is not one of the fixed pages', () => {
+test('the header and the footer link only to pages, and a page key is not one of the fixed pages', () => {
   const footer = changed('site.json', (site) => site.footer.push('guide'));
   assert.throws(() => readContent(footer), /site\.json\n {2}footer\.5: guide is not a page/);
+  const header = changed('site.json', (site) => site.header.push('credits'));
+  assert.throws(() => readContent(header), /site\.json\n {2}header\.2: credits is not a page/);
   for (const key of ['credits', 'home', 'apartment']) {
     const fixed = changed('site.json', (site) => site.pages.push(key));
     assert.throws(() => readContent(fixed), /site\.json\n {2}pages\.5: taken by a page/, key);
