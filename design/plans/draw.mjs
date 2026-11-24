@@ -83,36 +83,17 @@ export function window(x, y, w, h) {
   );
 }
 
-// A bed with its head on one side: frame, duvet folded back, and one pillow per sleeper.
-export function bed(x, y, w, h, head, wood, woodLine, sleepers = 2) {
-  const along = head === 'left' || head === 'right';
-  const [length, breadth] = along ? [w, h] : [h, w];
-  let body = box(x, y, w, h, color.linen, color.whiteLine, 1.3);
-  const fold = length * 0.28;
-  const pillow = (i) => {
-    const size = (breadth - 12 - (sleepers - 1) * 6) / sleepers;
-    const at = 6 + i * (size + 6);
-    if (head === 'left') return box(x + 6, y + at, 38, size, '#fff', color.whiteLine, 1, { rx: 6 });
-    if (head === 'right')
-      return box(x + w - 44, y + at, 38, size, '#fff', color.whiteLine, 1, { rx: 6 });
-    if (head === 'top') return box(x + at, y + 6, size, 38, '#fff', color.whiteLine, 1, { rx: 6 });
-    return box(x + at, y + h - 44, size, 38, '#fff', color.whiteLine, 1, { rx: 6 });
-  };
-  const folded = {
-    left: [x + fold, y, w - fold, h],
-    right: [x, y, w - fold, h],
-    top: [x, y + fold, w, h - fold],
-    bottom: [x, y, w, h - fold],
-  }[head];
-  body += box(...folded, '#eef1ee', color.whiteLine, 1.3);
-  for (let i = 0; i < sleepers; i++) body += pillow(i);
-  const board = {
-    left: [x - 4, y - 2, 8, h + 4],
-    right: [x + w - 4, y - 2, 8, h + 4],
-    top: [x - 2, y - 4, w + 4, 8],
-    bottom: [x - 2, y + h - 4, w + 4, 8],
-  }[head];
-  return body + box(...board, wood, woodLine, 1);
+// A bed with its head against the wall on its left: frame, duvet folded back towards the
+// pillows, one pillow per sleeper, and the headboard. Its length runs along x.
+export function bed(x, y, w, h, wood, woodLine, sleepers = 2) {
+  const fold = w * 0.28;
+  const size = (h - 12 - (sleepers - 1) * 6) / sleepers;
+  let body =
+    box(x, y, w, h, color.linen, color.whiteLine, 1.3) +
+    box(x + fold, y, w - fold, h, '#eef1ee', color.whiteLine, 1.3);
+  for (let i = 0; i < sleepers; i++)
+    body += box(x + 6, y + 6 + i * (size + 6), 38, size, '#fff', color.whiteLine, 1, { rx: 6 });
+  return body + box(x - 4, y - 2, 8, h + 4, wood, woodLine, 1);
 }
 
 // A chair seen from above, its back on the side away from the table: centre, size, turn in degrees.
@@ -121,39 +102,20 @@ export function chair(cx, cy, turn, fill, line, size = 44) {
   return `<g transform="translate(${cx} ${cy}) rotate(${turn})">${box(-half, -half, size, size, fill, line, 1.2, { rx: 8 })}${rect(-half + 4, half - 10, size - 8, 6, { rx: 3, fill: line, opacity: 0.55 })}</g>`;
 }
 
-// A sofa with its back on one side: shell, two seats and their back cushions.
-export function sofa(x, y, w, h, back, fill, light, line) {
-  const along = back === 'top' || back === 'bottom';
+// A sofa with its back against the wall on its left: shell, two seats and their back cushions.
+export function sofa(x, y, w, h, fill, light, line) {
+  const each = (h - 30) / 2;
   let body = box(x, y, w, h, fill, line, 1.6, { rx: 8 });
-  const seats = 2;
-  const [span, depth] = along ? [w, h] : [h, w];
-  const each = (span - 24 - 6) / seats;
-  for (let i = 0; i < seats; i++) {
-    const at = 12 + i * (each + 6);
-    const cushion = {
-      top: [x + at, y + 26, each, depth - 38],
-      bottom: [x + at, y + 12, each, depth - 38],
-      left: [x + 26, y + at, depth - 38, each],
-      right: [x + 12, y + at, depth - 38, each],
-    }[back];
-    const rest = {
-      top: [x + at, y + 8, each, 16],
-      bottom: [x + at, y + h - 24, each, 16],
-      left: [x + 8, y + at, 16, each],
-      right: [x + w - 24, y + at, 16, each],
-    }[back];
+  for (const at of [12, 18 + each])
     body +=
-      box(...cushion, light, line, 1.1, { rx: 5 }) + box(...rest, light, line, 1.1, { rx: 5 });
-  }
+      box(x + 26, y + at, w - 38, each, light, line, 1.1, { rx: 5 }) +
+      box(x + 8, y + at, 16, each, light, line, 1.1, { rx: 5 });
   return body;
 }
 
-// A worktop run with its doors' seams across it at the given offsets.
+// A worktop run along a wall, down the plan, with its doors' seams at the given offsets.
 export function worktop(x, y, w, h, seams, fill, line) {
-  const down = h > w;
-  const d = seams
-    .map((at) => (down ? `M${x} ${y + at}H${x + w}` : `M${x + at} ${y}V${y + h}`))
-    .join('');
+  const d = seams.map((at) => `M${x} ${y + at}H${x + w}`).join('');
   return box(x, y, w, h, fill, line, 1.2) + path(d, { stroke: line, strokeWidth: 1 });
 }
 export const sink = (x, y, w, h) =>
@@ -166,25 +128,34 @@ export function hob(x, y, w, h, rings) {
   return body;
 }
 
-// A wardrobe against a wall: grey inside, a dotted rail, and its doors as a band on the open side.
+// A wardrobe along a wall, down the plan: grey inside, a dotted rail, and its doors as a band on
+// the open side, left or right.
 export function wardrobe(x, y, w, h, front, doors, leaf, edge) {
-  const down = h > w;
-  let body = rect(x, y, w, h, { fill: color.closet });
-  const rail = down ? `M${x + w / 2} ${y + 6}V${y + h - 6}` : `M${x + 6} ${y + h / 2}H${x + w - 6}`;
-  body += path(rail, { stroke: '#eef0ee', strokeWidth: 1.2, strokeDasharray: '2.5 5.5' });
-  const span = (down ? h : w) / doors;
-  for (let i = 0; i < doors; i++) {
-    const at = i * span + 1;
-    const face = {
-      left: [x + 1, y + at, 3.6, span - 2],
-      right: [x + w - 4.6, y + at, 3.6, span - 2],
-      top: [x + at, y + 1, span - 2, 3.6],
-      bottom: [x + at, y + h - 4.6, span - 2, 3.6],
-    }[front];
-    body += rect(...face, { fill: leaf, stroke: edge, strokeWidth: 1 });
-  }
+  const span = h / doors;
+  let body =
+    rect(x, y, w, h, { fill: color.closet }) +
+    path(`M${x + w / 2} ${y + 6}V${y + h - 6}`, {
+      stroke: '#eef0ee',
+      strokeWidth: 1.2,
+      strokeDasharray: '2.5 5.5',
+    });
+  for (let i = 0; i < doors; i++)
+    body += rect(front === 'left' ? x + 1 : x + w - 4.6, y + i * span + 1, 3.6, span - 2, {
+      fill: leaf,
+      stroke: edge,
+      strokeWidth: 1,
+    });
   return body;
 }
+
+// A room's floor, and its corners for a zone: the same numbers draw both.
+export const floor = ([x, y, w, h], fill) => rect(x, y, w, h, { fill });
+export const corners = ([x, y, w, h]) => [
+  [x, y],
+  [x + w, y],
+  [x + w, y + h],
+  [x, y + h],
+];
 
 // The drawing: a viewBox around the plan, with a margin, and its parts in order. No text, no
 // background: the page writes the names and lays the ground.
@@ -193,22 +164,24 @@ export function drawing([x, y, w, h], parts) {
 }
 
 // Writes the drawing, and the zones' corners and label points into the apartment's plan by key;
-// the names and the alternative text stay as written there.
+// the names and the alternative text stay as written there. Neither file is written unless the
+// script draws exactly the zones the plan names.
 export function write(slug, svg, zones) {
   const file = `pictures/${slug}-plan.svg`;
-  writeFileSync(`content/demo/${file}`, svg);
   const json = `content/demo/apartments/${slug}.json`;
   const apartment = JSON.parse(readFileSync(json, 'utf8'));
-  const keys = apartment.plan.zones.map((zone) => zone.key);
-  if (keys.join() !== Object.keys(zones).join())
+  const named = apartment.plan.zones.map((zone) => zone.key).sort();
+  const drawn = Object.keys(zones).sort();
+  if (named.join() !== drawn.join())
     throw new Error(
-      `${json}: zones ${keys.join(', ')}, the script draws ${Object.keys(zones).join(', ')}`,
+      `${json}: the plan names ${named.join(', ')}, the script draws ${drawn.join(', ')}`,
     );
   apartment.plan.file = file;
   for (const zone of apartment.plan.zones) {
     zone.points = zones[zone.key].points.map(([px, py]) => [round(px), round(py)]);
     zone.label = zones[zone.key].label.map(round);
   }
+  writeFileSync(`content/demo/${file}`, svg);
   writeFileSync(json, `${JSON.stringify(apartment, null, 2)}\n`);
   // Objects that fit on a line are written on one, as the content files have them.
   execFileSync('npx', ['prettier', '--object-wrap', 'collapse', '--write', json], {

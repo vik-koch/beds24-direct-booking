@@ -88,8 +88,9 @@ content. The application has no wording, no colour and no typeface of its own. T
   side by side. `alt` says in each language what the plan shows. Each zone has a key, its `name` in
   each language, its polygon's corners as `[x, y]` pairs, at least three, and the `label` point
   `[x, y]` its name is centred on, both in the drawing's coordinates and inside its `viewBox`. A
-  picture names the zones it shows, `"zones": ["kitchen", "dining"]`, or none; every zone is shown
-  by at least one picture. The drawing is served at `/pictures/apartments/` under a name that
+  picture names the zones it is a picture of, `"zones": ["kitchen", "dining"]`, or none, not a zone
+  seen only through a door or at its edge, since choosing a zone shows its pictures; every zone is
+  shown by at least one picture. The drawing is served at `/pictures/apartments/` under a name that
   changes with it.
 
 - **The apartment page** (`apartment` in a texts file) is the page's wording: its headings, the
