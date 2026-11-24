@@ -1,4 +1,5 @@
 // Validates a deployment's content folder and writes it as typed modules for the build.
+import { createHash } from 'node:crypto';
 import {
   cpSync,
   existsSync,
@@ -32,18 +33,59 @@ function differences(a, b, path = []) {
   });
 }
 
-// An SVG document: valid UTF-8, well-formed XML with an <svg> root in the SVG namespace. Malformed
-// XML parses to a parsererror root; a lenient decoder would hide an invalid byte.
+// An SVG document's root: valid UTF-8, well-formed XML with an <svg> root in the SVG namespace.
+// Malformed XML parses to a parsererror root; a lenient decoder would hide an invalid byte.
 const parser = new new JSDOM('').window.DOMParser();
 const utf8 = new TextDecoder('utf-8', { fatal: true });
-const isSvg = (bytes) => {
+const svgRoot = (bytes) => {
   try {
     const root = parser.parseFromString(utf8.decode(bytes), 'image/svg+xml').documentElement;
-    return root.localName === 'svg' && root.namespaceURI === 'http://www.w3.org/2000/svg';
+    return root.localName === 'svg' && root.namespaceURI === 'http://www.w3.org/2000/svg'
+      ? root
+      : undefined;
   } catch {
-    return false;
+    return undefined;
   }
 };
+
+// A floor plan's drawing, and its zones inside it; its viewBox. The page shows the drawing as a
+// picture, which loads nothing else and runs no script, and writes the zones' names itself.
+function readPlan(dir, file, plan) {
+  const fail = (reason) => new Error(`${file}\n  plan.file: ${plan.file} ${reason}`);
+  if (!existsSync(join(dir, plan.file))) throw fail('does not exist');
+  const root = svgRoot(readFileSync(join(dir, plan.file)));
+  if (!root) throw fail('is not an SVG document in UTF-8');
+  const viewBox = (root.getAttribute('viewBox') ?? '')
+    .trim()
+    .split(/[\s,]+/)
+    .map(Number);
+  if (
+    viewBox.length !== 4 ||
+    !viewBox.every(Number.isFinite) ||
+    !(viewBox[2] > 0 && viewBox[3] > 0)
+  )
+    throw fail('has no viewBox of four numbers');
+  const outside = /url\(\s*['"]?(?!#)|@import/;
+  for (const element of [root, ...root.querySelectorAll('*')]) {
+    if (element.localName === 'text') throw fail("has text: the page writes the zones' names");
+    if (element.localName === 'script') throw fail('has a script');
+    if (element.localName === 'style' && outside.test(element.textContent))
+      throw fail('refers to another file');
+    for (const { name, value } of element.attributes)
+      if (/^on/i.test(name)) throw fail(`has a script in ${name}`);
+      else if (/(^|:)href$/.test(name) ? !value.startsWith('#') : outside.test(value))
+        throw fail(`refers to another file in ${name}`);
+  }
+  const [x, y, width, height] = viewBox;
+  const within = ([px, py]) => px >= x && px <= x + width && py >= y && py <= y + height;
+  plan.zones.forEach(({ points, label }, index) => {
+    if (!points.split(' ').every((point) => within(point.split(',').map(Number))))
+      throw new Error(`${file}\n  plan.zones.${index}.points: outside the drawing's viewBox`);
+    if (!within(label))
+      throw new Error(`${file}\n  plan.zones.${index}.label: outside the drawing's viewBox`);
+  });
+  return viewBox;
+}
 
 // With a map every apartment has its point inside the box; without one none has a point. Its
 // routes' points lie in the box too, on the way to a place of the map.
@@ -99,15 +141,36 @@ export function readContent(dir) {
       throw new Error(
         `${join(dir, 'apartments', file)}\n  (file): not an apartment site.json lists`,
       );
-  // Each picture's alternative text is given in exactly the site's languages.
-  for (const { slug, pictures } of apartments)
-    pictures.forEach(({ alt }, index) => {
-      for (const tag of new Set([...site.languages, ...Object.keys(alt)]))
-        if (!site.languages.includes(tag) || !Object.hasOwn(alt, tag))
+  // Each picture's alternative text, the plan's and its zones' names are given in exactly the
+  // site's languages.
+  const inLanguages = (file, path, texts) => {
+    for (const tag of new Set([...site.languages, ...Object.keys(texts)]))
+      if (!site.languages.includes(tag) || !Object.hasOwn(texts, tag))
+        throw new Error(
+          `${file}\n  ${path}.${tag}: ${site.languages.includes(tag) ? 'missing' : 'a language site.json does not list'}`,
+        );
+  };
+  for (const { slug, pictures, plan } of apartments) {
+    const file = join(dir, 'apartments', `${slug}.json`);
+    pictures.forEach(({ alt }, index) => inLanguages(file, `pictures.${index}.alt`, alt));
+    // Each zone is shown by a picture, and a picture shows zones of the plan only.
+    const zones = plan?.zones.map((zone) => zone.key) ?? [];
+    pictures.forEach((picture, index) => {
+      for (const key of picture.zones ?? [])
+        if (!zones.includes(key))
           throw new Error(
-            `${join(dir, 'apartments', `${slug}.json`)}\n  pictures.${index}.alt.${tag}: ${site.languages.includes(tag) ? 'missing' : 'a language site.json does not list'}`,
+            `${file}\n  pictures.${index}.zones: ${plan ? `${key} is not a zone of the plan` : 'no plan'}`,
           );
     });
+    if (!plan) continue;
+    zones.forEach((key, index) => {
+      if (!pictures.some((picture) => picture.zones?.includes(key)))
+        throw new Error(`${file}\n  plan.zones.${index}: no picture names ${key}`);
+    });
+    inLanguages(file, 'plan.alt', plan.alt);
+    plan.zones.forEach(({ name }, index) => inLanguages(file, `plan.zones.${index}.name`, name));
+    plan.viewBox = readPlan(dir, file, plan);
+  }
   const texts = Object.fromEntries(
     site.languages.map((tag) => [prefix(tag), read(`texts.${tag}.json`, textsSchema)]),
   );
@@ -252,7 +315,7 @@ export function readContent(dir) {
           `${join(dir, 'site.json')}\n  seasons.${name}.${key}: ${file} does not exist`,
         );
       // Served as an SVG by its name, so it must be one.
-      else if (key === 'icon' && !isSvg(readFileSync(join(dir, file))))
+      else if (key === 'icon' && !svgRoot(readFileSync(join(dir, file))))
         throw new Error(
           `${join(dir, 'site.json')}\n  seasons.${name}.icon: ${file} is not an SVG document in UTF-8`,
         );
@@ -330,12 +393,15 @@ export async function writeContent(dir, out, cache) {
   const { site, texts } = readContent(dir);
   rmSync(out, { recursive: true, force: true });
   mkdirSync(out, { recursive: true });
-  // The apartments' pictures and the heroes are served only as their converted files, unless a
-  // season's icon is the same file.
+  // The apartments' pictures, plans and the heroes are served only as their converted files,
+  // unless a season's icon is the same file.
   const tabIcons = Object.values(site.seasons).map(({ icon }) => icon);
   const sources = new Set(
     [
-      ...site.apartments.flatMap(({ pictures }) => pictures.map(({ file }) => file)),
+      ...site.apartments.flatMap(({ pictures, plan }) => [
+        ...pictures.map(({ file }) => file),
+        ...(plan ? [plan.file] : []),
+      ]),
       ...Object.values(site.seasons).map(({ hero }) => hero.file),
     ]
       .filter((file) => !tabIcons.includes(file))
@@ -355,15 +421,28 @@ export async function writeContent(dir, out, cache) {
     converted += files.converted;
     seasons[name] = { ...season, hero: { credit: season.hero.credit, ...files.hero } };
   }
-  // Alternative texts by address prefix, as the texts are; the routes' points stay with the routes.
-  const apartments = site.apartments.map(({ via, ...apartment }) => ({
+  // Texts by address prefix, as the texts are; the routes' points stay with the routes. A plan is
+  // served under a name that changes with it, as a converted picture is.
+  const byPrefix = (texts) =>
+    Object.fromEntries(Object.entries(texts).map(([tag, text]) => [prefix(tag), text]));
+  const served = (slug, plan) => {
+    const bytes = readFileSync(join(dir, plan.file));
+    const name = `${slug}-plan.${createHash('sha256').update(bytes).digest('hex').slice(0, 8)}.svg`;
+    writeFileSync(join(out, 'pictures', 'apartments', name), bytes);
+    return {
+      url: `/pictures/apartments/${name}`,
+      viewBox: plan.viewBox,
+      alt: byPrefix(plan.alt),
+      zones: plan.zones.map((zone) => ({ ...zone, name: byPrefix(zone.name) })),
+    };
+  };
+  const apartments = site.apartments.map(({ via, plan, ...apartment }) => ({
     ...apartment,
     pictures: pictures[apartment.slug].map((picture) => ({
       ...picture,
-      alt: Object.fromEntries(
-        Object.entries(picture.alt).map(([tag, text]) => [prefix(tag), text]),
-      ),
+      alt: byPrefix(picture.alt),
     })),
+    ...(plan && { plan: served(apartment.slug, plan) }),
   }));
   const module = (type, value) =>
     `import type { ${type} } from '../schema';\n\nconst value: ${type} = ${JSON.stringify(value, null, 2)};\nexport default value;\n`;

@@ -301,6 +301,172 @@ test('the generated site gives each picture its files and its texts by address p
   assert.ok(existsSync(join(out, 'pictures', 'icon-winter.svg')));
 });
 
+// The demo's Zirbe with a plan of three zones, each shown by its pictures, and its drawing.
+const drawing =
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400"><path d="M0 0H600V400H0Z" fill="#454a48"/></svg>';
+function planned(change = () => {}, svg = drawing) {
+  const dir = changed('apartments/zirbe.json', (apartment) => {
+    const shown = ['room', 'room', 'kitchenette', 'kitchenette', 'bathroom'];
+    apartment.pictures.forEach((picture, index) => (picture.zones = [shown[index]]));
+    const names = (en, de) => ({ 'de-AT': de, 'en-GB': en });
+    apartment.plan = {
+      file: 'pictures/zirbe-plan.svg',
+      alt: names('Floor plan of the studio', 'Grundriss der Stube'),
+      zones: [
+        {
+          key: 'room',
+          name: names('Room', 'Stube'),
+          points: '0,0 400,0 400,400 0,400',
+          label: [200, 200],
+        },
+        {
+          key: 'kitchenette',
+          name: names('Kitchenette', 'Küchenzeile'),
+          points: '400,0 600,0 600,200 400,200',
+          label: [500, 100],
+        },
+        {
+          key: 'bathroom',
+          name: names('Bathroom', 'Bad'),
+          points: '400,200 600,200 600,400 400,400',
+          label: [500, 300],
+        },
+      ],
+    };
+    change(apartment);
+  });
+  writeFileSync(join(dir, 'pictures', 'zirbe-plan.svg'), svg);
+  return dir;
+}
+
+test('a plan is optional, and each of its zones is shown by a picture of the plan', () => {
+  readContent(planned());
+  assert.throws(
+    () => readContent(planned((a) => delete a.plan)),
+    /zirbe\.json\n {2}pictures\.0\.zones: no plan$/,
+  );
+  assert.throws(
+    () => readContent(planned((a) => (a.pictures[1].zones = ['room', 'sauna']))),
+    /zirbe\.json\n {2}pictures\.1\.zones: sauna is not a zone of the plan$/,
+  );
+  assert.throws(
+    () => readContent(planned((a) => delete a.pictures[4].zones)),
+    /zirbe\.json\n {2}plan\.zones\.2: no picture names bathroom$/,
+  );
+  // A picture may show two zones, or none.
+  readContent(
+    planned((a) => {
+      a.pictures[4].zones = ['bathroom', 'room'];
+      delete a.pictures[0].zones;
+    }),
+  );
+});
+
+test("a plan's keys are checked: its zones, their keys, points and label", () => {
+  for (const [change, message] of [
+    [(a) => (a.plan.zones = []), /plan\.zones: at least one zone/],
+    [(a) => (a.plan.zones[1].key = 'room'), /plan\.zones: a zone key is listed twice/],
+    [(a) => (a.plan.zones[0].key = 'Room'), /plan\.zones\.0\.key/],
+    [(a) => (a.plan.zones[0].points = '0,0 400,0'), /plan\.zones\.0\.points: not three points/],
+    [(a) => (a.plan.zones[0].points = '0,0, 400,0 4,4'), /plan\.zones\.0\.points: not three/],
+    [(a) => (a.plan.zones[0].label = [1]), /plan\.zones\.0\.label/],
+    [(a) => (a.pictures[0].zones = []), /pictures\.0\.zones/],
+    [(a) => (a.pictures[0].zones = ['room', 'room']), /pictures\.0\.zones: a zone is listed twice/],
+    [(a) => (a.plan.file = 'pictures/zirbe-plan.png'), /plan\.file: not an SVG file in pictures/],
+  ])
+    assert.throws(() => readContent(planned(change)), message);
+});
+
+test("a plan's alternative text and its zones' names are given in exactly the site's languages", () => {
+  assert.throws(
+    () => readContent(planned((a) => delete a.plan.alt['de-AT'])),
+    /zirbe\.json\n {2}plan\.alt\.de-AT: missing$/,
+  );
+  assert.throws(
+    () => readContent(planned((a) => (a.plan.zones[1].name.it = 'Cucina'))),
+    /zirbe\.json\n {2}plan\.zones\.1\.name\.it: a language site\.json does not list$/,
+  );
+  assert.throws(
+    () => readContent(planned((a) => (a.plan.zones[1].name['en-GB'] = ''))),
+    /plan\.zones\.1\.name\.en-GB: empty or only spaces/,
+  );
+});
+
+test("a plan's drawing is an SVG file with a viewBox, no text, no script and no other file", () => {
+  const svg = (inside, viewBox = '0 0 600 400') =>
+    `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="${viewBox}">${inside}</svg>`;
+  const refused = (file, message) =>
+    assert.throws(
+      () => readContent(planned(undefined, file)),
+      new RegExp(`plan\\.file: pictures/zirbe-plan\\.svg ${message}`),
+    );
+  refused('', 'is not an SVG document in UTF-8');
+  refused('<svg>', 'is not an SVG document in UTF-8');
+  refused(svg('').replace(' viewBox="0 0 600 400"', ''), 'has no viewBox of four numbers');
+  refused(svg('', '0 0 600'), 'has no viewBox of four numbers');
+  refused(svg('', '0 0 0 400'), 'has no viewBox of four numbers');
+  refused(svg('<text x="1" y="1">KITCHEN</text>'), "has text: the page writes the zones' names");
+  refused(svg('<script>alert(1)</script>'), 'has a script');
+  refused(svg('<rect width="1" height="1" onclick="alert(1)"/>'), 'has a script in onclick');
+  refused(svg('<image href="photo.jpg"/>'), 'refers to another file in href');
+  refused(svg('<use xlink:href="other.svg#a"/>'), 'refers to another file in xlink:href');
+  refused(
+    svg('<rect width="1" height="1" style="fill: url(other.svg#p)"/>'),
+    'refers to another file in style',
+  );
+  refused(svg('<style>@import "other.css";</style>'), 'refers to another file');
+  const gone = planned();
+  rmSync(join(gone, 'pictures', 'zirbe-plan.svg'));
+  assert.throws(() => readContent(gone), /plan\.file: pictures\/zirbe-plan\.svg does not exist$/);
+  // References within the drawing, its patterns and their uses, are its own; commas may part the
+  // viewBox's numbers.
+  readContent(
+    planned(
+      undefined,
+      svg(
+        '<defs><pattern id="wood" width="4" height="4"/></defs><rect id="r" width="9" height="9" fill="url(#wood)"/><use href="#r"/><use xlink:href="#r"/>',
+        '-28,-28 656 456',
+      ),
+    ),
+  );
+});
+
+test("a plan's zones and their labels lie within the drawing's viewBox", () => {
+  assert.throws(
+    () =>
+      readContent(planned((a) => (a.plan.zones[2].points = '400,200 600,200 600,400.5 400,400'))),
+    /zirbe\.json\n {2}plan\.zones\.2\.points: outside the drawing's viewBox$/,
+  );
+  assert.throws(
+    () => readContent(planned((a) => (a.plan.zones[0].label = [-1, 200]))),
+    /zirbe\.json\n {2}plan\.zones\.0\.label: outside the drawing's viewBox$/,
+  );
+});
+
+test('the generated site gives a plan its own address, its viewBox and its texts by prefix', async () => {
+  const dir = planned();
+  const out = mkdtempSync(join(root, 'generated-'));
+  await writeContent(dir, out, cache);
+  const site = readFileSync(join(out, 'site.ts'), 'utf8');
+  const value = JSON.parse(site.slice(site.indexOf('= ') + 2, site.lastIndexOf(';\nexport')));
+  const { plan, pictures } = value.apartments[0];
+  assert.match(plan.url, /^\/pictures\/apartments\/zirbe-plan\.[0-9a-f]{8}\.svg$/);
+  assert.equal(readFileSync(join(out, plan.url), 'utf8'), drawing);
+  assert.ok(!existsSync(join(out, 'pictures', 'zirbe-plan.svg')));
+  assert.deepEqual(plan.viewBox, [0, 0, 600, 400]);
+  assert.deepEqual(plan.alt, { de: 'Grundriss der Stube', en: 'Floor plan of the studio' });
+  assert.deepEqual(plan.zones[1], {
+    key: 'kitchenette',
+    name: { de: 'Küchenzeile', en: 'Kitchenette' },
+    points: '400,0 600,0 600,200 400,200',
+    label: [500, 100],
+  });
+  assert.deepEqual(pictures[2].zones, ['kitchenette']);
+  // An apartment without a plan has none, and its pictures no zones.
+  assert.ok(!('plan' in value.apartments[1]));
+  assert.ok(value.apartments[1].pictures.every((picture) => !('zones' in picture)));
+});
+
 test('an anchor the pages already use is refused', () => {
   for (const taken of ['top', 'booking', 'month-winter-0'])
     assert.throws(
