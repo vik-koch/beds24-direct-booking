@@ -463,24 +463,25 @@ keyboard. In the sheet the apartments are indented under their entry at weight 4
 
 ### Floor plan
 
-An apartment with a floor plan shows it in the mosaic's first square, beside the first picture: the
-whole plan on a shade below the surface (6% ink in white), so that the square stands on the page's
-ground, its name in a white pill at its foot as the "+N" cell has. In the strip of a phone, and on a
-mosaic of one picture, a white pill with an icon and the name stands at the picture's lower left,
-opposite the count. The viewer opens on the plan from there, and on a picture from a picture; a
-toggle like the booking panel's, a white pill with the pictures' and the plan's icons, switches
-between the two in the viewer's bar and keeps the visitor's place: a picture's room, a room's
-picture.
+An apartment with a floor plan shows it in the mosaic's top right square, the second cell or the
+third in a mosaic of five: the whole plan on oak, so that the square stands on the page's ground,
+its name in a white pill at its foot as the "+N" cell has. In the strip of a phone, and on a mosaic
+of one picture, a white pill with an icon and the name stands at the picture's lower left, opposite
+the count. The viewer opens on the plan from there, and on a picture from a picture.
 
-- **Plan's view:** from 48rem the plan on the left above its rooms, the chosen room's picture on the
-  right with its steps and its text below; on a phone the plan above, at most about half the
-  screen's height, then the rooms and the picture, scrolled as one.
-- **Rooms:** chosen as the map's apartments are, accent text that becomes an accent pill, a radio
-  group under the plan. On the plan the chosen room has an accent frame, 2.5 px at any size, and an
+- **Two views of the same pictures:** a toggle like the booking panel's, a white pill with the
+  pictures' and the plan's icons, switches between the pictures alone and the plan beside them. The
+  picture, its buttons, its text and the thumbnails stay where they are and keep the visitor's
+  place; the plan only takes half the room, left of the picture from 48rem, above it on a phone.
+  With a plan, the toggle and the close button stand in the screen's top corners in both views, and
+  the count between them.
+- **Rooms:** the shown picture's room has an accent frame on the plan, 2.5 px at any size, and an
   18% accent fill; a room under the pointer only a 10% fill. A frame, because a fill alone would not
-  set the room off at 3:1.
-- **Names on the plan:** each room's name in a small white pill at its point, the chosen one's in
-  the accent, shown only where it fits inside the room's width; the rooms' radios name them all.
+  set the room off at 3:1. A click on a room shows its first picture, arriving as a step or a jump
+  does. A picture of no room frames none.
+- **Names:** each room's name in a small white pill at its point on the plan, the framed one's in
+  the accent, shown only where it fits inside the room on both sides of its point; and the shown
+  picture's room in a small label on its corner, as the strip's count is.
 
 ### Language menu
 

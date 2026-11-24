@@ -157,8 +157,7 @@
     "next": "Nächstes Bild",
     "more": { "one": "+{count} Bild", "other": "+{count} Bilder" },
     "plan": "Grundriss",
-    "photos": "Fotos",
-    "zones": "Räume"
+    "photos": "Fotos"
   },
   "amenities": {
     "areas": {

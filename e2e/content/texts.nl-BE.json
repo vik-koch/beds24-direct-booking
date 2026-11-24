@@ -148,8 +148,7 @@
     "next": "Volgende foto",
     "more": { "one": "+{count} foto", "other": "+{count} foto's" },
     "plan": "Plattegrond",
-    "photos": "Foto's",
-    "zones": "Kamers"
+    "photos": "Foto's"
   },
   "amenities": {
     "areas": { "comfort": "Comfort" },

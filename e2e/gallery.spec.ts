@@ -230,8 +230,8 @@ test('a picture slides in, over the ends too, and its text fades; at once with r
   const moving = (index: number) =>
     track.evaluate(
       (element, index) =>
-        [...element.querySelectorAll('img')]
-          .filter((img) => img.checkVisibility())
+        [...element.querySelectorAll('.viewer-shot')]
+          .filter((shot) => shot.checkVisibility())
           .at(index)!
           .getAnimations().length,
       index,
@@ -336,9 +336,9 @@ test('two pictures: past either end the other picture arrives from the side aske
   await page.locator('.tile').first().click();
   const arrival = (index: number) =>
     viewer(page)
-      .locator('.viewer-slide img')
+      .locator('.viewer-shot')
       .nth(index)
-      .evaluate((image) => String(image.getAnimations()[0]?.effect?.getKeyframes()[0].transform));
+      .evaluate((shot) => String(shot.getAnimations()[0]?.effect?.getKeyframes()[0].transform));
   await page.keyboard.press('ArrowRight');
   expect(await arrival(1)).toBe('undefined');
   await settled(page);
@@ -552,27 +552,60 @@ test('every tab stop in the viewer shows a focus ring, in both views', async ({
     'Bild 2 von 3',
     'Bild 3 von 3',
   ]);
-  // A radio group is one stop, at its chosen radio.
+  // A radio group is one stop, at its chosen radio; the plan adds none.
   await viewer(page).getByTitle('Grundriss').click();
-  expect(await walk()).toEqual(['Grundriss', 'Schließen', 'Wohnraum']);
+  expect(await walk()).toEqual([
+    'Grundriss',
+    'Schließen',
+    'Voriges Bild',
+    'Bilder',
+    'Nächstes Bild',
+    'Bild 1 von 3',
+    'Bild 2 von 3',
+    'Bild 3 von 3',
+  ]);
 });
 
-// The plan's view: its rooms' radios, by name.
-const room = (page: Page, name: string) => viewer(page).getByRole('radio', { name, exact: true });
+// The plan's view: the room framed on the plan, and the name on the shown picture.
+const framed = (page: Page) => viewer(page).locator('.plan-box polygon[data-chosen]');
+// The names on the picture in the frame; each slide has its own.
+const named = (page: Page) =>
+  expect.poll(() =>
+    viewer(page)
+      .locator('.viewer-track')
+      .evaluate((track) => {
+        const frame = track.getBoundingClientRect();
+        return [...track.querySelectorAll('.viewer-room')]
+          .filter((room) => {
+            const { left } = room.getBoundingClientRect();
+            return room.checkVisibility() && left >= frame.left && left < frame.right;
+          })
+          .map((room) => room.textContent!.trim());
+      }),
+  );
 
-test('a floor plan takes the mosaic’s first square; the strip and a lone picture have its pill', async ({
+test('a floor plan takes the mosaic’s top right square; the strip and a lone picture have its pill', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
+  for (const path of [
+    '/de/wohnungen/laerche',
+    '/de/wohnungen/zirbe',
+    'http://localhost:4002/it/appartamenti/zonneterras',
+  ]) {
+    await page.goto(path);
+    const cells = await Promise.all((await page.locator('.tile:visible').all()).map(box));
+    const square = await box(page.locator('.plan-tile'));
+    expect(Math.abs(square.y - cells[0].y), path).toBeLessThan(1);
+    expect(
+      Math.abs(square.x + square.width - Math.max(...cells.map((c) => c.x + c.width))),
+      path,
+    ).toBeLessThan(1);
+  }
   await page.goto('/de/wohnungen/laerche');
-  const square = page.locator('.plan-tile');
-  await expect(square).toHaveText('Grundriss');
-  const lead = await box(tile(page).first());
-  const cell = await box(square);
-  expect(Math.abs(cell.y - lead.y)).toBeLessThan(1);
-  expect(cell.x).toBeGreaterThan(lead.x + lead.width);
-  // A shade below the surface, so that the square shows on the page's ground.
-  await expect(square).not.toHaveCSS('background-color', 'rgb(255, 255, 255)');
+  // On oak, so that the square shows on the page's ground.
+  await expect(page.locator('.plan-tile')).toHaveText('Grundriss');
+  await expect(page.locator('.plan-tile')).toHaveCSS('background-color', 'rgb(234, 223, 206)');
   await expect(page.locator('.plan-pill')).toBeHidden();
   await page.goto('/de/wohnungen/ahorn');
   await expect(page.locator('.plan-tile, .plan-pill')).toHaveCount(0);
@@ -592,117 +625,130 @@ test('a floor plan takes the mosaic’s first square; the strip and a lone pictu
   ];
   expect(left.x + left.width).toBeLessThan(right.x);
   expect(Math.abs(left.y + left.height - (right.y + right.height))).toBeLessThan(6);
+  // Opened from the pill and closed on a wide screen, the focus goes to the square.
+  await page.locator('.plan-pill').click();
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.keyboard.press('Escape');
+  await expect(page.locator('.plan-tile')).toBeFocused();
 });
 
-test('the plan’s view shows a room chosen by its name or on the plan, with its pictures', async ({
+test('the plan’s view frames the shown picture’s room, and a room on the plan shows its picture', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto('/de/wohnungen/laerche?season=summer');
   await page.locator('.plan-tile').click();
   await expect(viewer(page)).toHaveAttribute('data-view', 'plan');
+  // Drawn in its view before it shows: the switch's knob does not glide there.
+  expect(
+    await viewer(page)
+      .locator('.views-knob')
+      .evaluate((knob) => knob.getAnimations().length),
+  ).toBe(0);
   await expect(viewer(page).locator('.plan-box img')).toHaveAttribute(
     'alt',
     /^Grundriss der Lärche/,
   );
-  await expect(
-    viewer(page).getByRole('radiogroup', { name: 'Räume' }).getByRole('radio'),
-  ).toHaveCount(5);
-  await expect(room(page, 'Wohnküche')).toBeChecked();
-  await expect(viewer(page).locator('.plan-box polygon[data-chosen]')).toHaveCount(1);
-  const caption = viewer(page).locator('.plan-caption');
-  await expect(caption).toHaveText(/Wohnküche aus Lärche mit Tisch/);
-  // One picture a room: no steps.
-  await expect(viewer(page).locator('.plan-steps')).toHaveCount(0);
-  // By the keys, as any radio group.
-  await room(page, 'Wohnküche').focus();
+  await expect(viewer(page).locator('.viewer-count')).toHaveText('Bild 1 von 5');
+  await expect(framed(page)).toHaveCount(1);
+  await expect(viewer(page).locator('.plan-box polygon').first()).toHaveCSS('stroke-opacity', '1');
+  await named(page).toEqual(['Wohnküche']);
+  // The steps and the keys go through all the pictures, the room framed along.
   await page.keyboard.press('ArrowRight');
-  await expect(room(page, 'Schlafzimmer')).toBeChecked();
-  await expect(caption).toHaveText(/Doppelzimmer mit Kopfteil/);
-  // On the plan: the bathroom's room, its name and its frame.
+  await expect(viewer(page).locator('.viewer-count')).toHaveText('Bild 2 von 5');
+  await named(page).toEqual(['Schlafzimmer']);
+  await expect(viewer(page).locator('.plan-box polygon').nth(1)).toHaveAttribute('data-chosen', '');
+  // A room on the plan: its first picture.
   await viewer(page).locator('.plan-box polygon').nth(3).click();
-  await expect(room(page, 'Bad')).toBeChecked();
-  await expect(caption).toHaveText(/Bad mit weißer Badewanne/);
-  await expect(viewer(page).locator('.plan-box polygon').nth(3)).toHaveCSS('stroke-opacity', '1');
-  // A name shows on the plan only where it fits inside its room.
-  for (const label of await viewer(page).locator('.plan-label[data-fits]').all()) {
+  await expect(viewer(page).locator('.viewer-count')).toHaveText('Bild 4 von 5');
+  await expect(viewer(page).locator('.caption-in')).toHaveText(/Bad mit weißer Badewanne/);
+  await named(page).toEqual(['Bad']);
+  // A picture of no room: nothing framed, nothing named.
+  await viewer(page).getByRole('button', { name: 'Nächstes Bild' }).click();
+  await expect(viewer(page).locator('.viewer-count')).toHaveText('Bild 5 von 5');
+  await expect(framed(page)).toHaveCount(0);
+  await named(page).toEqual([]);
+  // A name shows on the plan only where it fits inside its room on both sides of its point.
+  const fits = viewer(page).locator('.plan-label[data-fits]');
+  await expect(fits).not.toHaveCount(0);
+  for (const label of await fits.all()) {
     const index = await label.evaluate((element) =>
       [...element.parentElement!.querySelectorAll('.plan-label')].indexOf(element as HTMLElement),
     );
     const zone = await box(viewer(page).locator('.plan-box polygon').nth(index));
-    expect((await box(label)).width).toBeLessThanOrEqual(zone.width);
+    const name = await box(label);
+    expect(name.x).toBeGreaterThanOrEqual(zone.x);
+    expect(name.x + name.width).toBeLessThanOrEqual(zone.x + zone.width + 0.5);
   }
-  await expect(viewer(page).locator('.plan-label[data-fits]')).not.toHaveCount(0);
   const { violations } = await new AxeBuilder({ page }).include('dialog.viewer').analyze();
   expect(violations).toEqual([]);
-  // Closed, the focus goes back to the plan's square.
   await page.keyboard.press('Escape');
   await expect(page.locator('.plan-tile')).toBeFocused();
+  // A picture of two rooms is the first of the plan's; a room of two pictures frames both.
+  await page.goto('http://localhost:4002/it/appartamenti/zonneterras');
+  await tile(page).nth(1).click();
+  await viewer(page).getByTitle('Planimetria').click();
+  await named(page).toEqual(['Soggiorno']);
+  await page.goto('/de/wohnungen/zirbe');
+  await page.locator('.plan-tile').click();
+  for (const count of ['Bild 1 von 3', 'Bild 2 von 3']) {
+    await expect(viewer(page).locator('.viewer-count')).toHaveText(count);
+    await named(page).toEqual(['Wohnraum']);
+    await expect(viewer(page).locator('.plan-box polygon').first()).toHaveAttribute(
+      'data-chosen',
+      '',
+    );
+    await page.keyboard.press('ArrowRight');
+  }
 });
 
-test('the switch keeps the place: a picture opens its room, a room goes on with its picture', async ({
+test('the switch keeps the picture, and leaves itself and the close button where they are', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto('/de/wohnungen/laerche');
   await tile(page).nth(2).click();
   await expect(viewer(page).locator('.viewer-count')).toHaveText('Bild 3 von 5');
+  const places = async () =>
+    Promise.all(['.viewer-views', '.viewer-close'].map((part) => box(viewer(page).locator(part))));
+  await settled(page);
+  const before = await places();
   await viewer(page).getByTitle('Grundriss').click();
-  await expect(room(page, 'Stockbettzimmer')).toBeChecked();
-  await expect(viewer(page).locator('.plan-caption')).toHaveText(/Zweites Schlafzimmer/);
-  await viewer(page).locator('.zone-choices').getByText('Balkon').click();
+  await expect(viewer(page).locator('.viewer-count')).toHaveText('Bild 3 von 5');
+  await named(page).toEqual(['Stockbettzimmer']);
+  expect(await places()).toEqual(before);
+  // On the switch the arrows choose a view, as in any radio group: the button steps.
+  await viewer(page).getByRole('button', { name: 'Nächstes Bild' }).click();
   await viewer(page).getByTitle('Fotos').click();
   await expect(viewer(page)).toHaveAttribute('data-view', 'photos');
-  await expect(viewer(page).locator('.viewer-count')).toHaveText('Bild 5 von 5');
-  await expect(viewer(page).locator('.caption-in')).toHaveText(/Holzbalkon/);
-  // A room of three pictures steps through them, by its buttons and the keys; a picture of two
-  // rooms opens the first; a picture of none, the plan's first room.
-  await page.goto('http://localhost:4002/it/appartamenti/zonneterras');
-  await tile(page).nth(1).click();
-  await viewer(page).getByTitle('Planimetria').click();
-  await expect(room(page, 'Soggiorno')).toBeChecked();
-  const steps = viewer(page).locator('.plan-steps');
-  await expect(steps).toHaveText('Immagine 2 di 3');
-  await steps.getByLabel('Immagine successiva').click();
-  await expect(steps).toHaveText('Immagine 3 di 3');
-  await expect(viewer(page).locator('.plan-caption')).toHaveText('Immagine di prova 3');
-  await page.keyboard.press('ArrowRight');
-  await expect(steps).toHaveText('Immagine 1 di 3');
-  await viewer(page).locator('.zone-choices').getByText('Giardino').click();
-  await expect(steps).toHaveText('Immagine 1 di 2');
-  await expect(viewer(page).locator('.plan-caption')).toHaveText('Immagine di prova 2');
-  await viewer(page).getByTitle('Foto', { exact: true }).click();
-  await expect(viewer(page).locator('.viewer-count')).toHaveText('Immagine 2 di 20');
-  await page.keyboard.press('Escape');
-  await tile(page).nth(5).click();
-  await viewer(page).getByTitle('Planimetria').click();
-  await expect(room(page, 'Soggiorno')).toBeChecked();
-  await expect(steps).toHaveText('Immagine 1 di 3');
+  await expect(viewer(page).locator('.viewer-count')).toHaveText('Bild 4 von 5');
+  await expect(viewer(page).locator('.caption-in')).toHaveText(/Bad mit weißer Badewanne/);
+  await named(page).toEqual([]);
+  expect(await places()).toEqual(before);
 });
 
-test('on a phone the plan stands above its rooms and the picture, each room’s name tall enough', async ({
-  page,
-}) => {
+test('on a phone the plan stands above the picture, its buttons and its text', async ({ page }) => {
   await phoneWidth(page, 320, 640);
   await page.goto('/de/wohnungen/laerche?season=winter');
   await page.locator('.plan-pill').click();
   await expect(viewer(page)).toHaveAttribute('data-view', 'plan');
-  const plan = await box(viewer(page).locator('.plan-box'));
-  const width = await page.evaluate(() => innerWidth);
-  expect(plan.x).toBeGreaterThanOrEqual(0);
-  expect(plan.x + plan.width).toBeLessThanOrEqual(width);
-  for (const name of await viewer(page).locator('.zone-choices span').all())
-    expect((await box(name)).height).toBeGreaterThanOrEqual(24);
-  const rooms = await box(viewer(page).locator('.zone-choices'));
-  expect(rooms.y).toBeGreaterThan(plan.y + plan.height);
-  // The picture below them, scrolled to; the season's own.
-  const picture = viewer(page).locator('.plan-frame img:visible');
-  await picture.scrollIntoViewIfNeeded();
-  expect((await box(picture)).y).toBeGreaterThan(rooms.y);
-  await expect(viewer(page).locator('.plan-caption')).toHaveText(
+  await named(page).toEqual(['Wohnküche']);
+  // Measured at once, after the viewer has scrolled its text into view.
+  await viewer(page).locator('.viewer-caption').scrollIntoViewIfNeeded();
+  const [plan, frame, button, caption, overflow] = (await viewer(page).evaluate((dialog) => [
+    ...['.plan-box', '.viewer-track', '.viewer-next', '.viewer-caption'].map((part) => {
+      const { left, right, top, bottom } = dialog.querySelector(part)!.getBoundingClientRect();
+      return { left, right, top, bottom };
+    }),
+    dialog.scrollWidth - dialog.clientWidth,
+  ])) as [DOMRect, DOMRect, DOMRect, DOMRect, number];
+  expect(plan.left).toBeGreaterThanOrEqual(0);
+  expect(plan.right).toBeLessThanOrEqual(320);
+  expect(frame.top).toBeGreaterThan(plan.bottom);
+  expect(button.top).toBeGreaterThan(frame.bottom);
+  expect(caption.top).toBeGreaterThan(button.bottom);
+  expect(overflow).toBe(0);
+  await expect(viewer(page).locator('.caption-in')).toHaveText(
     /Wohnküche aus Lärche mit anthrazit/,
   );
-  await expect
-    .poll(() => viewer(page).evaluate((dialog) => dialog.scrollWidth - dialog.clientWidth))
-    .toBe(0);
 });

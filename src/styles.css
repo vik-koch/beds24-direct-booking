@@ -747,8 +747,9 @@
     }
   }
 
-  /* A small label on a picture: a generated one says so, the gallery's strip counts. */
-  :is(.ai-label, .strip-count) {
+  /* A small label on a picture: a generated one says so, the gallery's strip counts, the
+     viewer names a picture's room. */
+  :is(.ai-label, .strip-count, .viewer-room) {
     position: absolute;
     padding: 0.1875rem 0.625rem;
     border-radius: var(--radius-control);

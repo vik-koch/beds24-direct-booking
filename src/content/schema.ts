@@ -428,7 +428,7 @@ export const textsSchema = z.strictObject({
     bar: z.strictObject({ choose: text, book: text }),
   }),
   // The pictures' mosaic and viewer; {index} counts from 1. With a floor plan: its name, on its
-  // cell and its view, the photos' view, and the name of its zones' choice.
+  // cell and its view, and the photos' view.
   gallery: z.strictObject({
     name: text,
     position: text,
@@ -437,7 +437,6 @@ export const textsSchema = z.strictObject({
     more: z.strictObject({ one: text, other: text }),
     plan: text,
     photos: text,
-    zones: text,
   }),
   // The names of the areas and the rooms site.json lists, and the labels of Beds24's codes: the
   // amenities' and the beds' and fittings' in a room.

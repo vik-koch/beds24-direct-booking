@@ -148,8 +148,7 @@
     "next": "Immagine successiva",
     "more": { "one": "+{count} immagine", "other": "+{count} immagini" },
     "plan": "Planimetria",
-    "photos": "Foto",
-    "zones": "Stanze"
+    "photos": "Foto"
   },
   "amenities": {
     "areas": { "comfort": "Comfort" },

@@ -157,8 +157,7 @@
     "next": "Next picture",
     "more": { "one": "+{count} picture", "other": "+{count} pictures" },
     "plan": "Floor plan",
-    "photos": "Photos",
-    "zones": "Rooms"
+    "photos": "Photos"
   },
   "amenities": {
     "areas": {
