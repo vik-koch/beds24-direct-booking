@@ -384,11 +384,14 @@ export function readContent(dir) {
       );
   });
   // Each content page has its address, its link text and its file in every language, and the
-  // header and the footer link only to pages the site has.
+  // header and the footer link only to pages the site has, the footer not to the header's.
   for (const part of ['header', 'footer'])
     site[part].forEach((key, index) => {
-      if (!site.pages.includes(key) && !(part === 'footer' && key === 'credits'))
-        throw new Error(`${join(dir, 'site.json')}\n  ${part}.${index}: ${key} is not a page`);
+      const fault =
+        !site.pages.includes(key) && !(part === 'footer' && key === 'credits')
+          ? 'is not a page'
+          : part === 'footer' && site.header.includes(key) && 'is in the header too';
+      if (fault) throw new Error(`${join(dir, 'site.json')}\n  ${part}.${index}: ${key} ${fault}`);
     });
   const pages = {};
   for (const tag of site.languages) {

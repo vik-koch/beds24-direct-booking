@@ -236,7 +236,10 @@ export const siteSchema = z.strictObject({
       ),
     )
     .refine((list) => unique(list, (key) => key), 'a page is listed twice'),
-  header: z.array(segment).refine((list) => unique(list, (key) => key), 'a page is listed twice'),
+  header: z
+    .array(segment)
+    .max(2, 'at most two pages')
+    .refine((list) => unique(list, (key) => key), 'a page is listed twice'),
   footer: z.array(segment).refine((list) => unique(list, (key) => key), 'a page is listed twice'),
 });
 

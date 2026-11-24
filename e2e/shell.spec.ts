@@ -142,12 +142,9 @@ test('the header links to the content pages site.json lists, after its own, and 
   await page.goto('/de/haeufige-fragen');
   const wide = !(await folded(page));
   const nav = page.locator(wide ? '.header-wide' : '.sheet-nav');
-  const menu = async () => {
-    if (wide) return;
-    const button = page.locator('.header-narrow .icon-button');
-    const box = (await button.boundingBox())!;
-    await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
-  };
+  // At the page's top, so a locator's click, which waits for the button to take it, moves nothing.
+  const menu = () => (wide ? undefined : page.locator('.header-narrow .icon-button').click());
+  await expect(page.locator('html')).toHaveAttribute('data-started', '');
   await menu();
   await expect(nav.locator(':scope > ul > li > :is(a, button):not([data-language])')).toHaveText([
     'Freie Wochen',

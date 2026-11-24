@@ -63,9 +63,9 @@ content. The application has no wording, no colour and no typeface of its own. T
   printed in a QR code, it must not change. A table wider than the column scrolls on its own. How a
   page is built is [ADR 17](adr/0017-content-pages-in-markdown.md).
 
-- **The header's links** (`header` in `site.json`) are content pages, in their order, after the
-  header's own links to the free weeks, the apartments and the location. The page shown is marked
-  there.
+- **The header's links** (`header` in `site.json`) are up to two content pages, in their order,
+  after the header's own links to the free weeks, the apartments and the location. The page shown is
+  marked there, and the footer does not link to it again.
 - **The footer's links** (`footer` in `site.json`) are content pages or `credits`, the picture
   credits page, in their order.
 - **An apartment** is a file of its own, named by its slug: `site.json` lists
@@ -276,7 +276,7 @@ beyond a limit fails its build, with the limit named.
 | Varies | Limit | Why | Enforced by |
 |---|---|---|---|
 | Site name | 15 characters | The narrow header keeps one row at 320 px: the name shrinks from 24 px where its room runs short, to about 15.5 px for 15 letters | The schema; an e2e test puts a 15-letter name into the demo's header |
-| The header's links | Their text beside the name, the language's code and the season switch on one line from 66rem | From 66rem, with a pointer that hovers, the header shows its links in one line; below, they are in the menu's sheet. The demo's German links fit there with the name at full size, and from 72rem with the language's name too. A longer text or another page shrinks the name | Not the build: a deployment checks its header at 1,056 and 1,152 px in each language, and keeps a link's text short, such as "FAQ" |
+| The header's links | Up to 2 pages, their text beside the name, the language's code and the season switch on one line from 66rem | From 66rem, with a pointer that hovers, the header shows its links in one line; below, they are in the menu's sheet. The demo's German links fit there with the name at full size, and from 72rem with the language's name too. A longer text or another page shrinks the name | The schema counts the pages; the text's width is not the build's: a deployment checks its header at 1,056 and 1,152 px in each language, and keeps a link's text short, such as "FAQ" |
 | Apartments | 1 to 4 | From 48rem the free-weeks list has a column for each, and four fill the card | The schema; the e2e test site has four |
 | Apartment name | 20 characters | The list's column headers and the phone's tabs | The schema; the e2e test site's names |
 | Languages | Exactly 2 | The language menu and the address prefixes have not been tried with a third | The schema |
@@ -316,12 +316,13 @@ the way to no place of the map, a place without its name or with a text for a se
 not list, tiles cut for another box or a tile missing, a `map/` folder without a map, a map without
 a `.woff2` font in `theme.css`, a route missing, left over or computed before a point moved, a
 content page without its file, address or link text in a language, a page file `site.json` does not
-list, a header or footer link to no page, two pages at one address, a page that does not open with
-its title or holds an element, an attribute, a link or a question's `id` the pages do not take, and
-a part beyond its boundary stop the build with the file and the key named; for the tiles and the
-routes, with the script to run. The schema, not the demo's files, defines the keys, so the compiler
-checks every template against the same keys for every site. Every language has the same keys, so
-every language renders the same elements and a change of language finds the reader's place.
+list, a header or footer link to no page, a footer link the header has, two pages at one address, a
+page that does not open with its title or holds an element, an attribute, a link or a question's
+`id` the pages do not take, and a part beyond its boundary stop the build with the file and the key
+named; for the tiles and the routes, with the script to run. The schema, not the demo's files,
+defines the keys, so the compiler checks every template against the same keys for every site. Every
+language has the same keys, so every language renders the same elements and a change of language
+finds the reader's place.
 
 ## Another folder
 

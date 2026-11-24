@@ -151,6 +151,7 @@ test('a content folder beyond a limit fails, and the message names the limit', (
     [(site) => (site.languages = ['de-AT', 'en-GB', 'it']), /languages: exactly two languages/],
     [(site) => (site.apartments = []), /apartments: at least one apartment/],
     [(site) => site.apartments.push('d', 'e'), /apartments: at most four apartments/],
+    [(site) => site.header.push('terms'), /header: at most two pages/],
     [
       (site) =>
         (site.map.places = Array.from({ length: 11 }, (_, i) => ({
@@ -1043,8 +1044,10 @@ test('a page file that no page lists is refused', () => {
 test('the header and the footer link only to pages, and a page key is not one of the fixed pages', () => {
   const footer = changed('site.json', (site) => site.footer.push('guide'));
   assert.throws(() => readContent(footer), /site\.json\n {2}footer\.4: guide is not a page/);
-  const header = changed('site.json', (site) => site.header.push('credits'));
-  assert.throws(() => readContent(header), /site\.json\n {2}header\.2: credits is not a page/);
+  const header = changed('site.json', (site) => (site.header = ['about', 'credits']));
+  assert.throws(() => readContent(header), /site\.json\n {2}header\.1: credits is not a page/);
+  const both = changed('site.json', (site) => site.footer.push('faq'));
+  assert.throws(() => readContent(both), /site\.json\n {2}footer\.4: faq is in the header too/);
   for (const key of ['credits', 'home', 'apartment']) {
     const fixed = changed('site.json', (site) => site.pages.push(key));
     assert.throws(() => readContent(fixed), /site\.json\n {2}pages\.5: taken by a page/, key);
