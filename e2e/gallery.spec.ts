@@ -516,7 +516,7 @@ test('every tab stop in the viewer shows a focus ring, in both views', async ({
       const stop = await page.evaluate(() => {
         const element = document.activeElement as HTMLElement;
         // The pictures' row rings its picture, so that the ring fits it; a switch's radio its
-        // label, a room's its word.
+        // label; a room on the plan has a ring drawn along its edges.
         const ringed = element.matches('.viewer-track')
           ? element.querySelectorAll('img')[0]
           : element.matches('input')
@@ -532,7 +532,10 @@ test('every tab stop in the viewer shows a focus ring, in both views', async ({
               ? element.closest('label')!.textContent!.trim()
               : element.tagName),
           body: element === document.body,
-          ring: style.outlineStyle !== 'none' && parseFloat(style.outlineWidth) >= 2,
+          ring: element.matches('.plan-room')
+            ? document.querySelector('.plan-ring')?.getAttribute('points') ===
+              element.getAttribute('points')
+            : style.outlineStyle !== 'none' && parseFloat(style.outlineWidth) >= 2,
         };
       });
       if (stop.body) break;
@@ -665,6 +668,10 @@ test('the plan’s view frames the shown picture’s room, and a room on the pla
   await expect(viewer(page).locator('.viewer-count')).toHaveText('Bild 4 von 5');
   await expect(viewer(page).locator('.caption-in')).toHaveText(/Bad mit weißer Badewanne/);
   await named(page).toEqual(['Bad']);
+  // A click rings nothing: neither the browser's own outline on a shape nor the room's ring.
+  await expect(viewer(page).locator('.plan-room').nth(3)).toBeFocused();
+  await expect(viewer(page).locator('.plan-room').nth(3)).toHaveCSS('outline-style', 'none');
+  await expect(viewer(page).locator('.plan-ring')).toHaveCount(0);
   // By keys too: each room is a button by its name, the shown picture's current.
   const bedroom = viewer(page).getByRole('button', { name: 'Schlafzimmer', exact: true });
   await bedroom.focus();
@@ -705,6 +712,13 @@ test('the plan’s view frames the shown picture’s room, and a room on the pla
   await expect(viewer(page).locator('.viewer-count')).toHaveText('Immagine 2 di 20');
   await named(page).toEqual(['Giardino']);
   await expect(viewer(page).locator('.plan-box polygon').nth(1)).toHaveAttribute('data-chosen', '');
+  // A room's ring follows its own edges, an L here, not its bounding box.
+  await page.keyboard.press('Shift+Tab');
+  await page.keyboard.press('Tab');
+  await expect(viewer(page).locator('.plan-ring')).toHaveAttribute(
+    'points',
+    '255,10 390,10 390,290 320,290 320,150 255,150',
+  );
   await page.goto('/de/wohnungen/zirbe');
   await page.locator('.plan-tile').click();
   for (const count of ['Bild 1 von 3', 'Bild 2 von 3']) {

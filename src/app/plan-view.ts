@@ -33,6 +33,7 @@ import { LANGUAGE } from './texts';
       <svg [attr.viewBox]="plan().viewBox.join(' ')" role="group">
         @for (zone of plan().zones; track zone.key) {
           <polygon
+            class="plan-room"
             tabindex="0"
             role="button"
             [attr.points]="corners(zone)"
@@ -42,7 +43,16 @@ import { LANGUAGE } from './texts';
             (click)="choose.emit(zone.key)"
             (keydown.enter)="choose.emit(zone.key)"
             (keydown.space)="$event.preventDefault(); choose.emit(zone.key)"
+            (focus)="ring($event, zone)"
+            (blur)="ringed.set(undefined)"
           />
+        }
+        @if (ringed(); as zone) {
+          <mask id="plan-ring">
+            <polygon class="plan-ring-outer" [attr.points]="corners(zone)" />
+            <polygon class="plan-ring-inner" [attr.points]="corners(zone)" />
+          </mask>
+          <polygon class="plan-ring" [attr.points]="corners(zone)" mask="url(#plan-ring)" />
         }
       </svg>
       @for (zone of plan().zones; track zone.key) {
@@ -83,7 +93,8 @@ import { LANGUAGE } from './texts';
 
       /* The picture's room in the accent: a frame for its edge, which a fill alone would not
          draw at 3:1, and a light fill for its area; a hovered one only the light fill. */
-      .plan-box polygon {
+      .plan-room {
+        outline: none;
         fill: var(--color-accent);
         fill-opacity: 0;
         stroke: var(--color-accent);
@@ -104,13 +115,25 @@ import { LANGUAGE } from './texts';
           fill-opacity: 0.18;
           stroke-opacity: 1;
         }
+      }
 
-        /* In the plan's units, as an outline on its shapes is; inside the room, clear of its
-           frame: outside it would lie on the dark wall. */
-        &:focus-visible {
-          outline-width: calc(2px * var(--unit));
-          outline-offset: calc(-6px * var(--unit));
-        }
+      /* The focus ring along the room's own edges, where an outline would draw its bounding box:
+         the room masked to a band 4 to 6 px inside its edge, clear of its frame; outside, it would
+         lie on the dark wall. In the plan's units, scaled to pixels. */
+      .plan-ring {
+        fill: var(--color-accent);
+        pointer-events: none;
+      }
+
+      :is(.plan-ring-outer, .plan-ring-inner) {
+        fill: none;
+        stroke: white;
+        stroke-width: calc(12px * var(--unit));
+      }
+
+      .plan-ring-inner {
+        stroke: black;
+        stroke-width: calc(8px * var(--unit));
       }
 
       .plan-label {
@@ -146,6 +169,8 @@ export class PlanView {
   protected readonly fits = signal<string[]>([]);
   // Pixels to a unit of the plan, as it is drawn.
   protected readonly scale = signal(1);
+  // The room whose ring shows: focused by the keyboard, as :focus-visible would ring it.
+  protected readonly ringed = signal<Plan['zones'][number] | undefined>(undefined);
   protected readonly corners = (zone: Plan['zones'][number]) =>
     zone.points.map((point) => point.join(',')).join(' ');
   private readonly box = viewChild.required<ElementRef<HTMLElement>>('box');
@@ -167,6 +192,10 @@ export class PlanView {
       observer.observe(box);
       onCleanup(() => observer.disconnect());
     });
+  }
+
+  protected ring(event: FocusEvent, zone: Plan['zones'][number]) {
+    this.ringed.set((event.target as Element).matches(':focus-visible') ? zone : undefined);
   }
 }
 
