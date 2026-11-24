@@ -3,8 +3,8 @@ import site from '../content/generated/site';
 import { seasonNames } from '../content/names';
 import { TEXTS } from './texts';
 
-// Every picture of the content that names who to credit. Apartment pictures join the list
-// when they come.
+// Every picture of the content that names who to credit: the heroes', then the pages'. Apartment
+// pictures join the list when they come.
 @Component({
   selector: 'app-credits',
   template: `
@@ -38,8 +38,10 @@ import { TEXTS } from './texts';
 })
 export class Credits {
   protected readonly texts = inject(TEXTS);
-  protected readonly credits = seasonNames.flatMap((name) => {
-    const credit = site.seasons[name]?.hero.credit;
+  protected readonly credits = [
+    ...seasonNames.map((name) => site.seasons[name]?.hero.credit),
+    ...(site.pictures ?? []).map(({ credit }) => credit),
+  ].flatMap((credit) => {
     if (!credit) return [];
     // What was changed, in the page's language, after the title and outside its link.
     const changes = credit.changes?.map((change) => this.texts.credits.changes?.[change]);

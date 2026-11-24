@@ -225,6 +225,12 @@ export const siteSchema = z.strictObject({
     .refine((value) => Object.keys(value).length > 0, 'lists nothing: leave the contact out')
     .optional(),
   map: map.optional(),
+  // Who to credit for a picture the content pages show, once for every language; a page's
+  // Markdown gives its alternative text.
+  pictures: z
+    .array(picture.required({ credit: true }))
+    .refine((list) => unique(list, (entry) => entry.file), 'a picture is listed twice')
+    .optional(),
   // The content pages, each with a file per language in pages/, its address and its link text in
   // the texts; the header's links after its own, in their order, to content pages; and the
   // footer's links in their order: content pages or the picture credits.

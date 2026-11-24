@@ -73,3 +73,26 @@ test('a question the address names is open, below the header, also when the addr
   await page.keyboard.press('Enter');
   await expect(arrival).not.toHaveAttribute('open');
 });
+
+test("the company page's picture is converted, fits a phone, and is credited", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 640 });
+  await page.goto('/en/about');
+  const picture = page.getByRole('img', { name: /^Saalbach in summer/ });
+  await picture.scrollIntoViewIfNeeded();
+  await expect
+    .poll(() => picture.evaluate((img: HTMLImageElement) => img.naturalWidth))
+    .toBeGreaterThan(0);
+  expect(await picture.evaluate((img: HTMLImageElement) => img.currentSrc)).toMatch(
+    /\/pictures\/pages\/saalbach-summer-\d+\.[0-9a-f]{8}\.webp$/,
+  );
+  const sizes = await page.evaluate(() => [
+    document.documentElement.scrollWidth,
+    document.documentElement.clientWidth,
+  ]);
+  expect(sizes[0]).toBeLessThanOrEqual(sizes[1]);
+  await page.goto('/en/picture-credits');
+  await expect(page.getByRole('link', { name: 'Saalbach from above.jpg' })).toHaveAttribute(
+    'href',
+    'https://commons.wikimedia.org/wiki/File:Saalbach_from_above.jpg',
+  );
+});

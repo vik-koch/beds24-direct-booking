@@ -1070,7 +1070,11 @@ test('a content page opens with its title and holds only what a page shows', () 
     ['<h1>Title</h1>', /starts with its title/],
     ['# Title\n\n<a>Contact</a>', /a link without an address/],
     ['# Title\n\nA <span>word</span>.', /has <span>/],
-    ['# Title\n\n![A bed](pictures/bed.webp)', /has <img>/],
+    ['# Title\n\n![](pictures/bed.webp)', /shows pictures\/bed\.webp without an alternative text/],
+    ['# Title\n\n![A bed](https://x.example/bed.webp)', /give a file in pictures\//],
+    ['# Title\n\n![A bed](pictures/.bed.webp)', /give a file in pictures\//],
+    ['# Title\n\n![A bed](pictures/bed.webp "Bed")', /has title on <img>/],
+    ['# Title\n\nSee ![A bed](pictures/bed.webp).', /outside a paragraph of its own/],
     ['# Title\n\n```\ncode\n```', /has <pre>/],
     ['# Title\n\n<p class="x">Text</p>', /has class on <p>/],
     ['# Title\n\n[Here](javascript:alert(1))', /links to javascript:alert\(1\)/],
@@ -1092,7 +1096,7 @@ test('a content page opens with its title and holds only what a page shows', () 
     ],
     ['# Title\n\n<p>Text <summary>Q</summary></p>', /a <summary> that does not open a <details>/],
     ['# Title\n\n<summary>Q</summary>', /a <summary> that does not open a <details>/],
-    ['# ![A bed](pictures/bed.webp)', /has <img>/],
+    ['# ![A bed](pictures/bed.webp)', /outside a paragraph of its own/],
     ['# <span></span>', /has <span>/],
     ['# <strong> </strong>', /a title without text/],
     ['<style>p { color: red }</style>\n\n# Title', /starts with its title/],
@@ -1121,4 +1125,56 @@ test("a content page's title is its heading, and its tables scroll in a frame", 
     page.html,
     /<details id="arrival">\n<summary>When\?<\/summary><p>From 4 pm\.<\/p>\n<\/details>$/,
   );
+});
+
+test("a page's picture exists, and a credit is for a picture a page shows", () => {
+  const missing = changed('site.json', () => undefined);
+  writeFileSync(join(missing, 'pages/faq.en-GB.md'), '# FAQ\n\n![A bed](pictures/bed.webp)\n');
+  assert.throws(
+    () => readContent(missing),
+    /faq\.en-GB\.md\n {2}shows pictures\/bed\.webp, which does not exist/,
+  );
+  const unshown = changed('site.json', (site) =>
+    site.pictures.push({ ...site.pictures[0], file: 'pictures/ahorn-1.webp' }),
+  );
+  assert.throws(
+    () => readContent(unshown),
+    /site\.json\n {2}pictures\.1: pictures\/ahorn-1\.webp is on no page/,
+  );
+  const uncredited = changed('site.json', (site) => delete site.pictures[0].credit);
+  assert.throws(() => readContent(uncredited), /site\.json\n {2}pictures\.0\.credit/);
+  const unnamed = changed(
+    'site.json',
+    (site) => (site.pictures[0].credit.changes = ['cropped']),
+    'texts.de-AT.json',
+    (texts) => delete texts.credits.changes.cropped,
+    'texts.en-GB.json',
+    (texts) => delete texts.credits.changes.cropped,
+  );
+  assert.throws(
+    () => readContent(unnamed),
+    /texts\.de-AT\.json\n {2}credits\.changes\.cropped: missing/,
+  );
+});
+
+test("a page's picture is converted, and the page names its files wherever it shows it", async () => {
+  const dir = changed('site.json', () => undefined);
+  writeFileSync(
+    join(dir, 'pages/faq.en-GB.md'),
+    '# FAQ\n\n![The village](pictures/saalbach-summer.webp)\n\n![Again](pictures/saalbach-summer.webp)\n',
+  );
+  const out = mkdtempSync(join(root, 'generated-'));
+  await writeContent(dir, out, cache);
+  const files = readdirSync(join(out, 'pictures', 'pages'));
+  const page = readFileSync(join(out, 'page.en.faq.ts'), 'utf8');
+  assert.equal(files.length, 4);
+  assert.equal(page.match(/ srcset=/g).length, 2);
+  // Served only as its conversions.
+  assert.ok(!existsSync(join(out, 'pictures', 'saalbach-summer.webp')));
+  assert.match(
+    page,
+    /<img src=\\"\/pictures\/pages\/saalbach-summer-480\.[0-9a-f]{8}\.webp\\" alt=\\"The village\\" srcset=\\"[^"]* 1920w\\" sizes=\\"\(min-width: 44rem\) 40rem, 100vw\\" width=\\"1920\\" height=\\"1440\\" loading=\\"lazy\\">/,
+  );
+  for (const [, url] of page.matchAll(/(\/pictures\/pages\/[^ ]+\.webp)/g))
+    assert.ok(existsSync(join(out, url)), url);
 });

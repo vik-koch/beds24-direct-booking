@@ -1,5 +1,5 @@
-// Converts the apartments' pictures and the heroes into WebP files in several widths, named by
-// their content.
+// Converts the apartments' and the pages' pictures and the heroes into WebP files in several
+// widths, named by their content.
 import { createHash, randomUUID } from 'node:crypto';
 import {
   copyFileSync,
@@ -96,25 +96,32 @@ const measure = (bytes, file) =>
       },
     );
 
-// Each apartment's pictures by slug, written to `out`, and how many files had to be converted.
-export async function convertPictures(dir, apartments, out, cache) {
+// A picture from square to 2:1 in its widths, written to `out` and served from `url`, and how
+// many files had to be converted.
+export async function convertPicture(dir, file, name, out, url, cache) {
   mkdirSync(cache, { recursive: true });
   mkdirSync(out, { recursive: true });
+  const { bytes, keep } = await read(dir, file, cache);
+  const size = await measure(bytes, file);
+  const { width, height } = size;
+  if (width < height * (1 - slack) || width > height * 2 * (1 + slack))
+    throw new Error(`${file} is ${width} × ${height}, not between square and 2:1`);
+  const files = await convert(bytes, size, name, out, url, cache);
+  await keep();
+  return files;
+}
+
+// Each apartment's pictures by slug, written to `out`, and how many files had to be converted.
+export async function convertPictures(dir, apartments, out, cache) {
   let converted = 0;
   const pictures = {};
   for (const { slug, pictures: list } of apartments) {
     pictures[slug] = [];
     for (const [index, { file, alt, generated, season, zones }] of list.entries()) {
       try {
-        const { bytes, keep } = await read(dir, file, cache);
-        const size = await measure(bytes, file);
-        const { width, height } = size;
-        if (width < height * (1 - slack) || width > height * 2 * (1 + slack))
-          throw new Error(`${file} is ${width} × ${height}, not between square and 2:1`);
         const name = `${slug}-${index + 1}`;
-        const files = await convert(bytes, size, name, out, '/pictures/apartments', cache);
+        const files = await convertPicture(dir, file, name, out, '/pictures/apartments', cache);
         converted += files.converted;
-        await keep();
         pictures[slug].push({
           alt,
           ...(generated && { generated }),
