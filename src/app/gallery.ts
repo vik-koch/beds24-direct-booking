@@ -770,11 +770,13 @@ import { fill, LANGUAGE, TEXTS } from './texts';
         }
 
         /* The plan between the bar and the pictures, at most a third of the screen's height; the
-           viewer scrolls if they do not fit. */
+           viewer scrolls if they do not fit, without a scrollbar: the page's kept room for its own
+           would leave one short of the window's edge, and the cut picture shows there is more. */
         .viewer[data-view='plan'][open] {
           /* The track's row by its content: as an auto row it would take less than its 4:3. */
           grid-template: auto auto max-content auto auto 1fr / auto 1fr auto;
           overflow-y: auto;
+          scrollbar-width: none;
         }
 
         .viewer-plan {
