@@ -516,7 +516,7 @@ test('every tab stop in the viewer shows a focus ring, in both views', async ({
       const stop = await page.evaluate(() => {
         const element = document.activeElement as HTMLElement;
         // The pictures' row rings its picture, so that the ring fits it; a switch's radio its
-        // label; a room on the plan has a ring drawn along its edges.
+        // label. A room on the plan has a ring drawn along its edges, on the next render.
         const ringed = element.matches('.viewer-track')
           ? element.querySelectorAll('img')[0]
           : element.matches('input')
@@ -532,15 +532,18 @@ test('every tab stop in the viewer shows a focus ring, in both views', async ({
               ? element.closest('label')!.textContent!.trim()
               : element.tagName),
           body: element === document.body,
-          ring: element.matches('.plan-room')
-            ? document.querySelector('.plan-ring')?.getAttribute('points') ===
-              element.getAttribute('points')
-            : style.outlineStyle !== 'none' && parseFloat(style.outlineWidth) >= 2,
+          room: element.matches('.plan-room') ? element.getAttribute('points') : null,
+          ring: style.outlineStyle !== 'none' && parseFloat(style.outlineWidth) >= 2,
         };
       });
       if (stop.body) break;
       seen.push(stop.name);
-      expect(stop.ring, stop.name).toBe(true);
+      if (stop.room)
+        await expect(viewer(page).locator('.plan-ring'), stop.name).toHaveAttribute(
+          'points',
+          stop.room,
+        );
+      else expect(stop.ring, stop.name).toBe(true);
     }
     return seen;
   };
