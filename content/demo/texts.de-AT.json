@@ -155,7 +155,10 @@
     "position": "Bild {index} von {count}",
     "previous": "Voriges Bild",
     "next": "Nächstes Bild",
-    "more": { "one": "+{count} Bild", "other": "+{count} Bilder" }
+    "more": { "one": "+{count} Bild", "other": "+{count} Bilder" },
+    "plan": "Grundriss",
+    "photos": "Fotos",
+    "zones": "Räume"
   },
   "amenities": {
     "areas": {

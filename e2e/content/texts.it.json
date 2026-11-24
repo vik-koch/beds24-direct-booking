@@ -146,7 +146,10 @@
     "position": "Immagine {index} di {count}",
     "previous": "Immagine precedente",
     "next": "Immagine successiva",
-    "more": { "one": "+{count} immagine", "other": "+{count} immagini" }
+    "more": { "one": "+{count} immagine", "other": "+{count} immagini" },
+    "plan": "Planimetria",
+    "photos": "Foto",
+    "zones": "Stanze"
   },
   "amenities": {
     "areas": { "comfort": "Comfort" },

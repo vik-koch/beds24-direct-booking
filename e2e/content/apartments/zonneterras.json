@@ -8,21 +8,24 @@
       "alt": {
         "it": "Immagine di prova 1",
         "nl-BE": "Testafbeelding 1"
-      }
+      },
+      "zones": ["soggiorno"]
     },
     {
       "file": "pictures/four-three.png",
       "alt": {
         "it": "Immagine di prova 2",
         "nl-BE": "Testafbeelding 2"
-      }
+      },
+      "zones": ["soggiorno", "giardino"]
     },
     {
       "file": "pictures/square.png",
       "alt": {
         "it": "Immagine di prova 3",
         "nl-BE": "Testafbeelding 3"
-      }
+      },
+      "zones": ["soggiorno"]
     },
     {
       "file": "pictures/four-three.png",
@@ -37,7 +40,8 @@
       "alt": {
         "it": "Immagine di prova 5",
         "nl-BE": "Testafbeelding 5"
-      }
+      },
+      "zones": ["giardino"]
     },
     {
       "file": "pictures/four-three.png",
@@ -149,5 +153,33 @@
         "nl-BE": "Testafbeelding 20"
       }
     }
-  ]
+  ],
+  "plan": {
+    "file": "pictures/plan.svg",
+    "alt": { "it": "Planimetria di prova", "nl-BE": "Testplattegrond" },
+    "zones": [
+      {
+        "key": "soggiorno",
+        "name": { "it": "Soggiorno", "nl-BE": "Woonkamer" },
+        "points": [
+          [10, 10],
+          [245, 10],
+          [245, 290],
+          [10, 290]
+        ],
+        "label": [127, 150]
+      },
+      {
+        "key": "giardino",
+        "name": { "it": "Giardino", "nl-BE": "Tuin" },
+        "points": [
+          [255, 10],
+          [390, 10],
+          [390, 290],
+          [255, 290]
+        ],
+        "label": [322, 150]
+      }
+    ]
+  }
 }

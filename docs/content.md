@@ -105,7 +105,8 @@ content. The application has no wording, no colour and no typeface of its own. T
   viewer's buttons, and `more` for the last cell of the mosaic when pictures follow beyond it,
   taking `{count}` with a `one` and an `other` form. The mosaic shows 8, 5 or 3 cells, or the first
   picture alone, by the number of pictures; the viewer shows each picture whole with its alternative
-  text below it.
+  text below it. With a floor plan, `plan` names it on its cell and its view, `photos` names the
+  pictures' view, and `zones` names the choice of its rooms; the plan takes a cell of the mosaic.
 - **The amenities** (`amenities` in `site.json`) sort Beds24's feature codes into areas for the
   apartment page, in their order:
   `{ "area": "kitchen", "icon": "cooking-pot", "codes": ["KITCHEN", "DISHWASHER"] }`, or a code
