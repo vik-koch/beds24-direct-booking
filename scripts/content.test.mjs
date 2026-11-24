@@ -42,6 +42,13 @@ test('the demo and the test site are valid', () => {
   assert.deepEqual(Object.keys(readContent('e2e/content').texts), ['it', 'nl']);
 });
 
+test("the demo's questions have the same ids in both languages", () => {
+  const { pages } = readContent('content/demo');
+  const ids = (html) => [...html.matchAll(/<details id="([^"]+)"/g)].map((match) => match[1]);
+  assert.ok(ids(pages.en.faq.html).length > 0);
+  assert.deepEqual(ids(pages.de.faq.html), ids(pages.en.faq.html));
+});
+
 test('a key missing in one language is named', () => {
   const dir = changed('texts.en-GB.json', (texts) => delete texts.nav.weeks);
   assert.throws(() => readContent(dir), /texts\.en-GB\.json\n {2}nav\.weeks/);
