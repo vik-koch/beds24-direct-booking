@@ -62,6 +62,7 @@ function readPlan(dir, file, plan) {
   if (
     parts.length !== 4 ||
     !parts.every((part) => /^[-+]?(\d+\.?\d*|\.\d+)(e[-+]?\d+)?$/i.test(part)) ||
+    !viewBox.every(Number.isFinite) ||
     !(viewBox[2] > 0 && viewBox[3] > 0)
   )
     throw fail('has no viewBox of four numbers');
@@ -71,7 +72,7 @@ function readPlan(dir, file, plan) {
         node.nodeType === node.PROCESSING_INSTRUCTION_NODE && node.target === 'xml-stylesheet',
     )
   )
-    throw fail('refers to another file in a stylesheet');
+    throw fail('has an xml-stylesheet line: style it with a <style> inside it');
   const outside = /url\((?!\s*['"]?#)|@import/i;
   for (const element of [root, ...root.querySelectorAll('*')]) {
     if (element.localName === 'text') throw fail("has text: the page writes the zones' names");

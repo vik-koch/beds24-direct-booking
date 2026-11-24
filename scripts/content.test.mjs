@@ -427,6 +427,7 @@ test("a plan's drawing is an SVG file with a viewBox, no text, no script and no 
   refused(svg('', '0 0 600,,400'), 'has no viewBox of four numbers');
   refused(svg('', '0 0 600 400,'), 'has no viewBox of four numbers');
   refused(svg('', '0 0 0x10 400'), 'has no viewBox of four numbers');
+  refused(svg('', '0 0 1e309 400'), 'has no viewBox of four numbers');
   refused(svg('', '0 0 0 400'), 'has no viewBox of four numbers');
   refused(svg('<text x="1" y="1">KITCHEN</text>'), "has text: the page writes the zones' names");
   refused(svg('<script>alert(1)</script>'), 'has a script');
@@ -441,7 +442,7 @@ test("a plan's drawing is an SVG file with a viewBox, no text, no script and no 
   refused(svg('<style>rect { fill: URL(other.svg#p) }</style>'), 'refers to another file');
   refused(
     `<?xml-stylesheet href="other.css"?>${svg('')}`,
-    'refers to another file in a stylesheet',
+    'has an xml-stylesheet line: style it with a <style> inside it',
   );
   const gone = planned();
   rmSync(join(gone, 'pictures', 'zirbe-plan.svg'));
