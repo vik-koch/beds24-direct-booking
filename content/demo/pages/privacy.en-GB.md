@@ -1,7 +1,8 @@
 # Privacy
 
 > Firn & Farn is made up: this website is a demo, and the company is an example. What this page says
-> about the website itself is true, though: this is how it handles data.
+> about your visit and your browser is true of this website, though. It describes booking as an
+> example: the demo takes no bookings.
 
 ## Who is responsible
 
@@ -14,7 +15,7 @@ officer; please write to us directly.
 - No tracking, no analytics, no advertising.
 - Fonts, the map and pictures come from our own server, not from third parties.
 - Our server keeps no access log.
-- Your booking and payment are taken by our booking system, Beds24.
+- Booking and payment go through our booking system, Beds24; this demo takes no bookings.
 
 ## When you visit the website
 
@@ -28,20 +29,24 @@ The server is rented from a hosting provider, which acts for us as a processor.
 
 ## What stays in your browser
 
-The website remembers two settings in your browser, and only when you choose them yourself. It needs
-both for a function you use on purpose, so it does not ask for consent (§ 165(3) of the Austrian
+The website remembers two settings in your browser: the season, when you switch it or open a link to
+a week of another season, and the calendar view, when you choose it. It needs both to show the
+website as you asked for it, so it does not ask for consent (§ 165(3) of the Austrian
 Telecommunications Act 2021).
 
-| Name     | Kind          | What it holds                                    | How long |
-| -------- | ------------- | ------------------------------------------------ | -------- |
-| “season” | Local storage | The season you chose and the day you chose it    | 30 days  |
-| “view”   | Cookie        | That you chose the calendar in the booking panel | 30 days  |
+| Name     | Kind          | What it holds                                    | How long                                                    |
+| -------- | ------------- | ------------------------------------------------ | ----------------------------------------------------------- |
+| “season” | Local storage | The season shown and the day it was stored       | Used for 30 days, then replaced or deleted on a later visit |
+| “view”   | Cookie        | That you chose the calendar in the booking panel | 30 days at most                                             |
 
 If you choose the list again, the website deletes the cookie. Both stay in your browser and are sent
 to no one else; besides the page itself, only our server reads the cookie, to show the page in your
 view straight away.
 
 ## When you book
+
+On this demo the free weeks and prices come from a simulator, and booking stops before the form: you
+enter no details and pay nothing. A website with Beds24 works like this:
 
 The free weeks and prices come from Beds24, our booking system. When you book a week, you enter your
 details in Beds24's booking form: at least title, first name and surname, email and country, and

@@ -1,7 +1,8 @@
 # Datenschutz
 
 > Firn & Farn ist erfunden: Diese Website ist eine Demo, und das Unternehmen ist ein Beispiel. Was
-> diese Seite über die Website selbst sagt, stimmt aber: So geht sie mit Daten um.
+> diese Seite über den Besuch und Ihren Browser sagt, stimmt aber für diese Website. Die Buchung
+> beschreibt sie als Beispiel: Auf der Demo ist keine möglich.
 
 ## Wer verantwortlich ist
 
@@ -14,7 +15,8 @@ haben wir nicht; schreiben Sie uns direkt.
 - Kein Tracking, keine Analyse, keine Werbung.
 - Schriften, Karte und Bilder kommen von unserem eigenen Server, nicht von Dritten.
 - Unser Server schreibt kein Zugriffsprotokoll.
-- Ihre Buchung und Zahlung nimmt unser Buchungssystem Beds24 entgegen.
+- Buchung und Zahlung laufen über unser Buchungssystem Beds24; auf dieser Demo ist keine Buchung
+  möglich.
 
 ## Wenn Sie die Website besuchen
 
@@ -28,20 +30,24 @@ Der Server ist bei einem Hosting-Anbieter gemietet, der für uns als Auftragsver
 
 ## Was in Ihrem Browser bleibt
 
-Die Website merkt sich zwei Einstellungen in Ihrem Browser, und nur, wenn Sie sie selbst wählen.
-Beide braucht sie für eine Funktion, die Sie ausdrücklich nutzen, daher fragen wir nicht um
-Einwilligung (§ 165 Abs. 3 Telekommunikationsgesetz 2021).
+Die Website merkt sich zwei Einstellungen in Ihrem Browser: die Saison, wenn Sie sie wechseln oder
+einen Link zu einer Woche einer anderen Saison öffnen, und die Kalenderansicht, wenn Sie sie wählen.
+Beide braucht sie, um die Website so zu zeigen, wie Sie sie aufgerufen haben, daher fragen wir nicht
+um Einwilligung (§ 165 Abs. 3 Telekommunikationsgesetz 2021).
 
-| Name     | Art              | Was es enthält                                      | Wie lange |
-| -------- | ---------------- | --------------------------------------------------- | --------- |
-| „season“ | Lokaler Speicher | Die gewählte Saison und den Tag der Wahl            | 30 Tage   |
-| „view“   | Cookie           | Dass Sie im Buchungsfeld den Kalender gewählt haben | 30 Tage   |
+| Name     | Art              | Was es enthält                                                | Wie lange                                                           |
+| -------- | ---------------- | ------------------------------------------------------------- | ------------------------------------------------------------------- |
+| „season“ | Lokaler Speicher | Die gezeigte Saison und den Tag, an dem sie gespeichert wurde | 30 Tage beachtet, danach beim nächsten Besuch ersetzt oder gelöscht |
+| „view“   | Cookie           | Dass Sie im Buchungsfeld den Kalender gewählt haben           | Höchstens 30 Tage                                                   |
 
 Wählen Sie wieder die Liste, löscht die Website das Cookie. Beides bleibt in Ihrem Browser und wird
 an niemanden sonst geschickt; das Cookie liest neben der Seite selbst nur unser Server, um sie
 gleich in Ihrer Ansicht zu zeigen.
 
 ## Wenn Sie buchen
+
+Auf dieser Demo kommen die freien Wochen und Preise aus einem Simulator, und die Buchung endet vor
+dem Formular: Sie geben keine Angaben ein und zahlen nichts. Eine Website mit Beds24 arbeitet so:
 
 Die freien Wochen und Preise kommen aus Beds24, unserem Buchungssystem. Wenn Sie eine Woche buchen,
 geben Sie Ihre Angaben in das Buchungsformular von Beds24 ein: mindestens Anrede, Vor- und Nachname,

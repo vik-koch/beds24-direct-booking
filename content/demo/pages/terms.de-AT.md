@@ -1,4 +1,4 @@
-# Mietbedingungen
+# Allgemeine Geschäftsbedingungen
 
 > Firn & Farn ist erfunden: Diese Website ist eine Demo, und diese Bedingungen sind ein Beispiel
 > dafür, was ein österreichischer Vermieter von Ferienwohnungen hier regelt. Sie sind keine Vorlage
@@ -27,8 +27,9 @@ Diese Bedingungen gelten für die Miete unserer Ferienwohnungen in Saalbach. Ver
 ## 3. Ortstaxe
 
 Die Gemeinde Saalbach-Hinterglemm erhebt eine Ortstaxe. Sie beträgt 3,50 € pro Erwachsenem und
-Nacht; Kinder bis 14 Jahre zahlen keine. Das Buchungsformular weist sie als eigene Zeile aus, und
-wir führen sie an die Gemeinde ab.
+Nacht; Kinder bis 14 Jahre zahlen keine, in den Wohnungen, deren Buchung Kinder getrennt zählt:
+Lärche und Ahorn. In der Zirbe zählt jeder Gast als Erwachsener. Das Buchungsformular weist sie als
+eigene Zeile aus, und wir führen sie an die Gemeinde ab.
 
 ## 4. Kein Rücktrittsrecht
 
@@ -41,13 +42,13 @@ nicht binnen 14 Tagen kostenlos widerrufen, sondern nur stornieren, wie es Punkt
 Sie können jederzeit schriftlich stornieren, per E-Mail genügt. Es zählt der Tag, an dem Ihre
 Nachricht bei uns ankommt. Wir verlangen dann einen Teil des Preises:
 
-| Stornierung                    | Wir verlangen |
-| ------------------------------ | ------------: |
-| bis 60 Tage vor der Anreise    |          10 % |
-| 59 bis 30 Tage vor der Anreise |          30 % |
-| 29 bis 7 Tage vor der Anreise  |          60 % |
-| ab 6 Tage vor der Anreise      |          90 % |
-| Nichtanreise                   |         100 % |
+| Stornierung                         | Wir verlangen |
+| ----------------------------------- | ------------: |
+| 60 Tage oder mehr vor der Anreise   |          10 % |
+| 59 bis 30 Tage vor der Anreise      |          30 % |
+| 29 bis 7 Tage vor der Anreise       |          60 % |
+| 6 Tage oder weniger vor der Anreise |          90 % |
+| Nichtanreise                        |         100 % |
 
 Können wir die Woche anders vermieten, verlangen wir nur unseren Aufwand von 50 €. Eine
 Reiserücktrittsversicherung empfehlen wir.

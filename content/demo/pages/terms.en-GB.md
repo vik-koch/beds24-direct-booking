@@ -25,8 +25,9 @@ Appartements GmbH (see the [imprint](/en/imprint)).
 ## 3. Tourist tax
 
 The municipality of Saalbach-Hinterglemm charges a tourist tax. It is €3.50 per adult per night;
-children up to 14 pay none. The booking form shows it as a line of its own, and we pass it on to the
-municipality.
+children up to 14 pay none in the apartments whose booking counts children apart: Lärche and Ahorn.
+In Zirbe every guest counts as an adult. The booking form shows it as a line of its own, and we pass
+it on to the municipality.
 
 ## 4. No right of withdrawal
 
@@ -39,13 +40,13 @@ from a booking free of charge within 14 days, only cancel it as section 5 sets o
 You can cancel at any time in writing; an email is enough. What counts is the day your message
 reaches us. We then charge part of the price:
 
-| Cancellation                 | We charge |
-| ---------------------------- | --------: |
-| up to 60 days before arrival |       10% |
-| 59 to 30 days before arrival |       30% |
-| 29 to 7 days before arrival  |       60% |
-| from 6 days before arrival   |       90% |
-| no arrival                   |      100% |
+| Cancellation                   | We charge |
+| ------------------------------ | --------: |
+| 60 days or more before arrival |       10% |
+| 59 to 30 days before arrival   |       30% |
+| 29 to 7 days before arrival    |       60% |
+| 6 days or fewer before arrival |       90% |
+| no arrival                     |      100% |
 
 If we can let the week to someone else, we charge only our costs of €50. We recommend cancellation
 insurance.
