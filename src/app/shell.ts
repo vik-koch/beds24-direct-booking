@@ -30,7 +30,8 @@ export function heading(texts: Texts, route: ActivatedRouteSnapshot): string {
   if (page === 'home') return texts.home.title;
   if (page === 'notFound') return texts.notFound.title;
   if (page === 'apartment') return name ?? '';
-  return page === 'book' ? `${name}: ${texts.pages.book}` : texts.pages[page];
+  if (page === 'book') return `${name}: ${texts.pages.book}`;
+  return route.data['content']?.title ?? texts.pages[page];
 }
 
 @Component({

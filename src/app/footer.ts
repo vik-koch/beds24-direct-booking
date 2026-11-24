@@ -50,7 +50,8 @@ export class Footer {
   protected readonly contact = site.contact;
   protected readonly choice = inject(Choice);
   private readonly language = inject(LANGUAGE);
-  protected readonly links = (['faq', 'imprint', 'privacy', 'terms', 'credits'] as const).map(
-    (page) => ({ text: this.texts.pages[page], path: address(this.language, page) }),
-  );
+  protected readonly links = site.footer.map((page) => ({
+    text: this.texts.pages[page],
+    path: address(this.language, page),
+  }));
 }

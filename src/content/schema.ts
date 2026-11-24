@@ -17,7 +17,7 @@ const taken = [
   'amenities',
   'map-more',
 ];
-const anchor = segment.refine(
+export const anchor = segment.refine(
   (value) => !taken.includes(value) && !value.startsWith('month-'),
   'taken by the pages: top, an id they hold, or month-…',
 );
@@ -162,6 +162,9 @@ const seasons = z
       });
   });
 
+// The pages the application has, beside the home page and the apartments' pages.
+export const fixedPages = ['apartments', 'book', 'confirmation', 'credits'];
+
 // The limits docs/content.md lists, each with its reason there.
 export const siteSchema = z.strictObject({
   name: text.refine((value) => letters(value) <= 15, 'at most 15 characters'),
@@ -222,6 +225,17 @@ export const siteSchema = z.strictObject({
     .refine((value) => Object.keys(value).length > 0, 'lists nothing: leave the contact out')
     .optional(),
   map: map.optional(),
+  // The content pages, each with a file per language in pages/, its address and its link text in
+  // the texts; and the footer's links in their order: content pages or the picture credits.
+  pages: z
+    .array(
+      segment.refine(
+        (key) => !fixedPages.includes(key),
+        `taken by a page of the site: ${fixedPages.join(', ')}`,
+      ),
+    )
+    .refine((list) => unique(list, (key) => key), 'a page is listed twice'),
+  footer: z.array(segment).refine((list) => unique(list, (key) => key), 'a page is listed twice'),
 });
 
 // An apartment's floor plan: an SVG drawing in pictures/, its alternative text in each of the
@@ -287,17 +301,10 @@ export const apartmentSchema = z.strictObject({
 });
 
 export const textsSchema = z.strictObject({
-  paths: z.strictObject({
-    apartments: segment,
-    book: segment,
-    confirmation: segment,
-    faq: segment,
-    about: segment,
-    imprint: segment,
-    privacy: segment,
-    terms: segment,
-    credits: segment,
-  }),
+  // And one for each content page by its key; the content script checks the keys.
+  paths: z
+    .strictObject({ apartments: segment, book: segment, confirmation: segment, credits: segment })
+    .catchall(segment),
   anchors: z.strictObject({
     weeks: anchor,
     apartments: anchor,
@@ -344,16 +351,8 @@ export const textsSchema = z.strictObject({
     features: z.record(segment, text),
     button: text,
   }),
-  pages: z.strictObject({
-    book: text,
-    confirmation: text,
-    faq: text,
-    about: text,
-    imprint: text,
-    privacy: text,
-    terms: text,
-    credits: text,
-  }),
+  // Each page's name in a link, and a content page's too, by its key.
+  pages: z.strictObject({ book: text, confirmation: text, credits: text }).catchall(text),
   credits: z.strictObject({
     lead: text,
     author: text,
@@ -508,6 +507,11 @@ export interface Plan {
     points: [number, number][];
     label: [number, number];
   }[];
+}
+// A content page as the page shows it: its title, and the rest of its file as HTML.
+export interface ContentPage {
+  title: string;
+  html: string;
 }
 export type Apartment = { slug: string; pictures: Picture[]; plan?: Plan } & Omit<
   z.infer<typeof apartmentSchema>,

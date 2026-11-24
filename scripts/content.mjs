@@ -12,9 +12,12 @@ import {
 import { join, resolve } from 'node:path';
 import * as lucide from '@ng-icons/lucide';
 import { JSDOM } from 'jsdom';
+import { marked } from 'marked';
 import { groups } from '../src/content/map-kinds.ts';
 import {
+  anchor,
   apartmentSchema,
+  fixedPages,
   inBox,
   lucideName,
   prefix,
@@ -97,6 +100,75 @@ function readPlan(dir, file, plan) {
       throw new Error(`${file}\n  plan.zones.${index}.label: outside the drawing's viewBox`);
   });
   return viewBox;
+}
+
+// The elements a content page styles, with the attributes each may have.
+const pageElements = {
+  ...Object.fromEntries(
+    'p h2 h3 h4 ul li blockquote hr br strong em table thead tbody tr'
+      .split(' ')
+      .map((name) => [name, []]),
+  ),
+  ol: ['start'],
+  th: ['align'],
+  td: ['align'],
+  a: ['href'],
+  details: ['id'],
+  summary: [],
+};
+
+// A content page from its Markdown: the title of the one # heading it opens with, and the rest
+// as HTML of the elements the page styles. The file is the deployment's own, so what the page
+// would not style is refused rather than dropped.
+export function readPage(file, markdown) {
+  const fail = (reason) => new Error(`${file}\n  ${reason}`);
+  const body = parser.parseFromString(marked.parse(markdown), 'text/html').body;
+  const title = body.firstElementChild;
+  if (title?.localName !== 'h1') throw fail('starts with its title, a # heading');
+  title.remove();
+  const ids = new Set();
+  for (const element of body.querySelectorAll('*')) {
+    const name = element.localName;
+    if (!Object.hasOwn(pageElements, name))
+      throw fail(
+        name === 'h1' ? 'has a second # heading' : `has <${name}>, which a page does not show`,
+      );
+    for (const { name: attribute, value } of element.attributes)
+      if (!pageElements[name].includes(attribute))
+        throw fail(`has ${attribute} on <${name}>, which a page does not take`);
+      else if (attribute === 'href' && !/^(https?:|mailto:|tel:|\/(?!\/))/.test(value))
+        throw fail(
+          `links to ${value}: give a path from the root, or an http(s), mailto or tel link`,
+        );
+    if (name === 'summary' && element !== element.parentElement.firstElementChild)
+      throw fail('has a <summary> that does not open a <details>');
+    if (name === 'details') {
+      const id = element.id;
+      if (element.firstElementChild?.localName !== 'summary')
+        throw fail('has a <details> that does not open with a <summary>');
+      if (!anchor.safeParse(id).success)
+        throw fail(
+          `has a <details> without an id of lower-case words, or one the pages use: ${id}`,
+        );
+      if (ids.has(id)) throw fail(`has the id ${id} twice`);
+      ids.add(id);
+    }
+  }
+  // Markdown inside an HTML block needs a blank line before it, or it stays bare text.
+  for (const parent of [body, ...body.querySelectorAll('details')])
+    for (const node of parent.childNodes)
+      if (node.nodeType === node.TEXT_NODE && node.textContent.trim())
+        throw fail(
+          `has text outside a paragraph: ${node.textContent.trim().slice(0, 40)}; leave a blank line after <summary>`,
+        );
+  // Wider than the column, a table scrolls in a frame of its own.
+  for (const table of body.querySelectorAll('table')) {
+    const frame = body.ownerDocument.createElement('div');
+    frame.className = 'table-frame';
+    table.replaceWith(frame);
+    frame.append(table);
+  }
+  return { title: title.textContent.trim(), html: body.innerHTML.trim() };
 }
 
 // With a map every apartment has its point inside the box; without one none has a point. Its
@@ -300,6 +372,43 @@ export function readContent(dir) {
         `${join(dir, 'site.json')}\n  map.places.${index}.icon: ${icon} is not a Lucide icon`,
       );
   });
+  // Each content page has its address, its link text and its file in every language, and the
+  // footer links only to pages the site has.
+  site.footer.forEach((key, index) => {
+    if (key !== 'credits' && !site.pages.includes(key))
+      throw new Error(`${join(dir, 'site.json')}\n  footer.${index}: ${key} is not a page`);
+  });
+  const pages = {};
+  for (const tag of site.languages) {
+    const file = join(dir, `texts.${tag}.json`);
+    const { paths } = texts[prefix(tag)];
+    for (const part of ['paths', 'pages']) {
+      const named = texts[prefix(tag)][part];
+      for (const key of new Set([...site.pages, ...Object.keys(named)]))
+        if (!fixedPages.includes(key) && (!site.pages.includes(key) || !Object.hasOwn(named, key)))
+          throw new Error(
+            `${file}\n  ${part}.${key}: ${site.pages.includes(key) ? 'missing' : 'a page site.json does not list'}`,
+          );
+    }
+    // The booking step's address lies below an apartment's.
+    const top = Object.entries(paths).filter(([key]) => key !== 'book');
+    for (const [key, path] of top)
+      if (top.find((other) => other[1] === path)[0] !== key)
+        throw new Error(`${file}\n  paths.${key}: ${path} is another page's address too`);
+    pages[prefix(tag)] = Object.fromEntries(
+      site.pages.map((key) => {
+        const page = join(dir, 'pages', `${key}.${tag}.md`);
+        if (!existsSync(page)) throw new Error(`${page}\n  (file): missing`);
+        return [key, readPage(page, readFileSync(page, 'utf8'))];
+      }),
+    );
+  }
+  if (existsSync(join(dir, 'pages')))
+    for (const file of readdirSync(join(dir, 'pages')))
+      if (!site.pages.some((key) => site.languages.some((tag) => file === `${key}.${tag}.md`)))
+        throw new Error(
+          `${join(dir, 'pages', file)}\n  (file): not a page and language site.json lists`,
+        );
   // Every language renders the same elements, so a change of language finds the reader's place.
   const [first, ...others] = site.languages;
   for (const tag of others) {
@@ -341,7 +450,7 @@ export function readContent(dir) {
     const { paths, anchors } = texts[code];
     return { tag, code, name: name[0].toLocaleUpperCase(tag) + name.slice(1), paths, anchors };
   });
-  return { site: { ...site, languages, apartments, ...(map && { map }) }, texts };
+  return { site: { ...site, languages, apartments, ...(map && { map }) }, texts, pages };
 }
 
 const mapColors = [
@@ -406,7 +515,7 @@ function readMap(dir, map, apartments) {
 }
 
 export async function writeContent(dir, out, cache) {
-  const { site, texts } = readContent(dir);
+  const { site, texts, pages } = readContent(dir);
   rmSync(out, { recursive: true, force: true });
   mkdirSync(out, { recursive: true });
   // The apartments' pictures, plans and the heroes are served only as their converted files,
@@ -495,6 +604,20 @@ export async function writeContent(dir, out, cache) {
   writeFileSync(
     join(out, 'texts.ts'),
     `import type { Texts } from '../schema';\n\nexport const loadTexts: Record<string, () => Promise<Texts>> = {\n${loaders.join('\n')}\n};\n`,
+  );
+  // A module per content page and language, which only its page loads.
+  for (const [code, list] of Object.entries(pages))
+    for (const [key, page] of Object.entries(list))
+      writeFileSync(join(out, `page.${code}.${key}.ts`), module('ContentPage', page));
+  const pageLoaders = Object.entries(pages).map(
+    ([code, list]) =>
+      `  ${code}: {\n${Object.keys(list)
+        .map((key) => `    '${key}': () => import('./page.${code}.${key}').then((m) => m.default),`)
+        .join('\n')}\n  },`,
+  );
+  writeFileSync(
+    join(out, 'pages.ts'),
+    `import type { ContentPage } from '../schema';\n\nexport const loadPage: Record<string, Record<string, () => Promise<ContentPage>>> = {\n${pageLoaders.join('\n')}\n};\n`,
   );
   // The fonts are served unhashed at /fonts/, so that the page can preload them before the
   // stylesheet asks for them.

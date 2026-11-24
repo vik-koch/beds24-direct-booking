@@ -314,62 +314,6 @@ type Fold = ReturnType<typeof fold>;
         margin-top: -0.5rem;
       }
 
-      .prose {
-        /* Keeps its children's outer margins, so its height is all a fold has to open to. */
-        display: flow-root;
-        max-width: 40rem;
-
-        h2 {
-          margin: 1.25rem 0 0.375rem;
-          font-size: 1.1875rem;
-          font-weight: 500;
-          letter-spacing: normal;
-
-          &:first-child {
-            margin-top: 0;
-          }
-        }
-
-        p,
-        ul,
-        ol,
-        blockquote {
-          margin-bottom: 0.625rem;
-        }
-
-        ul,
-        ol {
-          padding-left: 1.25rem;
-        }
-
-        ul {
-          list-style: disc;
-        }
-
-        ol {
-          list-style: decimal;
-        }
-
-        blockquote {
-          padding-left: 1rem;
-          border-left: 2px solid var(--color-line);
-        }
-
-        hr {
-          margin: 1rem 0;
-          border-color: var(--color-line);
-        }
-
-        strong {
-          font-weight: 600;
-        }
-
-        a {
-          color: var(--color-accent);
-          font-weight: 500;
-        }
-      }
-
       /* A block cut to a height with a fade until its button opens it; the height moves to the
          content's measured one (--full). Without scripts there is no button, so nothing is cut. */
       .fold {
