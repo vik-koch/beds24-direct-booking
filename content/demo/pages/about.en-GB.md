@@ -3,9 +3,9 @@
 > Firn & Farn is made up: this website is a demo, and the company, its apartments and its contact
 > details are examples.
 
-Firn & Farn Appartements GmbH owns a house in Saalbach and lets its three apartments itself. We took
-the house over in 2014 and rebuilt it floor by floor, in wood from the region: stone pine, larch and
-maple give the apartments their names.
+Firn & Farn Appartements GmbH owns two houses in Saalbach, Haus Firn and Haus Farn, and lets three
+apartments in them itself. We took the houses over in 2014 and rebuilt them floor by floor, in wood
+from the region: stone pine, larch and maple give the apartments their names.
 
 ![Saalbach in summer, seen from a hiking trail on the Kohlmaiskopf: a meadow with a hay hut in front, the village in the valley, and wooded mountains with alpine pastures under a blue sky behind](pictures/saalbach-summer.webp)
 
@@ -15,7 +15,7 @@ maple give the apartments their names.
 - **Always up to date:** the free weeks and prices come straight from our booking system.
 - **Saturday to Saturday:** a week is our rhythm, in winter as in summer.
 
-We look after the house ourselves. When you arrive and during your stay, you reach us in person.
+We look after the houses ourselves. When you arrive and during your stay, you reach us in person.
 
 ## Contact
 
