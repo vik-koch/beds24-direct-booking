@@ -211,7 +211,7 @@ test('the calendar shows the list’s month and week, at the same height', async
   await week.click();
   await expect(page).toHaveURL(/arrival=\d{4}-\d\d-\d\d/);
   const arrival = new URL(page.url()).searchParams.get('arrival')!;
-  await page.locator('.views').getByTitle('Kalender').click();
+  await page.locator('app-booking-panel .views').getByTitle('Kalender').click();
   await expect(monthName(page)).toHaveText(name);
   expect(
     await month(page)
@@ -234,7 +234,7 @@ test('the calendar shows the list’s month and week, at the same height', async
   );
   // Six weeks in both views, the days of the months around half seen.
   await expect(month(page).locator('[role=row]')).toHaveCount(7);
-  await page.locator('.views').getByTitle('Liste').click();
+  await page.locator('app-booking-panel .views').getByTitle('Liste').click();
   await expect(month(page).locator('.week [aria-selected=true]')).toHaveCount(1);
 });
 
@@ -279,7 +279,7 @@ test('the months page by their buttons, slide in from their side and keep the fo
   await expect.poll(moves).toEqual(['0px', `${width}px`]);
   expect(await moved).toHaveLength(1);
   await expect(monthName(page)).not.toHaveText(first);
-  await page.locator('.views').getByTitle('Calendar').click();
+  await page.locator('app-booking-panel .views').getByTitle('Calendar').click();
   const paged = below();
   await back.click();
   expect(await paged).toHaveLength(1);
@@ -372,7 +372,7 @@ test('a week or a day of the month before or after chooses its week and shows it
   await expect(chosen(page)).toHaveAttribute('data-date', arrival!);
   await expect(page).toHaveURL(new RegExp(`arrival=${arrival}`));
   // In the calendar, a free week's first day in the month after.
-  await page.locator('.views').getByTitle('Calendar').click();
+  await page.locator('app-booking-panel .views').getByTitle('Calendar').click();
   const day = month(page).locator('.day.outside:has(.start)');
   for (let i = 0; i < 12 && !(await day.count()); i++) await toNext(page);
   const start = await day.last().getAttribute('data-date');
@@ -393,8 +393,8 @@ test('a change of language or a reload keeps the view and the month', async ({ p
   await openNext(page, '/de/wohnungen/laerche');
   // A week chosen, then the calendar and another month shown.
   await (await firstFree(page)).click();
-  await page.locator('.views').getByTitle('Kalender').click();
-  await expect(page.locator('.views')).toHaveAttribute('data-view', 'calendar');
+  await page.locator('app-booking-panel .views').getByTitle('Kalender').click();
+  await expect(page.locator('app-booking-panel .views')).toHaveAttribute('data-view', 'calendar');
   await expect(page).not.toHaveURL(/view=/);
   const before = await month(page).getAttribute('data-month');
   await next(page).click();
@@ -888,8 +888,8 @@ test(
   async ({ page, browser }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await open(page, '/en/apartments/laerche');
-    await page.locator('.views').getByTitle('Calendar').click();
-    await expect(page.locator('.views')).toHaveAttribute('data-view', 'calendar');
+    await page.locator('app-booking-panel .views').getByTitle('Calendar').click();
+    await expect(page.locator('app-booking-panel .views')).toHaveAttribute('data-view', 'calendar');
     const [cookie] = (await page.context().cookies()).filter(({ name }) => name === 'view');
     expect(cookie.value).toBe('calendar');
     expect((cookie.expires * 1000 - Date.now()) / 864e5).toBeCloseTo(30, 0);
@@ -931,8 +931,8 @@ test(
     await expect(fresh.locator('html')).not.toHaveAttribute('data-started');
     await later.close();
     // The list is the default again, and nothing is kept for it.
-    await page.locator('.views').getByTitle('List').click();
-    await expect(page.locator('.views')).toHaveAttribute('data-view', 'list');
+    await page.locator('app-booking-panel .views').getByTitle('List').click();
+    await expect(page.locator('app-booking-panel .views')).toHaveAttribute('data-view', 'list');
     expect((await page.context().cookies()).filter(({ name }) => name === 'view')).toEqual([]);
     await page.reload();
     await expect(page.getByRole('radio', { name: 'List' })).toBeChecked();
@@ -946,7 +946,7 @@ test('a page restored from the browser’s cache takes the view chosen since', a
   await page.evaluate(() =>
     dispatchEvent(new PageTransitionEvent('pageshow', { persisted: true })),
   );
-  await expect(page.locator('.views')).toHaveAttribute('data-view', 'calendar');
+  await expect(page.locator('app-booking-panel .views')).toHaveAttribute('data-view', 'calendar');
 });
 
 // One test per width: six scans in one come too close to the test's time limit.
@@ -962,7 +962,7 @@ for (const width of [320, 1280])
         // The fade starts after the view's render, so a check before it would find none.
         await page.waitForFunction(
           (view) =>
-            document.querySelector(`.views[data-view="${view}"]`) &&
+            document.querySelector(`app-booking-panel .views[data-view="${view}"]`) &&
             !document.getAnimations().length,
           place,
         );
@@ -976,7 +976,7 @@ for (const width of [320, 1280])
           .evaluateAll((rows) => rows.every((row) => row.scrollWidth <= row.clientWidth)),
         'rows fit',
       ).toBe(true);
-      await page.locator('.views').getByTitle('Calendar').click();
+      await page.locator('app-booking-panel .views').getByTitle('Calendar').click();
       await scan('calendar');
       await page.locator('#adults').click();
       const { violations } = await new AxeBuilder({ page })

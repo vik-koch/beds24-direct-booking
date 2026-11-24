@@ -7,7 +7,25 @@
       "alt": {
         "it": "Immagine di prova in formato 4:3",
         "nl-BE": "Testafbeelding in 4:3"
-      }
+      },
+      "zones": ["camera"]
     }
-  ]
+  ],
+  "plan": {
+    "file": "pictures/plan.svg",
+    "alt": { "it": "Planimetria di prova", "nl-BE": "Testplattegrond" },
+    "zones": [
+      {
+        "key": "camera",
+        "name": { "it": "Camera", "nl-BE": "Kamer" },
+        "points": [
+          [10, 10],
+          [390, 10],
+          [390, 290],
+          [10, 290]
+        ],
+        "label": [200, 150]
+      }
+    ]
+  }
 }

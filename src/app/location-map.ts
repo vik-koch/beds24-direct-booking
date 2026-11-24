@@ -659,20 +659,9 @@ function flavor(p: ReturnType<typeof palette>): Flavor {
         display: none;
       }
 
+      /* The first name stands in line with the legend; its pill reaches into the padding. */
       .map-choices {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.25rem;
-        /* The first name stands in line with the legend; its pill reaches into the padding. */
         margin: 0.5rem -0.75rem 0;
-
-        span {
-          display: grid;
-          place-items: center;
-          min-height: var(--size-control-small);
-          padding: 0 0.75rem;
-          border-radius: var(--radius-control);
-        }
       }
 
       /* Folded, the other places take no room and the panel's gap above them is taken back. */

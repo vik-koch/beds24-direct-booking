@@ -283,6 +283,62 @@
     border-radius: var(--radius-control);
   }
 
+  /* Two icons in a pill, the second chosen by the track's data-view; the accent part glides to
+     the chosen one, as in the season switch. The booking panel's list and calendar, the viewer's
+     photos and floor plan. */
+  .views {
+    grid-template-columns: repeat(2, var(--narrow));
+
+    label {
+      z-index: 1;
+      display: grid;
+      place-items: center;
+      border-radius: var(--radius-control);
+      color: var(--color-ink-soft);
+      cursor: pointer;
+      transition: color 0.3s ease;
+    }
+
+    ng-icon {
+      --ng-icon__size: 1.125rem;
+    }
+
+    &:not([data-view='calendar'], [data-view='plan']) label:first-of-type,
+    &:is([data-view='calendar'], [data-view='plan']) label:last-of-type {
+      color: var(--color-on-accent);
+    }
+
+    /* The radios are the labels round them, which draw their rings. */
+    input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    label:has(:focus-visible) {
+      outline: var(--focus-ring);
+      outline-offset: 4px;
+    }
+  }
+
+  .views-knob {
+    position: absolute;
+    inset-block: var(--pad);
+    left: var(--pad);
+    width: var(--narrow);
+    border-radius: var(--radius-control);
+    background: var(--color-accent);
+    transition: translate 0.32s cubic-bezier(0.65, 0, 0.35, 1);
+
+    :is([data-view='calendar'], [data-view='plan']) > & {
+      translate: 100% 0;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
+  }
+
   .season-switch {
     grid-template-columns: var(--narrow) auto;
     background: var(--color-surface);
@@ -691,8 +747,9 @@
     }
   }
 
-  /* A small label on a picture: a generated one says so, the gallery's strip counts. */
-  :is(.ai-label, .strip-count) {
+  /* A small label on a picture: a generated one says so, the gallery's strip counts, the
+     viewer names a picture's room. */
+  :is(.ai-label, .strip-count, .viewer-room) {
     position: absolute;
     padding: 0.1875rem 0.625rem;
     border-radius: var(--radius-control);
@@ -714,6 +771,20 @@
 
     ng-icon {
       --ng-icon__size: 0.875rem;
+    }
+  }
+
+  /* A caption's note that its picture was generated, in the viewer and the plan's view. */
+  .ai-note {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3125rem;
+    margin-left: 0.25rem;
+    white-space: nowrap;
+
+    /* Only the icon is soft, as beside other text; the note's words keep the caption's ink. */
+    ng-icon {
+      --ng-icon__color: var(--color-ink-soft);
     }
   }
 
@@ -932,6 +1003,21 @@
 
     @media (min-width: 48rem) {
       display: none;
+    }
+  }
+
+  /* Names chosen as words, a pill once chosen: the map's apartments. */
+  .map-choices {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+
+    span {
+      display: grid;
+      place-items: center;
+      min-height: var(--size-control-small);
+      padding: 0 0.75rem;
+      border-radius: var(--radius-control);
     }
   }
 

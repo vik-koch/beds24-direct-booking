@@ -26,6 +26,10 @@ export const placesOf = (pictures: Picture[], seasons: readonly SeasonName[]): S
   });
 };
 
+// The picture a place shows in a season: its own, or the one for both.
+export const seenIn = (place: Shown[], season: SeasonName) =>
+  place.find((shown) => !shown.season || shown.season === season)!.picture;
+
 // A converted picture's files for an img's srcset.
 export const srcset = (picture: Pick<Picture, 'sources'>) =>
   picture.sources.map(({ url, width }) => `${url} ${width}w`).join(', ');

@@ -153,6 +153,7 @@ export function readContent(dir) {
       throw new Error(
         `${join(dir, 'apartments', file)}\n  (file): not an apartment site.json lists`,
       );
+  const listed = seasonNames.filter((name) => site.seasons[name]);
   // Each picture's alternative text, the plan's and its zones' names are given in exactly the
   // site's languages.
   const inLanguages = (file, path, texts) => {
@@ -175,9 +176,13 @@ export function readContent(dir) {
           );
     });
     if (!plan) continue;
+    // In each season: a room is shown by the season's own picture.
     zones.forEach((key, index) => {
-      if (!pictures.some((picture) => picture.zones?.includes(key)))
-        throw new Error(`${file}\n  plan.zones.${index}: no picture names ${key}`);
+      for (const name of listed)
+        if (!pictures.some((p) => p.zones?.includes(key) && (!p.season || p.season === name)))
+          throw new Error(
+            `${file}\n  plan.zones.${index}: no picture ${listed.length > 1 ? `in ${name} ` : ''}names ${key}`,
+          );
     });
     inLanguages(file, 'plan.alt', plan.alt);
     plan.zones.forEach(({ name }, index) => inLanguages(file, `plan.zones.${index}.name`, name));
@@ -186,7 +191,6 @@ export function readContent(dir) {
   const texts = Object.fromEntries(
     site.languages.map((tag) => [prefix(tag), read(`texts.${tag}.json`, textsSchema)]),
   );
-  const listed = seasonNames.filter((name) => site.seasons[name]);
   // The texts name exactly the seasons site.json lists, in the switch and in the hero.
   for (const tag of site.languages)
     for (const part of ['seasons', 'hero'])

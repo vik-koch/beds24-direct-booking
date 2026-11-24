@@ -146,7 +146,9 @@
     "position": "Foto {index} van {count}",
     "previous": "Vorige foto",
     "next": "Volgende foto",
-    "more": { "one": "+{count} foto", "other": "+{count} foto's" }
+    "more": { "one": "+{count} foto", "other": "+{count} foto's" },
+    "plan": "Plattegrond",
+    "photos": "Foto's"
   },
   "amenities": {
     "areas": { "comfort": "Comfort" },

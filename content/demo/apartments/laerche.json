@@ -80,8 +80,7 @@
       "alt": {
         "de-AT": "Sonniger Holzbalkon mit Klapptisch und zwei Stühlen mit rostroten Polstern, Blick über Dächer des Orts und einen bewaldeten Berghang.",
         "en-GB": "Sunny wooden balcony with a folding table and two rust-cushioned chairs overlooking village roofs and a forested mountain slope."
-      },
-      "zones": ["balcony"]
+      }
     },
     {
       "file": "pictures/laerche-5-winter.webp",
@@ -90,8 +89,7 @@
       "alt": {
         "de-AT": "Überdachter Holzbalkon im Winter mit leerem Klapptisch, zusammengeklappten Stühlen und Blick über verschneite Dächer und Wald.",
         "en-GB": "Covered wooden balcony in winter with a bare folding table, folded chairs and a view over snowy roofs and forest."
-      },
-      "zones": ["balcony"]
+      }
     }
   ],
   "plan": {
@@ -144,17 +142,6 @@
           [372, 620]
         ],
         "label": [498, 570]
-      },
-      {
-        "key": "balcony",
-        "name": { "de-AT": "Balkon", "en-GB": "Balcony" },
-        "points": [
-          [680, 650],
-          [980, 650],
-          [980, 810],
-          [680, 810]
-        ],
-        "label": [830, 785]
       }
     ]
   }

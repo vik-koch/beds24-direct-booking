@@ -114,7 +114,7 @@ type Fold = ReturnType<typeof fold>;
               }
             </ul>
           }
-          <app-gallery [pictures]="apartment.pictures" />
+          <app-gallery [pictures]="apartment.pictures" [plan]="apartment.plan" />
           @if (!listing) {
             <p class="text-ink-soft">{{ texts.apartment.unavailable }}</p>
           }

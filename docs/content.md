@@ -89,9 +89,10 @@ content. The application has no wording, no colour and no typeface of its own. T
   each language, its polygon's corners as `[x, y]` pairs, at least three, and the `label` point
   `[x, y]` its name is centred on, both in the drawing's coordinates and inside its `viewBox`. A
   picture names the zones it is a picture of, `"zones": ["kitchen", "dining"]`, or none, not a zone
-  seen only through a door or at its edge, since choosing a zone shows its pictures; every zone is
-  shown by at least one picture. The drawing is served at `/pictures/apartments/` under a name that
-  changes with it.
+  seen only through a door or at its edge, since choosing a zone shows its pictures; in each season
+  the site lists, every zone is shown by at least one picture, and a picture without a season counts
+  in every season. The drawing is served at `/pictures/apartments/` under a name that changes with
+  it.
 
 - **The apartment page** (`apartment` in a texts file) is the page's wording: its headings, the
   facts line (`guests` and `bedrooms` take `{count}`, with a `one` and an `other` form), and the
@@ -105,7 +106,8 @@ content. The application has no wording, no colour and no typeface of its own. T
   viewer's buttons, and `more` for the last cell of the mosaic when pictures follow beyond it,
   taking `{count}` with a `one` and an `other` form. The mosaic shows 8, 5 or 3 cells, or the first
   picture alone, by the number of pictures; the viewer shows each picture whole with its alternative
-  text below it.
+  text below it. With a floor plan, `plan` names it on its cell and its view and `photos` names the
+  pictures' view; the plan takes the mosaic's top right cell.
 - **The amenities** (`amenities` in `site.json`) sort Beds24's feature codes into areas for the
   apartment page, in their order:
   `{ "area": "kitchen", "icon": "cooking-pot", "codes": ["KITCHEN", "DISHWASHER"] }`, or a code

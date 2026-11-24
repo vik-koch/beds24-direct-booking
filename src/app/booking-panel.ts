@@ -427,18 +427,6 @@ const shownMonths = new InjectionToken('booking panel months', {
           line-height: 1.2;
         }
 
-        /* The view's radios are the labels round them, which draw their rings. */
-        input[type='radio'] {
-          position: absolute;
-          opacity: 0;
-          pointer-events: none;
-        }
-
-        label:has(:focus-visible) {
-          outline: var(--focus-ring);
-          outline-offset: 2px;
-        }
-
         h3 {
           font-size: 1.0625rem;
           font-weight: 500;
@@ -471,53 +459,10 @@ const shownMonths = new InjectionToken('booking panel months', {
         }
       }
 
-      /* Two icons in a pill; the accent part glides to the chosen one, as in the season switch. */
-      .views {
-        grid-template-columns: repeat(2, var(--narrow));
+      .booking .views {
         margin-block: -0.3125rem;
         margin-left: auto;
         background: var(--color-ground);
-
-        label {
-          z-index: 1;
-          display: grid;
-          place-items: center;
-          border-radius: var(--radius-control);
-          color: var(--color-ink-soft);
-          cursor: pointer;
-          transition: color 0.3s ease;
-        }
-
-        ng-icon {
-          --ng-icon__size: 1.125rem;
-        }
-
-        &[data-view='list'] label:first-of-type,
-        &[data-view='calendar'] label:last-of-type {
-          color: var(--color-on-accent);
-        }
-
-        label:has(:focus-visible) {
-          outline-offset: 4px;
-        }
-      }
-
-      .views-knob {
-        position: absolute;
-        inset-block: var(--pad);
-        left: var(--pad);
-        width: var(--narrow);
-        border-radius: var(--radius-control);
-        background: var(--color-accent);
-        transition: translate 0.32s cubic-bezier(0.65, 0, 0.35, 1);
-
-        [data-view='calendar'] > & {
-          translate: 100% 0;
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-          transition: none;
-        }
       }
 
       /* The seasons, and in each its months, lie in one place, so one can slide over another.

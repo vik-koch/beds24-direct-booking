@@ -1,5 +1,6 @@
 import {
   afterRenderEffect,
+  ChangeDetectorRef,
   Component,
   computed,
   ElementRef,
@@ -10,10 +11,18 @@ import {
   ViewEncapsulation,
 } from '@angular/core';
 import { NgIcon, provideIcons } from '@ng-icons/core';
-import { lucideChevronLeft, lucideChevronRight, lucideSparkles, lucideX } from '@ng-icons/lucide';
-import { placesOf, srcset, type Shown } from '../content/names';
-import type { Picture } from '../content/schema';
+import {
+  lucideChevronLeft,
+  lucideChevronRight,
+  lucideImages,
+  lucideLayoutDashboard,
+  lucideSparkles,
+  lucideX,
+} from '@ng-icons/lucide';
+import { placesOf, seenIn, srcset, type Shown } from '../content/names';
+import type { Picture, Plan } from '../content/schema';
 import { Files } from './files';
+import { PlanView } from './plan-view';
 import { Season } from './season';
 import { fill, LANGUAGE, TEXTS } from './texts';
 
@@ -21,16 +30,25 @@ import { fill, LANGUAGE, TEXTS } from './texts';
   encapsulation: ViewEncapsulation.None,
   selector: 'app-gallery',
   host: { '(document:keydown)': 'key($event)' },
-  imports: [Files, NgIcon],
-  providers: [provideIcons({ lucideChevronLeft, lucideChevronRight, lucideSparkles, lucideX })],
+  imports: [Files, NgIcon, PlanView],
+  providers: [
+    provideIcons({
+      lucideChevronLeft,
+      lucideChevronRight,
+      lucideImages,
+      lucideLayoutDashboard,
+      lucideSparkles,
+      lucideX,
+    }),
+  ],
   template: `
     <section class="gallery" [attr.aria-label]="texts.gallery.name" [attr.data-shown]="shown()">
-      <div class="tiles" (scroll)="stripped($event)">
+      <div #tiles class="tiles" (scroll)="stripped($event)">
         @for (place of places(); track $index; let first = $first) {
           <button
             type="button"
             class="tile"
-            [attr.data-beyond]="$index < shown() ? null : ''"
+            [attr.data-beyond]="cell($index) < shown() ? null : ''"
             (click)="open($index, $event.currentTarget)"
           >
             <!-- A season's picture, and its label, are fetched and shown in their season only:
@@ -60,12 +78,28 @@ import { fill, LANGUAGE, TEXTS } from './texts';
                 >
               }
             }
-            @if ($index === shown() - 1 && places().length > shown()) {
+            @if (cell($index) === shown() - 1 && rest() > 0) {
               <span class="more">{{ more() }}</span>
             }
           </button>
+          @if ($index === planCell() - 1 && mosaicPlan()) {
+            <button type="button" class="tile plan-tile" (click)="openPlan($event.currentTarget)">
+              <img [appFiles]="{ src: plan()!.url }" alt="" />
+              <span class="more">{{ texts.gallery.plan }}</span>
+            </button>
+          }
         }
       </div>
+      @if (plan()) {
+        <button
+          type="button"
+          class="plan-pill"
+          [attr.data-mosaic]="mosaicPlan() ? '' : null"
+          (click)="openPlan($event.currentTarget)"
+        >
+          <ng-icon name="lucideLayoutDashboard" aria-hidden="true" />{{ texts.gallery.plan }}
+        </button>
+      }
       @if (places().length > 1) {
         <p class="strip-count" aria-hidden="true">{{ strip() + 1 }} / {{ places().length }}</p>
       }
@@ -76,11 +110,38 @@ import { fill, LANGUAGE, TEXTS } from './texts';
       #dialog
       class="viewer"
       tabindex="-1"
+      [attr.data-view]="view()"
+      [attr.data-plan]="plan() ? '' : null"
       [attr.aria-label]="texts.gallery.name"
       (cancel)="close($event)"
       (close)="closed()"
     >
       <div class="viewer-stage">
+        @if (plan()) {
+          <div
+            class="views viewer-views"
+            role="radiogroup"
+            [attr.aria-label]="texts.gallery.name"
+            [attr.data-view]="view()"
+          >
+            <span class="views-knob" aria-hidden="true"></span>
+            @for (name of views; track name) {
+              <label [title]="texts.gallery[name]">
+                <input
+                  type="radio"
+                  name="gallery-view"
+                  [checked]="view() === name"
+                  (change)="show(name)"
+                  [attr.aria-label]="texts.gallery[name]"
+                />
+                <ng-icon
+                  [name]="name === 'photos' ? 'lucideImages' : 'lucideLayoutDashboard'"
+                  aria-hidden="true"
+                />
+              </label>
+            }
+          </div>
+        }
         <p class="viewer-count" aria-live="polite">{{ position(index()) }}</p>
         <button
           class="icon-button viewer-close"
@@ -90,6 +151,9 @@ import { fill, LANGUAGE, TEXTS } from './texts';
         >
           <ng-icon name="lucideX" aria-hidden="true" />
         </button>
+        @if (view() === 'plan' && plan(); as plan) {
+          <app-plan-view [plan]="plan" [room]="roomOf(index())?.key" (choose)="choose($event)" />
+        }
         @if (places().length > 1) {
           <button
             class="icon-button viewer-previous"
@@ -110,21 +174,25 @@ import { fill, LANGUAGE, TEXTS } from './texts';
         >
           @for (place of places(); track $index; let at = $index) {
             <div class="viewer-slide">
+              <!-- In the plan's view each picture is named by its room, if it is of one. -->
               @for (shown of place; track $index) {
                 @let picture = shown.picture;
-                <img
-                  class="season-picture"
-                  [attr.data-for]="shown.season"
-                  [appFiles]="{
-                    sizes: '100vw',
-                    srcset: srcset(picture),
-                    src: picture.sources[0].url,
-                  }"
-                  [width]="picture.width"
-                  [height]="picture.height"
-                  alt=""
-                  [attr.loading]="near(at) && shows(shown) ? 'eager' : 'lazy'"
-                />
+                <span class="viewer-shot season-picture" [attr.data-for]="shown.season">
+                  <img
+                    [appFiles]="{
+                      sizes: '100vw',
+                      srcset: srcset(picture),
+                      src: picture.sources[0].url,
+                    }"
+                    [width]="picture.width"
+                    [height]="picture.height"
+                    alt=""
+                    [attr.loading]="near(at) && shows(shown) ? 'eager' : 'lazy'"
+                  />
+                  @if (roomIn(picture); as room) {
+                    <span class="viewer-room">{{ room.name[language.code] }}</span>
+                  }
+                </span>
               }
             </div>
           }
@@ -249,6 +317,45 @@ import { fill, LANGUAGE, TEXTS } from './texts';
         }
       }
 
+      /* The plan's cell: the whole plan on oak, so that the cell keeps its square. Not in the
+         strip, where the pill stands for it. */
+      .plan-tile {
+        display: none;
+        background: var(--color-oak);
+
+        img {
+          padding: 0.5rem 0.5rem 3rem;
+          object-fit: contain;
+        }
+      }
+
+      /* Opposite the strip's count, and on a mosaic of one picture. */
+      .plan-pill {
+        position: absolute;
+        bottom: 0.75rem;
+        left: 0.75rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        min-height: var(--size-control-small);
+        padding: 0 0.875rem 0 0.625rem;
+        border-radius: var(--radius-control);
+        background: var(--color-surface);
+        font-size: 0.9375rem;
+        font-weight: 500;
+        box-shadow: var(--shadow-card);
+        cursor: pointer;
+        transition: color 0.2s;
+
+        &:hover {
+          color: var(--color-accent);
+        }
+
+        ng-icon {
+          --ng-icon__size: 1rem;
+        }
+      }
+
       /* Beside a 4:3 picture, columns of two squares. The picture's width is solved from the
          gallery's, so that a square plus a gap is half its height. Square cells, so that a ring
          around one fits it; the gaps leave it room. */
@@ -319,6 +426,14 @@ import { fill, LANGUAGE, TEXTS } from './texts';
         .strip-count {
           display: none;
         }
+
+        .plan-tile {
+          display: block;
+        }
+
+        .plan-pill[data-mosaic] {
+          display: none;
+        }
       }
 
       /* The viewer: the picture in a 4:3 frame on the page's own ground, its buttons beside it, its
@@ -380,25 +495,86 @@ import { fill, LANGUAGE, TEXTS } from './texts';
         }
       }
 
-      /* The count and the close button stand over the picture and its buttons, not in the screen's
-         far corners; all of them are centred together. */
+      /* The pictures, their buttons and the plan centred together below a row kept for the count.
+         The stage is the corners' box: as fixed, they would follow the opening scale's box. */
       .viewer-stage {
+        position: relative;
         display: grid;
-        grid-template-columns: repeat(3, auto);
+        grid-template: var(--size-control) auto / repeat(3, auto);
         place-content: center;
         align-items: center;
         row-gap: 0.75rem;
         container-type: size;
+
+        > * {
+          grid-row: 2;
+        }
       }
 
       .viewer-count {
         grid-area: 1 / 1 / 2 / -1;
+        justify-self: center;
         font-size: 0.9375rem;
       }
 
-      .viewer-close {
-        grid-area: 1 / 1 / 2 / -1;
-        justify-self: end;
+      .viewer-views {
+        background: var(--color-surface);
+      }
+
+      /* The switch and the close button in the screen's top corners, the same in every viewer; the
+         count between them, or in the switch's corner without a plan. On a phone they stay in the
+         bar, which both views share. */
+      @media (width >= 48rem) {
+        /* Without a grid area, so that their box is the stage's, not a cell's. */
+        .viewer :is(.viewer-views, .viewer-close),
+        .viewer:not([data-plan]) .viewer-count {
+          position: absolute;
+          top: 0;
+          grid-area: auto;
+        }
+
+        .viewer :is(.viewer-views, .viewer-count) {
+          left: 0;
+        }
+
+        .viewer-count {
+          line-height: var(--size-control);
+        }
+
+        .viewer .viewer-close {
+          right: 0;
+        }
+      }
+
+      /* The plan's view: the plan left of the pictures' buttons and frame, each half of the room
+         they leave. */
+      @media (width >= 48rem) {
+        .viewer[data-view='plan'] {
+          .viewer-stage {
+            --half: calc((100cqw - var(--beside) - 2.5rem) / 2);
+            grid-template-columns: repeat(4, auto);
+          }
+
+          .viewer-plan {
+            width: var(--half);
+            height: calc(100cqh - var(--size-control) - 0.75rem);
+            margin-inline-end: 2.5rem;
+          }
+
+          .viewer-track {
+            width: min(var(--half), (100cqh - var(--size-control) - 0.75rem) * 4 / 3);
+          }
+        }
+      }
+
+      /* A picture's room, on its corner, in the plan's view only. */
+      .viewer-room {
+        top: 0.75rem;
+        left: 0.75rem;
+
+        .viewer:not([data-view='plan']) & {
+          display: none;
+        }
       }
 
       .viewer-previous {
@@ -410,17 +586,21 @@ import { fill, LANGUAGE, TEXTS } from './texts';
       }
 
       /* The buttons' room is kept only where there are buttons; the row above takes its own. */
+      .viewer-stage {
+        --beside: 0px;
+
+        &:has(.viewer-previous) {
+          --beside: calc(2 * (var(--size-control) + 1rem));
+        }
+      }
+
       .viewer-track {
         display: flex;
-        width: min(100cqw - var(--beside, 0px), (100cqh - var(--size-control) - 0.75rem) * 4 / 3);
+        width: min(100cqw - var(--beside), (100cqh - var(--size-control) - 0.75rem) * 4 / 3);
         aspect-ratio: 4 / 3;
         overflow-x: auto;
         scroll-snap-type: x mandatory;
         scrollbar-width: none;
-
-        .viewer-previous + & {
-          --beside: 2 * (var(--size-control) + 1rem);
-        }
 
         &:focus-visible {
           outline: none;
@@ -428,7 +608,8 @@ import { fill, LANGUAGE, TEXTS } from './texts';
       }
 
       /* Each picture whole and at its own ratio, so that the ring fits it; the padding keeps the
-         ring inside the track, which would cut it. A place's two seasons lie in one cell. */
+         ring inside the track, which would cut it. A place's two seasons lie in one cell, each
+         with its room's name on it. */
       .viewer-slide {
         display: grid;
         flex: 0 0 100%;
@@ -436,11 +617,17 @@ import { fill, LANGUAGE, TEXTS } from './texts';
         place-items: center;
         padding: 5px;
         scroll-snap-align: start;
+        container-type: size;
+      }
+
+      .viewer-shot {
+        grid-area: 1 / 1;
+        position: relative;
 
         img {
-          grid-area: 1 / 1;
-          max-width: 100%;
-          max-height: 100%;
+          display: block;
+          max-width: 100cqw;
+          max-height: 100cqh;
           width: auto;
           height: auto;
 
@@ -501,19 +688,6 @@ import { fill, LANGUAGE, TEXTS } from './texts';
         .caption-in,
         .caption-out {
           animation: none;
-        }
-      }
-
-      .ai-note {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.3125rem;
-        margin-left: 0.25rem;
-        white-space: nowrap;
-
-        /* Only the icon is soft, as beside other text; the note's words keep the caption's ink. */
-        ng-icon {
-          --ng-icon__color: var(--color-ink-soft);
         }
       }
 
@@ -591,6 +765,25 @@ import { fill, LANGUAGE, TEXTS } from './texts';
           grid-area: 1 / 3;
         }
 
+        .viewer-views {
+          grid-area: 1 / 1;
+        }
+
+        /* The plan between the bar and the pictures, at most a third of the screen's height; the
+           viewer scrolls if they do not fit, without a scrollbar: the page's kept room for its own
+           would leave one short of the window's edge, and the cut picture shows there is more. */
+        .viewer[data-view='plan'][open] {
+          /* The track's row by its content: as an auto row it would take less than its 4:3. */
+          grid-template: auto auto max-content auto auto 1fr / auto 1fr auto;
+          overflow-y: auto;
+          scrollbar-width: none;
+        }
+
+        .viewer-plan {
+          grid-area: 2 / 1 / 3 / -1;
+          height: 35svh;
+        }
+
         /* Stretched by hand: a grid item with a ratio would otherwise take its content's width. */
         .viewer-track {
           grid-area: 3 / 1 / 4 / -1;
@@ -603,9 +796,10 @@ import { fill, LANGUAGE, TEXTS } from './texts';
           grid-area: 4 / 1;
         }
 
+        /* Across the row, under the buttons: the switch would widen the first column. */
         .viewer-count {
-          grid-area: 4 / 2;
-          text-align: center;
+          grid-area: 4 / 1 / 5 / -1;
+          align-self: center;
         }
 
         .viewer-next {
@@ -626,26 +820,50 @@ import { fill, LANGUAGE, TEXTS } from './texts';
 })
 export class Gallery {
   readonly pictures = input.required<Picture[]>();
+  readonly plan = input<Plan>();
   private readonly season = inject(Season);
   // Each place's pictures, one for both seasons or one per season, which the page's season
   // attribute shows; the caption takes the shown one's text.
   protected readonly places = computed(() => placesOf(this.pictures(), this.season.names));
   protected readonly shows = ({ season }: Shown) => !season || season === this.season.current();
-  protected readonly seen = (index: number) => this.places()[index].find(this.shows)!.picture;
+  protected readonly seen = (index: number) => seenIn(this.places()[index], this.season.current());
   protected readonly texts = inject(TEXTS);
   protected readonly language = inject(LANGUAGE);
   protected readonly srcset = srcset;
 
-  // The mosaic's cells: 8, 5, 3 or the first alone; its last cell counts the pictures beyond.
+  // The mosaic's cells: 8, 5, 3 or the first alone; its last cell counts the pictures beyond. A
+  // plan takes the top right square, where the mosaic has squares: the second cell, or the third
+  // in a mosaic of five. A mosaic of one picture, and the strip, have the plan's pill instead.
   protected readonly shown = computed(() => {
-    const count = this.places().length;
+    const count = this.places().length + (this.plan() ? 1 : 0);
     return [8, 5, 3].find((cells) => count >= cells) ?? 1;
   });
+  protected readonly mosaicPlan = computed(() => !!this.plan() && this.shown() >= 3);
+  protected readonly planCell = computed(() => (this.shown() === 5 ? 2 : 1));
+  protected readonly cell = (index: number) =>
+    this.mosaicPlan() && index >= this.planCell() ? index + 1 : index;
+  protected readonly rest = computed(
+    () => this.places().length - this.shown() + (this.mosaicPlan() ? 1 : 0),
+  );
   protected readonly more = computed(() => {
-    const rest = this.places().length - this.shown();
-    const plural = new Intl.PluralRules(this.language.tag).select(rest);
-    return fill(this.texts.gallery.more[plural === 'one' ? 'one' : 'other'], { count: rest });
+    const plural = new Intl.PluralRules(this.language.tag).select(this.rest());
+    return fill(this.texts.gallery.more[plural === 'one' ? 'one' : 'other'], {
+      count: this.rest(),
+    });
   });
+
+  // The viewer shows the pictures alone, or the plan beside them: the same pictures in the same
+  // order, each in the plan's view named by its room: the one chosen on the plan if it shows it,
+  // or else the first of the plan's it shows.
+  protected readonly views = ['photos', 'plan'] as const;
+  protected readonly view = signal<(typeof this.views)[number]>('photos');
+  private readonly chosen = signal<string | undefined>(undefined);
+  protected readonly roomIn = (picture: Picture) => {
+    const rooms = this.plan()?.zones.filter(({ key }) => picture.zones?.includes(key));
+    return rooms?.find(({ key }) => key === this.chosen()) ?? rooms?.[0];
+  };
+  protected readonly roomOf = (index: number) => this.roomIn(this.seen(index));
+  private readonly changes = inject(ChangeDetectorRef);
   protected readonly strip = signal(0);
   protected readonly index = signal(0);
   // The picture shown before, whose text fades out.
@@ -665,6 +883,7 @@ export class Gallery {
   private readonly dialog = viewChild.required<ElementRef<HTMLDialogElement>>('dialog');
   private readonly track = viewChild.required<ElementRef<HTMLElement>>('track');
   private readonly thumbs = viewChild<ElementRef<HTMLElement>>('thumbs');
+  private readonly tiles = viewChild.required<ElementRef<HTMLElement>>('tiles');
 
   constructor() {
     afterRenderEffect((onCleanup) => {
@@ -709,15 +928,41 @@ export class Gallery {
     this.strip.set(Math.round(strip.scrollLeft / strip.clientWidth));
   }
 
-  protected open(index: number, opener: EventTarget | null) {
-    this.opener = opener as HTMLElement;
+  protected open(
+    index: number,
+    opener: EventTarget | null,
+    view: (typeof this.views)[number] = 'photos',
+  ) {
+    this.view.set(view);
+    this.chosen.set(undefined);
     this.from.set(index);
     this.index.set(index);
+    this.opener = opener as HTMLElement;
     this.opened.set(true);
+    // Drawn in its view before it shows, so that its switch does not glide there.
+    this.changes.detectChanges();
     const dialog = this.dialog().nativeElement;
     dialog.showModal();
     dialog.focus();
     this.go(index, 0);
+  }
+
+  protected openPlan(opener: EventTarget | null) {
+    this.open(0, opener, 'plan');
+  }
+
+  // Both views show the same picture: the switch only adds or takes away the plan, and the track,
+  // resized, stays on it.
+  protected show(view: (typeof this.views)[number]) {
+    this.view.set(view);
+  }
+
+  // A room chosen on the plan: its first picture arrives as a step or a jump does.
+  protected choose(key: string) {
+    this.chosen.set(key);
+    const first = this.places().findIndex((_, index) => this.seen(index).zones?.includes(key));
+    if (first < 0 || first === this.index()) return;
+    this.go(first, Math.sign(first - this.index()));
   }
 
   // A neighbour slides in. A jump, over the ends too, is instant, and the picture arrives from
@@ -785,17 +1030,25 @@ export class Gallery {
     this.opened.set(false);
     for (const fade of this.fades) fade.cancel();
     this.fades = [];
+    // A plan's cell and pill stand for each other across the strip's width.
     const opener = this.opener!;
-    const more = opener.parentElement!.children[this.shown() - 1] as HTMLElement;
-    (opener.checkVisibility() ? opener : more).focus();
+    const tiles = this.tiles().nativeElement;
+    const other = opener.matches('.plan-tile, .plan-pill')
+      ? [...tiles.parentElement!.querySelectorAll<HTMLElement>('.plan-tile, .plan-pill')].find(
+          (one) => one.checkVisibility(),
+        )
+      : (tiles.children[this.shown() - 1] as HTMLElement);
+    (opener.checkVisibility() ? opener : other)?.focus();
   }
 
-  // Plain arrows only: with a modifier they are the browser's, such as Alt+Left for back. From a
-  // thumbnail the focus follows the picture.
+  // Plain arrows only: with a modifier they are the browser's, such as Alt+Left for back; on a
+  // radio they choose among its group. From a thumbnail the focus follows the picture.
   protected key(event: KeyboardEvent) {
     const by = { ArrowLeft: -1, ArrowRight: 1 }[event.key];
     const modified = event.altKey || event.ctrlKey || event.metaKey || event.shiftKey;
-    if (!by || modified || !this.dialog().nativeElement.open || this.places().length < 2) return;
+    const radio = (event.target as Element).matches('input[type=radio]');
+    if (!by || modified || radio || !this.dialog().nativeElement.open || this.places().length < 2)
+      return;
     event.preventDefault();
     this.step(by);
     const thumbs = this.thumbs()?.nativeElement;
