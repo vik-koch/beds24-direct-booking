@@ -17,6 +17,19 @@
   transition: background-color 0.2s;
 }
 
+/* The copied triggers take the baseline of the rule for text with an icon (styles.css), over their
+   utilities. */
+.spartan-navigation-menu-trigger,
+.spartan-select-trigger,
+.spartan-select-item,
+.spartan-accordion-trigger {
+  align-items: baseline;
+}
+
+.spartan-navigation-menu-trigger {
+  padding-block: calc((var(--size-control) - 1lh) / 2);
+}
+
 .spartan-navigation-menu-trigger:hover,
 .spartan-navigation-menu-trigger[data-state='open'],
 .spartan-navigation-menu-link:hover {
@@ -24,7 +37,7 @@
 }
 
 .spartan-navigation-menu-trigger-icon {
-  font-size: 1rem;
+  --ng-icon__size: 1rem;
   transition: rotate 0.2s;
 }
 
@@ -111,7 +124,6 @@
 
 .spartan-accordion-trigger,
 .prose summary {
-  align-items: center;
   gap: var(--row-gap);
   min-height: 3.5rem;
   padding: 0.5rem var(--row-padding);

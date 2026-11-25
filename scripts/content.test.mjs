@@ -1242,7 +1242,7 @@ test("a content page's title is its heading, and its tables scroll in a frame", 
   );
   assert.match(
     page.html,
-    /<details id="arrival">\n<summary>When\?<\/summary><p>From 4 pm\.<\/p>\n<\/details>$/,
+    /<details id="arrival">\n<summary><span>When\?<\/span><\/summary><p>From 4 pm\.<\/p>\n<\/details>$/,
   );
 });
 

@@ -210,9 +210,10 @@ import { TEXTS } from './texts';
         }
       }
 
+      /* In the row's line, so that it stands on the number's baseline; its margins keep it in the
+         row's right padding. */
       .spartan-select-item-indicator {
-        position: absolute;
-        right: calc(0.875rem - 0.375rem);
+        margin: 0 -1.25rem 0 0.25rem;
         color: var(--color-accent);
       }
     }

@@ -199,7 +199,7 @@ hierarchy; weight barely does.
   carry the season's name in the accent at weight 400, after it or on a second line.
 - **Lead** (400, clamp(1.1875rem, 1rem + 0.5vw, 1.375rem), 1.5, ink-soft): the line under the
   display headline on the hero card. The feature icons below it are 1.25rem on a phone and 1.5rem
-  from 48rem up, their centre at 0.5 and 0.6 of the cap height above the baseline.
+  from 48rem up, placed as every icon beside text is (Shapes › Icons).
 - **Title** (500, 1.1875rem, 1.2): a column's name, the amount of a card's lowest price, the booking
   panel's total. A price in a week list is body text at weight 500.
 - **Body** (400, 1.125rem, 1.5): running text and list rows. Paragraphs stay under about 45rem.
@@ -279,7 +279,14 @@ downwards, so it reads as lying on the page rather than floating.
   spartan/ui's components use, at its stroke width of 2. Beside text (facts, features, rooms,
   amenities, hints) they are in soft ink, so the prose has less black; in a control they take its
   colour. Their colour is set through `--ng-icon__color`: ng-icons colours its own element outside
-  the site's CSS layers, so a plain `color` on it does nothing.
+  the site's CSS layers, so a plain `color` on it does nothing. An icon beside text, before or after
+  it, stands on the first line with its centre at half the cap height above the baseline, the
+  capitals' middle, at every size: centred on the line box it sits low, as the line keeps room below
+  the baseline for letters such as "p", and a share that grows with the icon's size looked high
+  (#330). It moves by whole pixels, up to half a pixel off that middle: a fraction of a pixel blurs
+  its lines, and sharpness comes first. A row taller than its line keeps the line in its middle; an
+  icon standing alone is centred in its box. A button's icon is centred on the button instead: its
+  text may wrap, and an arrow between the lines reads better than one beside the first.
 
 ## Components
 

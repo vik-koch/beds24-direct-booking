@@ -745,11 +745,6 @@ function flavor(p: ReturnType<typeof palette>): Flavor {
         --ng-icon__color: var(--color-ink-soft);
         --ng-icon__size: 1.375rem;
 
-        /* Level with the name's capitals, which sit below the middle of its line. */
-        > ng-icon {
-          margin-top: 0.0625rem;
-        }
-
         > [data-for] {
           grid-column: 2;
         }

@@ -265,20 +265,22 @@ export function readPage(file, markdown, path) {
           `has text outside a paragraph: ${node.textContent.trim().slice(0, 40)}; leave a blank line after <summary>`,
         );
   // The icon's drawing goes in after the check, which refuses an author's own <svg>. A quote that
-  // opens with one is a note.
-  for (const [block, drawing] of iconed) {
-    const icon = parse(drawing).content.firstChild;
-    icon.removeAttribute('style');
-    icon.setAttribute('stroke-width', '2');
-    icon.setAttribute('class', 'icon');
-    icon.setAttribute('aria-hidden', 'true');
+  // opens with one is a note. A question's text is a span, which wraps beside its chevron.
+  const drawings = new Map(iconed);
+  for (const block of new Set([...drawings.keys(), ...body.querySelectorAll('summary')])) {
+    const drawing = drawings.get(block);
+    const icon = drawing && parse(drawing).content.firstChild;
+    icon?.removeAttribute('style');
+    icon?.setAttribute('stroke-width', '2');
+    icon?.setAttribute('class', 'icon');
+    icon?.setAttribute('aria-hidden', 'true');
     if (block.localName === 'p') {
       block.parentElement.className = 'note';
       block.before(icon);
     } else {
       const text = body.ownerDocument.createElement('span');
       text.append(...block.childNodes);
-      block.append(icon, text);
+      block.append(...(icon ? [icon] : []), text);
     }
   }
   // Wider than the column, a table scrolls in a frame of its own.
