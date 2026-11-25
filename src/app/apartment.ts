@@ -1,6 +1,7 @@
 import {
   afterRenderEffect,
   Component,
+  computed,
   ElementRef,
   inject,
   signal,
@@ -8,15 +9,13 @@ import {
   ViewEncapsulation,
   type Signal,
 } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import {
   lucideArrowLeft,
   lucideBedDouble,
   lucideChevronDown,
-  lucideChevronRight,
   lucideClock,
-  lucideFileText,
   lucideMapPin,
   lucideRuler,
   lucideScrollText,
@@ -32,7 +31,7 @@ import { Choice } from './choice';
 import { Gallery } from './gallery';
 import { LocationMap } from './location-map';
 import { handover } from './map-handover';
-import { address, fill, LANGUAGE, pageLinks, TEXTS } from './texts';
+import { address, fill, LANGUAGE, TEXTS } from './texts';
 
 // A room or an area of amenities: its icon, its name and what it holds; a code shown alone has
 // no items.
@@ -49,16 +48,14 @@ type Fold = ReturnType<typeof fold>;
 @Component({
   encapsulation: ViewEncapsulation.None,
   selector: 'app-apartment',
-  imports: [NgIcon, RouterLink, HlmAccordionImports, BookingPanel, Gallery, LocationMap],
+  imports: [NgIcon, HlmAccordionImports, BookingPanel, Gallery, LocationMap],
   providers: [
     provideIcons({
       ...icons,
       lucideArrowLeft,
       lucideBedDouble,
       lucideChevronDown,
-      lucideChevronRight,
       lucideClock,
-      lucideFileText,
       lucideMapPin,
       lucideRuler,
       lucideScrollText,
@@ -199,7 +196,7 @@ type Fold = ReturnType<typeof fold>;
           }
         </div>
         <app-booking-panel />
-        @if (checkIn || listing?.checkOut || text.houseRules || pages.length) {
+        @if (checkIn || listing?.checkOut || text.houseRules || apartment.goodToKnow.length) {
           <section>
             <h2>{{ texts.apartment.goodToKnow }}</h2>
             <div hlmAccordion>
@@ -234,24 +231,14 @@ type Fold = ReturnType<typeof fold>;
                   </hlm-accordion-content>
                 </div>
               }
-              @for (page of pages; track page.path) {
-                <div class="spartan-accordion-item">
-                  <h3 class="flex">
-                    <a
-                      class="spartan-accordion-trigger page-row"
-                      [routerLink]="page.path"
-                      [queryParams]="choice.params()"
-                    >
-                      <ng-icon name="lucideFileText" aria-hidden="true" /><span>{{
-                        page.text
-                      }}</span>
-                      <ng-icon
-                        name="lucideChevronRight"
-                        class="spartan-accordion-trigger-icon"
-                        aria-hidden="true"
-                      />
-                    </a>
-                  </h3>
+              @for (note of notes(); track $index) {
+                <div hlmAccordionItem>
+                  <hlm-accordion-trigger>
+                    <ng-icon [name]="note.icon" aria-hidden="true" /><span>{{ note.title }}</span>
+                  </hlm-accordion-trigger>
+                  <hlm-accordion-content>
+                    <div class="prose" [innerHTML]="note.html"></div>
+                  </hlm-accordion-content>
                 </div>
               }
             </div>
@@ -273,25 +260,13 @@ type Fold = ReturnType<typeof fold>;
   `,
   styles: `
     @layer components {
-      /* A link to one of its pages, as a row of the accordion it ends. */
-      .page-row {
-        display: flex;
-        flex: 1;
-        text-decoration: none;
-
-        > span {
-          text-decoration: underline transparent;
-          text-underline-offset: 0.2em;
-          transition: text-decoration-color 0.2s;
-        }
-
-        &:hover > span {
-          text-decoration-color: currentColor;
-        }
-      }
-
       /* The apartment page: from 64rem the pictures and the content on the left, the right column
          free for the booking panel. */
+      /* A fold's text ends at the fold's padding, as the house rules do. */
+      .spartan-accordion-content-inner .prose > :last-child {
+        margin-bottom: 0;
+      }
+
       .apartment {
         padding-top: 1rem;
 
@@ -483,12 +458,16 @@ export class Apartment {
     const text = from && until ? wording.both : from ? wording.from : until ? wording.until : null;
     return text && fill(text, { from: from ?? '', until: until ?? '' });
   })();
-  // Its pages that the navigation links; the others are reached by their address only.
-  protected readonly pages = pageLinks(
-    this.texts,
-    this.language,
-    this.apartment.public ?? [],
-    this.apartment.slug,
+  // The site's links in a fold carry the visitor's choice, as every link between the pages does.
+  protected readonly notes = computed(() =>
+    this.apartment.goodToKnow.map(({ icon, title, html }) => ({
+      icon,
+      title: title[this.language.code],
+      html: html[this.language.code].replace(
+        /href="(\/[^"]*)"/g,
+        (_, href: string) => `href="${this.choice.link(href).replaceAll('&', '&amp;')}"`,
+      ),
+    })),
   );
   protected readonly back = `${address(this.language, 'home')}#${this.language.anchors.apartments}`;
   protected readonly choice = inject(Choice);
