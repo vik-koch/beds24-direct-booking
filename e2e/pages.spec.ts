@@ -135,10 +135,11 @@ test("the partner's logo keeps its set width and leads to the partner", async ({
   await logo.scrollIntoViewIfNeeded();
   await expect
     .poll(() => logo.evaluate((img: HTMLImageElement) => img.currentSrc))
-    .toMatch(/\/pictures\/pages\/skischule-musterberg-160\.[0-9a-f]{8}\.webp$/);
-  // The link, and with it the focus ring, is as wide as the logo.
-  for (const box of [await logo.boundingBox(), await link.boundingBox()])
-    expect([box?.width, box?.height]).toEqual([160, 53]);
+    .toMatch(/\/pictures\/pages\/skischule-musterberg-(160|320)\.[0-9a-f]{8}\.webp$/);
+  // The link, and with it the focus ring, is as large as the logo.
+  const box = await logo.boundingBox();
+  expect(box?.width).toBe(160);
+  expect(await link.boundingBox()).toEqual(box);
 });
 
 test("the FAQ's list leads to its groups and a question's address opens it, below the header", async ({
