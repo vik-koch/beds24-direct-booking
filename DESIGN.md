@@ -514,7 +514,8 @@ chosen, and the focus is on the language entry, or the menu button where the hea
 ### Do:
 
 - **Do** keep the ground light and let white surfaces and space do the separating.
-- **Do** use the season's accent for what a visitor can act on, and nothing else.
+- **Do** use the season's accent for what a visitor can act on, and nothing else but a content
+  page's note icon (Cards / Containers).
 - **Do** measure every colour pair of a new theme in both seasons before using it.
 - **Do** right-align prices and use tabular figures.
 - **Do** keep a photo's edges straight and put text on a card in front of it.

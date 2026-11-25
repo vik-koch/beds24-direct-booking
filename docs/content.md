@@ -82,10 +82,11 @@ content. The application has no wording, no colour and no typeface of its own. T
   name as [lucide.dev](https://lucide.dev/icons) shows it, between colons and followed by a space,
   such as `## :key-round: Arrival`, `<summary>:door-open: How do I get in?</summary>` or
   `> :info: Made up.`. The build checks the name and stops on one Lucide lacks, and draws the icon
-  into the page, where a screen reader passes over it. A heading's `id` comes from the text after
-  it, so `arrival` here. A quote that opens with an icon is a note, a card with the icon beside its
-  text, and a question's answer starts below its text, as an apartment's "Good to know" rows do.
-  Anywhere else, such as in the title, a `####` heading or a paragraph, `:key-round:` stays text.
+  into the page, where a screen reader passes over it. A `##` heading's `id` comes from the text
+  after it, so `arrival` here. A quote that opens with an icon is a note, a card with the icon
+  beside its text, and a question's answer starts below its text, as an apartment's "Good to know"
+  rows do. Anywhere else, such as in the title, a `####` heading or a paragraph, `:key-round:` stays
+  text.
 
   A picture stands in a paragraph of its own, written with its alternative text in the page's
   language: `![The village in summer, seen from a trail above it](pictures/saalbach-summer.webp)`.
