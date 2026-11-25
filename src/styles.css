@@ -456,8 +456,8 @@
       padding: 0;
 
       > ng-icon {
+        top: 0;
         margin-top: 0;
-        translate: none;
       }
     }
 
@@ -1639,12 +1639,14 @@
   ) {
     align-items: baseline;
 
-    /* Lowered from the baseline; only its part above the baseline takes room in the line. */
+    /* Lowered from the baseline by whole pixels, as a fraction of one blurs its lines; only its
+       part above the baseline takes room in the line. */
     > :is(ng-icon, .icon),
     &:is(summary)::after {
-      --drop: calc(var(--ng-icon__size, 1em) / 2 - 0.5cap);
+      --drop: round(calc(var(--ng-icon__size, 1em) / 2 - 0.5cap), 1px);
+      position: relative;
+      top: var(--drop);
       margin-top: calc(-1 * var(--drop));
-      translate: 0 var(--drop);
     }
   }
 
