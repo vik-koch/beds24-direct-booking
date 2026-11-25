@@ -298,7 +298,9 @@ downwards, so it reads as lying on the page rather than floating.
   the prices and weeks of both week lists, the booking panel's guest pills, the view toggles of the
   booking panel and the picture viewer, the map's apartments, and the season switch's inner pill. A
   new control takes one of them, not a number.
-- **Shape:** pill (999px), 1.5rem of padding at the sides.
+- **Shape:** pill (999px), 1.5rem of padding at the sides and 0.375rem above and below, with a line
+  height of 1.25 as the apartment tabs have, so a label that wraps keeps its lines together inside
+  the pill; a one-line button stays at the control height.
 - **Primary:** accent fill, white text at weight 500.
 - **Hover / Focus:** a soft shadow in the accent on hover (underlined instead where the button
   stands on the accent, as in the booking bar); a 2px accent outline, 3px away, on keyboard focus,

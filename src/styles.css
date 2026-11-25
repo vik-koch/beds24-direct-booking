@@ -187,11 +187,12 @@
     display: inline-flex;
     align-items: center;
     min-height: var(--size-control);
-    padding: 0 1.5rem;
+    padding: 0.375rem 1.5rem;
     border-radius: var(--radius-control);
     background: var(--color-accent);
     color: var(--color-on-accent);
     font-weight: var(--font-weight-medium);
+    line-height: 1.25;
     text-decoration: none;
     transition: box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 
