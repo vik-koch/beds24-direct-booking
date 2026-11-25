@@ -751,11 +751,12 @@ export async function writeContent(dir, out, cache) {
       const { width, height, sources } = shown[shownAt(img.getAttribute('src'), sized)];
       img.setAttribute('src', sources[0].url);
       img.setAttribute('srcset', sources.map(({ url, width }) => `${url} ${width}w`).join(', '));
-      // The column's side padding, 1rem and from 48rem 2rem, around at most 45rem.
+      // The column's side padding, 1rem and from 48rem 2rem, around at most 45rem; a sized picture
+      // is at most 720 px, so narrower than the column only below 48rem.
       img.setAttribute(
         'sizes',
         sized
-          ? `${sized}px`
+          ? `(min-width: ${Number(sized) + 32}px) ${sized}px, calc(100vw - 2rem)`
           : '(min-width: 49rem) 45rem, (min-width: 48rem) calc(100vw - 4rem), calc(100vw - 2rem)',
       );
       if (sized) img.className = 'sized';

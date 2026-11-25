@@ -1332,7 +1332,7 @@ test("a page's picture at a set width is converted at it and twice it, and shown
   const page = readFileSync(join(out, 'page.en.faq.ts'), 'utf8');
   assert.match(
     page,
-    /<img src=\\"\/pictures\/pages\/saalbach-summer-300\.[0-9a-f]{8}\.webp\\" alt=\\"Small\\" width=\\"300\\" srcset=\\"[^"]* 300w, [^"]*saalbach-summer-600\.[0-9a-f]{8}\.webp 600w\\" sizes=\\"300px\\" class=\\"sized\\" height=\\"225\\" loading=\\"lazy\\">/,
+    /<img src=\\"\/pictures\/pages\/saalbach-summer-300\.[0-9a-f]{8}\.webp\\" alt=\\"Small\\" width=\\"300\\" srcset=\\"[^"]* 300w, [^"]*saalbach-summer-600\.[0-9a-f]{8}\.webp 600w\\" sizes=\\"\(min-width: 332px\) 300px, calc\(100vw - 2rem\)\\" class=\\"sized\\" height=\\"225\\" loading=\\"lazy\\">/,
   );
   assert.match(page, /alt=\\"The village\\" srcset=\\"[^"]* 1920w\\"/);
 });
