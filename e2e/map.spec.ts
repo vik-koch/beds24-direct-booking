@@ -152,6 +152,10 @@ test("the map's hint is a pill clear of its controls, the map not dimmed", async
   for (const width of widths) {
     await page.setViewportSize({ width, height: 900 });
     await openMap(page);
+    // The error link's label at the schema's limit, in wide letters.
+    await page
+      .locator('.maplibregl-ctrl-attrib a[href="https://www.openstreetmap.org/fixthemap"]')
+      .evaluate((link) => (link.textContent = 'Mw '.repeat(11).slice(0, 32)));
     if (!isMobile)
       await page.locator('.maplibregl-canvas').hover({ position: { x: width / 2, y: 100 } });
     // The hint fades soon after the gesture, so it is read in one frame while fully shown. A

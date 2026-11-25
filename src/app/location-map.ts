@@ -1408,7 +1408,7 @@ export class LocationMap {
           attribution:
             // OpenStreetMap's licence asks for the credit and its link, FOSSGIS's routing servers
             // for a link to report an error: the map's only links out.
-            `<a href="https://www.openstreetmap.org/copyright">© OpenStreetMap</a> · Protomaps · <a href="https://www.openstreetmap.org/fixthemap">${this.texts.report}</a>`,
+            `<a href="https://www.openstreetmap.org/copyright">© OpenStreetMap</a> · Protomaps · <a href="https://www.openstreetmap.org/fixthemap">${this.texts.report.replace(/&/g, '&amp;').replace(/</g, '&lt;')}</a>`,
         },
         routes: { type: 'geojson', data: { type: 'FeatureCollection', features: lines } },
         // Both ends of the chosen place's route.

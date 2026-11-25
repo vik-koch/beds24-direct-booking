@@ -243,10 +243,10 @@ content. The application has no wording, no colour and no typeface of its own. T
   readers; `from` heads the panel's choice of apartment and `more` labels its switch. The page
   writes each walk's distance in its own language, such as "900 m" or "1,4 km". `zoomIn`, `zoomOut`,
   `reset` (back to the view of the choices) and `attribution` name the map's buttons, `report`
-  labels the attribution's link to report an error in the map, and `gestures` holds the hints the
-  map shows when a scroll without Ctrl (`windows`) or ⌘ (`mac`), or one finger (`touch`), would move
-  it. The map writes its labels in the theme's typeface: the first `.woff2` file in `fonts/` that
-  `theme.css` names, which a site with a map must have.
+  labels the attribution's link to report an error in the map, as plain text, and `gestures` holds
+  the hints the map shows when a scroll without Ctrl (`windows`) or ⌘ (`mac`), or one finger
+  (`touch`), would move it. The map writes its labels in the theme's typeface: the first `.woff2`
+  file in `fonts/` that `theme.css` names, which a site with a map must have.
 - **The map's tiles** are `map/tiles/<build>/`, cut out of a
   [Protomaps](https://maps.protomaps.com/builds/) planet build of OpenStreetMap at zoom 12 to 15
   inside the box, with `map/tiles.json` naming the build, the box and the number of tiles. They are
@@ -317,6 +317,7 @@ beyond a limit fails its build, with the limit named.
 | A content page's title | A word as wide as the column at 300 px, or one with a soft hyphen (`&shy;`) where it may break, as the demo's `Geschäfts&shy;bedingungen` | Headlines are not hyphenated, and the layout holds down to 300 px (DESIGN.md): a longer word would make the page scroll sideways | Not checked: a deployment looks at its titles at 300 px |
 | The map's box | At most 0.1° each way, within 85° of latitude | The tiles grow with the area, and the repository and the image carry them; the demo's 0.07° by 0.03° is 773 kB | The schema |
 | The map's places | 1 to 10 | One route for each apartment and place, and the map's list of places | The schema |
+| The map's error link (`map.report`) | 32 characters | The opened attribution keeps to two lines at 320 px, below the gesture hint; 55 characters still did | The schema; an e2e test puts 32 wide letters into it at every width |
 
 **The site name's size comes from its length,** at an assumed 0.55em per letter: the widest
 mixed-case average measured in the demo's font (Jost at weight 500: 0.547em in "Wohnen am Wald").

@@ -465,7 +465,7 @@ export const textsSchema = z.strictObject({
       zoomOut: text,
       reset: text,
       attribution: text,
-      report: text,
+      report: text.refine((value) => letters(value) <= 32, 'at most 32 characters'),
       gestures: z.strictObject({ windows: text, mac: text, touch: text }),
       places: z.record(
         segment,
