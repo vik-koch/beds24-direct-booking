@@ -283,8 +283,10 @@ downwards, so it reads as lying on the page rather than floating.
   it, stands on the first line with its centre at half the cap height above the baseline, the
   capitals' middle, at every size: centred on the line box it sits low, as the line keeps room below
   the baseline for letters such as "p", and a share that grows with the icon's size looked high
-  (#330). A row taller than its line keeps the line in its middle; an icon standing alone is centred
-  in its box.
+  (#330). It moves by whole pixels, up to half a pixel off that middle: a fraction of a pixel blurs
+  its lines, and sharpness comes first. A row taller than its line keeps the line in its middle; an
+  icon standing alone is centred in its box. A button's icon is centred on the button instead: its
+  text may wrap, and an arrow between the lines reads better than one beside the first.
 
 ## Components
 

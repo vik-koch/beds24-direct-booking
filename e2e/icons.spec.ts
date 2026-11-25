@@ -52,11 +52,13 @@ for (const width of [320, 1280])
     await centred(page.locator('.entries h3 > ng-icon'), 8);
     // A row of "Good to know" and its chevron, also when its text wraps.
     const row = page.locator('.spartan-accordion-trigger').first();
+    const lines = async () => (await offset(row.locator('ng-icon').first())).lines;
+    if (width === 1280) await expect.poll(lines).toBe(1);
     await centred(row.locator('ng-icon:visible'), 2);
     await row.evaluate(
       (button) => (button.closest<HTMLElement>('.spartan-accordion')!.style.width = '15rem'),
     );
-    await expect.poll(async () => (await offset(row.locator('ng-icon').first())).lines).toBe(2);
+    await expect.poll(lines).toBe(2);
     await centred(row.locator('ng-icon:visible'), 2);
     await page.goto('/en/faq');
     await centred(page.locator('.prose :is(h2, .note) > .icon'), 6);
