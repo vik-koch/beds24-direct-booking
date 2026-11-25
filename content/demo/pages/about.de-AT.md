@@ -1,7 +1,8 @@
 # Über uns
 
 > Firn & Farn ist erfunden: Diese Website ist eine Demo, und das Unternehmen, seine Wohnungen und
-> seine Kontaktdaten sind Beispiele.
+> seine Kontaktdaten sind Beispiele, außer der E-Mail-Adresse: Sie ist echt und erreicht die Person,
+> die die Demo betreibt.
 
 Die Firn & Farn Appartements GmbH besitzt zwei Häuser in Saalbach, Haus Firn und Haus Farn, und
 vermietet drei Wohnungen darin selbst. Wir haben die Häuser 2014 übernommen und Stock für Stock
