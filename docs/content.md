@@ -269,7 +269,7 @@ content. The application has no wording, no colour and no typeface of its own. T
   `wps=lon,lat,lon,lat,…`, longitude first. The router moves a point to the nearest way and never
   turns back at it, so put it on the path itself, away from a junction, or the route takes a detour
   to pass it. No waypoint leads a route along a way OpenStreetMap lacks or keeps walkers off: map or
-  tag it there first, and the next weekly run takes it.
+  tag it there first; once Valhalla's data has the edit, a weekly run proposes the changed route.
 - **The lifts** are `map/lifts.json`: OpenStreetMap's aerial lifts inside the box, gondolas, cable
   cars, chairlifts and drag lifts, each with its kind and its local name, taken through the
   [Overpass API](https://overpass-api.de/) with the box they were taken for. Take them with

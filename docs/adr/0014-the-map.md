@@ -72,7 +72,7 @@ A spike (#254, branch `spike/254-map`, not merged) tried the decision below in t
 | A hand-written style | No style dependency. | The spike's first hand-written layers drew streams, which the tiles store as lines, as filled polygons; every layer kind has such details. | Rejected. |
 | A routing engine run per visit | Any route on demand. | A server process beside the site on a 1 GB machine, for routes that change once a year. | Rejected. |
 | OSRM's foot profile on routing.openstreetmap.de, from the script | The shortest routes in the spike. | Its data was from 2026-08-26 on 2026-11-25, so edits in OpenStreetMap reach the routes months late. | Chosen first, replaced (#317). |
-| Valhalla's pedestrian costing on valhalla1.openstreetmap.de, from the script | Data a day old; no key; the same operator and usage policy as OSRM's server. | Some routes longer than OSRM's where OpenStreetMap's tags keep walkers off a way. | Chosen (#317). |
+| Valhalla's pedestrian costing on valhalla1.openstreetmap.de, from the script | Its tileset was built the same day when checked on 2026-11-25; no key; the same operator and usage policy as OSRM's server. | Some routes longer than OSRM's where OpenStreetMap's tags keep walkers off a way. | Chosen (#317). |
 | GraphHopper's API, from the script | Data updated about daily, by its own account. | Needs an API key, a secret in every site's repository. | Rejected. |
 
 ## What this rests on
