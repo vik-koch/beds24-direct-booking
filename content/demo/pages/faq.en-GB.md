@@ -1,6 +1,6 @@
 # Frequently asked questions
 
-> Firn & Farn is made up: this website is a demo, and these answers are examples.
+> :info: Firn & Farn is made up: this website is a demo, and these answers are examples.
 
 - [Booking and payment](#booking-and-payment)
 - [Arrival](#arrival)
@@ -8,7 +8,7 @@
 - [Departure](#departure)
 - [Getting here](#getting-here)
 
-## Booking and payment
+## :credit-card: Booking and payment
 
 <details id="weeks">
 <summary>How long can I stay?</summary>
@@ -51,7 +51,7 @@ insurance.
 
 </details>
 
-## Arrival
+## :key-round: Arrival
 
 <details id="check-in">
 <summary>When can I arrive?</summary>
@@ -75,7 +75,7 @@ Austrian law requires us to register every guest. Please bring an ID for each ad
 
 </details>
 
-## In the apartment
+## :sofa: In the apartment
 
 <details id="wifi">
 <summary>Is there Wi-Fi?</summary>
@@ -107,7 +107,7 @@ The houses are non-smoking, and quiet hours are from 10 pm to 7 am. The other ho
 
 </details>
 
-## Departure
+## :luggage: Departure
 
 <details id="check-out">
 <summary>When do I have to leave?</summary>
@@ -124,7 +124,7 @@ Yes, in the ski room until 4 pm, so you can have a last morning on the slopes or
 
 </details>
 
-## Getting here
+## :map: Getting here
 
 <details id="car">
 <summary>How do I get here by car?</summary>

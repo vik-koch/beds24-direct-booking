@@ -1,6 +1,6 @@
 # Häufige Fragen
 
-> Firn & Farn ist erfunden: Diese Website ist eine Demo, und diese Antworten sind Beispiele.
+> :info: Firn & Farn ist erfunden: Diese Website ist eine Demo, und diese Antworten sind Beispiele.
 
 - [Buchung und Zahlung](#buchung-und-zahlung)
 - [Ankunft](#ankunft)
@@ -8,7 +8,7 @@
 - [Abreise](#abreise)
 - [Der Weg zu uns](#der-weg-zu-uns)
 
-## Buchung und Zahlung
+## :credit-card: Buchung und Zahlung
 
 <details id="weeks">
 <summary>Wie lange kann ich bleiben?</summary>
@@ -52,7 +52,7 @@ Stornoversicherung.
 
 </details>
 
-## Ankunft
+## :key-round: Ankunft
 
 <details id="check-in">
 <summary>Wann kann ich ankommen?</summary>
@@ -77,7 +77,7 @@ einen Ausweis mit.
 
 </details>
 
-## In der Wohnung
+## :sofa: In der Wohnung
 
 <details id="wifi">
 <summary>Gibt es WLAN?</summary>
@@ -109,7 +109,7 @@ in unseren [AGB](/de/agb#7-hausordnung).
 
 </details>
 
-## Abreise
+## :luggage: Abreise
 
 <details id="check-out">
 <summary>Wann muss ich abreisen?</summary>
@@ -126,7 +126,7 @@ Ja, im Skiraum bis 16 Uhr, für einen letzten Vormittag auf der Piste oder am Be
 
 </details>
 
-## Der Weg zu uns
+## :map: Der Weg zu uns
 
 <details id="car">
 <summary>Wie komme ich mit dem Auto?</summary>
