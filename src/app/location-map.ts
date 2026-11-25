@@ -459,8 +459,8 @@ function flavor(p: ReturnType<typeof palette>): Flavor {
       outline-offset: -3px;
     }
 
-    /* The hint to zoom with Ctrl or move with two fingers: a pill above the attribution, which takes
-       two lines on a narrow phone, in the map's middle, the map not dimmed. */
+    /* The hint to zoom with Ctrl or move with two fingers: a pill above the attribution, which
+       takes two lines on a narrow phone, in the map's middle, the map not dimmed. */
     .location-map .maplibregl-cooperative-gesture-screen {
       inset: auto 3rem 4rem;
       padding: 0;
