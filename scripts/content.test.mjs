@@ -1071,6 +1071,8 @@ test("an apartment's page needs its file in every language, and links only its o
     () => readContent(shared),
     /zirbe\.json\n {2}pages\.2: faq is a page of the site too/,
   );
+  const twice = changed('apartments/zirbe.json', (zirbe) => zirbe.public.push('arrival'));
+  assert.throws(() => readContent(twice), /zirbe\.json\n {2}public: a page is listed twice/);
   const fixed = changed('apartments/zirbe.json', (zirbe) => zirbe.pages.push('book'));
   assert.throws(() => readContent(fixed), /zirbe\.json\n {2}pages\.2: taken by a page/);
 });

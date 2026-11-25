@@ -314,7 +314,7 @@ export const apartmentSchema = z.strictObject({
   // Its own content pages, each with a file per language in pages/<slug>/, and those its page
   // links under "Good to know"; any other is reached by its address only.
   pages: pageKeys.optional(),
-  public: z.array(segment).optional(),
+  public: pageKeys.optional(),
 });
 
 export const textsSchema = z.strictObject({
