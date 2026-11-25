@@ -82,6 +82,14 @@ test('a picture at a set width of any shape is converted at it and twice it, not
     [160, 40, [160, 320]],
   );
   await assert.rejects(at('pictures/small.png'), /small\.png is 319 wide, less than twice 160/);
+  writeFileSync(
+    join(dir, 'pictures', 'logo.svg'),
+    '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="100"><rect width="400" height="100"/></svg>',
+  );
+  await assert.rejects(
+    at('pictures/logo.svg'),
+    /logo\.svg is an SVG: give a PNG, JPEG or WebP file/,
+  );
 });
 
 test('a picture is measured as the camera meant it to be shown', async () => {

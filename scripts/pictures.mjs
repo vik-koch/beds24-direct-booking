@@ -90,7 +90,7 @@ const measure = (bytes, file) =>
   sharp(bytes)
     .metadata()
     .then(
-      (size) => ({ file, ...size.autoOrient }),
+      (size) => ({ file, format: size.format, ...size.autoOrient }),
       () => {
         throw new Error(`${file} is not a picture`);
       },
@@ -105,6 +105,7 @@ export async function convertPicture(dir, file, name, out, url, cache, width) {
   const size = await measure(bytes, file);
   const { width: shown, height } = size;
   if (width) {
+    if (size.format === 'svg') throw new Error(`${file} is an SVG: give a PNG, JPEG or WebP file`);
     if (shown < width * 2) throw new Error(`${file} is ${shown} wide, less than twice ${width}`);
   } else if (shown < height * (1 - slack) || shown > height * 2 * (1 + slack))
     throw new Error(`${file} is ${shown} × ${height}, not between square and 2:1`);
