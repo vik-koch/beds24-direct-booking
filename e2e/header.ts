@@ -19,7 +19,14 @@ export async function toLanguage(page: Page, current: string, other: string) {
   const menu = page.locator('.header-narrow .icon-button');
   if (await menu.isVisible()) {
     const box = (await menu.boundingBox())!;
-    await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+    const [x, y] = [box.x + box.width / 2, box.y + box.height / 2];
+    // Until a full load's fade (a view transition) has ended, a press reaches the document.
+    await expect
+      .poll(() =>
+        menu.evaluate((button, [x, y]) => button.contains(document.elementFromPoint(x, y)), [x, y]),
+      )
+      .toBe(true);
+    await page.mouse.click(x, y);
   } else await open(page, current);
   const from = page.url();
   await page.getByRole('link', { name: other }).click();
