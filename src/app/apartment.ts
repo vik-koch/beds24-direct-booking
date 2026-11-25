@@ -119,7 +119,8 @@ type Fold = ReturnType<typeof fold>;
                 @let permit = texts.apartment.permit.split('{number}');
                 <li>
                   <ng-icon name="lucideFileBadge" aria-hidden="true" /><span
-                    >{{ permit[0] }}<span class="whitespace-nowrap">{{ listing.permit }}</span
+                    >{{ permit[0]
+                    }}<span class="inline-block max-w-full wrap-anywhere">{{ listing.permit }}</span
                     >{{ permit[1] }}</span
                   >
                 </li>

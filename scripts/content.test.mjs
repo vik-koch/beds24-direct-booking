@@ -55,6 +55,13 @@ test('a key missing in one language is named', () => {
   assert.throws(() => readContent(dir), /texts\.en-GB\.json\n {2}nav\.weeks/);
 });
 
+test('a registration label without its number once is refused', () => {
+  for (const label of ['Registration no. {permit}', '{number} / {number}']) {
+    const dir = changed('texts.en-GB.json', (texts) => (texts.apartment.permit = label));
+    assert.throws(() => readContent(dir), /apartment\.permit[^]*needs \{number\} once/);
+  }
+});
+
 test('a key the schema does not know is refused', () => {
   const dir = changed('texts.de-AT.json', (texts) => (texts.nav.extra = 'x'));
   assert.throws(() => readContent(dir), /texts\.de-AT\.json\n {2}nav/);

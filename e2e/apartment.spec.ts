@@ -189,6 +189,29 @@ test('an open row keeps one arrow, turned', async ({ page }) => {
   await expect(arrows).toHaveCSS('rotate', '180deg');
 });
 
+test('at 320 px a registration number takes its own line, and breaks only when wider than it', async ({
+  page,
+}) => {
+  await phoneWidth(page, 320, 700);
+  await page.goto('/en/apartments/ahorn');
+  const number = page.locator('.facts li').last().locator('span span');
+  const box = () =>
+    number.evaluate((span) => {
+      const { top, height } = span.getBoundingClientRect();
+      return { top: Math.round(top), height: Math.round(height) };
+    });
+  const short = await box();
+  // Too long to stand beside the label, short enough for a line of its own.
+  await number.evaluate((span) => (span.textContent = 'ATR-2026-000000000123'));
+  const long = await box();
+  expect(long.top).toBeGreaterThan(short.top);
+  expect(long.height).toBe(short.height);
+  await number.evaluate((span) => (span.textContent = 'X'.repeat(60)));
+  expect(await page.locator('html').evaluate((html) => html.scrollWidth - html.offsetWidth)).toBe(
+    0,
+  );
+});
+
 test('without JavaScript every text can be read in full', async ({ browser }) => {
   const context = await browser.newContext({ javaScriptEnabled: false });
   const page = await context.newPage();

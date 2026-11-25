@@ -425,7 +425,7 @@ export const textsSchema = z.strictObject({
     checkOut: text,
     houseRules: text,
     // The registration number Beds24 holds for the property, in the facts line.
-    permit: text,
+    permit: text.refine((value) => value.split('{number}').length === 2, 'needs {number} once'),
     unavailable: text,
     generated: text,
   }),
