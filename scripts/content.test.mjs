@@ -1219,7 +1219,7 @@ test("a page's picture is converted, and the page names its files wherever it sh
   assert.ok(!existsSync(join(out, 'pictures', 'saalbach-summer.webp')));
   assert.match(
     page,
-    /<img src=\\"\/pictures\/pages\/saalbach-summer-480\.[0-9a-f]{8}\.webp\\" alt=\\"The village\\" srcset=\\"[^"]* 1920w\\" sizes=\\"\(min-width: 49rem\) 45rem, 100vw\\" width=\\"1920\\" height=\\"1440\\" loading=\\"lazy\\">/,
+    /<img src=\\"\/pictures\/pages\/saalbach-summer-480\.[0-9a-f]{8}\.webp\\" alt=\\"The village\\" srcset=\\"[^"]* 1920w\\" sizes=\\"\(min-width: 49rem\) 45rem, \(min-width: 48rem\) calc\(100vw - 4rem\), calc\(100vw - 2rem\)\\" width=\\"1920\\" height=\\"1440\\" loading=\\"lazy\\">/,
   );
   for (const [, url] of page.matchAll(/(\/pictures\/pages\/[^ ]+\.webp)/g))
     assert.ok(existsSync(join(out, url)), url);

@@ -653,7 +653,11 @@ export async function writeContent(dir, out, cache) {
       const { width, height, sources } = shown[img.getAttribute('src')];
       img.setAttribute('src', sources[0].url);
       img.setAttribute('srcset', sources.map(({ url, width }) => `${url} ${width}w`).join(', '));
-      img.setAttribute('sizes', '(min-width: 49rem) 45rem, 100vw');
+      // The column's side padding, 1rem and from 48rem 2rem, around at most 45rem.
+      img.setAttribute(
+        'sizes',
+        '(min-width: 49rem) 45rem, (min-width: 48rem) calc(100vw - 4rem), calc(100vw - 2rem)',
+      );
       img.setAttribute('width', width);
       img.setAttribute('height', height);
       img.setAttribute('loading', 'lazy');
