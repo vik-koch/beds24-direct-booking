@@ -1057,24 +1057,47 @@ test('a page file that no page lists is refused', () => {
   assert.throws(() => readContent(dir), /guide\.en-GB\.md\n {2}\(file\): not a page/);
 });
 
-test("an apartment's page needs its file in every language, and links only its own pages", () => {
+test("an apartment's page needs its file in every language, and its key is the apartments'", () => {
   const noFile = changed('site.json', () => undefined);
   rmSync(join(noFile, 'pages', 'zirbe', 'guide.en-GB.md'));
   assert.throws(() => readContent(noFile), /pages\/zirbe\/guide\.en-GB\.md\n {2}\(file\): missing/);
-  const linked = changed('apartments/zirbe.json', (zirbe) => zirbe.public.push('heating'));
-  assert.throws(
-    () => readContent(linked),
-    /zirbe\.json\n {2}public\.1: heating is not one of its pages/,
-  );
   const shared = changed('apartments/zirbe.json', (zirbe) => zirbe.pages.push('faq'));
   assert.throws(
     () => readContent(shared),
     /zirbe\.json\n {2}pages\.2: faq is a page of the site too/,
   );
-  const twice = changed('apartments/zirbe.json', (zirbe) => zirbe.public.push('arrival'));
-  assert.throws(() => readContent(twice), /zirbe\.json\n {2}public: a page is listed twice/);
   const fixed = changed('apartments/zirbe.json', (zirbe) => zirbe.pages.push('book'));
   assert.throws(() => readContent(fixed), /zirbe\.json\n {2}pages\.2: taken by a page/);
+});
+
+test('a page a fold links to is public, and any other unlisted', () => {
+  assert.deepEqual(readContent('content/demo').site.apartments[0].public, ['arrival']);
+  const none = changed('apartments/zirbe.json', (zirbe) => delete zirbe.goodToKnow);
+  assert.deepEqual(readContent(none).site.apartments[0].public, []);
+});
+
+test('a fold is named in every language, with a Lucide icon, and holds only what it shows', () => {
+  const fold = (change) => changed('apartments/zirbe.json', (zirbe) => change(zirbe.goodToKnow[0]));
+  const text = (markdown) => fold((note) => (note.text['en-GB'] = markdown));
+  const refused = [
+    [fold((note) => delete note.title['en-GB']), /goodToKnow\.0\.title\.en-GB: missing/],
+    [fold((note) => (note.text.fr = 'Texte')), /goodToKnow\.0\.text\.fr: a language/],
+    [fold((note) => (note.icon = 'no-such-icon')), /goodToKnow\.0\.icon: no-such-icon is not/],
+    [text('## Getting here'), /text\.en-GB: has <h2>, which a fold does not show/],
+    [text('![The house](pictures/house.webp)'), /has <img>, which a fold does not show/],
+    [text('[Here](javascript:alert)'), /links to javascript:alert/],
+    [
+      text('[Heating](/en/apartments/zirbe/heating)'),
+      /links to \/en\/apartments\/zirbe\/heating, which is no apartment's page/,
+    ],
+    [text('[Getting here](/en/apartments/laerche/getting-here)'), /which is no apartment's page/],
+  ];
+  for (const [dir, message] of refused) assert.throws(() => readContent(dir), message);
+  // The apartment's own page, its booking step and an outside address are no page to check.
+  const allowed = text(
+    '[Zirbe](/en/apartments/zirbe), [book](/en/apartments/zirbe/book), [web](https://example.com)',
+  );
+  assert.deepEqual(readContent(allowed).site.apartments[0].public, ['arrival']);
 });
 
 test("a file in an apartment's pages folder that it does not list is refused, as is a folder", () => {

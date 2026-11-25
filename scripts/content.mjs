@@ -135,6 +135,29 @@ const pageElements = {
   summary: [],
 };
 
+// Where a page's or a fold's link may lead: the site's own paths and http(s), mailto and tel.
+const linkable = /^(https?:|mailto:|tel:|\/(?!\/))/;
+
+// A fold's text from its Markdown: paragraphs, lists, emphasis and links, which the
+// accordion styles; anything else is refused.
+export function readNote(fail, markdown) {
+  const template = parse(marked.parse(markdown));
+  for (const element of template.content.querySelectorAll('*')) {
+    const name = element.localName;
+    if (!'p ul ol li strong em a br'.split(' ').includes(name))
+      throw fail(`has <${name}>, which a fold does not show`);
+    if (name === 'a' && !element.hasAttribute('href')) throw fail('has a link without an address');
+    for (const { name: attribute, value } of element.attributes)
+      if (name !== 'a' || attribute !== 'href')
+        throw fail(`has ${attribute} on <${name}>, which a fold does not take`);
+      else if (!linkable.test(value))
+        throw fail(
+          `links to ${value}: give a path from the root, or an http(s), mailto or tel link`,
+        );
+  }
+  return template.innerHTML.trim();
+}
+
 // A content page from its Markdown: the title of the one # heading it opens with, the rest as HTML
 // of the elements the page styles, and the files of its pictures. The file is the deployment's
 // own, so what the page would not style is refused rather than dropped. A ## heading gets an id
@@ -164,7 +187,7 @@ export function readPage(file, markdown, path) {
     for (const { name: attribute, value } of element.attributes)
       if (!pageElements[name].includes(attribute))
         throw fail(`has ${attribute} on <${name}>, which a page does not take`);
-      else if (attribute === 'href' && !/^(https?:|mailto:|tel:|#|\/(?!\/))/.test(value))
+      else if (attribute === 'href' && !value.startsWith('#') && !linkable.test(value))
         throw fail(
           `links to ${value}: give a path from the root, an id on the page, or an http(s), mailto or tel link`,
         );
@@ -438,14 +461,9 @@ export function readContent(dir) {
           : part === 'footer' && site.header.includes(key) && 'is in the header too';
       if (fault) throw new Error(`${join(dir, 'site.json')}\n  ${part}.${index}: ${key} ${fault}`);
     });
-  // An apartment's pages are its own, and those it links among them; a key is a site page's or
-  // apartments' pages', not both.
-  for (const { slug, pages = [], public: linked = [] } of apartments) {
+  // A key is a site page's or the apartments' pages', not both.
+  for (const { slug, pages = [] } of apartments) {
     const file = join(dir, 'apartments', `${slug}.json`);
-    linked.forEach((key, index) => {
-      if (!pages.includes(key))
-        throw new Error(`${file}\n  public.${index}: ${key} is not one of its pages`);
-    });
     pages.forEach((key, index) => {
       if (site.pages.includes(key))
         throw new Error(`${file}\n  pages.${index}: ${key} is a page of the site too`);
@@ -493,6 +511,39 @@ export function readContent(dir) {
         }),
       ),
     );
+  }
+  // A fold under "Good to know" is named in each language and holds what the accordion styles; a
+  // link to an apartment's page leads to one it has, and makes that page public.
+  for (const apartment of apartments) apartment.public = [];
+  for (const apartment of apartments) {
+    const file = join(dir, 'apartments', `${apartment.slug}.json`);
+    apartment.goodToKnow = (apartment.goodToKnow ?? []).map(({ icon, title, text }, index) => {
+      const path = `goodToKnow.${index}`;
+      if (!(lucideName(icon) in lucide))
+        throw new Error(`${file}\n  ${path}.icon: ${icon} is not a Lucide icon`);
+      inLanguages(file, `${path}.title`, title);
+      inLanguages(file, `${path}.text`, text);
+      const html = {};
+      for (const tag of site.languages) {
+        const fail = (reason) => new Error(`${file}\n  ${path}.text.${tag}: ${reason}`);
+        html[tag] = readNote(fail, text[tag]);
+        for (const link of parse(html[tag]).content.querySelectorAll('a[href^="/"]')) {
+          const href = link.getAttribute('href');
+          const [, code, top, slug, part, ...rest] = new URL(href, 'https://site').pathname.split(
+            '/',
+          );
+          const language = site.languages.find((other) => prefix(other) === code);
+          const paths = language && texts[code].paths;
+          if (!paths || top !== paths.apartments || part === undefined || part === paths.book)
+            continue;
+          const owner = apartments.find((other) => other.slug === slug);
+          const key = owner?.pages?.find((page) => paths[page] === part);
+          if (!key || rest.length) throw fail(`links to ${href}, which is no apartment's page`);
+          if (!owner.public.includes(key)) owner.public.push(key);
+        }
+      }
+      return { icon, title, html };
+    });
   }
   // A credit is for a picture a page shows.
   const shown = Object.values(pages).flatMap((list) =>
@@ -717,6 +768,11 @@ export async function writeContent(dir, out, cache) {
       alt: byPrefix(picture.alt),
     })),
     ...(plan && { plan: served(apartment.slug, plan) }),
+    goodToKnow: apartment.goodToKnow.map(({ icon, title, html }) => ({
+      icon: lucideName(icon),
+      title: byPrefix(title),
+      html: byPrefix(html),
+    })),
   }));
   const module = (type, value) =>
     `import type { ${type} } from '../schema';\n\nconst value: ${type} = ${JSON.stringify(value, null, 2)};\nexport default value;\n`;
@@ -784,13 +840,17 @@ export async function writeContent(dir, out, cache) {
   mkdirSync(join(out, 'fonts'));
   if (existsSync(join(dir, 'fonts')))
     cpSync(join(dir, 'fonts'), join(out, 'fonts'), { recursive: true });
-  // Only the icons site.json names are imported, so the bundle holds no others. Two names can
+  // Only the icons the content names are imported, so the bundle holds no others. Two names can
   // be one icon: heading-1 and heading1 are both lucideHeading1.
   const icons = [
     ...new Set(
-      [...site.features, ...site.amenities, ...site.rooms, ...(site.map?.places ?? [])].map((f) =>
-        lucideName(f.icon),
-      ),
+      [
+        ...site.features,
+        ...site.amenities,
+        ...site.rooms,
+        ...(site.map?.places ?? []),
+        ...site.apartments.flatMap(({ goodToKnow }) => goodToKnow),
+      ].map((f) => lucideName(f.icon)),
     ),
   ];
   // The tiles are served by their build's path, which changes when they are cut again.

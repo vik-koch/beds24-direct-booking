@@ -311,10 +311,19 @@ export const apartmentSchema = z.strictObject({
     )
     .min(1, 'at least one picture'),
   plan: plan.optional(),
-  // Its own content pages, each with a file per language in pages/<slug>/, and those its page
-  // links under "Good to know"; any other is reached by its address only.
+  // Its own content pages, each with a file per language in pages/<slug>/.
   pages: pageKeys.optional(),
-  public: pageKeys.optional(),
+  // Its folds under "Good to know" after Beds24's, each with a Lucide icon, and its title and
+  // Markdown text in each language by tag. A page a fold links to is public, any other unlisted.
+  goodToKnow: z
+    .array(
+      z.strictObject({
+        icon: segment,
+        title: z.record(z.string(), text),
+        text: z.record(z.string(), text),
+      }),
+    )
+    .optional(),
 });
 
 export const textsSchema = z.strictObject({
@@ -529,10 +538,20 @@ export interface ContentPage {
   title: string;
   html: string;
 }
-export type Apartment = { slug: string; pictures: Picture[]; plan?: Plan } & Omit<
-  z.infer<typeof apartmentSchema>,
-  'pictures' | 'via' | 'plan'
->;
+// A fold under "Good to know": its icon's name, its title and its text as HTML by address prefix.
+export interface Note {
+  icon: string;
+  title: Record<string, string>;
+  html: Record<string, string>;
+}
+// An apartment as the site shows it; public names its pages that a fold links to.
+export type Apartment = {
+  slug: string;
+  pictures: Picture[];
+  plan?: Plan;
+  goodToKnow: Note[];
+  public: string[];
+} & Omit<z.infer<typeof apartmentSchema>, 'pictures' | 'via' | 'plan' | 'goodToKnow'>;
 type Map = NonNullable<z.infer<typeof siteSchema>['map']>;
 // A walking route as the map draws it: its line as [longitude, latitude] pairs.
 export interface Route {
