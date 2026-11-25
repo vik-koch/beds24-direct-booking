@@ -845,8 +845,8 @@ test("an apartment's panel lists its distances in every engine, without the map 
   await page.goto('/en/apartments/ahorn');
   await scrollToMap(page);
   await expect(places(page)).toHaveText([
-    new RegExp(`Schattberg X-press.*${walk('ahorn')}`),
-    new RegExp(`Kohlmaisbahn.*${walk('ahorn', 'kohlmais')}`),
+    new RegExp(`Schattberg X-press.*${RegExp.escape(walk('ahorn'))}`),
+    new RegExp(`Kohlmaisbahn.*${RegExp.escape(walk('ahorn', 'kohlmais'))}`),
   ]);
   await expect(panel(page).getByRole('radio')).toHaveCount(0);
 });
