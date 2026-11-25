@@ -189,7 +189,6 @@ test("an apartment's public page is linked under Good to know and indexed, in bo
   await expect(page).toHaveURL('/de/wohnungen/zirbe/anfahrt');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Anfahrt zur Zirbe');
   await expect(page.locator('meta[name=robots]')).toHaveCount(0);
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
 });
 
 test('an unlisted page is not indexed and linked from nowhere, and only its apartment has it', async ({
@@ -213,8 +212,33 @@ test('an unlisted page is not indexed and linked from nowhere, and only its apar
   await expect(page.getByRole('link', { name: 'Getting here', exact: true })).toHaveCount(0);
 });
 
-test("an apartment's page opens while Beds24 cannot be reached", async ({ page }) => {
-  const response = await page.goto('http://localhost:4001/en/apartments/zirbe/getting-here');
-  expect(response!.status()).toBe(200);
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Getting to Zirbe');
-});
+test(
+  "an apartment's page opens while Beds24 cannot be reached",
+  { tag: '@any-engine' },
+  async ({ page }) => {
+    const response = await page.goto('http://localhost:4001/en/apartments/zirbe/getting-here');
+    expect(response!.status()).toBe(200);
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Getting to Zirbe');
+  },
+);
+
+// One test per page and width, as the apartment page's scans.
+for (const path of [
+  '/de/wohnungen/zirbe/anfahrt',
+  '/en/apartments/zirbe/getting-here',
+  '/de/wohnungen/zirbe/wohnungsmappe',
+  '/en/apartments/zirbe/guide',
+])
+  for (const width of [320, 1280])
+    test(
+      `${path} passes axe at ${width} px in both seasons`,
+      { tag: '@any-engine' },
+      async ({ page }) => {
+        await page.setViewportSize({ width, height: 800 });
+        for (const season of ['winter', 'summer']) {
+          await page.goto(`${path}?season=${season}`);
+          const { violations } = await new AxeBuilder({ page }).analyze();
+          expect(violations, `in ${season}`).toEqual([]);
+        }
+      },
+    );
