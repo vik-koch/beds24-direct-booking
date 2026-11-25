@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { after, test } from 'node:test';
 import sharp from 'sharp';
-import { convertHero, convertPictures } from './pictures.mjs';
+import { convertHero, convertPicture, convertPictures } from './pictures.mjs';
 
 const root = mkdtempSync(join(tmpdir(), 'pictures-test-'));
 after(() => rmSync(root, { recursive: true, force: true }));
@@ -71,6 +71,17 @@ test('a crop 1% off square or off 2:1 still counts, and one pixel more does not'
   assert.equal(pictures.one.length, 2);
   await assert.rejects(convert(dir, listing('pictures/not-square.png')), /is 98 × 100/);
   await assert.rejects(convert(dir, listing('pictures/too-wide.png')), /is 203 × 100/);
+});
+
+test('a picture at a set width of any shape is converted at it and twice it, not narrower', async () => {
+  const dir = await folder({ 'logo.png': png(400, 100), 'small.png': png(319, 100) });
+  const at = (file) => convertPicture(dir, file, 'logo', temp('out'), '/p', temp('cache'), 160);
+  const { picture } = await at('pictures/logo.png');
+  assert.deepEqual(
+    [picture.width, picture.height, picture.sources.map((s) => s.width)],
+    [160, 40, [160, 320]],
+  );
+  await assert.rejects(at('pictures/small.png'), /small\.png is 319 wide, less than twice 160/);
 });
 
 test('a picture is measured as the camera meant it to be shown', async () => {

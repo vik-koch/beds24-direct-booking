@@ -92,6 +92,15 @@ content. The application has no wording, no colour and no typeface of its own. T
   one listed that no page shows stops the build. A picture made by an image model belongs to an
   apartment's pictures, which label it: a page has no such label.
 
+  A small picture, such as a partner's logo, is shown at a set width instead, from 48 to 720 px, in
+  an `<img>` of its own:
+  `<img src="pictures/skischule-musterberg.webp" alt="Skischule Musterberg" width="160">`. It keeps
+  its own shape, and the build converts it at that width and at twice it, so its file has to be at
+  least twice as wide. A picture may be a link, written `[![alt](pictures/….webp)](https://…)` or
+  `<a href="https://…"><img …></a>`, alone in its paragraph. Its alternative text is then the link's
+  name, so it says where the link leads, such as the partner's name, rather than what the picture
+  shows.
+
 - **An apartment's own pages** (`pages` in its file, optional) are content pages that belong to it,
   such as how its heating works or how to reach it: `"pages": ["arrival", "guide"]`, each in
   `pages/<slug>/<key>.<tag>.md` and written like any content page. Each is served below the

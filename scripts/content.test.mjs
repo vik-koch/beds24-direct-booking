@@ -1162,6 +1162,14 @@ test('a content page opens with its title and holds only what a page shows', () 
     ['# Title\n\n![A bed](pictures/.bed.webp)', /give a file in pictures\//],
     ['# Title\n\n![A bed](pictures/bed.webp "Bed")', /has title on <img>/],
     ['# Title\n\nSee ![A bed](pictures/bed.webp).', /outside a paragraph of its own/],
+    ['# Title\n\nSee [![A bed](pictures/bed.webp)](/en).', /outside a paragraph of its own/],
+    ['# Title\n\n[A ![bed](pictures/bed.webp)](/en)', /outside a paragraph of its own/],
+    ['# Title\n\n[![A bed](pictures/bed.webp)](javascript:alert(1))', /links to javascript:/],
+    ...['47', '721', '160px', '0160', ''].map((width) => [
+      `# Title\n\n<img src="pictures/bed.webp" alt="A bed" width="${width}">`,
+      new RegExp(`shows pictures/bed\\.webp ${width} wide: give a width from 48 to 720`),
+    ]),
+    ['# Title\n\n<img src="pictures/bed.webp" alt="A bed" height="80">', /has height on <img>/],
     ['# Title\n\n```\ncode\n```', /has <pre>/],
     ['# Title\n\n<p class="x">Text</p>', /has class on <p>/],
     ['# Title\n\n[Here](javascript:alert(1))', /links to javascript:alert\(1\)/],
@@ -1246,6 +1254,21 @@ test("a page's ## headings take an id from their text, and a link to an id leads
   assert.match(page.html, /<h3>Straße<\/h3>/);
 });
 
+test("a page's picture may have a width and a link", () => {
+  const page = readPage(
+    'page.md',
+    '# Partners\n\n<img src="pictures/logo.webp" alt="Glemmtal mountain school" width="160">\n\n[![The village](pictures/village.webp)](https://village.example)\n\n<details id="logo">\n<summary>Logo?</summary>\n\n<a href="/en"><img src="pictures/logo.webp" alt="Home" width="48"></a>\n\n</details>\n',
+    '/en/partners',
+  );
+  assert.match(page.html, /^<p><img src="pictures\/logo\.webp" alt="[^"]+" width="160"><\/p>/);
+  assert.match(page.html, /<p><a href="https:\/\/village\.example"><img [^>]+><\/a><\/p>/);
+  assert.deepEqual(page.pictures, [
+    { file: 'pictures/logo.webp', width: 160 },
+    { file: 'pictures/village.webp' },
+    { file: 'pictures/logo.webp', width: 48 },
+  ]);
+});
+
 test("a page's picture exists, and a credit is for a picture a page shows", () => {
   const missing = changed('site.json', () => undefined);
   writeFileSync(join(missing, 'pages/faq.en-GB.md'), '# FAQ\n\n![A bed](pictures/bed.webp)\n');
@@ -1286,7 +1309,7 @@ test("a page's picture is converted, and the page names its files wherever it sh
   await writeContent(dir, out, cache);
   const files = readdirSync(join(out, 'pictures', 'pages'));
   const page = readFileSync(join(out, 'page.en.faq.ts'), 'utf8');
-  assert.equal(files.length, 4);
+  assert.equal(files.filter((file) => file.startsWith('saalbach-summer-')).length, 4);
   assert.equal(page.match(/ srcset=/g).length, 2);
   // Served only as its conversions.
   assert.ok(!existsSync(join(out, 'pictures', 'saalbach-summer.webp')));
@@ -1296,4 +1319,20 @@ test("a page's picture is converted, and the page names its files wherever it sh
   );
   for (const [, url] of page.matchAll(/(\/pictures\/pages\/[^ ]+\.webp)/g))
     assert.ok(existsSync(join(out, url)), url);
+});
+
+test("a page's picture at a set width is converted at it and twice it, and shown at it", async () => {
+  const dir = changed('site.json', () => undefined);
+  writeFileSync(
+    join(dir, 'pages/faq.en-GB.md'),
+    '# FAQ\n\n![The village](pictures/saalbach-summer.webp)\n\n<img src="pictures/saalbach-summer.webp" alt="Small" width="300">\n',
+  );
+  const out = mkdtempSync(join(root, 'generated-'));
+  await writeContent(dir, out, cache);
+  const page = readFileSync(join(out, 'page.en.faq.ts'), 'utf8');
+  assert.match(
+    page,
+    /<img src=\\"\/pictures\/pages\/saalbach-summer-300\.[0-9a-f]{8}\.webp\\" alt=\\"Small\\" width=\\"300\\" srcset=\\"[^"]* 300w, [^"]*saalbach-summer-600\.[0-9a-f]{8}\.webp 600w\\" sizes=\\"300px\\" class=\\"sized\\" height=\\"225\\" loading=\\"lazy\\">/,
+  );
+  assert.match(page, /alt=\\"The village\\" srcset=\\"[^"]* 1920w\\"/);
 });

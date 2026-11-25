@@ -31,8 +31,12 @@ the choice:
    text reaches the browser.
 3. **What a page would not style is refused, not dropped:** headings, paragraphs, lists, quotes,
    rules, links to `http`, `https`, `mailto`, `tel`, the site's own paths and an `id` on the page,
-   tables, and `<details>` with its `<summary>` and an `id`. Anything else stops the build with the
-   file and the reason. The files are the deployment's own, so a mistake is fixed where it was made.
+   tables, `<details>` with its `<summary>` and an `id`, and pictures from `pictures/` with an
+   alternative text, each alone in its paragraph or in a link there. Anything else stops the build
+   with the file and the reason. The files are the deployment's own, so a mistake is fixed where it
+   was made. **A picture is shown across the column, or at the `width` its `<img>` gives,** from 48
+   to 720 px, at its own shape, such as a partner's logo. Amended on 2026-11-25 (#323): a logo
+   across the column is blown up, and its size belongs to the content, as on GitHub.
 4. **One component shows every content page,** with the description's typography from
    `src/styles.css`. A `<details>` looks like the apartment page's accordion and opens when the
    address names its `id`; a table wider than the column scrolls in a frame of its own.

@@ -52,9 +52,9 @@ async function read(dir, file, cache) {
 // under the source's digest and published under a digest of the file itself, so a different
 // encoding gets a new address. Sizes and region are measured as shown, after the camera's
 // orientation is applied.
-async function convert(bytes, { file, width, height, region }, name, out, url, cache) {
+async function convert(bytes, { file, width, height, region }, name, out, url, cache, sizes) {
   const shown = region ?? { width, height };
-  const sizes = [
+  sizes ??= [
     ...new Set([...widths.filter((w) => w < shown.width), Math.min(shown.width, widths.at(-1))]),
   ];
   const key = region
@@ -96,18 +96,22 @@ const measure = (bytes, file) =>
       },
     );
 
-// A picture from square to 2:1 in its widths, written to `out` and served from `url`, and how
-// many files had to be converted.
-export async function convertPicture(dir, file, name, out, url, cache) {
+// A picture from square to 2:1 in its widths, or of any shape shown at `width` in it and twice it,
+// written to `out` and served from `url`, and how many files had to be converted.
+export async function convertPicture(dir, file, name, out, url, cache, width) {
   mkdirSync(cache, { recursive: true });
   mkdirSync(out, { recursive: true });
   const { bytes, keep } = await read(dir, file, cache);
   const size = await measure(bytes, file);
-  const { width, height } = size;
-  if (width < height * (1 - slack) || width > height * 2 * (1 + slack))
-    throw new Error(`${file} is ${width} × ${height}, not between square and 2:1`);
-  const files = await convert(bytes, size, name, out, url, cache);
+  const { width: shown, height } = size;
+  if (width) {
+    if (shown < width * 2) throw new Error(`${file} is ${shown} wide, less than twice ${width}`);
+  } else if (shown < height * (1 - slack) || shown > height * 2 * (1 + slack))
+    throw new Error(`${file} is ${shown} × ${height}, not between square and 2:1`);
+  const files = await convert(bytes, size, name, out, url, cache, width && [width, width * 2]);
   await keep();
+  if (width)
+    files.picture = { ...files.picture, width, height: Math.round((width * height) / shown) };
   return files;
 }
 

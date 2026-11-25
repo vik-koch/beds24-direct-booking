@@ -1423,8 +1423,9 @@
       font-weight: var(--font-weight-medium);
     }
 
-    /* A picture stands in a paragraph of its own (the content script), across the column. */
-    p:has(> img) {
+    /* A picture stands in a paragraph of its own (the content script), maybe in a link, across the
+       column or at its set width. */
+    p:has(> img, > a > img) {
       margin-block: 1.25rem;
     }
 
@@ -1432,6 +1433,22 @@
       width: 100%;
       height: auto;
       border-radius: var(--radius-card);
+    }
+
+    /* Such as a logo, which keeps its own corners. */
+    .sized {
+      width: auto;
+      border-radius: 0;
+    }
+
+    a:has(> img) {
+      display: block;
+      width: fit-content;
+      border-radius: var(--radius-card);
+
+      &:has(> .sized) {
+        border-radius: 0;
+      }
     }
 
     a {
