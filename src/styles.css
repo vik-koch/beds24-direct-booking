@@ -181,11 +181,11 @@
     font-weight: var(--font-weight-medium);
   }
 
+  /* As tall as a control by its padding, so its line has the text's baseline (text with an icon,
+     below). */
   .button {
     display: inline-flex;
-    align-items: center;
-    min-height: var(--size-control);
-    padding: 0 1.5rem;
+    padding: calc((var(--size-control) - 1lh) / 2) 1.5rem;
     border-radius: var(--radius-control);
     background: var(--color-accent);
     color: var(--color-on-accent);
@@ -275,7 +275,6 @@
      the others. */
   .language-current {
     display: flex;
-    align-items: center;
     justify-content: space-between;
     gap: 1rem;
 
@@ -375,12 +374,12 @@
     visibility: hidden;
   }
 
+  /* Its line in the middle by its padding: the narrow slot clips the name, which may not wrap. */
   .season-sizer,
   .season-switch label {
     display: flex;
-    align-items: center;
     gap: 0.375rem;
-    padding: 0 0.875rem 0 0.5rem;
+    padding: calc((var(--narrow) - 1lh) / 2) 0.875rem calc((var(--narrow) - 1lh) / 2) 0.5rem;
     font-size: 0.9375rem;
     font-weight: var(--font-weight-medium);
     white-space: nowrap;
@@ -390,7 +389,7 @@
      move, as winter's sits at the left one. */
   .season-switch label[data-for='summer'] {
     flex-direction: row-reverse;
-    padding: 0 0.5rem 0 0.875rem;
+    padding-inline: 0.875rem 0.5rem;
   }
 
   .season-sizer {
@@ -447,10 +446,16 @@
       display: none;
     }
 
+    /* An icon alone, centred in its slot. */
     html[data-season] .season-switch label[data-for] {
+      align-items: center;
       justify-content: center;
       width: var(--narrow);
       padding: 0;
+
+      > ng-icon {
+        translate: none;
+      }
     }
 
     .season-name {
@@ -650,8 +655,6 @@
 
     li {
       display: flex;
-      /* The icon starts on the first line's baseline, also when the text wraps. */
-      align-items: baseline;
       gap: 0.5rem;
     }
 
@@ -659,16 +662,10 @@
       /* A smaller icon on a phone, where the features stand in a column; Lucide's own grid
          from 48rem up, where its strokes are sharpest. */
       --ng-icon__size: 1.25rem;
-      /* The icon's centre as a share of the font's cap height above the baseline: centred on
-         the line box, an icon looks low next to text with few descenders. The larger icon
-         sits a little higher to look centred. */
-      --lift: 0.5cap;
       --ng-icon__color: var(--color-ink-soft);
-      translate: 0 calc(var(--ng-icon__size) / 2 - var(--lift));
 
       @media (min-width: 48rem) {
         --ng-icon__size: 1.5rem;
-        --lift: 0.6cap;
       }
     }
   }
@@ -681,7 +678,6 @@
 
     li {
       display: flex;
-      align-items: center;
       gap: 0.5rem;
     }
 
@@ -711,7 +707,6 @@
   /* An apartment too small for the chosen guests: on its card and in its panel. */
   .too-small {
     display: flex;
-    align-items: center;
     gap: 0.5rem;
     color: var(--color-ink-soft);
     font-size: 0.875rem;
@@ -790,7 +785,6 @@
     top: 0.75rem;
     left: 0.75rem;
     display: inline-flex;
-    align-items: center;
     gap: 0.3125rem;
     padding-left: 0.5rem;
     line-height: 1.5;
@@ -803,7 +797,6 @@
   /* A caption's note that its picture was generated, in the viewer and the plan's view. */
   .ai-note {
     display: inline-flex;
-    align-items: center;
     gap: 0.3125rem;
     margin-left: 0.25rem;
     white-space: nowrap;
@@ -888,11 +881,9 @@
   :is(.back, .text-button) {
     --air: 0.875rem;
     display: inline-flex;
-    align-items: center;
     gap: 0.375rem;
-    min-height: var(--size-control);
     margin-inline: calc(-1 * var(--air));
-    padding-inline: var(--air);
+    padding: calc((var(--size-control) - 1lh) / 2) var(--air);
     border-radius: var(--radius-control);
     color: var(--color-accent);
     font-weight: var(--font-weight-medium);
@@ -947,7 +938,6 @@
     /* As tall as a control by its padding, so its baseline stays the text's. */
     > span {
       display: flex;
-      align-items: baseline;
       gap: 0.5rem;
       padding: calc((var(--size-control) - 1lh) / 2) var(--air);
       border-radius: var(--radius-control);
@@ -964,10 +954,6 @@
 
     &:hover > span {
       text-decoration-color: currentcolor;
-    }
-
-    ng-icon {
-      align-self: center;
     }
 
     /* On the narrowest screens a smaller size keeps the longer label on one line. */
@@ -1335,6 +1321,8 @@
   .taken.small {
     display: inline-flex;
     gap: 0.375rem;
+    padding-block: calc((var(--size-control-small) - 1lh + 1px) / 2)
+      calc((var(--size-control-small) - 1lh - 1px) / 2);
 
     ng-icon {
       --ng-icon__size: 1rem;
@@ -1416,26 +1404,19 @@
 
     /* An icon a heading, a question or a note opens with (the content script). */
     .icon {
-      --icon: 1em;
+      --ng-icon__size: 1em;
       flex: none;
-      width: var(--icon);
-      height: var(--icon);
+      width: var(--ng-icon__size);
+      height: var(--ng-icon__size);
       color: var(--color-ink-soft);
     }
 
     :is(summary, .note) > .icon {
-      --icon: var(--row-icon);
-    }
-
-    /* On the first line's baseline, its centre raised to half the cap height, where a capital's
-       middle is: centred on the line box, it sits low beside Jost. */
-    :is(h2, h3, .note) > .icon {
-      translate: 0 calc(var(--icon) / 2 - 0.5cap);
+      --ng-icon__size: var(--row-icon);
     }
 
     :is(h2, h3):has(> .icon) {
       display: flex;
-      align-items: baseline;
       gap: 0.5rem;
     }
 
@@ -1447,7 +1428,6 @@
     .note {
       display: grid;
       grid-template-columns: var(--row-icon) 1fr;
-      align-items: baseline;
       column-gap: var(--row-gap);
       padding: 1rem var(--row-padding);
       border: 0;
@@ -1626,6 +1606,56 @@
     [open] > summary::after {
       rotate: 180deg;
     }
+  }
+
+  /* Text with an icon beside it, before or after: the icon stands on the first line's baseline with
+     its centre at half the cap height, the capitals' middle, at any size and also when the text
+     wraps. The copied triggers take the baseline in ui.css, over their utilities. */
+  :is(
+    .back,
+    .text-button,
+    .button,
+    .plan-pill,
+    .season-switch label,
+    .taken.small,
+    .other-season > span,
+    .facts li,
+    .features li,
+    .entries h3,
+    .sheet-nav h3,
+    .too-small,
+    .ai-label,
+    .ai-note,
+    .language-current,
+    .map-line,
+    .spartan-accordion-trigger,
+    .spartan-navigation-menu-trigger,
+    .spartan-select-trigger,
+    .spartan-select-item,
+    .prose :is(h2, h3, summary, .note)
+  ) {
+    align-items: baseline;
+
+    /* Lowered from the baseline; only its part above the baseline takes room in the line. */
+    > :is(ng-icon, .icon) {
+      --drop: calc(var(--ng-icon__size, 1em) / 2 - 0.5cap);
+      margin-top: calc(-1 * var(--drop));
+      translate: 0 var(--drop);
+    }
+  }
+
+  .prose summary::after {
+    --drop: calc(1.125rem / 2 - 0.5cap);
+    margin-top: calc(-1 * var(--drop));
+    translate: 0 var(--drop);
+  }
+
+  /* A row taller than its line keeps the line in its middle; it is as wide as its place, and its
+     text grows in a span of its own, so it does not fall below its icon. A control that sizes
+     itself is as tall as it by its padding instead. */
+  :is(.spartan-accordion-trigger, .spartan-select-trigger, .spartan-select-item, .prose summary) {
+    flex-wrap: wrap;
+    align-content: center;
   }
 }
 

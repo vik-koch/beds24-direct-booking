@@ -398,7 +398,6 @@ type Fold = ReturnType<typeof fold>;
       .entries {
         h3 {
           display: flex;
-          align-items: center;
           gap: 0.625rem;
           font-weight: var(--font-weight-medium);
         }

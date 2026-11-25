@@ -175,9 +175,7 @@ import { address, LANGUAGE, pageLinks, TEXTS } from './texts';
                 </li>
               }
               <li>
-                <h3
-                  class="text-ink-soft mt-4 flex items-center gap-2 pb-1 text-[0.9375rem] font-medium"
-                >
+                <h3 class="text-ink-soft mt-4 flex gap-2 pb-1 text-[0.9375rem] font-medium">
                   <ng-icon name="lucideGlobe" aria-hidden="true" />{{ texts.nav.language }}
                 </h3>
                 <ul>

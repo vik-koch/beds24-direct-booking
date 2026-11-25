@@ -335,10 +335,9 @@ import { fill, LANGUAGE, TEXTS } from './texts';
         bottom: 0.75rem;
         left: 0.75rem;
         display: inline-flex;
-        align-items: center;
         gap: 0.375rem;
-        min-height: var(--size-control-small);
-        padding: 0 0.875rem 0 0.625rem;
+        padding: calc((var(--size-control-small) - 1lh) / 2) 0.875rem
+          calc((var(--size-control-small) - 1lh) / 2) 0.625rem;
         border-radius: var(--radius-control);
         background: var(--color-surface);
         font-size: 0.9375rem;
