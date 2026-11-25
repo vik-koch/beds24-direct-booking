@@ -130,7 +130,7 @@ const pageElements = {
   th: ['align'],
   td: ['align'],
   a: ['href'],
-  img: ['src', 'alt'],
+  img: ['src', 'alt', 'width'],
   details: ['id'],
   summary: [],
 };
@@ -177,6 +177,14 @@ export function readPage(file, markdown, path) {
       child.nodeType === child.COMMENT_NODE ? child.remove() : uncomment(child),
     );
   uncomment(body);
+  // A line of only <img …> is an HTML block, outside any paragraph.
+  const blocks = [body, ...body.querySelectorAll('details')];
+  for (const img of body.querySelectorAll('img'))
+    if (blocks.includes(img.parentNode)) {
+      const paragraph = body.ownerDocument.createElement('p');
+      img.replaceWith(paragraph);
+      paragraph.append(img);
+    }
   const title = body.firstElementChild;
   const ids = new Set();
   for (const element of body.querySelectorAll('*')) {
@@ -193,13 +201,17 @@ export function readPage(file, markdown, path) {
         );
     const parent = element.parentElement;
     if (name === 'img') {
+      const src = element.getAttribute('src');
       // A name that starts with a dot is a hidden file, which the server does not serve.
-      if (!/^pictures\/\w[\w.-]*$/.test(element.getAttribute('src')))
-        throw fail(`shows ${element.getAttribute('src')}: give a file in pictures/`);
+      if (!/^pictures\/\w[\w.-]*$/.test(src)) throw fail(`shows ${src}: give a file in pictures/`);
       if (!element.getAttribute('alt')?.trim())
-        throw fail(`shows ${element.getAttribute('src')} without an alternative text`);
-      if (parent?.localName !== 'p' || parent.childNodes.length !== 1)
-        throw fail(`shows ${element.getAttribute('src')} outside a paragraph of its own`);
+        throw fail(`shows ${src} without an alternative text`);
+      const width = element.getAttribute('width');
+      if (width !== null && !(/^[1-9]\d*$/.test(width) && width >= 48 && width <= 720))
+        throw fail(`shows ${src} ${width} wide: give a width from 48 to 720`);
+      const holder = parent?.localName === 'a' && parent.childNodes.length === 1 ? parent : element;
+      if (holder.parentElement?.localName !== 'p' || holder.parentElement.childNodes.length !== 1)
+        throw fail(`shows ${src} outside a paragraph of its own`);
     }
     if (
       name === 'summary' &&
@@ -231,7 +243,7 @@ export function readPage(file, markdown, path) {
   if (!text) throw fail('has a title without text');
   title.remove();
   // Markdown inside an HTML block needs a blank line before it, or it stays bare text.
-  for (const parent of [body, ...body.querySelectorAll('details')])
+  for (const parent of blocks)
     for (const node of parent.childNodes)
       if (node.nodeType === node.TEXT_NODE && node.textContent.trim())
         throw fail(
@@ -244,7 +256,10 @@ export function readPage(file, markdown, path) {
     table.replaceWith(frame);
     frame.append(table);
   }
-  const pictures = [...body.querySelectorAll('img')].map((img) => img.getAttribute('src'));
+  const pictures = [...body.querySelectorAll('img')].map((img) => ({
+    file: img.getAttribute('src'),
+    ...(img.hasAttribute('width') && { width: Number(img.getAttribute('width')) }),
+  }));
   return { title: text, html: template.innerHTML.trim(), pictures };
 }
 
@@ -504,7 +519,7 @@ export function readContent(dir) {
           if (!existsSync(page)) throw new Error(`${page}\n  (file): missing`);
           const path = [prefix(tag), ...(slug ? [paths.apartments, slug] : []), paths[key]];
           const read = readPage(page, readFileSync(page, 'utf8'), `/${path.join('/')}`);
-          for (const file of read.pictures)
+          for (const { file } of read.pictures)
             if (!existsSync(join(dir, file)))
               throw new Error(`${page}\n  shows ${file}, which does not exist`);
           return [slug ? `${slug}/${key}` : key, read];
@@ -547,7 +562,7 @@ export function readContent(dir) {
   }
   // A credit is for a picture a page shows.
   const shown = Object.values(pages).flatMap((list) =>
-    Object.values(list).flatMap(({ pictures }) => pictures),
+    Object.values(list).flatMap(({ pictures }) => pictures.map(({ file }) => file)),
   );
   site.pictures?.forEach(({ file }, index) => {
     if (!shown.includes(file))
@@ -676,15 +691,15 @@ export async function writeContent(dir, out, cache) {
   const { site, texts, pages } = readContent(dir);
   rmSync(out, { recursive: true, force: true });
   mkdirSync(out, { recursive: true });
+  // The pages' pictures, each file once for all pages and languages at each width it is shown.
+  const shownAt = (file, width) => `${file} ${width ?? ''}`;
+  const pagePictures = new Map(
+    Object.values(pages)
+      .flatMap((list) => Object.values(list).flatMap(({ pictures }) => pictures))
+      .map((picture) => [shownAt(picture.file, picture.width), picture]),
+  );
   // The apartments' and the pages' pictures, plans and the heroes are served only as their
   // converted files, unless a season's icon is the same file.
-  const pageFiles = [
-    ...new Set(
-      Object.values(pages).flatMap((list) =>
-        Object.values(list).flatMap(({ pictures }) => pictures),
-      ),
-    ),
-  ];
   const tabIcons = Object.values(site.seasons).map(({ icon }) => icon);
   const sources = new Set(
     [
@@ -693,7 +708,7 @@ export async function writeContent(dir, out, cache) {
         ...(plan ? [plan.file] : []),
       ]),
       ...Object.values(site.seasons).map(({ hero }) => hero.file),
-      ...pageFiles,
+      ...[...pagePictures.values()].map(({ file }) => file),
     ]
       .filter((file) => !tabIcons.includes(file))
       .map((file) => join(dir, file)),
@@ -712,9 +727,8 @@ export async function writeContent(dir, out, cache) {
     converted += files.converted;
     seasons[name] = { ...season, hero: { credit: season.hero.credit, ...files.hero } };
   }
-  // The pages' pictures, each file once for all pages and languages; a page shows its files.
   const shown = {};
-  for (const file of pageFiles) {
+  for (const [at, { file, width }] of pagePictures) {
     const name = basename(file).replace(/\.[^.]*$/, '');
     const page = await convertPicture(
       dir,
@@ -723,23 +737,29 @@ export async function writeContent(dir, out, cache) {
       join(out, 'pictures', 'pages'),
       '/pictures/pages',
       cache,
+      width,
     ).catch((error) => {
       throw new Error(`${join(dir, file)}\n  ${error.message}`);
     });
     converted += page.converted;
-    shown[file] = page.picture;
+    shown[at] = page.picture;
   }
   const withFiles = ({ title, html }) => {
     const template = parse(html);
     for (const img of template.content.querySelectorAll('img')) {
-      const { width, height, sources } = shown[img.getAttribute('src')];
+      const sized = img.getAttribute('width');
+      const { width, height, sources } = shown[shownAt(img.getAttribute('src'), sized)];
       img.setAttribute('src', sources[0].url);
       img.setAttribute('srcset', sources.map(({ url, width }) => `${url} ${width}w`).join(', '));
-      // The column's side padding, 1rem and from 48rem 2rem, around at most 45rem.
+      // The column's side padding, 1rem and from 48rem 2rem, around at most 45rem; a sized picture
+      // is at most 720 px, so narrower than the column only below 48rem.
       img.setAttribute(
         'sizes',
-        '(min-width: 49rem) 45rem, (min-width: 48rem) calc(100vw - 4rem), calc(100vw - 2rem)',
+        sized
+          ? `(min-width: ${Number(sized) + 32}px) ${sized}px, calc(100vw - 2rem)`
+          : '(min-width: 49rem) 45rem, (min-width: 48rem) calc(100vw - 4rem), calc(100vw - 2rem)',
       );
+      if (sized) img.className = 'sized';
       img.setAttribute('width', width);
       img.setAttribute('height', height);
       img.setAttribute('loading', 'lazy');

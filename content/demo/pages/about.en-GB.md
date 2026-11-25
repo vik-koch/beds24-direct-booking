@@ -18,6 +18,13 @@ from the region: stone pine, larch and maple give the apartments their names.
 
 We look after the houses ourselves. When you arrive and during your stay, you reach us in person.
 
+## Our partner in the valley
+
+Skischule Musterberg teaches skiing in winter and leads guided hikes in summer. Book a course with
+them and mention us: our guests get a place even on a full course.
+
+<a href="https://example.com/"><img src="pictures/skischule-musterberg.webp" alt="Skischule Musterberg" width="160"></a>
+
 ## Contact
 
 Firn & Farn Appartements GmbH  

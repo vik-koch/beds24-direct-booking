@@ -126,6 +126,22 @@ test("the company page's picture is converted, fits a phone, and is credited", a
   );
 });
 
+test("the partner's logo keeps its set width and leads to the partner", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 640 });
+  await page.goto('/en/about');
+  const link = page.getByRole('link', { name: 'Skischule Musterberg' });
+  await expect(link).toHaveAttribute('href', 'https://example.com/');
+  const logo = link.getByRole('img');
+  await logo.scrollIntoViewIfNeeded();
+  await expect
+    .poll(() => logo.evaluate((img: HTMLImageElement) => img.currentSrc))
+    .toMatch(/\/pictures\/pages\/skischule-musterberg-(160|320)\.[0-9a-f]{8}\.webp$/);
+  // The link, and with it the focus ring, is as large as the logo.
+  const box = await logo.boundingBox();
+  expect(box?.width).toBe(160);
+  expect(await link.boundingBox()).toEqual(box);
+});
+
 test("the FAQ's list leads to its groups and a question's address opens it, below the header", async ({
   page,
 }) => {
