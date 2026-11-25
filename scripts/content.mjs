@@ -190,7 +190,7 @@ export function readPage(file, markdown, path) {
   for (const block of body.querySelectorAll('h2, h3, summary, blockquote > p:first-child')) {
     const start = block.firstChild;
     const [code, name] =
-      (start?.nodeType === start.TEXT_NODE &&
+      (start?.nodeName === '#text' &&
         start.textContent.match(/^\s*:([a-z0-9]+(?:-[a-z0-9]+)*):\s+/)) ||
       [];
     if (!code) continue;
@@ -233,6 +233,8 @@ export function readPage(file, markdown, path) {
       throw fail('has a <summary> that does not open a <details>');
     if (name === 'details' && element.firstElementChild?.localName !== 'summary')
       throw fail('has a <details> that does not open with a <summary>');
+    if (name === 'summary' && !element.textContent.trim())
+      throw fail('has a question without text');
     if (name === 'h2') element.id = idOf(element.textContent);
     if (name === 'details' || name === 'h2') {
       const id = element.id;

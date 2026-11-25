@@ -1200,6 +1200,14 @@ test('a content page opens with its title and holds only what a page shows', () 
     ],
     ['# Title\n\n<p>Text <summary>Q</summary></p>', /a <summary> that does not open a <details>/],
     ['# Title\n\n<summary>Q</summary>', /a <summary> that does not open a <details>/],
+    [
+      '# Title\n\n<details id="a">\n<summary></summary>\n\nA.\n\n</details>',
+      /a question without text/,
+    ],
+    [
+      '# Title\n\n<details id="a">\n<summary>:info: </summary>\n\nA.\n\n</details>',
+      /a question without text/,
+    ],
     ['# ![A bed](pictures/bed.webp)', /outside a paragraph of its own/],
     ['# <span></span>', /has <span>/],
     ['# <strong> </strong>', /a title without text/],
