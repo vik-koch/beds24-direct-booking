@@ -203,6 +203,7 @@
     "zoomOut": "Zoom out",
     "reset": "Show the whole view",
     "attribution": "Map sources",
+    "report": "Report a map error",
     "gestures": {
       "windows": "Hold Ctrl and scroll to zoom the map",
       "mac": "Hold ⌘ and scroll to zoom the map",

@@ -203,6 +203,7 @@
     "zoomOut": "Verkleinern",
     "reset": "Ganze Ansicht zeigen",
     "attribution": "Quellen der Karte",
+    "report": "Kartenfehler melden",
     "gestures": {
       "windows": "Zum Zoomen Strg gedrückt halten und scrollen",
       "mac": "Zum Zoomen ⌘ gedrückt halten und scrollen",

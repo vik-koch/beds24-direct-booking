@@ -1,7 +1,8 @@
 # Imprint
 
 > Firn & Farn is made up: this website is a demo. The company and everything on this page are
-> examples of what an Austrian landlord gives here.
+> examples of what an Austrian landlord gives here, except the email address: it is real and reaches
+> the person who runs the demo.
 
 ## Details under § 5 of the E-Commerce Act and § 14 of the Commercial Code
 
@@ -9,7 +10,7 @@
 Musterweg 0, 5753 Saalbach, Austria
 
 Phone: [+43 000 0000000](tel:+430000000000)  
-Email: [hallo@firn-und-farn.example](mailto:hallo@firn-und-farn.example)
+Email: [demo@vikkoch.com](mailto:demo@vikkoch.com)
 
 - **Legal form:** Limited liability company (GmbH)
 - **Registered office:** Saalbach-Hinterglemm

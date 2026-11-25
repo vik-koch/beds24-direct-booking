@@ -1,7 +1,8 @@
 # Über uns
 
 > Firn & Farn ist erfunden: Diese Website ist eine Demo, und das Unternehmen, seine Wohnungen und
-> seine Kontaktdaten sind Beispiele.
+> seine Kontaktdaten sind Beispiele, außer der E-Mail-Adresse: Sie ist echt und erreicht die Person,
+> die die Demo betreibt.
 
 Die Firn & Farn Appartements GmbH besitzt zwei Häuser in Saalbach, Haus Firn und Haus Farn, und
 vermietet drei Wohnungen darin selbst. Wir haben die Häuser 2014 übernommen und Stock für Stock
@@ -25,6 +26,6 @@ Firn & Farn Appartements GmbH
 Musterweg 0, 5753 Saalbach, Österreich
 
 Telefon: [+43 000 0000000](tel:+430000000000)  
-E-Mail: [hallo@firn-und-farn.example](mailto:hallo@firn-und-farn.example)
+E-Mail: [demo@vikkoch.com](mailto:demo@vikkoch.com)
 
 Die Angaben zum Unternehmen finden Sie im [Impressum](/de/impressum).

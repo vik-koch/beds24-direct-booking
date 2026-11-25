@@ -7,8 +7,8 @@
 ## Wer verantwortlich ist
 
 Firn & Farn Appartements GmbH, Musterweg 0, 5753 Saalbach, Österreich,
-[hallo@firn-und-farn.example](mailto:hallo@firn-und-farn.example). Einen Datenschutzbeauftragten
-haben wir nicht; schreiben Sie uns direkt.
+[demo@vikkoch.com](mailto:demo@vikkoch.com). Einen Datenschutzbeauftragten haben wir nicht;
+schreiben Sie uns direkt.
 
 ## Kurz gesagt
 
@@ -84,6 +84,6 @@ Sie haben das Recht auf
 5. Datenübertragbarkeit und
 6. Widerspruch gegen eine Verarbeitung aus berechtigtem Interesse.
 
-Schreiben Sie uns dazu an [hallo@firn-und-farn.example](mailto:hallo@firn-und-farn.example). Sie
-können sich auch bei der Österreichischen Datenschutzbehörde beschweren, Barichgasse 40–42, 1030
-Wien, [dsb.gv.at](https://www.dsb.gv.at).
+Schreiben Sie uns dazu an [demo@vikkoch.com](mailto:demo@vikkoch.com). Sie können sich auch bei der
+Österreichischen Datenschutzbehörde beschweren, Barichgasse 40–42, 1030 Wien,
+[dsb.gv.at](https://www.dsb.gv.at).

@@ -58,7 +58,9 @@ A spike (#254, branch `spike/254-map`, not merged) tried the decision below in t
    out. Woods get a pattern of Lucide trees the same way. No sprite sheet is served, and the icons
    match the site's own.
 9. **The attribution stays visible,** "© OpenStreetMap · Protomaps", with a link to OpenStreetMap's
-   copyright page. It is the only link out, and nothing is fetched from there unless it is followed.
+   copyright page, and a link to OpenStreetMap's page for reporting an error in the map, which
+   FOSSGIS's routing servers ask for (#319). They are the only links out, and nothing is fetched
+   from there unless one is followed.
 
 ## Options
 
