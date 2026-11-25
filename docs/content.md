@@ -119,10 +119,10 @@ content. The application has no wording, no colour and no typeface of its own. T
 
 - **Public or unlisted:** a content page the site's navigation links is public: for a site page the
   header or the footer, for an apartment's page a fold under "Good to know" of any apartment, in any
-  language. Any other is unlisted: the page tells search engines not to index it (`noindex`), and a
-  guest reaches it by its address, such as a QR code in the apartment. Unlisted is not secret:
-  anyone with the address can read it, so a door's or a key box's code goes in Beds24's messages to
-  the guest, never on a page.
+  language; a fold's link to a site page does not make it public. Any other is unlisted: the page
+  tells search engines not to index it (`noindex`), and a guest reaches it by its address, such as a
+  QR code in the apartment. Unlisted is not secret: anyone with the address can read it, so a door's
+  or a key box's code goes in Beds24's messages to the guest, never on a page.
 - **The header's links** (`header` in `site.json`) are up to two content pages, in their order,
   after the header's own links to the free weeks, the apartments and the location. The page shown is
   marked there, and the footer does not link to it again.

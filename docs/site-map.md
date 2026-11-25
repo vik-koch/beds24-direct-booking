@@ -46,10 +46,11 @@ slug is the same in both languages and comes from the deployment's content.
 - **An apartment's own pages** are content pages that belong to it, below its address. Its page
   links them from folds of its own under "Good to know", after Beds24's, each with an icon, a title
   and a text the content gives.
-- **Public or unlisted:** a content page the header, the footer or a fold under "Good to know" links
-  is public and indexed. Any other is unlisted: it carries `noindex`, nothing links to it, and a
-  guest reaches it by its address, such as a QR code in the apartment. Anyone with the address can
-  read it, so no door's or key box's code is written on a page.
+- **Public or unlisted:** a site page is public when the header or the footer links it, an
+  apartment's page when a fold under "Good to know" does; a fold's link to a site page does not make
+  it public. A public page is indexed. Any other is unlisted: it carries `noindex`, no navigation
+  links to it, and a guest reaches it by its address, such as a QR code in the apartment. Anyone
+  with the address can read it, so no door's or key box's code is written on a page.
 - **A guide** is a content page: one for every apartment is a page of the site, one that differs by
   apartment is a page of each. A part every guide shares, such as how waste is sorted, is written
   into each one's file. The FAQ is one page for all apartments.
