@@ -98,14 +98,31 @@ content. The application has no wording, no colour and no typeface of its own. T
   apartment's address, `/en/apartments/zirbe/getting-here`, with its address part from `paths.<key>`
   and its link text from `pages.<key>`, as a site page's: a key that several apartments list shares
   both, so `arrival` is the same word under every apartment. A key is a site page's or the
-  apartments', not both. Those its page links under "Good to know" are listed in `public`,
-  `"public": ["arrival"]`; they stay linked while Beds24 cannot be reached, since the pages are
-  built with the site.
+  apartments', not both. Nothing links to one by itself: a fold under "Good to know" does.
+- **An apartment's folds** (`goodToKnow` in its file, optional) follow Beds24's arrival times and
+  house rules under "Good to know", in their order. Each has a Lucide icon by its name, and its
+  title and text in each of the site's languages by tag, as a picture's `alt`:
+
+  ```json
+  "goodToKnow": [
+    {
+      "icon": "map-pinned",
+      "title": { "de-AT": "Anfahrt", "en-GB": "Getting here" },
+      "text": { "de-AT": "…: [Anfahrt zur Zirbe](/de/wohnungen/zirbe/anfahrt).", "en-GB": "…" }
+    }
+  ]
+  ```
+
+  The text is Markdown with paragraphs, lists, **bold**, _italic_ and links, which lead where a
+  content page's may; a link to an apartment's page must name one it has. The folds show while
+  Beds24 cannot be reached, and the pages they link are built with the site.
+
 - **Public or unlisted:** a content page the site's navigation links is public: for a site page the
-  header or the footer, for an apartment's page its `public`. Any other is unlisted: the page tells
-  search engines not to index it (`noindex`), and a guest reaches it by its address, such as a QR
-  code in the apartment. Unlisted is not secret: anyone with the address can read it, so a door's or
-  a key box's code goes in Beds24's messages to the guest, never on a page.
+  header or the footer, for an apartment's page a fold under "Good to know" of any apartment, in any
+  language. Any other is unlisted: the page tells search engines not to index it (`noindex`), and a
+  guest reaches it by its address, such as a QR code in the apartment. Unlisted is not secret:
+  anyone with the address can read it, so a door's or a key box's code goes in Beds24's messages to
+  the guest, never on a page.
 - **The header's links** (`header` in `site.json`) are up to two content pages, in their order,
   after the header's own links to the free weeks, the apartments and the location. The page shown is
   marked there, and the footer does not link to it again.
@@ -368,15 +385,16 @@ the way to no place of the map, a place without its name or with a text for a se
 not list, tiles cut for another box or a tile missing, a `map/` folder without a map, a map without
 a `.woff2` font in `theme.css`, a route missing, left over or computed before a point moved, a
 content page without its file, address or link text in a language, a page file `site.json` or its
-apartment does not list, an apartment's `public` page it does not list or a page key the site lists
-too, a header or footer link to no page, a footer link the header has, two pages at one address, a
-page that does not open with its title or holds an element, an attribute, a link or a question's
-`id` the pages do not take, a `##` heading whose text gives no `id` or one the page has already, a
-`#` link to no `id` on its page, a page's picture without its file or alternative text or beside
-other text, a credited picture no page shows, and a part beyond its boundary stop the build with the
-file and the key named; for the tiles and the routes, with the script to run. The schema, not the
-demo's files, defines the keys, so the compiler checks every template against the same keys for
-every site. Every language has the same keys, so every language renders the same elements and a
+apartment does not list, a page key the site lists too, a fold without its title or text in a
+language, with an icon that is not Lucide's, an element its text does not show or a link to no
+apartment's page, a header or footer link to no page, a footer link the header has, two pages at one
+address, a page that does not open with its title or holds an element, an attribute, a link or a
+question's `id` the pages do not take, a `##` heading whose text gives no `id` or one the page has
+already, a `#` link to no `id` on its page, a page's picture without its file or alternative text or
+beside other text, a credited picture no page shows, and a part beyond its boundary stop the build
+with the file and the key named; for the tiles and the routes, with the script to run. The schema,
+not the demo's files, defines the keys, so the compiler checks every template against the same keys
+for every site. Every language has the same keys, so every language renders the same elements and a
 change of language finds the reader's place.
 
 ## Another folder

@@ -40,10 +40,12 @@ the choice:
    `pages/<slug>/<key>.<tag>.md`, served below its address and prerendered like the site's. **A page
    the site's navigation links is public; any other is unlisted:** `noindex`, reached by its
    address, such as a QR code in the apartment. The navigation is the header and the footer for the
-   site's pages and the apartment page's "Good to know" for its own, which an apartment's `public`
-   lists. Unlisted is not secret, so no code to a door or a key box goes on a page. Amended on
-   2026-11-25 (#59): a guide is partly the same everywhere and partly one apartment's, and some help
-   a guest at the apartment but are no use to a visitor choosing one.
+   site's pages, and for an apartment's the folds its file adds under "Good to know", each with an
+   icon, a title and a short Markdown text per language whose links the build reads: a page a fold
+   links to is public, so nothing else has to list it. Unlisted is not secret, so no code to a door
+   or a key box goes on a page. Amended on 2026-11-25 (#59): a guide is partly the same everywhere
+   and partly one apartment's, and some help a guest at the apartment but are no use to a visitor
+   choosing one.
 
 ## Options
 
@@ -55,6 +57,8 @@ the choice:
 | HTML files, sanitised like Beds24's texts | No parser | Harder to write and review; an editor's export brings styling to strip, and stripping hides the mistake | Rejected. |
 | Texts in the texts files' JSON | No new file kind | Long texts with structure as JSON strings; no preview | Rejected. |
 | An apartment's pages as site pages with the slug in their key, such as `zirbe-heating` | No new kind of page | The address does not say which apartment; the apartment page cannot find its own | Rejected (#59). |
+| An apartment's public pages listed in its file and shown as link rows under "Good to know" | No text to write | A row that leaves the page among rows that fold open; no word around the link; the list and the links can disagree | Rejected (#59, PR 327). |
+| Public pages listed in its file beside the folds that link them | Indexing said in one place | Says twice what the links already say; the build must check that both agree | Rejected (#59). |
 | Unlisted pages behind a code or a booking's token | A guide only guests read | A login or a link per booking, for text that holds nothing secret | Rejected (#59). |
 | A headless CMS | Editing in a browser | A service, accounts and a data flow for a few pages; the brief has no content editor in phase 1 | Rejected. |
 
