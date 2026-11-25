@@ -429,7 +429,7 @@ const shownMonths = new InjectionToken('booking panel months', {
 
         h3 {
           font-size: 1.0625rem;
-          font-weight: 500;
+          font-weight: var(--font-weight-medium);
         }
       }
 
@@ -589,7 +589,7 @@ const shownMonths = new InjectionToken('booking panel months', {
         }
 
         .week:not(.full) & {
-          font-weight: 500;
+          font-weight: var(--font-weight-medium);
         }
 
         .week:not(.full, .chosen) & {
@@ -681,7 +681,7 @@ const shownMonths = new InjectionToken('booking panel months', {
       .start {
         border: 1px solid var(--color-accent);
         color: var(--color-accent);
-        font-weight: 500;
+        font-weight: var(--font-weight-medium);
       }
 
       .panel-empty {
@@ -741,7 +741,7 @@ const shownMonths = new InjectionToken('booking panel months', {
           padding-top: 0.625rem;
           border-top: 1px solid var(--color-line);
           font-size: 1.1875rem;
-          font-weight: 500;
+          font-weight: var(--font-weight-medium);
 
           dt {
             color: var(--color-ink);

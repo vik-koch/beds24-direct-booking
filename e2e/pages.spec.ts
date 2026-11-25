@@ -21,6 +21,21 @@ test('a content page shows its file, and the language switch leads to the same p
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
 });
 
+test("a page's first heading sits under its title, a later one with room above it", async ({
+  page,
+}) => {
+  await page.goto(`${other}/it/condizioni`);
+  await expect(page.getByRole('heading', { level: 2, name: 'Cancellazione' })).toHaveCSS(
+    'margin-top',
+    '0px',
+  );
+  await page.goto('/en/faq');
+  await expect(page.getByRole('heading', { level: 2, name: 'Arrival' })).toHaveCSS(
+    'margin-top',
+    '36px',
+  );
+});
+
 test('a table wider than the column scrolls in its frame, reached by keyboard', async ({
   page,
 }) => {
@@ -141,4 +156,19 @@ test("the FAQ's list leads to its groups and a question's address opens it, belo
   await expect(parking).toHaveAttribute('open');
   await below(parking);
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+});
+
+test('a question opens with a transition where the browser eases to auto, at once with reduced motion', async ({
+  page,
+}) => {
+  const durations = () =>
+    page.locator('details#price').evaluate((details) => ({
+      answer: getComputedStyle(details, '::details-content').transitionDuration,
+      arrow: getComputedStyle(details.querySelector('summary')!, '::after').transitionDuration,
+    }));
+  await page.goto('/en/faq');
+  if (await page.evaluate(() => CSS.supports('interpolate-size: allow-keywords')))
+    await expect.poll(durations).toMatchObject({ answer: '0.3s, 0.3s' });
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await expect.poll(durations).toEqual({ answer: '0s', arrow: '0s' });
 });

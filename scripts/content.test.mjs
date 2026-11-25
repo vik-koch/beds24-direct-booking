@@ -966,6 +966,13 @@ test('a map colour counts when declared, not in a comment, with any space before
   assert.throws(() => readContent(dir), /--color-poi-shop: a map needs it/);
 });
 
+test('the theme names both weights on :root', () => {
+  const dir = changed('site.json', () => undefined);
+  const file = join(dir, 'theme.css');
+  writeFileSync(file, readFileSync(file, 'utf8').replace(/--font-weight-medium:[^;]+;/, ''));
+  assert.throws(() => readContent(dir), /theme\.css\n {2}--font-weight-medium: missing/);
+});
+
 test('the lifts are taken for the box the map has now', () => {
   const lifts = changed('map/lifts.json', (file) => (file.box.east += 0.001));
   assert.throws(
@@ -1143,6 +1150,17 @@ test("a content page's title is its heading, and its tables scroll in a frame", 
   );
 });
 
+test("a page's comments stay in its file, also one above the title", () => {
+  const page = readPage(
+    'page.md',
+    '<!-- TODO: the title -->\n\n# Terms\n\n<!--\nA note\nover lines\n-->\n\nText <!-- inline --> here.\n\n<details id="keys">\n<summary>Keys?<!-- ask --></summary>\n\n<!-- in an answer -->\n\nBy the door.\n\n</details>\n',
+    '/en/terms',
+  );
+  assert.equal(page.title, 'Terms');
+  assert.doesNotMatch(page.html, /<!--|-->|TODO|note|inline|ask|answer/);
+  assert.match(page.html, /<p>Text  here\.<\/p>/);
+});
+
 test("a page's ## headings take an id from their text, and a link to an id leads to it at the page's path", () => {
   const page = readPage(
     'page.md',
@@ -1201,7 +1219,7 @@ test("a page's picture is converted, and the page names its files wherever it sh
   assert.ok(!existsSync(join(out, 'pictures', 'saalbach-summer.webp')));
   assert.match(
     page,
-    /<img src=\\"\/pictures\/pages\/saalbach-summer-480\.[0-9a-f]{8}\.webp\\" alt=\\"The village\\" srcset=\\"[^"]* 1920w\\" sizes=\\"\(min-width: 44rem\) 40rem, 100vw\\" width=\\"1920\\" height=\\"1440\\" loading=\\"lazy\\">/,
+    /<img src=\\"\/pictures\/pages\/saalbach-summer-480\.[0-9a-f]{8}\.webp\\" alt=\\"The village\\" srcset=\\"[^"]* 1920w\\" sizes=\\"\(min-width: 49rem\) 45rem, \(min-width: 48rem\) calc\(100vw - 4rem\), calc\(100vw - 2rem\)\\" width=\\"1920\\" height=\\"1440\\" loading=\\"lazy\\">/,
   );
   for (const [, url] of page.matchAll(/(\/pictures\/pages\/[^ ]+\.webp)/g))
     assert.ok(existsSync(join(out, url)), url);

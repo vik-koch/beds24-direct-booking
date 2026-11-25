@@ -617,7 +617,7 @@ function flavor(p: ReturnType<typeof palette>): Flavor {
         /* MapLibre sets its own font on the map; a label takes the theme's. */
         font-family: var(--font-sans);
         font-size: 0.8125rem;
-        font-weight: 500;
+        font-weight: var(--font-weight-medium);
         white-space: nowrap;
         cursor: pointer;
         /* Its near edge beside the pin's head, level with its middle. */

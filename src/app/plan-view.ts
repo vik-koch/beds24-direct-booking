@@ -143,7 +143,7 @@ import { LANGUAGE } from './texts';
         border-radius: var(--radius-control);
         background: color-mix(in srgb, var(--color-surface) 88%, transparent);
         font-size: 0.8125rem;
-        font-weight: 500;
+        font-weight: var(--font-weight-medium);
         white-space: nowrap;
         pointer-events: none;
         visibility: hidden;

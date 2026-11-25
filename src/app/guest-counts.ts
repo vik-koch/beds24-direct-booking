@@ -164,7 +164,7 @@ import { TEXTS } from './texts';
         padding-right: 0.875rem;
         border-radius: inherit;
         font-size: 0.9375rem;
-        font-weight: 600;
+        font-weight: var(--font-weight-medium);
         cursor: pointer;
       }
 
@@ -202,7 +202,7 @@ import { TEXTS } from './texts';
         padding-right: calc(0.875rem - 0.375rem + 1.25rem);
         border-radius: 0.5rem;
         font-size: 0.9375rem;
-        font-weight: 500;
+        font-weight: var(--font-weight-medium);
         cursor: pointer;
 
         &[data-highlighted] {

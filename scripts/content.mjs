@@ -142,11 +142,18 @@ const pageElements = {
 export function readPage(file, markdown, path) {
   const fail = (reason) => new Error(`${file}\n  ${reason}`);
   const tokens = marked.lexer(markdown);
-  const first = tokens.find((token) => token.type !== 'space');
+  // A note to the page's editors, also one above the title, stays in its file.
+  const note = (token) => token.type === 'html' && token.raw.trimStart().startsWith('<!--');
+  const first = tokens.find((token) => token.type !== 'space' && !note(token));
   if (first?.type !== 'heading' || first.depth !== 1)
     throw fail('starts with its title, a # heading');
   const template = parse(marked.parser(tokens));
   const body = template.content;
+  const uncomment = (node) =>
+    [...node.childNodes].forEach((child) =>
+      child.nodeType === child.COMMENT_NODE ? child.remove() : uncomment(child),
+    );
+  uncomment(body);
   const title = body.firstElementChild;
   const ids = new Set();
   for (const element of body.querySelectorAll('*')) {
@@ -385,8 +392,7 @@ export function readContent(dir) {
   )?.[2];
   if (site.map && !(font && existsSync(join(dir, font))))
     throw new Error(`${join(dir, 'theme.css')}\n  @font-face: a map needs a .woff2 file in fonts/`);
-  // And its water, woods and places in the theme's map colours, the same in every season: declared
-  // on :root, not in a comment.
+  // A map's colours and the two weights hold in every season: declared on :root, not in a comment.
   const root = readFileSync(join(dir, 'theme.css'), 'utf8')
     .replace(/\/\*[\s\S]*?\*\//g, '')
     .match(/:root\s*\{[^}]*\}/g)
@@ -395,6 +401,9 @@ export function readContent(dir) {
     if (site.map && !new RegExp(`--color-${name}\\s*:`).test(root ?? ''))
       throw new Error(`${join(dir, 'theme.css')}
   --color-${name}: a map needs it`);
+  for (const name of ['normal', 'medium'])
+    if (!new RegExp(`--font-weight-${name}\\s*:`).test(root ?? ''))
+      throw new Error(`${join(dir, 'theme.css')}\n  --font-weight-${name}: missing`);
   const map = site.map && { ...readMap(dir, site.map, apartments), font: `/${font}` };
   // Each place is named in every language, with a text only for a season the site lists.
   const places = site.map?.places.map((place) => place.key) ?? [];
@@ -644,7 +653,11 @@ export async function writeContent(dir, out, cache) {
       const { width, height, sources } = shown[img.getAttribute('src')];
       img.setAttribute('src', sources[0].url);
       img.setAttribute('srcset', sources.map(({ url, width }) => `${url} ${width}w`).join(', '));
-      img.setAttribute('sizes', '(min-width: 44rem) 40rem, 100vw');
+      // The column's side padding, 1rem and from 48rem 2rem, around at most 45rem.
+      img.setAttribute(
+        'sizes',
+        '(min-width: 49rem) 45rem, (min-width: 48rem) calc(100vw - 4rem), calc(100vw - 2rem)',
+      );
       img.setAttribute('width', width);
       img.setAttribute('height', height);
       img.setAttribute('loading', 'lazy');

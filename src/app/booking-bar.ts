@@ -113,7 +113,7 @@ export interface BarLine {
           }
 
           strong {
-            font-weight: 500;
+            font-weight: var(--font-weight-medium);
           }
 
           small {

@@ -299,7 +299,7 @@ import { fill, LANGUAGE, TEXTS } from './texts';
         border-radius: var(--radius-control);
         background: var(--color-surface);
         font-size: 0.9375rem;
-        font-weight: 500;
+        font-weight: var(--font-weight-medium);
         white-space: nowrap;
         box-shadow: var(--shadow-card);
       }
@@ -342,7 +342,7 @@ import { fill, LANGUAGE, TEXTS } from './texts';
         border-radius: var(--radius-control);
         background: var(--color-surface);
         font-size: 0.9375rem;
-        font-weight: 500;
+        font-weight: var(--font-weight-medium);
         box-shadow: var(--shadow-card);
         cursor: pointer;
         transition: color 0.2s;

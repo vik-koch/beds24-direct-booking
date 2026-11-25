@@ -24,16 +24,22 @@ import { Choice } from './choice';
     </div>
   `,
   styles: `
+    /* Unlayered, these win over .prose's rules in @layer components. */
     .text-prose {
+      max-width: 45rem;
+
       h2 {
-        margin-top: 2rem;
         font-size: 1.375rem;
+
+        &:not(:first-child) {
+          margin-top: 2.25rem;
+        }
       }
 
       h3,
       h4 {
         margin: 1.25rem 0 0.375rem;
-        font-weight: 500;
+        font-weight: var(--font-weight-medium);
       }
     }
   `,

@@ -183,7 +183,7 @@ type SeasonWeeks = FreeWeeks['seasons'][number];
 
       .teaser h3 {
         font-size: 1.5rem;
-        font-weight: 500;
+        font-weight: var(--font-weight-medium);
         letter-spacing: -0.01em;
       }
 
