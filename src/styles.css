@@ -1414,6 +1414,52 @@
       border-left: 2px solid var(--color-line);
     }
 
+    /* An icon a heading, a question or a note opens with (the content script). */
+    .icon {
+      flex: none;
+      width: 1em;
+      height: 1em;
+      color: var(--color-ink-soft);
+    }
+
+    :is(h2, h3):has(> .icon) {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    :is(summary, .note) > .icon {
+      width: var(--row-icon);
+      height: var(--row-icon);
+    }
+
+    /* The answer starts where the question's text does, as in the accordion. */
+    details:has(> summary > .icon) > :not(summary) {
+      margin-left: calc(var(--row-padding) + var(--row-icon) + var(--row-gap));
+    }
+
+    .note {
+      display: grid;
+      grid-template-columns: var(--row-icon) 1fr;
+      column-gap: var(--row-gap);
+      padding: 1rem var(--row-padding);
+      border: 0;
+      border-radius: var(--radius-card);
+
+      > .icon {
+        margin-top: calc((1lh - var(--row-icon)) / 2);
+        color: var(--color-accent);
+      }
+
+      > :not(.icon) {
+        grid-column: 2;
+      }
+
+      > :last-child {
+        margin-bottom: 0;
+      }
+    }
+
     hr {
       margin: 1rem 0;
       border-color: var(--color-line);
