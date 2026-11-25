@@ -42,9 +42,10 @@ A spike (#254, branch `spike/254-map`, not merged) tried the decision below in t
    OSRM on routing.openstreetmap.de came first, chosen over Valhalla and BRouter, whose routes were
    longer and took detours, in a
    [comparison on #254](https://github.com/vik-koch/beds24-direct-booking/issues/254#issuecomment-7080109602).
-   Its data was three months old when Valhalla's was a day old, so a path added or a tag corrected
-   in OpenStreetMap reached the routes only months later. A detour is now fixed where it starts, in
-   OpenStreetMap, and reaches the site with the next weekly pull request (ADR 15).
+   On 2026-11-25 its data was three months old and Valhalla's tileset had been built that day, so
+   with OSRM a path added or a tag corrected in OpenStreetMap could reach the routes months later. A
+   detour is now fixed where it starts, in OpenStreetMap: once Valhalla's data has the fix, the next
+   weekly run proposes the new route (ADR 15), and visitors see it when that pull request is merged.
 5. **Lifts too are taken by a script** (#268): the aerial lifts inside the box, from OpenStreetMap
    through the Overpass API, into a committed file. The tiles have none.
 6. **The places are content:** the coordinates of an apartment in its file, the places in

@@ -254,10 +254,11 @@ content. The application has no wording, no colour and no typeface of its own. T
   arrived, and keep their build when the newer build's tiles are the same. The demo's box is 62
   tiles, 773 kB.
 - **The walking routes** are `map/routes.json`: one line from each apartment to each place, with its
-  metres and minutes on foot, from Valhalla's pedestrian costing on FOSSGIS's server, whose data is
-  a day old. Compute them with `node scripts/map-routes.mjs` when a point is added, moved or
-  removed; it asks for one route a second, as the service asks. The routes follow OpenStreetMap's
-  ways, which do not say what is closed or a piste in winter: walk them before a site shows them.
+  metres and minutes on foot, from Valhalla's pedestrian costing on FOSSGIS's server, which had
+  built its data the same day when checked on 2026-11-25. Compute them with
+  `node scripts/map-routes.mjs` when a point is added, moved or removed; it asks for one route a
+  second, as the service asks. The routes follow OpenStreetMap's ways, which do not say what is
+  closed or a piste in winter: walk them before a site shows them.
 - **A route's waypoints** lead it the way people walk where the router takes another, such as a road
   around the centre: an apartment's `via` gives, by a place's key, the points its route to that
   place goes through, in their order:
