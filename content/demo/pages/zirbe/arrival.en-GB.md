@@ -10,12 +10,13 @@ keys reach you.
 
 Follow the road up the Glemm valley into Saalbach and turn right at the church into Musterweg. Haus
 Firn is the last house on the left, with its name over the door. Your parking space, if you booked
-one, is the first beside the house; please leave the others free for the guests of Lärche.
+one, is the first beside the house; please leave the others free for the guests of Lärche. Without
+one, park in the Parkhaus Zentrum in the village centre.
 
 ## By train and bus
 
-From Zell am See station, the regional bus up the Glemm valley stops at Saalbach Ort. From there,
-walk up past the church into Musterweg: about five minutes, with a short climb at the end.
+From Zell am See station, the regional bus up the Glemm valley stops at Saalbach Ronachgrund: the
+map at the end of this page shows the way from the stop and from the car park.
 
 ## At the house
 

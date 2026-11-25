@@ -20,6 +20,7 @@ import {
   fixedPages,
   inBox,
   lucideName,
+  pageMapSchema,
   prefix,
   seasonNames,
   siteSchema,
@@ -324,21 +325,63 @@ export function checkPoints(dir, site, apartments) {
 // constructor.
 export const waypoints = ({ via = {} }, key) => (Object.hasOwn(via, key) ? via[key] : []);
 
+export function readJson(dir, file, schema) {
+  let value;
+  try {
+    value = JSON.parse(readFileSync(join(dir, file), 'utf8'));
+  } catch (error) {
+    throw new Error(`${join(dir, file)}\n  (file): ${error.message}`);
+  }
+  const result = schema.safeParse(value);
+  if (result.success) return result.data;
+  const issues = result.error.issues.map((i) => `  ${i.path.join('.') || '(file)'}: ${i.message}`);
+  throw new Error(`${join(dir, file)}\n${issues.join('\n')}`);
+}
+
+// Each page by its address part and folder: the site's, then each apartment's below its own.
+const listingsOf = (site, apartments) => [
+  { folder: 'pages', keys: site.pages },
+  ...apartments
+    .filter(({ pages }) => pages?.length)
+    .map(({ slug, pages }) => ({ slug, folder: `pages/${slug}`, keys: pages })),
+];
+
+// The maps of the pages that have one, each beside its page as <key>.map.json: the page as its
+// key or <slug>/<key>, the apartments it walks from (an apartment's page: that apartment alone),
+// and its places, which lie in the box of site.json's map.
+export function pageMaps(dir, site, apartments) {
+  return listingsOf(site, apartments).flatMap(({ slug, folder, keys }) =>
+    keys
+      .filter((key) => existsSync(join(dir, folder, `${key}.map.json`)))
+      .map((key) => {
+        const file = `${folder}/${key}.map.json`;
+        const { places } = readJson(dir, file, pageMapSchema);
+        if (!site.map) throw new Error(`${join(dir, file)}\n  (file): no map in site.json`);
+        places.forEach((place, index) => {
+          if (!inBox(site.map.box, place))
+            throw new Error(`${join(dir, file)}\n  places.${index}: outside the map's box`);
+        });
+        const from = slug ? [slug] : apartments.map((apartment) => apartment.slug);
+        return { page: slug ? `${slug}/${key}` : key, file: join(dir, file), from, places };
+      }),
+  );
+}
+
+// Every walk the maps draw: from each apartment to each place of site.json's map, through the
+// apartment's points for it, and to each place of a page's map from the apartments it walks from.
+export const walks = (site, apartments, maps) => [
+  ...apartments.flatMap((apartment) =>
+    site.map.places.map((place) => ({ apartment, place, via: waypoints(apartment, place.key) })),
+  ),
+  ...maps.flatMap(({ page, from, places }) =>
+    apartments
+      .filter(({ slug }) => from.includes(slug))
+      .flatMap((apartment) => places.map((place) => ({ page, apartment, place, via: [] }))),
+  ),
+];
+
 export function readContent(dir) {
-  const read = (file, schema) => {
-    let value;
-    try {
-      value = JSON.parse(readFileSync(join(dir, file), 'utf8'));
-    } catch (error) {
-      throw new Error(`${join(dir, file)}\n  (file): ${error.message}`);
-    }
-    const result = schema.safeParse(value);
-    if (result.success) return result.data;
-    const issues = result.error.issues.map(
-      (i) => `  ${i.path.join('.') || '(file)'}: ${i.message}`,
-    );
-    throw new Error(`${join(dir, file)}\n${issues.join('\n')}`);
-  };
+  const read = (file, schema) => readJson(dir, file, schema);
   const site = read('site.json', siteSchema);
   const apartments = site.apartments.map((slug, index) => {
     const file = `apartments/${slug}.json`;
@@ -476,7 +519,14 @@ export function readContent(dir) {
   for (const name of ['normal', 'medium'])
     if (!new RegExp(`--font-weight-${name}\\s*:`).test(root ?? ''))
       throw new Error(`${join(dir, 'theme.css')}\n  --font-weight-${name}: missing`);
-  const map = site.map && { ...readMap(dir, site.map, apartments), font: `/${font}` };
+  const maps = pageMaps(dir, site, apartments);
+  for (const { file, places } of maps)
+    places.forEach(({ icon, name }, index) => {
+      if (!(lucideName(icon) in lucide))
+        throw new Error(`${file}\n  places.${index}.icon: ${icon} is not a Lucide icon`);
+      inLanguages(file, `places.${index}.name`, name);
+    });
+  const map = site.map && { ...readMap(dir, site, apartments, maps), font: `/${font}` };
   // Each place is named in every language, with a text only for a season the site lists.
   const places = site.map?.places.map((place) => place.key) ?? [];
   for (const tag of site.languages) {
@@ -518,13 +568,7 @@ export function readContent(dir) {
         throw new Error(`${file}\n  pages.${index}: ${key} is a page of the site too`);
     });
   }
-  // Each page by its address part and folder: the site's, then each apartment's below its own.
-  const listings = [
-    { folder: 'pages', keys: site.pages },
-    ...apartments
-      .filter(({ pages }) => pages?.length)
-      .map(({ slug, pages }) => ({ slug, folder: `pages/${slug}`, keys: pages })),
-  ];
+  const listings = listingsOf(site, apartments);
   const pageKeys = new Set(listings.flatMap((listing) => listing.keys));
   const below = ['book', ...listings.slice(1).flatMap((listing) => listing.keys)];
   const pages = {};
@@ -556,7 +600,11 @@ export function readContent(dir) {
           for (const { file } of read.pictures)
             if (!existsSync(join(dir, file)))
               throw new Error(`${page}\n  shows ${file}, which does not exist`);
-          return [slug ? `${slug}/${key}` : key, read];
+          const id = slug ? `${slug}/${key}` : key;
+          const places = maps
+            .find(({ page }) => page === id)
+            ?.places.map(({ name, ...place }) => ({ ...place, name: name[tag] }));
+          return [id, { ...read, ...(places && { places }) }];
         }),
       ),
     );
@@ -606,7 +654,9 @@ export function readContent(dir) {
     if (existsSync(join(dir, folder)))
       for (const file of readdirSync(join(dir, folder)))
         if (
-          !keys.some((key) => site.languages.some((tag) => file === `${key}.${tag}.md`)) &&
+          !keys.some((key) =>
+            [...site.languages.map((tag) => `${key}.${tag}.md`), `${key}.map.json`].includes(file),
+          ) &&
           !(folder === 'pages' && listings.some((listing) => listing.folder === `pages/${file}`))
         )
           throw new Error(
@@ -669,7 +719,7 @@ const mapColors = [
 
 // The tiles, routes and lifts the map scripts wrote, checked against the content they came from;
 // the map with its tiles' address.
-function readMap(dir, map, apartments) {
+function readMap(dir, { map, ...site }, apartments, maps) {
   const stale = (file, key, reason, script) =>
     new Error(`${join(dir, 'map', file)}\n  ${key}: ${reason}; run scripts/${script}`);
   const json = (file, script) => {
@@ -691,30 +741,32 @@ function readMap(dir, map, apartments) {
       `${count} of ${tiles.count} tiles`,
       'map-tiles.mjs',
     );
-  // One route for each apartment and place, from the points they have now.
+  // One route for each walk, from the points it has now.
   const routes = json('routes.json', 'map-routes.mjs').features.map((f) => f.properties);
   const same = (a, b) => a.lat === b.lat && a.lon === b.lon;
   const sameVia = (a = [], b) => a.length === b.length && a.every((p, i) => same(p, b[i]));
-  for (const apartment of apartments)
-    for (const place of map.places) {
-      const pair = `${apartment.slug} to ${place.key}`;
-      const route = routes.find((r) => r.apartment === apartment.slug && r.place === place.key);
-      if (!route) throw stale('routes.json', pair, 'missing', 'map-routes.mjs');
-      if (
-        !same(route.from, apartment) ||
-        !same(route.to, place) ||
-        !sameVia(route.via, waypoints(apartment, place.key))
+  const expected = walks({ ...site, map }, apartments, maps);
+  const named = ({ page, apartment, place }) =>
+    `${page ? `${page}: ` : ''}${apartment} to ${place}`;
+  for (const { page, apartment, place, via } of expected) {
+    const pair = named({ page, apartment: apartment.slug, place: place.key });
+    const route = routes.find(
+      (r) => r.page === page && r.apartment === apartment.slug && r.place === place.key,
+    );
+    if (!route) throw stale('routes.json', pair, 'missing', 'map-routes.mjs');
+    if (!same(route.from, apartment) || !same(route.to, place) || !sameVia(route.via, via))
+      throw stale('routes.json', pair, 'computed before a point moved', 'map-routes.mjs');
+  }
+  for (const route of routes)
+    if (
+      !expected.some(
+        (w) =>
+          w.page === route.page &&
+          w.apartment.slug === route.apartment &&
+          w.place.key === route.place,
       )
-        throw stale('routes.json', pair, 'computed before a point moved', 'map-routes.mjs');
-    }
-  for (const { apartment, place } of routes)
-    if (!apartments.some((a) => a.slug === apartment) || !map.places.some((p) => p.key === place))
-      throw stale(
-        'routes.json',
-        `${apartment} to ${place}`,
-        'not a pair of the content',
-        'map-routes.mjs',
-      );
+    )
+      throw stale('routes.json', named(route), 'not a pair of the content', 'map-routes.mjs');
   const lifts = json('lifts.json', 'map-lifts.mjs');
   if (JSON.stringify(lifts.box) !== JSON.stringify(map.box))
     throw stale('lifts.json', 'box', "taken for another box than site.json's", 'map-lifts.mjs');
@@ -778,7 +830,7 @@ export async function writeContent(dir, out, cache) {
     converted += page.converted;
     shown[at] = page.picture;
   }
-  const withFiles = ({ title, html }) => {
+  const withFiles = ({ title, html, places }) => {
     const template = parse(html);
     for (const img of template.content.querySelectorAll('img')) {
       const sized = img.getAttribute('width');
@@ -798,7 +850,7 @@ export async function writeContent(dir, out, cache) {
       img.setAttribute('height', height);
       img.setAttribute('loading', 'lazy');
     }
-    return { title, html: template.innerHTML };
+    return { title, html: template.innerHTML, ...(places && { places }) };
   };
   // Texts by address prefix, as the texts are; the routes' points stay with the routes. A plan is
   // served under a name that changes with it, as a converted picture is.
@@ -836,7 +888,8 @@ export async function writeContent(dir, out, cache) {
   const round = (value) => Math.round(value * 1e5) / 1e5;
   const routes = site.map
     ? JSON.parse(readFileSync(join(dir, 'map', 'routes.json'), 'utf8')).features.map(
-        ({ properties: { apartment, place, meters }, geometry }) => ({
+        ({ properties: { page, apartment, place, meters }, geometry }) => ({
+          ...(page && { page }),
           apartment,
           place,
           meters,
@@ -904,6 +957,9 @@ export async function writeContent(dir, out, cache) {
         ...site.rooms,
         ...(site.map?.places ?? []),
         ...site.apartments.flatMap(({ goodToKnow }) => goodToKnow),
+        ...Object.values(pages).flatMap((list) =>
+          Object.values(list).flatMap(({ places = [] }) => places),
+        ),
       ].map((f) => lucideName(f.icon)),
     ),
   ];

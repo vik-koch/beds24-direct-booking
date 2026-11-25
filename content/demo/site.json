@@ -109,7 +109,7 @@
       }
     }
   ],
-  "pages": ["about", "faq", "imprint", "privacy", "terms"],
+  "pages": ["about", "faq", "parking", "imprint", "privacy", "terms"],
   "header": ["about", "faq"],
-  "footer": ["imprint", "privacy", "terms", "credits"]
+  "footer": ["parking", "imprint", "privacy", "terms", "credits"]
 }

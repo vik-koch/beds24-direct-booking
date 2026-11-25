@@ -1,0 +1,18 @@
+{
+  "places": [
+    {
+      "key": "zentrum",
+      "icon": "square-parking",
+      "lat": 47.392416,
+      "lon": 12.638167,
+      "name": { "de-AT": "Parkhaus Zentrum", "en-GB": "Parkhaus Zentrum car park" }
+    },
+    {
+      "key": "schattberg",
+      "icon": "square-parking",
+      "lat": 47.390465,
+      "lon": 12.634787,
+      "name": { "de-AT": "Parkplatz Schattberg X-Press", "en-GB": "Schattberg X-Press car park" }
+    }
+  ]
+}

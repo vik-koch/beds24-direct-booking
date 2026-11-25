@@ -1,20 +1,20 @@
 // Computes the walking route from every apartment to every place of the map, through the points the
-// apartment gives for it, with Valhalla's pedestrian costing on valhalla1.openstreetmap.de, and
-// writes them to the content folder's map/routes.json.
+// apartment gives for it, and to every place of a content page's map from the apartments it walks
+// from, with Valhalla's pedestrian costing on valhalla1.openstreetmap.de, and writes them to the
+// content folder's map/routes.json.
 // node scripts/map-routes.mjs
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { apartmentSchema, siteSchema } from '../src/content/schema.ts';
-import { checkPoints, waypoints } from './content.mjs';
+import { checkPoints, pageMaps, readJson, walks } from './content.mjs';
 
 const dir = resolve(process.env.CONTENT_DIR || 'content/demo');
-const read = (file, schema) => schema.parse(JSON.parse(readFileSync(join(dir, file), 'utf8')));
-const site = read('site.json', siteSchema);
+const site = readJson(dir, 'site.json', siteSchema);
 if (!site.map) throw new Error(`${join(dir, 'site.json')} has no map`);
 
 const apartments = site.apartments.map((slug) => ({
   slug,
-  ...read(`apartments/${slug}.json`, apartmentSchema),
+  ...readJson(dir, `apartments/${slug}.json`, apartmentSchema),
 }));
 checkPoints(dir, site, apartments);
 
@@ -44,43 +44,42 @@ const decode = (shape) => {
 };
 
 const features = [];
-for (const apartment of apartments) {
+const maps = pageMaps(dir, site, apartments);
+for (const { page, apartment, place, via } of walks(site, apartments, maps)) {
   const { slug, lat, lon } = apartment;
-  for (const place of site.map.places) {
-    const via = waypoints(apartment, place.key);
-    const locations = [
-      { lat, lon, type: 'break' },
-      ...via.map((point) => ({ ...point, type: 'through' })),
-      { lat: place.lat, lon: place.lon, type: 'break' },
-    ];
-    const response = await fetch('https://valhalla1.openstreetmap.de/route', {
-      method: 'POST',
-      headers: {
-        'User-Agent': 'beds24-direct-booking map routes',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ locations, costing: 'pedestrian', directions_type: 'none' }),
-    });
-    if (!response.ok)
-      throw new Error(`${slug} to ${place.key}: the router answered ${response.status}`);
-    const { summary, legs } = (await response.json()).trip;
-    features.push({
-      type: 'Feature',
-      properties: {
-        apartment: slug,
-        place: place.key,
-        meters: Math.round(summary.length * 100) * 10,
-        minutes: Math.ceil(summary.time / 60),
-        from: { lat, lon },
-        to: { lat: place.lat, lon: place.lon },
-        ...(via.length > 0 && { via }),
-      },
-      geometry: { type: 'LineString', coordinates: decode(legs[0].shape) },
-    });
-    console.log(`${slug} to ${place.key}: ${Math.round(summary.length * 1000)} m`);
-    // The router allows one request a second.
-    await new Promise((done) => setTimeout(done, 1000));
-  }
+  const pair = `${page ? `${page}: ` : ''}${slug} to ${place.key}`;
+  const locations = [
+    { lat, lon, type: 'break' },
+    ...via.map((point) => ({ ...point, type: 'through' })),
+    { lat: place.lat, lon: place.lon, type: 'break' },
+  ];
+  const response = await fetch('https://valhalla1.openstreetmap.de/route', {
+    method: 'POST',
+    headers: {
+      'User-Agent': 'beds24-direct-booking map routes',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ locations, costing: 'pedestrian', directions_type: 'none' }),
+  });
+  if (!response.ok) throw new Error(`${pair}: the router answered ${response.status}`);
+  const { summary, legs } = (await response.json()).trip;
+  features.push({
+    type: 'Feature',
+    properties: {
+      ...(page && { page }),
+      apartment: slug,
+      place: place.key,
+      meters: Math.round(summary.length * 100) * 10,
+      minutes: Math.ceil(summary.time / 60),
+      from: { lat, lon },
+      to: { lat: place.lat, lon: place.lon },
+      ...(via.length > 0 && { via }),
+    },
+    geometry: { type: 'LineString', coordinates: decode(legs[0].shape) },
+  });
+  console.log(`${pair}: ${Math.round(summary.length * 1000)} m`);
+  // The router allows one request a second.
+  await new Promise((done) => setTimeout(done, 1000));
 }
 mkdirSync(join(dir, 'map'), { recursive: true });
 writeFileSync(

@@ -123,6 +123,24 @@ const map = z
     }),
   );
 
+// A content page's map, after its text: the places it marks, each with a Lucide icon and its name
+// in each of the site's languages by tag.
+export const pageMapSchema = z.strictObject({
+  places: z
+    .array(
+      z.strictObject({
+        key: segment,
+        icon: segment,
+        lat: latitude,
+        lon: longitude,
+        name: z.record(z.string(), text),
+      }),
+    )
+    .min(1, 'at least one place')
+    .max(10, 'at most ten places')
+    .refine((list) => unique(list, (place) => place.key), 'a place key is listed twice'),
+});
+
 // With two seasons each starts on its day and lasts until the other starts; a single season
 // covers the year and has no start.
 const seasons = z
@@ -535,10 +553,20 @@ export interface Plan {
     label: [number, number];
   }[];
 }
-// A content page as the page shows it: its title, and the rest of its file as HTML.
+// A place a content page's map marks, named in the page's language.
+export interface PagePlace {
+  key: string;
+  icon: string;
+  lat: number;
+  lon: number;
+  name: string;
+}
+// A content page as the page shows it: its title, the rest of its file as HTML, and its map's
+// places.
 export interface ContentPage {
   title: string;
   html: string;
+  places?: PagePlace[];
 }
 // A fold under "Good to know": its icon's name, its title and its text as HTML by address prefix.
 export interface Note {
@@ -555,8 +583,10 @@ export type Apartment = {
   public: string[];
 } & Omit<z.infer<typeof apartmentSchema>, 'pictures' | 'via' | 'plan' | 'goodToKnow'>;
 type Map = NonNullable<z.infer<typeof siteSchema>['map']>;
-// A walking route as the map draws it: its line as [longitude, latitude] pairs.
+// A walking route as the map draws it: its line as [longitude, latitude] pairs. A route to a
+// content page's place names the page, as its key or <slug>/<key>.
 export interface Route {
+  page?: string;
   apartment: string;
   place: string;
   meters: number;

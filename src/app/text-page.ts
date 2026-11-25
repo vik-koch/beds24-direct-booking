@@ -12,16 +12,29 @@ import { DomSanitizer } from '@angular/platform-browser';
 import { ActivatedRoute } from '@angular/router';
 import type { ContentPage } from '../content/schema';
 import { Choice } from './choice';
+import { LocationMap } from './location-map';
+import { handover } from './map-handover';
 
-// A content page from the deployment's Markdown.
+// A content page from the deployment's Markdown, and its map after the text.
 @Component({
   selector: 'app-text-page',
   encapsulation: ViewEncapsulation.None,
+  imports: [LocationMap],
   template: `
     <div class="column pt-(--space-section)">
       <h1 class="headline">{{ page.title }}</h1>
       <div #prose class="prose text-prose mt-6" [innerHTML]="html"></div>
     </div>
+    @if (page.places; as places) {
+      <!-- The map's code loads when it comes into view; a map the last page left shows at once. -->
+      <div class="mt-10">
+        @defer (on viewport; when handover.drawn; hydrate on viewport) {
+          <app-location-map [page]="key" [apartment]="slug" [places]="places" />
+        } @placeholder {
+          <div class="map-size"></div>
+        }
+      </div>
+    }
   `,
   styles: `
     /* Unlayered, these win over .prose's rules in @layer components. */
@@ -45,7 +58,12 @@ import { Choice } from './choice';
   `,
 })
 export class TextPage {
-  protected readonly page: ContentPage = inject(ActivatedRoute).snapshot.data['content'];
+  private readonly route = inject(ActivatedRoute).snapshot;
+  protected readonly page: ContentPage = this.route.data['content'];
+  // An apartment's page is known by its slug and key, as its routes are.
+  protected readonly slug: string | undefined = this.route.params['slug'];
+  protected readonly key = [this.slug, this.route.data['page']].filter(Boolean).join('/');
+  protected readonly handover = handover;
   // Only elements the page styles: the content build refuses any other.
   protected readonly html = inject(DomSanitizer).bypassSecurityTrustHtml(this.page.html);
   private readonly prose = viewChild.required<ElementRef<HTMLElement>>('prose');

@@ -1,0 +1,18 @@
+{
+  "places": [
+    {
+      "key": "bus-stop",
+      "icon": "bus",
+      "lat": 47.387771,
+      "lon": 12.647203,
+      "name": { "de-AT": "Haltestelle Ronachgrund", "en-GB": "Ronachgrund bus stop" }
+    },
+    {
+      "key": "car-park",
+      "icon": "square-parking",
+      "lat": 47.392416,
+      "lon": 12.638167,
+      "name": { "de-AT": "Parkhaus Zentrum", "en-GB": "Parkhaus Zentrum car park" }
+    }
+  ]
+}

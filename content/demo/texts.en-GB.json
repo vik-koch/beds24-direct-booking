@@ -9,6 +9,7 @@
     "privacy": "privacy",
     "terms": "terms",
     "credits": "picture-credits",
+    "parking": "parking",
     "arrival": "getting-here",
     "guide": "guide"
   },
@@ -59,6 +60,7 @@
     "privacy": "Privacy",
     "terms": "Rental terms",
     "credits": "Picture credits",
+    "parking": "Parking",
     "arrival": "Getting here",
     "guide": "Apartment guide"
   },

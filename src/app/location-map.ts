@@ -41,26 +41,20 @@ import routes from '../content/generated/routes';
 import site from '../content/generated/site';
 import { groups } from '../content/map-kinds';
 import { lucideName } from '../content/names';
-import type { Route } from '../content/schema';
+import type { PagePlace, Route } from '../content/schema';
 import { handover } from './map-handover';
 import { Season } from './season';
 import { address, LANGUAGE, TEXTS } from './texts';
 
 const map = site.map!;
+// A place the map marks, named in the page's language: site.json's with its texts per season and
+// maybe behind the switch for more, or a content page's.
+type Place = PagePlace & { more?: true; winter?: string; summer?: string };
 const kinds = Object.fromEntries(
   Object.entries(groups).flatMap(([group, icons]) =>
     Object.entries(icons).map(([kind, icon]) => [kind, { group, svg: drawings[icon]! }]),
   ),
 );
-// A route from the apartment's point to the place's: the router's line starts and ends on the
-// nearest way, which may be across a yard or a road.
-const walk = ({ apartment, place, line }: Route): [number, number][] => {
-  const [from, to] = [
-    site.apartments.find(({ slug }) => slug === apartment)!,
-    map.places.find(({ key }) => key === place)!,
-  ];
-  return [[from.lon!, from.lat!], ...line, [to.lon, to.lat]];
-};
 // What a guest looks for first shows two zooms before the tiles would show it; culture, the other
 // services and bus stops one zoom after, so that food and shops lead.
 const early = ['parking', 'atm', 'supermarket', 'pharmacy', 'information'];
@@ -292,15 +286,15 @@ function flavor(p: ReturnType<typeof palette>): Flavor {
           </fieldset>
         }
         <ul class="map-places">
-          @for (place of defaults; track place.key) {
+          @for (place of defaults(); track place.key) {
             <ng-container *ngTemplateOutlet="line; context: { $implicit: place }" />
           }
         </ul>
-        @if (more.length) {
+        @if (more().length) {
           <!-- Folded, the other places stay in the page, so that the list can grow to them. -->
           <div class="map-more" [attr.data-open]="all() ? '' : null">
             <ul id="map-more" class="map-places" [attr.inert]="all() ? null : ''">
-              @for (place of more; track place.key) {
+              @for (place of more(); track place.key) {
                 <ng-container *ngTemplateOutlet="line; context: { $implicit: place }" />
               }
             </ul>
@@ -325,9 +319,7 @@ function flavor(p: ReturnType<typeof palette>): Flavor {
             >
               <ng-icon [name]="lucideName(place.icon)" aria-hidden="true" />
               <span class="map-place-name">
-                <span class="min-w-0 font-medium hyphens-auto">{{
-                  texts.places[place.key]!.name
-                }}</span>
+                <span class="min-w-0 font-medium hyphens-auto">{{ place.name }}</span>
                 @if (route(place.key); as route) {
                   <span class="text-ink-soft whitespace-nowrap tabular-nums">{{
                     distance(route)
@@ -336,7 +328,7 @@ function flavor(p: ReturnType<typeof palette>): Flavor {
               </span>
               <!-- Both seasons' texts, so that the first paint shows the page's season. -->
               @for (name of season.names; track name) {
-                @if (texts.places[place.key]![name]; as note) {
+                @if (place[name]; as note) {
                   <span class="text-ink-soft" [attr.data-for]="name">{{ note }}</span>
                 }
               }
@@ -441,7 +433,7 @@ function flavor(p: ReturnType<typeof palette>): Flavor {
           #marker
           type="button"
           class="map-pin map-place"
-          [attr.aria-label]="texts.places[place.key]!.name"
+          [attr.aria-label]="place.name"
           [attr.data-lat]="place.lat"
           [attr.data-lon]="place.lon"
           [attr.aria-pressed]="place.key === picked()"
@@ -777,11 +769,20 @@ export class LocationMap {
   protected readonly map = map;
   // On an apartment's page, that apartment alone, chosen.
   readonly apartment = input<string>();
+  // On a content page, its key, or <slug>/<key> for an apartment's, and its places.
+  readonly page = input<string>();
+  readonly places = input<PagePlace[]>();
+  private readonly list = computed<Place[]>(
+    () =>
+      this.places() ?? map.places.map((place) => ({ ...place, ...this.texts.places[place.key]! })),
+  );
+  // The walks to the places this map marks.
+  private readonly walks = computed(() => routes.filter((r) => r.page === this.page()));
   protected readonly apartments = computed(() =>
     site.apartments.filter(({ slug }) => !this.apartment() || slug === this.apartment()),
   );
-  protected readonly defaults = map.places.filter((place) => !place.more);
-  protected readonly more = map.places.filter((place) => place.more);
+  protected readonly defaults = computed(() => this.list().filter((place) => !place.more));
+  protected readonly more = computed(() => this.list().filter((place) => place.more));
   protected readonly maxZoom = 18;
   protected readonly minZoom = signal(0);
   protected readonly zoom = signal(handover.drawn?.getZoom() ?? 0);
@@ -793,7 +794,7 @@ export class LocationMap {
   protected readonly chosen = linkedSignal(() => this.apartment() ?? handover.chosen);
   protected readonly picked = signal(handover.picked);
   protected readonly all = signal(handover.all ?? false);
-  protected readonly shown = computed(() => map.places.filter((p) => this.all() || !p.more));
+  protected readonly shown = computed(() => this.list().filter((p) => this.all() || !p.more));
   protected readonly drawn = signal<MapLibre | undefined>(undefined);
   private readonly injector = inject(Injector);
   private readonly router = inject(Router);
@@ -807,7 +808,8 @@ export class LocationMap {
       const same = () => {
         const to = this.router.currentNavigation()?.finalUrl?.toString().split(/[?#]/)[0];
         const slug = this.apartment();
-        return site.languages.some((l) => to === address(l, slug ? 'apartment' : 'home', slug));
+        const page = this.page()?.split('/').at(-1) ?? (slug ? 'apartment' : 'home');
+        return site.languages.some((l) => to === address(l, page, slug));
       };
       destroyed.onDestroy(() => {
         const kept = same();
@@ -952,11 +954,11 @@ export class LocationMap {
       this.fit = (keep: boolean) => {
         const [picked, chosen] = [this.picked(), this.chosen()];
         const shown = this.shown().filter((p) => !picked || p.key === picked);
-        const lines = routes.filter(
+        const lines = this.walks().filter(
           (r) => r.apartment === chosen && shown.some((p) => p.key === r.place),
         );
         const points: [number, number][] = lines.length
-          ? lines.flatMap(walk)
+          ? lines.flatMap((route) => this.walk(route))
           : [...(picked ? [] : this.apartments()), ...shown].map(({ lon, lat }) => [lon!, lat!]);
         const bounds = points.reduce(
           (box, point) => box.extend(point),
@@ -1025,7 +1027,17 @@ export class LocationMap {
   }
 
   protected route(place: string) {
-    return routes.find((r) => r.apartment === this.chosen() && r.place === place);
+    return this.walks().find((r) => r.apartment === this.chosen() && r.place === place);
+  }
+
+  // A route from the apartment's point to the place's: the router's line starts and ends on the
+  // nearest way, which may be across a yard or a road.
+  private walk({ apartment, place, line }: Route): [number, number][] {
+    const [from, to] = [
+      site.apartments.find(({ slug }) => slug === apartment)!,
+      this.list().find(({ key }) => key === place)!,
+    ];
+    return [[from.lon!, from.lat!], ...line, [to.lon, to.lat]];
   }
 
   // A second click on the chosen apartment or place clears the choice, but not on the apartment's
@@ -1040,7 +1052,7 @@ export class LocationMap {
 
   // A chosen place that folds away is chosen no more.
   protected fold() {
-    if (this.all() && this.more.some((place) => place.key === this.picked()))
+    if (this.all() && this.more().some((place) => place.key === this.picked()))
       this.picked.set(undefined);
     this.all.set(!this.all());
   }
@@ -1049,7 +1061,7 @@ export class LocationMap {
   protected label(place: string) {
     const route = this.route(place);
     if (route) return this.distance(route);
-    return place === this.picked() ? this.texts.places[place]!.name : undefined;
+    return place === this.picked() ? this.list().find(({ key }) => key === place)!.name : undefined;
   }
 
   protected distance({ meters }: Route) {
@@ -1088,12 +1100,12 @@ export class LocationMap {
       );
     };
     const shown = this.shown().map((place) => place.key);
-    const lines = routes
+    const lines = this.walks()
       .filter((r) => r.apartment === this.chosen() && shown.includes(r.place))
       .map((route) => ({
         type: 'Feature' as const,
         properties: { picked: route.place === this.picked() },
-        geometry: { type: 'LineString' as const, coordinates: walk(route) },
+        geometry: { type: 'LineString' as const, coordinates: this.walk(route) },
       }));
     // The tiles' own entry for a place a pin marks, and a station under one, give way to the pin:
     // whatever lies within a metre of it.
@@ -1411,9 +1423,9 @@ export class LocationMap {
           type: 'geojson',
           data: {
             type: 'FeatureCollection',
-            features: routes
+            features: this.walks()
               .filter((r) => r.apartment === this.chosen() && r.place === this.picked())
-              .map(walk)
+              .map((route) => this.walk(route))
               .flatMap((line) => [point(line[0]!), point(line.at(-1)!)]),
           },
         },

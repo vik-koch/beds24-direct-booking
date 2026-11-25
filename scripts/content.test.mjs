@@ -190,13 +190,20 @@ test('a content folder beyond a limit fails, and the message names the limit', (
     },
     'apartments/zirbe.json',
     (apartment) => (apartment.name = 'x'.repeat(20)),
-    // d is a copy of zirbe, so it walks zirbe's routes.
+    // d is a copy of zirbe, so it walks zirbe's routes, also those of its own pages' maps.
     'map/routes.json',
     (routes) =>
       routes.features.push(
         ...routes.features
           .filter((f) => f.properties.apartment === 'zirbe')
-          .map((f) => ({ ...f, properties: { ...f.properties, apartment: 'd' } })),
+          .map(({ properties: { page, ...p }, ...f }) => ({
+            ...f,
+            properties: {
+              ...p,
+              ...(page && { page: page.replace('zirbe/', 'd/') }),
+              apartment: 'd',
+            },
+          })),
       ),
   );
   writeFileSync(
@@ -780,9 +787,16 @@ test('the map is optional, and without it no apartment has a point', () => {
     /map\n {2}\(folder\): no map in site\.json; delete the folder/,
   );
   rmSync(join(without, 'map'), { recursive: true });
+  assert.throws(
+    () => readContent(without),
+    /parking\.map\.json\n {2}\(file\): no map in site\.json/,
+  );
+  rmSync(join(without, 'pages', 'parking.map.json'));
+  rmSync(join(without, 'pages', 'zirbe', 'arrival.map.json'));
   assert.equal(readContent(without).site.map, undefined);
   const named = changed(...edits, ...apartments);
-  rmSync(join(named, 'map'), { recursive: true });
+  for (const path of ['map', 'pages/parking.map.json', 'pages/zirbe/arrival.map.json'])
+    rmSync(join(named, path), { recursive: true });
   assert.throws(() => readContent(named), /texts\.en-GB\.json\n {2}map: no map in site\.json/);
 });
 
@@ -915,7 +929,7 @@ test('one route for each apartment and place, from the points they have now', ()
   const missing = changed('map/routes.json', (routes) => routes.features.pop());
   assert.throws(
     () => readContent(missing),
-    /map\/routes\.json\n {2}ahorn to supermarket: missing; run scripts\/map-routes\.mjs/,
+    /map\/routes\.json\n {2}zirbe\/arrival: zirbe to car-park: missing; run scripts\/map-routes\.mjs/,
   );
   const moved = changed('apartments/zirbe.json', (apartment) => (apartment.lat += 0.0001));
   assert.throws(
@@ -1012,6 +1026,63 @@ test('a map writes its labels in the font theme.css names, which must be a file'
     () => readContent(dir),
     /theme\.css\n {2}@font-face: a map needs a \.woff2 file in fonts\//,
   );
+});
+
+test("a page's map lists places inside the box, each with a Lucide icon and a name in every language", () => {
+  const sidecar = 'pages/parking.map.json';
+  const cases = [
+    [
+      (map) => (map.places[0].lat = 47.5),
+      /parking\.map\.json\n {2}places\.0: outside the map's box/,
+    ],
+    [
+      (map) => (map.places[1].icon = 'parking-meterx'),
+      /places\.1\.icon: parking-meterx is not a Lucide icon/,
+    ],
+    [(map) => delete map.places[0].name['de-AT'], /places\.0\.name\.de-AT: missing/],
+    [
+      (map) => (map.places[0].name.fr = 'Parking'),
+      /places\.0\.name\.fr: a language site\.json does not list/,
+    ],
+    [(map) => (map.places[1].key = map.places[0].key), /places: a place key is listed twice/],
+    [(map) => (map.places = []), /places: at least one place/],
+  ];
+  for (const [change, error] of cases)
+    assert.throws(() => readContent(changed(sidecar, change)), error);
+  const unlisted = changed('site.json', () => undefined);
+  writeFileSync(join(unlisted, 'pages', 'zirbe', 'heating.map.json'), '{ "places": [] }');
+  assert.throws(() => readContent(unlisted), /zirbe\/heating\.map\.json\n {2}\(file\): not a page/);
+});
+
+test("a page's map walks from each apartment, or from its own apartment alone", () => {
+  const { pages } = readContent('content/demo');
+  assert.deepEqual(
+    pages.en['zirbe/arrival'].places.map(({ name }) => name),
+    ['Ronachgrund bus stop', 'Parkhaus Zentrum car park'],
+  );
+  assert.equal(pages.de['zirbe/arrival'].places[0].name, 'Haltestelle Ronachgrund');
+  assert.equal(pages.en.faq.places, undefined);
+  const moved = changed('pages/zirbe/arrival.map.json', (map) => (map.places[0].lon += 1e-4));
+  assert.throws(
+    () => readContent(moved),
+    /routes\.json\n {2}zirbe\/arrival: zirbe to bus-stop: computed before a point moved/,
+  );
+  const shared = changed('apartments/ahorn.json', (apartment) => (apartment.lat += 1e-4));
+  assert.throws(() => readContent(shared), /ahorn to schattberg: computed before/);
+  const { features } = JSON.parse(readFileSync('content/demo/map/routes.json', 'utf8'));
+  const pairs = features
+    .filter(({ properties: p }) => p.page)
+    .map(({ properties: p }) => `${p.page} ${p.apartment} ${p.place}`);
+  assert.deepEqual(pairs, [
+    'parking zirbe zentrum',
+    'parking zirbe schattberg',
+    'parking laerche zentrum',
+    'parking laerche schattberg',
+    'parking ahorn zentrum',
+    'parking ahorn schattberg',
+    'zirbe/arrival zirbe bus-stop',
+    'zirbe/arrival zirbe car-park',
+  ]);
 });
 
 test('the routes go into a module of their own, for the map alone', async () => {
@@ -1137,14 +1208,14 @@ test("an apartment's page has an address of its own below the apartment's", () =
 
 test('the header and the footer link only to pages, and a page key is not one of the fixed pages', () => {
   const footer = changed('site.json', (site) => site.footer.push('guide'));
-  assert.throws(() => readContent(footer), /site\.json\n {2}footer\.4: guide is not a page/);
+  assert.throws(() => readContent(footer), /site\.json\n {2}footer\.5: guide is not a page/);
   const header = changed('site.json', (site) => (site.header = ['about', 'credits']));
   assert.throws(() => readContent(header), /site\.json\n {2}header\.1: credits is not a page/);
   const both = changed('site.json', (site) => site.footer.push('faq'));
-  assert.throws(() => readContent(both), /site\.json\n {2}footer\.4: faq is in the header too/);
+  assert.throws(() => readContent(both), /site\.json\n {2}footer\.5: faq is in the header too/);
   for (const key of ['credits', 'home', 'apartment']) {
     const fixed = changed('site.json', (site) => site.pages.push(key));
-    assert.throws(() => readContent(fixed), /site\.json\n {2}pages\.5: taken by a page/, key);
+    assert.throws(() => readContent(fixed), /site\.json\n {2}pages\.6: taken by a page/, key);
   }
 });
 
