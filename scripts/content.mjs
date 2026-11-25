@@ -385,8 +385,7 @@ export function readContent(dir) {
   )?.[2];
   if (site.map && !(font && existsSync(join(dir, font))))
     throw new Error(`${join(dir, 'theme.css')}\n  @font-face: a map needs a .woff2 file in fonts/`);
-  // And its water, woods and places in the theme's map colours, the same in every season: declared
-  // on :root, not in a comment.
+  // A map's colours and the two weights hold in every season: declared on :root, not in a comment.
   const root = readFileSync(join(dir, 'theme.css'), 'utf8')
     .replace(/\/\*[\s\S]*?\*\//g, '')
     .match(/:root\s*\{[^}]*\}/g)
@@ -395,6 +394,9 @@ export function readContent(dir) {
     if (site.map && !new RegExp(`--color-${name}\\s*:`).test(root ?? ''))
       throw new Error(`${join(dir, 'theme.css')}
   --color-${name}: a map needs it`);
+  for (const name of ['normal', 'medium'])
+    if (!new RegExp(`--font-weight-${name}\\s*:`).test(root ?? ''))
+      throw new Error(`${join(dir, 'theme.css')}\n  --font-weight-${name}: missing`);
   const map = site.map && { ...readMap(dir, site.map, apartments), font: `/${font}` };
   // Each place is named in every language, with a text only for a season the site lists.
   const places = site.map?.places.map((place) => place.key) ?? [];

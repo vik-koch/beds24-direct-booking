@@ -13,7 +13,7 @@ content. The application has no wording, no colour and no typeface of its own. T
 | `apartments/<slug>.json` | One apartment: its Beds24 room ID, its name, its pictures and optionally its floor plan. One file for each slug `site.json` lists, and no other. |
 | `texts.<tag>.json` | Everything one language says: the wording, the address parts and the anchors. One file per language listed in `site.json`, such as `texts.en-GB.json`. |
 | `pages/<key>.<tag>.md` | A content page in one language, such as `pages/faq.en-GB.md`: one file for each page and language `site.json` lists, and no other. |
-| `theme.css` | The palette and the typeface as custom properties on `:root`, and the typeface's `@font-face`. |
+| `theme.css` | The palette, the typeface and its two weights as custom properties on `:root`, and the typeface's `@font-face`. |
 | `fonts/` | Optional: the font files `theme.css` refers to, as `fonts/<file>`. |
 | `pictures/` | The pictures `site.json` names, such as each season's hero photo, and the apartments' pictures and plans. |
 | `map/` | With a map: its tiles, walking routes and lifts, written by the three map scripts and committed. |
@@ -290,10 +290,13 @@ content. The application has no wording, no colour and no typeface of its own. T
   the other's under its attribute, as the demo does with
   `[data-season='summer'] { --color-accent: …; --color-accent-soft: …; }`.
 - **The theme's names** are the ones in [`DESIGN.md`](../DESIGN.md): `--font-sans` and the
-  `--color-*` properties of `content/demo/theme.css`. A site with a map also names the map's own
-  colours, which the content build requires: `--color-water`, `--color-trail`, `--color-pitch`, and
-  the colours of the places' icons, `--color-poi-food`, `-shop`, `-transport`, `-service` and
-  `-culture`. Every pair of text and ground is measured before a theme is used.
+  `--color-*` properties of `content/demo/theme.css`. `--font-weight-normal` and
+  `--font-weight-medium` are the typeface's regular and medium weights, which every text uses and
+  the content build requires: the demo's Jost at 400 and 500, another typeface perhaps at 350 and
+  600 for the same look. A site with a map also names the map's own colours, which the content build
+  requires: `--color-water`, `--color-trail`, `--color-pitch`, and the colours of the places' icons,
+  `--color-poi-food`, `-shop`, `-transport`, `-service` and `-culture`. Every pair of text and
+  ground is measured before a theme is used.
 
 ## Its boundaries
 

@@ -33,7 +33,7 @@ import { Choice } from './choice';
       h3,
       h4 {
         margin: 1.25rem 0 0.375rem;
-        font-weight: 500;
+        font-weight: var(--font-weight-medium);
       }
     }
   `,

@@ -1,4 +1,5 @@
-/* The demo's theme: its typeface and its colours. The shapes and the spacing are the site's. */
+/* The demo's theme: its typeface, its two weights and its colours. The shapes and the spacing are
+   the site's. */
 @font-face {
   font-family: Jost;
   src: url('fonts/jost-latin-wght-normal.woff2') format('woff2');
@@ -8,6 +9,8 @@
 
 :root {
   --font-sans: Jost, system-ui, sans-serif;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
 
   --color-ground: #f5f1ec;
   --color-surface: #ffffff;

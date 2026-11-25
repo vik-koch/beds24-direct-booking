@@ -265,7 +265,7 @@ type Fold = ReturnType<typeof fold>;
         h2 {
           margin-bottom: 1rem;
           font-size: var(--size-heading);
-          font-weight: 500;
+          font-weight: var(--font-weight-medium);
           letter-spacing: -0.01em;
         }
       }
@@ -372,7 +372,7 @@ type Fold = ReturnType<typeof fold>;
           display: flex;
           align-items: center;
           gap: 0.625rem;
-          font-weight: 500;
+          font-weight: var(--font-weight-medium);
         }
 
         ng-icon {

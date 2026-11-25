@@ -966,6 +966,13 @@ test('a map colour counts when declared, not in a comment, with any space before
   assert.throws(() => readContent(dir), /--color-poi-shop: a map needs it/);
 });
 
+test('the theme names both weights on :root', () => {
+  const dir = changed('site.json', () => undefined);
+  const file = join(dir, 'theme.css');
+  writeFileSync(file, readFileSync(file, 'utf8').replace(/--font-weight-medium:[^;]+;/, ''));
+  assert.throws(() => readContent(dir), /theme\.css\n {2}--font-weight-medium: missing/);
+});
+
 test('the lifts are taken for the box the map has now', () => {
   const lifts = changed('map/lifts.json', (file) => (file.box.east += 0.001));
   assert.throws(

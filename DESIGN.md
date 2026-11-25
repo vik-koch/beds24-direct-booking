@@ -114,8 +114,9 @@ list is the quietest, clearest thing on the page.
 
 Two things are kept apart. The **design language** is shared by every deployment: the shapes, the
 spacing, the type scale, how controls behave and how a season changes the page. The **theme**
-belongs to one deployment and is content: its colours and its typeface. The values in this file are
-the demo's theme. Another site keeps the language and sets its own.
+belongs to one deployment and is content: its colours, its typeface and that typeface's regular and
+medium weights. The values in this file are the demo's theme. Another site keeps the language and
+sets its own.
 
 Dark grounds, heavy type, hard corners on controls and bright, saturated accents were tried and
 rejected.
@@ -210,7 +211,8 @@ hierarchy; weight barely does.
 
 ### Named Rules
 
-**The Nothing Bold Rule.** No text weight above 500. Emphasis comes from size, colour or position.
+**The Nothing Bold Rule.** No text heavier than the theme's medium weight (500 in the demo's Jost).
+Emphasis comes from size, colour or position.
 
 **The Figures Rule.** Prices and dates use tabular figures and are right-aligned in a list, so that
 amounts can be compared down a column.
@@ -517,8 +519,8 @@ chosen, and the focus is on the language entry, or the menu button where the hea
 ### Don't:
 
 - **Don't** use a dark ground or a dark gradient over a photo.
-- **Don't** set text heavier than weight 500.
+- **Don't** set text heavier than the theme's medium weight.
 - **Don't** use bright, saturated accents; a season's colour is muted.
 - **Don't** draw boxes and rules where space is enough.
 - **Don't** give the language switch the season switch's shape; the two must be told apart.
-- **Don't** hard-code a colour or a typeface in a component: both come from the theme.
+- **Don't** hard-code a colour, a typeface or a weight in a component: they come from the theme.

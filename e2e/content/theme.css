@@ -1,6 +1,8 @@
 /* A second site for the tests: no font of its own, no notice, other colours. */
 :root {
   --font-sans: system-ui, sans-serif;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
 
   --color-ground: #f4f1ea;
   --color-surface: #ffffff;
