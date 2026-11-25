@@ -20,6 +20,14 @@ umgebaut, mit Holz aus der Region: Zirbe, Lärche und Ahorn geben den Wohnungen 
 Wir kümmern uns selbst um die Häuser. Bei der Ankunft und während Ihres Aufenthalts erreichen Sie
 uns persönlich.
 
+## Unser Partner im Tal
+
+Die Skischule Musterberg unterrichtet im Winter Skifahren und begleitet im Sommer Wanderungen.
+Buchen Sie dort einen Kurs und nennen Sie uns: Unsere Gäste bekommen auch in einem ausgebuchten Kurs
+einen Platz.
+
+<a href="https://example.com/"><img src="pictures/skischule-musterberg.webp" alt="Skischule Musterberg" width="160"></a>
+
 ## Kontakt
 
 Firn & Farn Appartements GmbH  
