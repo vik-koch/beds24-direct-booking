@@ -172,3 +172,49 @@ test('a question opens with a transition where the browser eases to auto, at onc
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await expect.poll(durations).toEqual({ answer: '0s', arrow: '0s' });
 });
+
+test("an apartment's public page is linked under Good to know and indexed, in both languages", async ({
+  page,
+}) => {
+  await page.goto('/en/apartments/zirbe');
+  const section = page.locator('section', {
+    has: page.getByRole('heading', { level: 2, name: 'Good to know' }),
+  });
+  await section.getByRole('link', { name: 'Getting here', exact: true }).click();
+  await expect(page).toHaveURL('/en/apartments/zirbe/getting-here');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Getting to Zirbe');
+  await expect(page).toHaveTitle('Getting to Zirbe · Firn & Farn');
+  await expect(page.locator('meta[name=robots]')).toHaveCount(0);
+  await toLanguage(page, 'Language: English', 'Deutsch');
+  await expect(page).toHaveURL('/de/wohnungen/zirbe/anfahrt');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Anfahrt zur Zirbe');
+  await expect(page.locator('meta[name=robots]')).toHaveCount(0);
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+});
+
+test('an unlisted page is not indexed and linked from nowhere, and only its apartment has it', async ({
+  page,
+}) => {
+  await page.goto('/en/apartments/zirbe');
+  await expect(page.getByRole('link', { name: 'Getting here', exact: true })).toBeVisible();
+  await expect(page.locator('a[href*="/guide"]')).toHaveCount(0);
+  await page.goto('/de/wohnungen/zirbe/wohnungsmappe');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Ihre Wohnungsmappe zur Zirbe');
+  await expect(page.locator('meta[name=robots]')).toHaveAttribute('content', 'noindex');
+  await toLanguage(page, 'Sprache: Deutsch', 'English');
+  await expect(page).toHaveURL('/en/apartments/zirbe/guide');
+  await expect(page.locator('meta[name=robots]')).toHaveAttribute('content', 'noindex');
+  // A page the footer links is indexed again after a navigation in the page.
+  await page.getByRole('contentinfo').getByRole('link', { name: 'Imprint' }).click();
+  await expect(page).toHaveURL('/en/imprint');
+  await expect(page.locator('meta[name=robots]')).toHaveCount(0);
+  expect((await page.goto('/en/apartments/laerche/guide'))!.status()).toBe(404);
+  await page.goto('/en/apartments/laerche');
+  await expect(page.getByRole('link', { name: 'Getting here', exact: true })).toHaveCount(0);
+});
+
+test("an apartment's page opens while Beds24 cannot be reached", async ({ page }) => {
+  const response = await page.goto('http://localhost:4001/en/apartments/zirbe/getting-here');
+  expect(response!.status()).toBe(200);
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Getting to Zirbe');
+});

@@ -384,9 +384,9 @@ test(
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Zirbe');
     await expect(page.locator('.tile img').first()).toBeVisible();
     await expect(page.getByText('cannot be loaded just now')).toBeVisible();
-    await expect(
-      page.locator('.facts, .prose, .rooms, .amenities, .spartan-accordion'),
-    ).toHaveCount(0);
+    await expect(page.locator('.facts, .prose, .rooms, .amenities')).toHaveCount(0);
+    // Its own pages are prerendered, so they stay linked.
+    await expect(page.locator('.spartan-accordion-item')).toHaveText(['Getting here']);
     await expect(page.locator('.panel')).toContainText('The free weeks cannot be shown just now.');
   },
 );
