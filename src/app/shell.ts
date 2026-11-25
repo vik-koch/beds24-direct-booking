@@ -1,7 +1,7 @@
 import { DOCUMENT, Location, ViewportScroller } from '@angular/common';
 import { afterNextRender, Component, DestroyRef, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Title } from '@angular/platform-browser';
+import { Meta, Title } from '@angular/platform-browser';
 import {
   ActivatedRoute,
   ActivatedRouteSnapshot,
@@ -60,6 +60,7 @@ export class Shell {
   private readonly route = inject(ActivatedRoute);
   private readonly document = inject(DOCUMENT);
   private readonly title = inject(Title);
+  private readonly meta = inject(Meta);
   private readonly router = inject(Router);
   private readonly location = inject(Location);
   protected alternates: Record<string, string> = {};
@@ -124,13 +125,21 @@ export class Shell {
     this.notFound = page === 'notFound';
     const text = heading(this.texts, route);
     this.title.setTitle(page === 'home' ? `${site.name}: ${text}` : `${text} · ${site.name}`);
+    // A content page no navigation links is reached by its address only, and not indexed.
+    const slug = slugOf(route);
+    const linked = slug
+      ? (site.apartments.find((apartment) => apartment.slug === slug)?.public ?? [])
+      : [...site.header, ...site.footer];
+    if (route.data['content'] && !linked.includes(page))
+      this.meta.updateTag({ name: 'robots', content: 'noindex' });
+    else this.meta.removeTag("name='robots'");
 
     // The address's season too: with a chosen week it names the week's season, for whoever the
     // link is sent to.
     const params = new URLSearchParams(this.location.path().split('#')[0].split('?')[1] ?? '');
     const query = params.size ? `?${params}` : '';
     this.alternates = Object.fromEntries(
-      site.languages.map((l) => [l.code, address(l, page, slugOf(route)) + query]),
+      site.languages.map((l) => [l.code, address(l, page, slug) + query]),
     );
     const head = this.document.head;
     head.querySelectorAll('link[rel=alternate]').forEach((link) => link.remove());

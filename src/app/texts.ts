@@ -9,23 +9,20 @@ export const LANGUAGE = new InjectionToken<Language>('language');
 // A page of the application, or a content page by its key.
 export type Page = 'home' | 'apartment' | 'notFound' | 'book' | 'confirmation' | 'credits' | string;
 
+// A page below an apartment's, such as the booking step or one of its content pages, by its slug.
 export function address(language: Language, page: Page, slug?: string): string {
   const paths = language.paths;
-  const apartment = `/${paths.apartments}/${slug}`;
-  const rest =
-    page === 'home' || page === 'notFound'
+  const rest = slug
+    ? `/${paths.apartments}/${slug}${page === 'apartment' ? '' : `/${paths[page]}`}`
+    : page === 'home' || page === 'notFound'
       ? ''
-      : page === 'apartment'
-        ? apartment
-        : page === 'book'
-          ? `${apartment}/${paths.book}`
-          : `/${paths[page]}`;
+      : `/${paths[page]}`;
   return `/${language.code}${rest}`;
 }
 
 // Links to the pages a list in site.json names, such as the header's or the footer's.
-export const pageLinks = (texts: Texts, language: Language, pages: Page[]) =>
-  pages.map((page) => ({ text: texts.pages[page], path: address(language, page) }));
+export const pageLinks = (texts: Texts, language: Language, pages: Page[], slug?: string) =>
+  pages.map((page) => ({ text: texts.pages[page], path: address(language, page, slug) }));
 
 // Changes the address's query in place, keeping its fragment and the history entry's state.
 export function replaceQuery(location: Location, change: (params: URLSearchParams) => void) {

@@ -1,6 +1,6 @@
 import { DOCUMENT } from '@angular/common';
 import { inject, REQUEST_CONTEXT } from '@angular/core';
-import { Routes } from '@angular/router';
+import { ActivatedRouteSnapshot, Route, Routes, UrlSegment } from '@angular/router';
 import { loadPage } from '../content/generated/pages';
 import site from '../content/generated/site';
 import { loadTexts } from '../content/generated/texts';
@@ -15,8 +15,25 @@ import { Shell } from './shell';
 import { TextPage } from './text-page';
 import { LANGUAGE, TEXTS } from './texts';
 
+const apartmentPages = [...new Set(site.apartments.flatMap(({ pages = [] }) => pages))];
+
 const pages = ({ code, paths }: Language): Routes => [
   { path: '', component: Home, resolve: { weeks }, data: { page: 'home' } },
+  ...apartmentPages.map((page) => ({
+    path: `${paths.apartments}/:slug/${paths[page]}`,
+    canMatch: [
+      (_route: Route, segments: UrlSegment[]) =>
+        site.apartments.some(
+          ({ slug, pages }) => slug === segments[1].path && pages?.includes(page),
+        ),
+    ],
+    component: TextPage,
+    resolve: {
+      content: (route: ActivatedRouteSnapshot) =>
+        loadPage[code][`${route.params['slug']}/${page}`](),
+    },
+    data: { page },
+  })),
   {
     path: `${paths.apartments}/:slug`,
     canMatch: [(_route, segments) => site.apartments.some(({ slug }) => slug === segments[1].path)],
