@@ -21,6 +21,17 @@ test('a content page shows its file, and the language switch leads to the same p
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
 });
 
+test("a page's first heading sits under its title, a later one with room above it", async ({
+  page,
+}) => {
+  const above = (heading: ReturnType<typeof page.locator>) =>
+    heading.evaluate((h) => getComputedStyle(h).marginTop);
+  await page.goto(`${other}/it/condizioni`);
+  expect(await above(page.getByRole('heading', { level: 2, name: 'Cancellazione' }))).toBe('0px');
+  await page.goto('/en/faq');
+  expect(await above(page.getByRole('heading', { level: 2, name: 'Arrival' }))).toBe('36px');
+});
+
 test('a table wider than the column scrolls in its frame, reached by keyboard', async ({
   page,
 }) => {
