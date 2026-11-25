@@ -1200,6 +1200,14 @@ test('a content page opens with its title and holds only what a page shows', () 
     ],
     ['# Title\n\n<p>Text <summary>Q</summary></p>', /a <summary> that does not open a <details>/],
     ['# Title\n\n<summary>Q</summary>', /a <summary> that does not open a <details>/],
+    [
+      '# Title\n\n<details id="a">\n<summary></summary>\n\nA.\n\n</details>',
+      /a question without text/,
+    ],
+    [
+      '# Title\n\n<details id="a">\n<summary>:info: </summary>\n\nA.\n\n</details>',
+      /a question without text/,
+    ],
     ['# ![A bed](pictures/bed.webp)', /outside a paragraph of its own/],
     ['# <span></span>', /has <span>/],
     ['# <strong> </strong>', /a title without text/],
@@ -1252,6 +1260,27 @@ test("a page's ## headings take an id from their text, and a link to an id leads
   assert.match(page.html, /<a href="\/de\/fragen#keys">Keys<\/a>/);
   assert.match(page.html, /<h2 id="uber-die-anreise">Über die Anreise<\/h2>/);
   assert.match(page.html, /<h3>Straße<\/h3>/);
+});
+
+test("a page's heading, question and quote may open with an icon, which leaves the id as it was", () => {
+  const page = readPage(
+    'page.md',
+    '# FAQ\n\n> :info: Made up.\n>\n> Twice.\n\n## :key-round: Über die *Anreise*\n\n### :flame: Heat\n\n#### :flame: Stays\n\nText :flame: here.\n\n> Quote :flame: here.\n\n<details id="keys">\n<summary>:door-open: Keys?</summary>\n\nBy the door.\n\n</details>\n',
+    '/de/fragen',
+  );
+  const icon = '<svg [^>]*class="icon" aria-hidden="true">(?:<(?!/svg)[^>]+>)+</svg>';
+  assert.match(page.html, new RegExp(`^<blockquote class="note">\\n${icon}<p>Made up\\.</p>`));
+  assert.match(
+    page.html,
+    new RegExp(`<h2 id="uber-die-anreise">${icon}<span>Über die <em>Anreise</em></span></h2>`),
+  );
+  assert.match(page.html, new RegExp(`<h3>${icon}<span>Heat</span></h3>`));
+  assert.match(page.html, new RegExp(`<summary>${icon}<span>Keys\\?</span></summary>`));
+  assert.match(page.html, /<h4>:flame: Stays<\/h4>\n<p>Text :flame: here\.<\/p>\n<blockquote>/);
+  assert.throws(
+    () => readPage('page.md', '# FAQ\n\n## :heat: Heat', '/de/fragen'),
+    /page\.md\n {2}has the icon :heat:, which Lucide lacks/,
+  );
 });
 
 test("a page's picture may have a width and a link", () => {

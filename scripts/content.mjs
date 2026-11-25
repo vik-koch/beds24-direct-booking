@@ -185,6 +185,19 @@ export function readPage(file, markdown, path) {
       img.replaceWith(paragraph);
       paragraph.append(img);
     }
+  // An icon a block opens with, as :name:, leaves its text before the ids are taken from it.
+  const iconed = [];
+  for (const block of body.querySelectorAll('h2, h3, summary, blockquote > p:first-child')) {
+    const start = block.firstChild;
+    const [code, name] =
+      (start?.nodeName === '#text' &&
+        start.textContent.match(/^\s*:([a-z0-9]+(?:-[a-z0-9]+)*):\s+/)) ||
+      [];
+    if (!code) continue;
+    if (!(lucideName(name) in lucide)) throw fail(`has the icon :${name}:, which Lucide lacks`);
+    start.textContent = start.textContent.slice(code.length);
+    iconed.push([block, lucide[lucideName(name)]]);
+  }
   const title = body.firstElementChild;
   const ids = new Set();
   for (const element of body.querySelectorAll('*')) {
@@ -220,6 +233,8 @@ export function readPage(file, markdown, path) {
       throw fail('has a <summary> that does not open a <details>');
     if (name === 'details' && element.firstElementChild?.localName !== 'summary')
       throw fail('has a <details> that does not open with a <summary>');
+    if (name === 'summary' && !element.textContent.trim())
+      throw fail('has a question without text');
     if (name === 'h2') element.id = idOf(element.textContent);
     if (name === 'details' || name === 'h2') {
       const id = element.id;
@@ -249,6 +264,23 @@ export function readPage(file, markdown, path) {
         throw fail(
           `has text outside a paragraph: ${node.textContent.trim().slice(0, 40)}; leave a blank line after <summary>`,
         );
+  // The icon's drawing goes in after the check, which refuses an author's own <svg>. A quote that
+  // opens with one is a note.
+  for (const [block, drawing] of iconed) {
+    const icon = parse(drawing).content.firstChild;
+    icon.removeAttribute('style');
+    icon.setAttribute('stroke-width', '2');
+    icon.setAttribute('class', 'icon');
+    icon.setAttribute('aria-hidden', 'true');
+    if (block.localName === 'p') {
+      block.parentElement.className = 'note';
+      block.before(icon);
+    } else {
+      const text = body.ownerDocument.createElement('span');
+      text.append(...block.childNodes);
+      block.append(icon, text);
+    }
+  }
   // Wider than the column, a table scrolls in a frame of its own.
   for (const table of body.querySelectorAll('table')) {
     const frame = body.ownerDocument.createElement('div');

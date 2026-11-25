@@ -78,6 +78,16 @@ content. The application has no wording, no colour and no typeface of its own. T
   also above the title: it stays in the file and never reaches the page. How a page is built is
   [ADR 17](adr/0017-content-pages-in-markdown.md).
 
+  A `##` or `###` heading, a question's `<summary>` and a quote may open with an icon: its Lucide
+  name as [lucide.dev](https://lucide.dev/icons) shows it, between colons and followed by a space,
+  such as `## :key-round: Arrival`, `<summary>:door-open: How do I get in?</summary>` or
+  `> :info: Made up.`. The build checks the name and stops on one Lucide lacks, and draws the icon
+  into the page, where a screen reader passes over it. A `##` heading's `id` comes from the text
+  after it, so `arrival` here. A quote that opens with an icon is a note, a card with the icon
+  beside its text, and a question's answer starts below its text, as an apartment's "Good to know"
+  rows do. Anywhere else, such as in the title, a `####` heading or a paragraph, `:key-round:` stays
+  text.
+
   A picture stands in a paragraph of its own, written with its alternative text in the page's
   language: `![The village in summer, seen from a trail above it](pictures/saalbach-summer.webp)`.
   It is a file in `pictures/`, from square to 2:1 like an apartment's, and the build converts it the
@@ -361,7 +371,7 @@ beyond a limit fails its build, with the limit named.
 | Hero features | Up to 5 | The hero's card | The schema |
 | An apartment's picture | Square to 2:1, landscape, with 1% to spare | The gallery's frames; tested with 1:1, 4:3 and 3:2 | The content script; the demo has 3:2, the e2e test site 1:1 and 4:3 |
 | An apartment's floor plan | One drawing, all floors in it | The gallery shows one plan | The schema |
-| A content page | Its title, then headings, paragraphs, lists, quotes, rules, links, tables, folded questions and pictures | The elements the page styles | The content script |
+| A content page | Its title, then headings, paragraphs, lists, quotes, rules, links, tables, folded questions and pictures; an icon only at the start of a `##` or `###` heading, a question or a quote | The elements the page styles | The content script |
 | A content page's title | A word as wide as the column at 300 px, or one with a soft hyphen (`&shy;`) where it may break, as the demo's `Geschäfts&shy;bedingungen` | Headlines are not hyphenated, and the layout holds down to 300 px (DESIGN.md): a longer word would make the page scroll sideways | Not checked: a deployment looks at its titles at 300 px |
 | The map's box | At most 0.1° each way, within 85° of latitude | The tiles grow with the area, and the repository and the image carry them; the demo's 0.07° by 0.03° is 773 kB | The schema |
 | The map's places | 1 to 10 | One route for each apartment and place, and the map's list of places | The schema |
@@ -399,12 +409,12 @@ language, with an icon that is not Lucide's, an element its text does not show o
 apartment's page, a header or footer link to no page, a footer link the header has, two pages at one
 address, a page that does not open with its title or holds an element, an attribute, a link or a
 question's `id` the pages do not take, a `##` heading whose text gives no `id` or one the page has
-already, a `#` link to no `id` on its page, a page's picture without its file or alternative text or
-beside other text, a credited picture no page shows, and a part beyond its boundary stop the build
-with the file and the key named; for the tiles and the routes, with the script to run. The schema,
-not the demo's files, defines the keys, so the compiler checks every template against the same keys
-for every site. Every language has the same keys, so every language renders the same elements and a
-change of language finds the reader's place.
+already, a `#` link to no `id` on its page, an icon Lucide lacks, a page's picture without its file
+or alternative text or beside other text, a credited picture no page shows, and a part beyond its
+boundary stop the build with the file and the key named; for the tiles and the routes, with the
+script to run. The schema, not the demo's files, defines the keys, so the compiler checks every
+template against the same keys for every site. Every language has the same keys, so every language
+renders the same elements and a change of language finds the reader's place.
 
 ## Another folder
 

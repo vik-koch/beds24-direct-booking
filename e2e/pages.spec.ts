@@ -174,6 +174,30 @@ test("the FAQ's list leads to its groups and a question's address opens it, belo
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
 });
 
+test("the FAQ's groups and its note open with an icon the heading's name leaves out, in both languages", async ({
+  page,
+}) => {
+  for (const [path, name, id, note] of [
+    ['/en/faq', 'Booking and payment', 'booking-and-payment', 'Firn & Farn is made up'],
+    [
+      '/de/haeufige-fragen',
+      'Buchung und Zahlung',
+      'buchung-und-zahlung',
+      'Firn & Farn ist erfunden',
+    ],
+  ]) {
+    await page.goto(path);
+    const heading = page.getByRole('heading', { level: 2, name, exact: true });
+    await expect(heading).toHaveAttribute('id', id);
+    await expect(heading.locator('svg.icon[aria-hidden="true"]')).toBeVisible();
+    const icon = page.locator('.note', { hasText: note }).locator('svg.icon');
+    await expect(icon).toBeVisible();
+    // In soft ink, as every icon beside text: the accent is for what a visitor can act on.
+    const ink = await heading.locator('svg.icon').evaluate((svg) => getComputedStyle(svg).color);
+    await expect(icon).toHaveCSS('color', ink);
+  }
+});
+
 test('a question opens with a transition where the browser eases to auto, at once with reduced motion', async ({
   page,
 }) => {

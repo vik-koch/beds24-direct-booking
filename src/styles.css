@@ -1414,6 +1414,54 @@
       border-left: 2px solid var(--color-line);
     }
 
+    /* An icon a heading, a question or a note opens with (the content script). */
+    .icon {
+      --icon: 1em;
+      flex: none;
+      width: var(--icon);
+      height: var(--icon);
+      color: var(--color-ink-soft);
+    }
+
+    :is(summary, .note) > .icon {
+      --icon: var(--row-icon);
+    }
+
+    /* On the first line's baseline, its centre raised to half the cap height, where a capital's
+       middle is: centred on the line box, it sits low beside Jost. */
+    :is(h2, h3, .note) > .icon {
+      translate: 0 calc(var(--icon) / 2 - 0.5cap);
+    }
+
+    :is(h2, h3):has(> .icon) {
+      display: flex;
+      align-items: baseline;
+      gap: 0.5rem;
+    }
+
+    /* The answer starts where the question's text does, as in the accordion. */
+    details:has(> summary > .icon) > :not(summary) {
+      margin-left: calc(var(--row-padding) + var(--row-icon) + var(--row-gap));
+    }
+
+    .note {
+      display: grid;
+      grid-template-columns: var(--row-icon) 1fr;
+      align-items: baseline;
+      column-gap: var(--row-gap);
+      padding: 1rem var(--row-padding);
+      border: 0;
+      border-radius: var(--radius-card);
+
+      > :not(.icon) {
+        grid-column: 2;
+      }
+
+      > :last-child {
+        margin-bottom: 0;
+      }
+    }
+
     hr {
       margin: 1rem 0;
       border-color: var(--color-line);
