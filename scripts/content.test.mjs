@@ -3,6 +3,7 @@ import { spawnSync } from 'node:child_process';
 import {
   cpSync,
   existsSync,
+  mkdirSync,
   mkdtempSync,
   readdirSync,
   readFileSync,
@@ -195,6 +196,7 @@ test('a content folder beyond a limit fails, and the message names the limit', (
     join(at, 'apartments/d.json'),
     readFileSync('content/demo/apartments/zirbe.json', 'utf8'),
   );
+  cpSync(join(at, 'pages/zirbe'), join(at, 'pages/d'), { recursive: true });
   assert.equal(readContent(at).site.apartments.length, 4);
   // A letter with its accent as a code point of its own counts once.
   const accent = (count) => 'x'.repeat(count - 1) + 'e\u0301';
@@ -1045,7 +1047,7 @@ test('a content page needs its file, its address and its link text in every lang
   });
   assert.throws(
     () => readContent(unlisted),
-    /texts\.de-AT\.json\n {2}paths\.about: a page site\.json does not list/,
+    /texts\.de-AT\.json\n {2}paths\.about: a page neither site\.json nor an apartment lists/,
   );
 });
 
@@ -1053,6 +1055,52 @@ test('a page file that no page lists is refused', () => {
   const dir = changed('site.json', () => undefined);
   writeFileSync(join(dir, 'pages', 'guide.en-GB.md'), '# Guide\n');
   assert.throws(() => readContent(dir), /guide\.en-GB\.md\n {2}\(file\): not a page/);
+});
+
+test("an apartment's page needs its file in every language, and links only its own pages", () => {
+  const noFile = changed('site.json', () => undefined);
+  rmSync(join(noFile, 'pages', 'zirbe', 'guide.en-GB.md'));
+  assert.throws(() => readContent(noFile), /pages\/zirbe\/guide\.en-GB\.md\n {2}\(file\): missing/);
+  const linked = changed('apartments/zirbe.json', (zirbe) => zirbe.public.push('heating'));
+  assert.throws(
+    () => readContent(linked),
+    /zirbe\.json\n {2}public\.1: heating is not one of its pages/,
+  );
+  const shared = changed('apartments/zirbe.json', (zirbe) => zirbe.pages.push('faq'));
+  assert.throws(
+    () => readContent(shared),
+    /zirbe\.json\n {2}pages\.2: faq is a page of the site too/,
+  );
+  const fixed = changed('apartments/zirbe.json', (zirbe) => zirbe.pages.push('book'));
+  assert.throws(() => readContent(fixed), /zirbe\.json\n {2}pages\.2: taken by a page/);
+});
+
+test("a file in an apartment's pages folder that it does not list is refused, as is a folder", () => {
+  const file = changed('site.json', () => undefined);
+  writeFileSync(join(file, 'pages', 'zirbe', 'heating.en-GB.md'), '# Heating\n');
+  assert.throws(
+    () => readContent(file),
+    /zirbe\/heating\.en-GB\.md\n {2}\(file\): not a page and language apartments\/zirbe\.json lists/,
+  );
+  const folder = changed('site.json', () => undefined);
+  mkdirSync(join(folder, 'pages', 'laerche'));
+  assert.throws(
+    () => readContent(folder),
+    /pages\/laerche\n {2}\(file\): not a page and language site\.json lists/,
+  );
+});
+
+test("an apartment's page has an address of its own below the apartment's", () => {
+  const book = changed('texts.en-GB.json', (texts) => (texts.paths.guide = 'book'));
+  assert.throws(
+    () => readContent(book),
+    /texts\.en-GB\.json\n {2}paths\.(book|guide): book is another/,
+  );
+  const pages = changed('texts.en-GB.json', (texts) => (texts.paths.guide = 'getting-here'));
+  assert.throws(() => readContent(pages), /paths\.(arrival|guide): getting-here is another/);
+  // A site page's address lies one level higher.
+  const site = changed('texts.en-GB.json', (texts) => (texts.paths.guide = 'faq'));
+  assert.equal(readContent(site).pages.en['zirbe/guide'].title, 'Your guide to Zirbe');
 });
 
 test('the header and the footer link only to pages, and a page key is not one of the fixed pages', () => {

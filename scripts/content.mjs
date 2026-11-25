@@ -438,33 +438,60 @@ export function readContent(dir) {
           : part === 'footer' && site.header.includes(key) && 'is in the header too';
       if (fault) throw new Error(`${join(dir, 'site.json')}\n  ${part}.${index}: ${key} ${fault}`);
     });
+  // An apartment's pages are its own, and those it links among them; a key is a site page's or
+  // apartments' pages', not both.
+  for (const { slug, pages = [], public: linked = [] } of apartments) {
+    const file = join(dir, 'apartments', `${slug}.json`);
+    linked.forEach((key, index) => {
+      if (!pages.includes(key))
+        throw new Error(`${file}\n  public.${index}: ${key} is not one of its pages`);
+    });
+    pages.forEach((key, index) => {
+      if (site.pages.includes(key))
+        throw new Error(`${file}\n  pages.${index}: ${key} is a page of the site too`);
+    });
+  }
+  // Each page by its address part and folder: the site's, then each apartment's below its own.
+  const listings = [
+    { folder: 'pages', keys: site.pages },
+    ...apartments
+      .filter(({ pages }) => pages?.length)
+      .map(({ slug, pages }) => ({ slug, folder: `pages/${slug}`, keys: pages })),
+  ];
+  const pageKeys = new Set(listings.flatMap((listing) => listing.keys));
+  const below = ['book', ...listings.slice(1).flatMap((listing) => listing.keys)];
   const pages = {};
   for (const tag of site.languages) {
     const file = join(dir, `texts.${tag}.json`);
     const { paths } = texts[prefix(tag)];
     for (const part of ['paths', 'pages']) {
       const named = texts[prefix(tag)][part];
-      for (const key of new Set([...site.pages, ...Object.keys(named)]))
-        if (!fixedPages.includes(key) && (!site.pages.includes(key) || !Object.hasOwn(named, key)))
+      for (const key of new Set([...pageKeys, ...Object.keys(named)]))
+        if (!fixedPages.includes(key) && (!pageKeys.has(key) || !Object.hasOwn(named, key)))
           throw new Error(
-            `${file}\n  ${part}.${key}: ${site.pages.includes(key) ? 'missing' : 'a page site.json does not list'}`,
+            `${file}\n  ${part}.${key}: ${pageKeys.has(key) ? 'missing' : 'a page neither site.json nor an apartment lists'}`,
           );
     }
-    // The booking step's address lies below an apartment's.
-    const top = Object.entries(paths).filter(([key]) => key !== 'book');
-    for (const [key, path] of top)
-      if (top.find((other) => other[1] === path)[0] !== key)
-        throw new Error(`${file}\n  paths.${key}: ${path} is another page's address too`);
+    // The booking step's address and the apartments' pages lie below an apartment's.
+    for (const level of [false, true]) {
+      const same = Object.entries(paths).filter(([key]) => below.includes(key) === level);
+      for (const [key, path] of same)
+        if (same.find((other) => other[1] === path)[0] !== key)
+          throw new Error(`${file}\n  paths.${key}: ${path} is another page's address too`);
+    }
     pages[prefix(tag)] = Object.fromEntries(
-      site.pages.map((key) => {
-        const page = join(dir, 'pages', `${key}.${tag}.md`);
-        if (!existsSync(page)) throw new Error(`${page}\n  (file): missing`);
-        const read = readPage(page, readFileSync(page, 'utf8'), `/${prefix(tag)}/${paths[key]}`);
-        for (const file of read.pictures)
-          if (!existsSync(join(dir, file)))
-            throw new Error(`${page}\n  shows ${file}, which does not exist`);
-        return [key, read];
-      }),
+      listings.flatMap(({ slug, folder, keys }) =>
+        keys.map((key) => {
+          const page = join(dir, folder, `${key}.${tag}.md`);
+          if (!existsSync(page)) throw new Error(`${page}\n  (file): missing`);
+          const path = [prefix(tag), ...(slug ? [paths.apartments, slug] : []), paths[key]];
+          const read = readPage(page, readFileSync(page, 'utf8'), `/${path.join('/')}`);
+          for (const file of read.pictures)
+            if (!existsSync(join(dir, file)))
+              throw new Error(`${page}\n  shows ${file}, which does not exist`);
+          return [slug ? `${slug}/${key}` : key, read];
+        }),
+      ),
     );
   }
   // A credit is for a picture a page shows.
@@ -475,12 +502,16 @@ export function readContent(dir) {
     if (!shown.includes(file))
       throw new Error(`${join(dir, 'site.json')}\n  pictures.${index}: ${file} is on no page`);
   });
-  if (existsSync(join(dir, 'pages')))
-    for (const file of readdirSync(join(dir, 'pages')))
-      if (!site.pages.some((key) => site.languages.some((tag) => file === `${key}.${tag}.md`)))
-        throw new Error(
-          `${join(dir, 'pages', file)}\n  (file): not a page and language site.json lists`,
-        );
+  for (const { folder, keys } of listings)
+    if (existsSync(join(dir, folder)))
+      for (const file of readdirSync(join(dir, folder)))
+        if (
+          !keys.some((key) => site.languages.some((tag) => file === `${key}.${tag}.md`)) &&
+          !(folder === 'pages' && listings.some((listing) => listing.folder === `pages/${file}`))
+        )
+          throw new Error(
+            `${join(dir, folder, file)}\n  (file): not a page and language ${folder === 'pages' ? 'site.json' : `apartments/${basename(folder)}.json`} lists`,
+          );
   // Every language renders the same elements, so a change of language finds the reader's place.
   const [first, ...others] = site.languages;
   for (const tag of others) {
@@ -726,11 +757,17 @@ export async function writeContent(dir, out, cache) {
   // A module per content page and language, which only its page loads.
   for (const [code, list] of Object.entries(pages))
     for (const [key, page] of Object.entries(list))
-      writeFileSync(join(out, `page.${code}.${key}.ts`), module('ContentPage', withFiles(page)));
+      writeFileSync(
+        join(out, `page.${code}.${key.replace('/', '.')}.ts`),
+        module('ContentPage', withFiles(page)),
+      );
   const pageLoaders = Object.entries(pages).map(
     ([code, list]) =>
       `  ${code}: {\n${Object.keys(list)
-        .map((key) => `    '${key}': () => import('./page.${code}.${key}').then((m) => m.default),`)
+        .map(
+          (key) =>
+            `    '${key}': () => import('./page.${code}.${key.replace('/', '.')}').then((m) => m.default),`,
+        )
         .join('\n')}\n  },`,
   );
   writeFileSync(

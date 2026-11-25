@@ -165,6 +165,15 @@ const seasons = z
 // The names of the application's own pages, which a content page cannot take.
 export const fixedPages = ['home', 'apartment', 'apartments', 'book', 'confirmation', 'credits'];
 
+const pageKeys = z
+  .array(
+    segment.refine(
+      (key) => !fixedPages.includes(key),
+      `taken by a page of the site: ${fixedPages.join(', ')}`,
+    ),
+  )
+  .refine((list) => unique(list, (key) => key), 'a page is listed twice');
+
 // The limits docs/content.md lists, each with its reason there.
 export const siteSchema = z.strictObject({
   name: text.refine((value) => letters(value) <= 15, 'at most 15 characters'),
@@ -234,14 +243,7 @@ export const siteSchema = z.strictObject({
   // The content pages, each with a file per language in pages/, its address and its link text in
   // the texts; the header's links after its own, in their order, to content pages; and the
   // footer's links in their order: content pages or the picture credits.
-  pages: z
-    .array(
-      segment.refine(
-        (key) => !fixedPages.includes(key),
-        `taken by a page of the site: ${fixedPages.join(', ')}`,
-      ),
-    )
-    .refine((list) => unique(list, (key) => key), 'a page is listed twice'),
+  pages: pageKeys,
   header: z
     .array(segment)
     .max(2, 'at most two pages')
@@ -309,6 +311,10 @@ export const apartmentSchema = z.strictObject({
     )
     .min(1, 'at least one picture'),
   plan: plan.optional(),
+  // Its own content pages, each with a file per language in pages/<slug>/, and those its page
+  // links under "Good to know"; any other is reached by its address only.
+  pages: pageKeys.optional(),
+  public: z.array(segment).optional(),
 });
 
 export const textsSchema = z.strictObject({
