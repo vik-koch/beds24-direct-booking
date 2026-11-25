@@ -24,12 +24,16 @@ test('a content page shows its file, and the language switch leads to the same p
 test("a page's first heading sits under its title, a later one with room above it", async ({
   page,
 }) => {
-  const above = (heading: ReturnType<typeof page.locator>) =>
-    heading.evaluate((h) => getComputedStyle(h).marginTop);
   await page.goto(`${other}/it/condizioni`);
-  expect(await above(page.getByRole('heading', { level: 2, name: 'Cancellazione' }))).toBe('0px');
+  await expect(page.getByRole('heading', { level: 2, name: 'Cancellazione' })).toHaveCSS(
+    'margin-top',
+    '0px',
+  );
   await page.goto('/en/faq');
-  expect(await above(page.getByRole('heading', { level: 2, name: 'Arrival' }))).toBe('36px');
+  await expect(page.getByRole('heading', { level: 2, name: 'Arrival' })).toHaveCSS(
+    'margin-top',
+    '36px',
+  );
 });
 
 test('a table wider than the column scrolls in its frame, reached by keyboard', async ({
@@ -159,13 +163,12 @@ test('a question opens with a transition where the browser eases to auto, at onc
 }) => {
   const durations = () =>
     page.locator('details#price').evaluate((details) => ({
-      eases: CSS.supports('interpolate-size: allow-keywords'),
       answer: getComputedStyle(details, '::details-content').transitionDuration,
       arrow: getComputedStyle(details.querySelector('summary')!, '::after').transitionDuration,
     }));
   await page.goto('/en/faq');
-  const moving = await durations();
-  if (moving.eases) expect(moving.answer).toBe('0.3s, 0.3s');
+  if (await page.evaluate(() => CSS.supports('interpolate-size: allow-keywords')))
+    await expect.poll(durations).toMatchObject({ answer: '0.3s, 0.3s' });
   await page.emulateMedia({ reducedMotion: 'reduce' });
-  expect(await durations()).toMatchObject({ answer: '0s', arrow: '0s' });
+  await expect.poll(durations).toEqual({ answer: '0s', arrow: '0s' });
 });
