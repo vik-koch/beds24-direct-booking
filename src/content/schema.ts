@@ -409,7 +409,7 @@ export const textsSchema = z.strictObject({
     tax: z.strictObject({ night: text, stay: text }),
     clear: text,
   }),
-  // The apartment page. {count}, {from} and {until} are filled in by the page.
+  // The apartment page. {count}, {from}, {until} and {number} are filled in by the page.
   apartment: z.strictObject({
     back: text,
     guests: z.strictObject({ one: text, other: text }),
@@ -424,6 +424,8 @@ export const textsSchema = z.strictObject({
     checkIn: z.strictObject({ both: text, from: text, until: text }),
     checkOut: text,
     houseRules: text,
+    // The registration number Beds24 holds for the property, in the facts line.
+    permit: text,
     unavailable: text,
     generated: text,
   }),

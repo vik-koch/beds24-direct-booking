@@ -24,6 +24,8 @@ export interface Listing {
   size: number;
   bedrooms: number;
   address: string;
+  // The property's registration number, empty where none is set.
+  permit: string;
   // HH:MM, midnight as 24:00; null where the property sets none.
   checkIn: { from: string | null; until: string | null };
   checkOut: string | null;
@@ -65,6 +67,7 @@ interface Properties {
     checkInStart: string;
     checkInEnd: string;
     checkOutEnd: string;
+    permit: string;
     featureCodes: string[][];
     // Missing when the property has no text at all.
     texts?: Texts<'houseRules'>;
@@ -153,6 +156,7 @@ export const loadInventory = async (first: string, last: string): Promise<Invent
         multiplier: multiplier(property.bookingPageMultiplier),
         tax: tax ? { amount: tax.amount, per: tax.period === 'daily' ? 'night' : 'stay' } : null,
         address: [property.address, property.city].filter(Boolean).join(', '),
+        permit: property.permit.trim(),
         checkIn: { from: property.checkInStart || null, until: property.checkInEnd || null },
         checkOut: property.checkOutEnd || null,
         features: [...property.featureCodes, ...room.featureCodes],
@@ -204,7 +208,7 @@ export const loadInventory = async (first: string, last: string): Promise<Invent
 export function listingOf(rooms: Room[], id: number, languages: string[]): Listing {
   const room = rooms.find((one) => one.id === id);
   if (!room) throw new Error(`Beds24 has no room ${id}`);
-  const { maxPeople, asksChildren, size, bedrooms, address } = room;
+  const { maxPeople, asksChildren, size, bedrooms, address, permit } = room;
   const { checkIn, checkOut, features, texts } = room;
   return {
     maxPeople,
@@ -212,6 +216,7 @@ export function listingOf(rooms: Room[], id: number, languages: string[]): Listi
     size,
     bedrooms,
     address,
+    permit,
     checkIn,
     checkOut,
     features,

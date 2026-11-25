@@ -100,6 +100,7 @@
       "id": 900102,
       "name": "Haus Farn",
       "address": "Musterweg 7",
+      "permit": "00000-000001",
       "latitude": 47.392,
       "longitude": 12.638,
       "featureCodes": [

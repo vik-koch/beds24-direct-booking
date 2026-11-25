@@ -16,6 +16,7 @@ import {
   lucideBedDouble,
   lucideChevronDown,
   lucideClock,
+  lucideFileBadge,
   lucideMapPin,
   lucideRuler,
   lucideScrollText,
@@ -56,6 +57,7 @@ type Fold = ReturnType<typeof fold>;
       lucideBedDouble,
       lucideChevronDown,
       lucideClock,
+      lucideFileBadge,
       lucideMapPin,
       lucideRuler,
       lucideScrollText,
@@ -111,6 +113,15 @@ type Fold = ReturnType<typeof fold>;
                   } @else {
                     {{ listing.address }}
                   }
+                </li>
+              }
+              @if (listing.permit) {
+                @let permit = texts.apartment.permit.split('{number}');
+                <li>
+                  <ng-icon name="lucideFileBadge" aria-hidden="true" /><span
+                    >{{ permit[0] }}<span class="whitespace-nowrap">{{ listing.permit }}</span
+                    >{{ permit[1] }}</span
+                  >
                 </li>
               }
             </ul>

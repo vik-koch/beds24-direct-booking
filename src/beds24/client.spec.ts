@@ -13,6 +13,7 @@ describe('loadInventory', () => {
         checkInStart: '16:00',
         checkInEnd: '20:00',
         checkOutEnd: '10:00',
+        permit: ' 00000-000001 ',
         featureCodes: [['WIFI'], ['PARKING_PAID']],
         texts: [
           { language: 'de', houseRules: 'Nachtruhe ab 22 Uhr. \r\n' },
@@ -58,6 +59,7 @@ describe('loadInventory', () => {
         checkInStart: '',
         checkInEnd: '18:00',
         checkOutEnd: '',
+        permit: '',
         featureCodes: [],
         roomTypes: [
           {
@@ -124,6 +126,7 @@ describe('loadInventory', () => {
         multiplier: 0.9,
         tax: { amount: 2.5, per: 'night' },
         address: 'Musterweg 1, Saalbach',
+        permit: '00000-000001',
         checkIn: { from: '16:00', until: '20:00' },
         checkOut: '10:00',
         features: [['WIFI'], ['PARKING_PAID'], ['BEDROOM', 'BED_DOUBLE'], ['BOOT_DRYER']],
@@ -148,6 +151,7 @@ describe('loadInventory', () => {
         multiplier: 1,
         tax: null,
         address: 'Saalbach',
+        permit: '',
         checkIn: { from: null, until: '18:00' },
         checkOut: null,
         features: [],
@@ -236,6 +240,7 @@ describe('listingOf', () => {
     multiplier: 1,
     tax: null,
     address: 'Musterweg 1, Saalbach',
+    permit: '00000-000001',
     checkIn: { from: '16:00', until: null },
     checkOut: '10:00',
     features: [['WIFI']],
@@ -253,6 +258,7 @@ describe('listingOf', () => {
       size: 61,
       bedrooms: 1,
       address: 'Musterweg 1, Saalbach',
+      permit: '00000-000001',
       checkIn: { from: '16:00', until: null },
       checkOut: '10:00',
       features: [['WIFI']],

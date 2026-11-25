@@ -117,6 +117,7 @@
     },
     "checkOut": "Departure by {until}.",
     "houseRules": "House rules",
+    "permit": "Registration no. {number}",
     "unavailable": "The details of this apartment cannot be loaded just now. Please try again in a few minutes.",
     "generated": "AI image"
   },
