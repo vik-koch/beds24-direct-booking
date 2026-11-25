@@ -195,7 +195,23 @@ test('without JavaScript every text can be read in full', async ({ browser }) =>
   for (const content of await page.locator('hlm-accordion-content').all())
     expect(await content.evaluate((element) => element.clientHeight)).toBeGreaterThan(0);
   await expect(page.getByText('Nachtruhe von 22 bis 7 Uhr.')).toBeVisible();
+  // A fold's link can be reached and followed.
+  await page.goto('/en/apartments/zirbe');
+  const link = page.getByRole('link', { name: 'Getting to Zirbe' });
+  await link.focus();
+  await expect(link).toBeFocused();
+  await link.click();
+  await expect(page).toHaveURL('/en/apartments/zirbe/getting-here');
   await context.close();
+});
+
+test("with JavaScript a closed fold's link is out of reach until it opens", async ({ page }) => {
+  await page.goto('/en/apartments/zirbe');
+  await expect(page.locator('html')).toHaveAttribute('data-started', '');
+  const content = page.locator('hlm-accordion-content').last();
+  await expect(content).toHaveAttribute('inert');
+  await page.getByRole('button', { name: 'Getting here' }).click();
+  await expect(content).not.toHaveAttribute('inert');
 });
 
 test('on a phone a long description opens with its button, a short one has none', async ({
