@@ -142,11 +142,18 @@ const pageElements = {
 export function readPage(file, markdown, path) {
   const fail = (reason) => new Error(`${file}\n  ${reason}`);
   const tokens = marked.lexer(markdown);
-  const first = tokens.find((token) => token.type !== 'space');
+  // A note to the page's editors, also one above the title, stays in its file.
+  const note = (token) => token.type === 'html' && token.raw.trimStart().startsWith('<!--');
+  const first = tokens.find((token) => token.type !== 'space' && !note(token));
   if (first?.type !== 'heading' || first.depth !== 1)
     throw fail('starts with its title, a # heading');
   const template = parse(marked.parser(tokens));
   const body = template.content;
+  const uncomment = (node) =>
+    [...node.childNodes].forEach((child) =>
+      child.nodeType === child.COMMENT_NODE ? child.remove() : uncomment(child),
+    );
+  uncomment(body);
   const title = body.firstElementChild;
   const ids = new Set();
   for (const element of body.querySelectorAll('*')) {

@@ -1150,6 +1150,17 @@ test("a content page's title is its heading, and its tables scroll in a frame", 
   );
 });
 
+test("a page's comments stay in its file, also one above the title", () => {
+  const page = readPage(
+    'page.md',
+    '<!-- TODO: the title -->\n\n# Terms\n\n<!--\nA note\nover lines\n-->\n\nText <!-- inline --> here.\n\n<details id="keys">\n<summary>Keys?<!-- ask --></summary>\n\n<!-- in an answer -->\n\nBy the door.\n\n</details>\n',
+    '/en/terms',
+  );
+  assert.equal(page.title, 'Terms');
+  assert.doesNotMatch(page.html, /<!--|-->|TODO|note|inline|ask|answer/);
+  assert.match(page.html, /<p>Text  here\.<\/p>/);
+});
+
 test("a page's ## headings take an id from their text, and a link to an id leads to it at the page's path", () => {
   const page = readPage(
     'page.md',

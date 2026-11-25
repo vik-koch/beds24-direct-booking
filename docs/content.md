@@ -70,8 +70,10 @@ content. The application has no wording, no colour and no typeface of its own. T
   language. The page's address with it, `/en/faq#check-in`, opens the question: printed in a QR
   code, it must not change. The address names its language, so a code opens the page in that
   language; the page in another language holds the same `id` at its own path, and the language
-  switch does not carry the `id` along. A table wider than the column scrolls on its own. How a page
-  is built is [ADR 17](adr/0017-content-pages-in-markdown.md).
+  switch does not carry the `id` along. A table wider than the column scrolls on its own. A note to
+  the page's editors is an HTML comment, `<!-- TODO: the opening hours -->`, anywhere in the file,
+  also above the title: it stays in the file and never reaches the page. How a page is built is
+  [ADR 17](adr/0017-content-pages-in-markdown.md).
 
   A picture stands in a paragraph of its own, written with its alternative text in the page's
   language: `![The village in summer, seen from a trail above it](pictures/saalbach-summer.webp)`.
