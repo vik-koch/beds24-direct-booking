@@ -14,6 +14,7 @@ content. The application has no wording, no colour and no typeface of its own. T
 | `texts.<tag>.json` | Everything one language says: the wording, the address parts and the anchors. One file per language listed in `site.json`, such as `texts.en-GB.json`. |
 | `pages/<key>.<tag>.md` | A content page in one language, such as `pages/faq.en-GB.md`: one file for each page and language `site.json` lists, and no other. |
 | `pages/<slug>/<key>.<tag>.md` | One of an apartment's own pages in one language, such as `pages/zirbe/arrival.en-GB.md`: one file for each page its file lists and each language, and no other. |
+| `pages/<key>.map.json`, `pages/<slug>/<key>.map.json` | Optional, with a map: the map that ends that page, with its places and their names in every language. |
 | `theme.css` | The palette, the typeface and its two weights as custom properties on `:root`, and the typeface's `@font-face`. |
 | `fonts/` | Optional: the font files `theme.css` refers to, as `fonts/<file>`. |
 | `pictures/` | The pictures `site.json` names, such as each season's hero photo, and the apartments' pictures and plans. |
@@ -135,6 +136,31 @@ content. The application has no wording, no colour and no typeface of its own. T
   The text is Markdown with paragraphs, lists, **bold**, _italic_ and links, which lead where a
   content page's may; a link to an apartment's page must name one it has. The folds show while
   Beds24 cannot be reached, and the pages they link are built with the site.
+
+- **A page's map** ends a content page, after its text, when a file beside the page's files holds
+  its places: `pages/parking.map.json` for a site page, `pages/zirbe/arrival.map.json` for an
+  apartment's. It is the home map in its look, with the page's places instead of `site.json`'s and
+  without the fold for more places; on an apartment's page it walks from that apartment alone, on a
+  site page from the apartment the visitor chooses. Each place has a key, a Lucide icon by its name,
+  its point, and its name in each of the site's languages by tag, as a picture's `alt`:
+
+  ```json
+  {
+    "places": [
+      {
+        "key": "bus-stop",
+        "icon": "bus",
+        "lat": 47.387771,
+        "lon": 12.647203,
+        "name": { "de-AT": "Haltestelle Ronachgrund", "en-GB": "Ronachgrund bus stop" }
+      }
+    ]
+  }
+  ```
+
+  The author picks the places, such as the nearest bins or car parks; the map searches for none. A
+  place's point is the one OpenStreetMap has for it, so that the tiles' own icon for it gives way to
+  the pin. The page's last section leads into the map, which has no heading of its own.
 
 - **Public or unlisted:** a content page the site's navigation links is public: for a site page the
   header or the footer, for an apartment's page a fold under "Good to know" of any apartment, in any
@@ -312,15 +338,16 @@ content. The application has no wording, no colour and no typeface of its own. T
   `node scripts/map-tiles.mjs 20261122` that day's. The old tiles stay until every new one has
   arrived, and keep their build when the newer build's tiles are the same. The demo's box is 62
   tiles, 773 kB.
-- **The walking routes** are `map/routes.json`: one line from each apartment to each place, with its
-  metres and minutes on foot, from Valhalla's pedestrian costing on FOSSGIS's server, which had
-  built its data the same day when checked on 2026-11-25. Compute them with
-  `node scripts/map-routes.mjs` when a point is added, moved or removed; it asks for one route a
-  second, as the service asks. The routes follow OpenStreetMap's ways, which do not say what is
-  closed or a piste in winter: walk them before a site shows them.
+- **The walking routes** are `map/routes.json`: one line from each apartment to each place, and from
+  each apartment a page's map walks from to each of its places, with its metres and minutes on foot,
+  from Valhalla's pedestrian costing on FOSSGIS's server, which had built its data the same day when
+  checked on 2026-11-25. Compute them with `node scripts/map-routes.mjs` when a point is added,
+  moved or removed; it asks for one route a second, as the service asks. The routes follow
+  OpenStreetMap's ways, which do not say what is closed or a piste in winter: walk them before a
+  site shows them.
 - **A route's waypoints** lead it the way people walk where the router takes another, such as a road
-  around the centre: an apartment's `via` gives, by a place's key, the points its route to that
-  place goes through, in their order:
+  around the centre: an apartment's `via` gives, by the key of a place in `site.json`, the points
+  its route to that place goes through, in their order:
   `"via": { "tourist-office": [{ "lat": 47.38938, "lon": 12.64275 }] }`. The metres shown are the
   route's through them. Try them first on
   [valhalla.openstreetmap.de](https://valhalla.openstreetmap.de/) with the profile set to
@@ -376,6 +403,7 @@ beyond a limit fails its build, with the limit named.
 | A content page's title | A word as wide as the column at 300 px, or one with a soft hyphen (`&shy;`) where it may break, as the demo's `Geschäfts&shy;bedingungen` | Headlines are not hyphenated, and the layout holds down to 300 px (DESIGN.md): a longer word would make the page scroll sideways | Not checked: a deployment looks at its titles at 300 px |
 | The map's box | At most 0.1° each way, within 85° of latitude | The tiles grow with the area, and the repository and the image carry them; the demo's 0.07° by 0.03° is 773 kB | The schema |
 | The map's places | 1 to 10 | One route for each apartment and place, and the map's list of places | The schema |
+| A page's map | One, after the page's text, with 1 to 10 places and no waypoints | A map within the text would split the page around a block that loads late; the routes and the list as the home map's. A route to a page's place that takes a detour is fixed in OpenStreetMap | The schema and the content script |
 | The map's error link (`map.report`) | 32 characters | The opened attribution keeps to two lines at 320 px, below the gesture hint; 55 characters still did | The schema; an e2e test puts 32 wide letters into it at every width |
 
 **The site name's size comes from its length,** at an assumed 0.55em per letter: the widest
@@ -405,17 +433,18 @@ the way to no place of the map, a place without its name or with a text for a se
 not list, tiles cut for another box or a tile missing, a `map/` folder without a map, a map without
 a `.woff2` font in `theme.css`, a route missing, left over or computed before a point moved, a
 content page without its file, address or link text in a language, a page file `site.json` or its
-apartment does not list, a page key the site lists too, a fold without its title or text in a
-language, with an icon that is not Lucide's, an element its text does not show or a link to no
-apartment's page, a header or footer link to no page, a footer link the header has, two pages at one
-address, a page that does not open with its title or holds an element, an attribute, a link or a
-question's `id` the pages do not take, a `##` heading whose text gives no `id` or one the page has
-already, a `#` link to no `id` on its page, an icon Lucide lacks, a page's picture without its file
-or alternative text or beside other text, a credited picture no page shows, and a part beyond its
-boundary stop the build with the file and the key named; for the tiles and the routes, with the
-script to run. The schema, not the demo's files, defines the keys, so the compiler checks every
-template against the same keys for every site. Every language has the same keys, so every language
-renders the same elements and a change of language finds the reader's place.
+apartment does not list, a page's map for a site without a map, with a place outside the box, an
+icon Lucide lacks or a name missing in a language, a page key the site lists too, a fold without its
+title or text in a language, with an icon that is not Lucide's, an element its text does not show or
+a link to no apartment's page, a header or footer link to no page, a footer link the header has, two
+pages at one address, a page that does not open with its title or holds an element, an attribute, a
+link or a question's `id` the pages do not take, a `##` heading whose text gives no `id` or one the
+page has already, a `#` link to no `id` on its page, an icon Lucide lacks, a page's picture without
+its file or alternative text or beside other text, a credited picture no page shows, and a part
+beyond its boundary stop the build with the file and the key named; for the tiles and the routes,
+with the script to run. The schema, not the demo's files, defines the keys, so the compiler checks
+every template against the same keys for every site. Every language has the same keys, so every
+language renders the same elements and a change of language finds the reader's place.
 
 ## Another folder
 

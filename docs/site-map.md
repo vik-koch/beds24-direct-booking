@@ -17,11 +17,12 @@ slug is the same in both languages and comes from the deployment's content.
 | An apartment | `/de/wohnungen/<slug>` | `/en/apartments/<slug>` |
 | Booking step | `/de/wohnungen/<slug>/buchen` | `/en/apartments/<slug>/book` |
 | An apartment's own page | `/de/wohnungen/<slug>/<path>` | `/en/apartments/<slug>/<path>` |
-| Zirbe's way there | `/de/wohnungen/zirbe/anfahrt` | `/en/apartments/zirbe/getting-here` |
+| Zirbe's way there, with a map | `/de/wohnungen/zirbe/anfahrt` | `/en/apartments/zirbe/getting-here` |
 | Zirbe's guide, unlisted | `/de/wohnungen/zirbe/wohnungsmappe` | `/en/apartments/zirbe/guide` |
 | Booking confirmation | `/de/buchungsbestaetigung` | `/en/booking-confirmation` |
 | FAQ | `/de/haeufige-fragen` | `/en/faq` |
 | Company, with contact | `/de/ueber-uns` | `/en/about` |
+| Parking, with a map | `/de/parken` | `/en/parking` |
 | Imprint | `/de/impressum` | `/en/imprint` |
 | Privacy | `/de/datenschutz` | `/en/privacy` |
 | Rental terms | `/de/agb` | `/en/terms` |
@@ -30,7 +31,8 @@ slug is the same in both languages and comes from the deployment's content.
 - **The application's own pages** are the home page, an apartment's page, the booking step, the
   confirmation and the picture credits. Every other page is a content page: its key, address and
   text come from the deployment's content ([`content.md`](content.md)). The demo's are the FAQ, the
-  company page, the imprint, the privacy page and the rental terms.
+  company page, parking, the imprint, the privacy page and the rental terms. A content page may end
+  with a map of its own places.
 - **The demo's apartments** have the slugs `zirbe`, `laerche` and `ahorn`.
 - **The address without a prefix** (`/`) redirects to the home page in the browser's language if the
   deployment has it, and in the deployment's first language otherwise.
@@ -82,8 +84,8 @@ and on a touch screen, all but the wordmark and the season switch fold into a sh
 On every page:
 
 - Contact: the business's name, address, telephone number and e-mail address.
-- The links `site.json` lists in `footer`, in their order. The demo's: the imprint, the privacy
-  page, the terms and the picture credits. A page the header links to is not repeated here.
+- The links `site.json` lists in `footer`, in their order. The demo's: parking, the imprint, the
+  privacy page, the terms and the picture credits. A page the header links to is not repeated here.
 
 ## Home page
 
