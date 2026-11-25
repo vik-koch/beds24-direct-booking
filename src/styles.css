@@ -1416,21 +1416,27 @@
 
     /* An icon a heading, a question or a note opens with (the content script). */
     .icon {
+      --icon: 1em;
       flex: none;
-      width: 1em;
-      height: 1em;
+      width: var(--icon);
+      height: var(--icon);
       color: var(--color-ink-soft);
+    }
+
+    :is(summary, .note) > .icon {
+      --icon: var(--row-icon);
+    }
+
+    /* On the first line's baseline, its centre raised to half the cap height, where a capital's
+       middle is: centred on the line box, it sits low beside Jost. */
+    :is(h2, h3, .note) > .icon {
+      translate: 0 calc(var(--icon) / 2 - 0.5cap);
     }
 
     :is(h2, h3):has(> .icon) {
       display: flex;
-      align-items: center;
+      align-items: baseline;
       gap: 0.5rem;
-    }
-
-    :is(summary, .note) > .icon {
-      width: var(--row-icon);
-      height: var(--row-icon);
     }
 
     /* The answer starts where the question's text does, as in the accordion. */
@@ -1441,13 +1447,13 @@
     .note {
       display: grid;
       grid-template-columns: var(--row-icon) 1fr;
+      align-items: baseline;
       column-gap: var(--row-gap);
       padding: 1rem var(--row-padding);
       border: 0;
       border-radius: var(--radius-card);
 
       > .icon {
-        margin-top: calc((1lh - var(--row-icon)) / 2);
         color: var(--color-accent);
       }
 
