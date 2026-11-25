@@ -5,8 +5,8 @@ Status: accepted, 2026-11-23. Group: process.
 ## Context
 
 A site's map data (tiles, walking routes and lifts, ADR 14) is committed content, written by three
-scripts that read OpenStreetMap through Protomaps, the OSRM router on routing.openstreetmap.de and
-the Overpass API. The data was only as new as the last time someone ran them, so an edit in
+scripts that read OpenStreetMap through Protomaps, the Valhalla router on valhalla1.openstreetmap.de
+and the Overpass API. The data was only as new as the last time someone ran them, so an edit in
 OpenStreetMap, such as a new path, reached a site only when someone remembered to.
 
 Rerunning the scripts on the demo on 2026-11-23 gave the same bytes for every file: all 62 tiles of

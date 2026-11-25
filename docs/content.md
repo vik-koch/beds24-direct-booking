@@ -254,21 +254,21 @@ content. The application has no wording, no colour and no typeface of its own. T
   arrived, and keep their build when the newer build's tiles are the same. The demo's box is 62
   tiles, 773 kB.
 - **The walking routes** are `map/routes.json`: one line from each apartment to each place, with its
-  metres and minutes on foot, from OSRM's foot profile on
-  [routing.openstreetmap.de](https://routing.openstreetmap.de/). Compute them with
-  `node scripts/map-routes.mjs` when a point is added, moved or removed; it asks for one route a
-  second, as the service asks. The routes follow OpenStreetMap's ways, which do not say what is
-  closed or a piste in winter: walk them before a site shows them.
+  metres and minutes on foot, from Valhalla's pedestrian costing on FOSSGIS's server, whose data is
+  a day old. Compute them with `node scripts/map-routes.mjs` when a point is added, moved or
+  removed; it asks for one route a second, as the service asks. The routes follow OpenStreetMap's
+  ways, which do not say what is closed or a piste in winter: walk them before a site shows them.
 - **A route's waypoints** lead it the way people walk where the router takes another, such as a road
   around the centre: an apartment's `via` gives, by a place's key, the points its route to that
   place goes through, in their order:
   `"via": { "tourist-office": [{ "lat": 47.38938, "lon": 12.64275 }] }`. The metres shown are the
   route's through them. Try them first on
-  [routing.openstreetmap.de](https://routing.openstreetmap.de/) with the profile set to foot:
-  dragging its line adds a waypoint, and the address names each point as `loc=lat,lon`. The router
-  moves a point to the nearest way, so put it on the path itself, away from a junction, or the route
-  walks to a road beside it and back. No waypoint leads a route along a way OpenStreetMap lacks: map
-  it there first.
+  [valhalla.openstreetmap.de](https://valhalla.openstreetmap.de/) with the profile set to
+  pedestrian: a right click on the map adds a via point, and the address lists the points as
+  `wps=lon,lat,lon,lat,…`, longitude first. The router moves a point to the nearest way and never
+  turns back at it, so put it on the path itself, away from a junction, or the route takes a detour
+  to pass it. No waypoint leads a route along a way OpenStreetMap lacks or keeps walkers off: map or
+  tag it there first, and the next weekly run takes it.
 - **The lifts** are `map/lifts.json`: OpenStreetMap's aerial lifts inside the box, gondolas, cable
   cars, chairlifts and drag lifts, each with its kind and its local name, taken through the
   [Overpass API](https://overpass-api.de/) with the box they were taken for. Take them with

@@ -36,11 +36,15 @@ A spike (#254, branch `spike/254-map`, not merged) tried the decision below in t
    again on a change of season, and passes the page's language. Labels use the theme's own font file
    through the style's `font-faces`, so no glyph files are needed.
 4. **Routes are computed by a script, not per visit.** It takes every apartment's and place's
-   coordinates from content, asks OSRM's foot profile on routing.openstreetmap.de for each pair
-   once, and writes the lines with their distance and walking time to a generated file that is
-   committed. A visitor's browser asks no routing service. OSRM was chosen over Valhalla and
-   BRouter, whose routes were longer and took detours, in a
+   coordinates from content, asks Valhalla's pedestrian costing on valhalla1.openstreetmap.de for
+   each pair once, and writes the lines with their distance and walking time to a generated file
+   that is committed. A visitor's browser asks no routing service. Amended on 2026-11-25 (#317):
+   OSRM on routing.openstreetmap.de came first, chosen over Valhalla and BRouter, whose routes were
+   longer and took detours, in a
    [comparison on #254](https://github.com/vik-koch/beds24-direct-booking/issues/254#issuecomment-7080109602).
+   Its data was three months old when Valhalla's was a day old, so a path added or a tag corrected
+   in OpenStreetMap reached the routes only months later. A detour is now fixed where it starts, in
+   OpenStreetMap, and reaches the site with the next weekly pull request (ADR 15).
 5. **Lifts too are taken by a script** (#268): the aerial lifts inside the box, from OpenStreetMap
    through the Overpass API, into a committed file. The tiles have none.
 6. **The places are content:** the coordinates of an apartment in its file, the places in
@@ -66,6 +70,9 @@ A spike (#254, branch `spike/254-map`, not merged) tried the decision below in t
 | Leaflet with raster tiles | A small library. | Raster tiles of our own must be rendered per colour scheme and season; restyling means re-rendering. | Rejected. |
 | A hand-written style | No style dependency. | The spike's first hand-written layers drew streams, which the tiles store as lines, as filled polygons; every layer kind has such details. | Rejected. |
 | A routing engine run per visit | Any route on demand. | A server process beside the site on a 1 GB machine, for routes that change once a year. | Rejected. |
+| OSRM's foot profile on routing.openstreetmap.de, from the script | The shortest routes in the spike. | Its data was from 2026-08-26 on 2026-11-25, so edits in OpenStreetMap reach the routes months late. | Chosen first, replaced (#317). |
+| Valhalla's pedestrian costing on valhalla1.openstreetmap.de, from the script | Data a day old; no key; the same operator and usage policy as OSRM's server. | Some routes longer than OSRM's where OpenStreetMap's tags keep walkers off a way. | Chosen (#317). |
+| GraphHopper's API, from the script | Data updated about daily, by its own account. | Needs an API key, a secret in every site's repository. | Rejected. |
 
 ## What this rests on
 
@@ -96,17 +103,29 @@ A spike (#254, branch `spike/254-map`, not merged) tried the decision below in t
   - In the CI image (`mcr.microsoft.com/playwright:v1.65.0-resolute`), headless Chromium and WebKit
     have WebGL 2 and draw the map; headless Firefox has no WebGL, also with `webgl.force-enabled`,
     and the map's constructor throws.
+- **Verified on 2026-11-25** (#317): Valhalla's server reported a tileset built that day at 01:35
+  UTC (`/status`, version 3.9.3). It returned all twelve demo routes, 860 m to 1,690 m; ten are
+  within 70 m of OSRM's. Two of Zirbe's are longer: to the supermarket 860 m instead of 220 m, and
+  to the tourist office through its waypoint 1,570 m instead of 670 m. OSRM's short way takes two
+  `highway=cycleway` ways without a `foot` tag, which Valhalla does not walk. The server ignores
+  `shape_format: "geojson"`, so the script decodes the line from its polyline of six decimals.
 - **Documented, not verified:** OpenStreetMap data is under the ODbL, which asks for the attribution
   above; MapLibre, `pmtiles` and `@protomaps/basemaps` are under the BSD 3-Clause licence (their
-  package files). routing.openstreetmap.de allows one request a second with a valid user agent
-  ([its about page](https://routing.openstreetmap.de/about.html), read 2026-11-22), which the routes
-  script keeps. The lifts script sends one query to overpass-api.de per run, with a user agent, and
-  waits 15 seconds before trying again when the server is busy.
-- **Not checked:** Overpass's usage policy, beyond one query per run; whether the computed routes
-  take paths that are closed or groomed for skiing in winter, which the tiles do not record, so the
-  owner of a deployment has to walk them; points of interest in the private deployment's town; the
-  reading that a map loading nothing from a third party needs no consent prompt in the EU, which is
-  ours, not a lawyer's.
+  package files). FOSSGIS's routing servers, routing.openstreetmap.de and
+  valhalla1.openstreetmap.de, allow one request a second over one connection, with a user agent that
+  names the application
+  ([its usage policy](https://www.fossgis.de/arbeitsgruppen/osm-server/nutzungsbedingungen/), read
+  2026-11-25), which the routes script keeps. routing.openstreetmap.de's
+  [about page](https://routing.openstreetmap.de/about.html) says its data is updated roughly every
+  two days; on 2026-11-25 its front end showed data from 2026-08-26 and did not route over edits
+  made two days before. The lifts script sends one query to overpass-api.de per run, with a user
+  agent, and waits 15 seconds before trying again when the server is busy.
+- **Not checked:** why Valhalla keeps walkers off a cycleway without a `foot` tag, which we take to
+  be its access default for the country; Overpass's usage policy, beyond one query per run; whether
+  the computed routes take paths that are closed or groomed for skiing in winter, which the tiles do
+  not record, so the owner of a deployment has to walk them; points of interest in the private
+  deployment's town; the reading that a map loading nothing from a third party needs no consent
+  prompt in the EU, which is ours, not a lawyer's.
 
 ## Consequences
 
