@@ -7,8 +7,8 @@
 ## Who is responsible
 
 Firn & Farn Appartements GmbH, Musterweg 0, 5753 Saalbach, Austria,
-[hallo@firn-und-farn.example](mailto:hallo@firn-und-farn.example). We have no data protection
-officer; please write to us directly.
+[demo@vikkoch.com](mailto:demo@vikkoch.com). We have no data protection officer; please write to us
+directly.
 
 ## In short
 
@@ -82,6 +82,6 @@ You have the right to
 5. data portability, and
 6. object to processing based on legitimate interest.
 
-To use them, write to [hallo@firn-und-farn.example](mailto:hallo@firn-und-farn.example). You can
-also complain to the Austrian Data Protection Authority, Barichgasse 40–42, 1030 Vienna,
+To use them, write to [demo@vikkoch.com](mailto:demo@vikkoch.com). You can also complain to the
+Austrian Data Protection Authority, Barichgasse 40–42, 1030 Vienna,
 [dsb.gv.at](https://www.dsb.gv.at).

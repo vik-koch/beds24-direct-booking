@@ -77,7 +77,7 @@
     "name": "Firn & Farn Appartements",
     "address": ["Musterweg 0", "5753 Saalbach", "Österreich"],
     "phone": "+43 000 0000000",
-    "email": "hallo@firn-und-farn.example"
+    "email": "demo@vikkoch.com"
   },
   "map": {
     "box": { "west": 12.6, "south": 47.375, "east": 12.67, "north": 47.405 },

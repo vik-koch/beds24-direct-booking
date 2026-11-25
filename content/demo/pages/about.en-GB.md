@@ -23,6 +23,6 @@ Firn & Farn Appartements GmbH
 Musterweg 0, 5753 Saalbach, Austria
 
 Phone: [+43 000 0000000](tel:+430000000000)  
-Email: [hallo@firn-und-farn.example](mailto:hallo@firn-und-farn.example)
+Email: [demo@vikkoch.com](mailto:demo@vikkoch.com)
 
 The company's details are in the [imprint](/en/imprint).
