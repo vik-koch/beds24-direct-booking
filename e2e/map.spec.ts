@@ -600,6 +600,9 @@ test('a change of language keeps the map, its view and the choices; a load start
     'aria-label',
     'Quellen der Karte',
   );
+  await expect(
+    page.locator('.maplibregl-ctrl-attrib a[href="https://www.openstreetmap.org/fixthemap"]'),
+  ).toHaveText('Kartenfehler melden');
   await expect(page.locator('.maplibregl-mobile-message')).toHaveText(
     'Die Karte mit zwei Fingern bewegen',
   );

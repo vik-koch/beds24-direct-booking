@@ -459,10 +459,10 @@ function flavor(p: ReturnType<typeof palette>): Flavor {
       outline-offset: -3px;
     }
 
-    /* The hint to zoom with Ctrl or move with two fingers: a pill above the attribution, in the
-       map's middle, the map not dimmed. */
+    /* The hint to zoom with Ctrl or move with two fingers: a pill above the attribution, which takes
+       two lines on a narrow phone, in the map's middle, the map not dimmed. */
     .location-map .maplibregl-cooperative-gesture-screen {
-      inset: auto 3rem 2.75rem;
+      inset: auto 3rem 4rem;
       padding: 0;
       background: none;
       color: var(--color-ink);
@@ -474,6 +474,7 @@ function flavor(p: ReturnType<typeof palette>): Flavor {
       /* Its middle 34rem from the left at least, so that a pill of 20rem clears the panel's 23rem
          by 1rem; on a wide map, the map's middle. */
       @media (min-width: 48rem) {
+        bottom: 2.75rem;
         left: max(3rem, 71rem - 100%);
       }
 
@@ -1405,8 +1406,9 @@ export class LocationMap {
           maxzoom: 15,
           bounds: [map.box.west, map.box.south, map.box.east, map.box.north],
           attribution:
-            // OpenStreetMap's licence asks for this credit and its link, the map's only link out.
-            '<a href="https://www.openstreetmap.org/copyright">© OpenStreetMap</a> · Protomaps',
+            // OpenStreetMap's licence asks for the credit and its link, FOSSGIS's routing servers
+            // for a link to report an error: the map's only links out.
+            `<a href="https://www.openstreetmap.org/copyright">© OpenStreetMap</a> · Protomaps · <a href="https://www.openstreetmap.org/fixthemap">${this.texts.report}</a>`,
         },
         routes: { type: 'geojson', data: { type: 'FeatureCollection', features: lines } },
         // Both ends of the chosen place's route.

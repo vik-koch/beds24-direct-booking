@@ -240,10 +240,11 @@ content. The application has no wording, no colour and no typeface of its own. T
 - **The map's wording** (`map` in a texts file, beside `places`): `label` names the map for screen
   readers; `from` heads the panel's choice of apartment and `more` labels its switch. The page
   writes each walk's distance in its own language, such as "900 m" or "1,4 km". `zoomIn`, `zoomOut`,
-  `reset` (back to the view of the choices) and `attribution` name the map's buttons, and `gestures`
-  holds the hints the map shows when a scroll without Ctrl (`windows`) or ⌘ (`mac`), or one finger
-  (`touch`), would move it. The map writes its labels in the theme's typeface: the first `.woff2`
-  file in `fonts/` that `theme.css` names, which a site with a map must have.
+  `reset` (back to the view of the choices) and `attribution` name the map's buttons, `report`
+  labels the attribution's link to report an error in the map, and `gestures` holds the hints the
+  map shows when a scroll without Ctrl (`windows`) or ⌘ (`mac`), or one finger (`touch`), would move
+  it. The map writes its labels in the theme's typeface: the first `.woff2` file in `fonts/` that
+  `theme.css` names, which a site with a map must have.
 - **The map's tiles** are `map/tiles/<build>/`, cut out of a
   [Protomaps](https://maps.protomaps.com/builds/) planet build of OpenStreetMap at zoom 12 to 15
   inside the box, with `map/tiles.json` naming the build, the box and the number of tiles. They are
