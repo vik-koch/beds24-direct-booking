@@ -760,7 +760,7 @@ test("an apartment's page shows its map with it alone, chosen for good", async (
   await expect.poll(() => accentPixels(page)).toBeGreaterThan(500);
   await expect(panel(page).getByRole('radio')).toHaveCount(0);
   await expect(panel(page)).not.toContainText('Routes from');
-  await expect(places(page).first()).toContainText('900 m');
+  await expect(places(page).first()).toContainText(walk('ahorn'));
   // Its pin is no button, and the other apartments have none.
   await expect(page.locator('.location-map').getByRole('img', { name: 'Ahorn' })).toBeVisible();
   await expect(page.locator('.map-pin:not(.map-place)')).toHaveCount(1);
@@ -768,7 +768,7 @@ test("an apartment's page shows its map with it alone, chosen for good", async (
     .locator('.map-label')
     .filter({ hasText: /^Ahorn$/ })
     .click();
-  await expect(places(page).first()).toContainText('900 m');
+  await expect(places(page).first()).toContainText(walk('ahorn'));
   await expect.poll(() => accentPixels(page)).toBeGreaterThan(500);
   const results = await new AxeBuilder({ page }).include('app-location-map').analyze();
   expect(results.violations.map((v) => v.id)).toEqual([]);
@@ -844,6 +844,9 @@ test("an apartment's panel lists its distances in every engine, without the map 
 }) => {
   await page.goto('/en/apartments/ahorn');
   await scrollToMap(page);
-  await expect(places(page)).toHaveText([/Schattberg X-press.*900 m/, /Kohlmaisbahn.*1.4 km/]);
+  await expect(places(page)).toHaveText([
+    new RegExp(`Schattberg X-press.*${walk('ahorn')}`),
+    new RegExp(`Kohlmaisbahn.*${walk('ahorn', 'kohlmais')}`),
+  ]);
   await expect(panel(page).getByRole('radio')).toHaveCount(0);
 });
