@@ -192,11 +192,9 @@ test("the FAQ's groups and its note open with an icon the heading's name leaves 
     await expect(heading.locator('svg.icon[aria-hidden="true"]')).toBeVisible();
     const icon = page.locator('.note', { hasText: note }).locator('svg.icon');
     await expect(icon).toBeVisible();
-    // The note's icon in the accent, as the page's links.
-    const accent = await page
-      .getByRole('link', { name })
-      .evaluate((a) => getComputedStyle(a).color);
-    await expect(icon).toHaveCSS('color', accent);
+    // In soft ink, as every icon beside text: the accent is for what a visitor can act on.
+    const ink = await heading.locator('svg.icon').evaluate((svg) => getComputedStyle(svg).color);
+    await expect(icon).toHaveCSS('color', ink);
   }
 });
 

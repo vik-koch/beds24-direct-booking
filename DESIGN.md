@@ -314,8 +314,7 @@ downwards, so it reads as lying on the page rather than floating.
 - **Border:** none.
 - **Internal Padding:** 1.5rem 1.25rem on a phone; 2.25rem 2.5rem from 48rem up.
 - **A content page's note** (a quote that opens with an icon) is a sheet like the questions': white,
-  no shadow, 1rem 1.25rem inside. Its icon takes the accent, the one icon beside text that does, so
-  the note reads apart from a plain quote.
+  no shadow, 1rem 1.25rem inside, its icon in soft ink beside the text.
 
 ### Season switch
 
@@ -514,8 +513,7 @@ chosen, and the focus is on the language entry, or the menu button where the hea
 ### Do:
 
 - **Do** keep the ground light and let white surfaces and space do the separating.
-- **Do** use the season's accent for what a visitor can act on, and nothing else but a content
-  page's note icon (Cards / Containers).
+- **Do** use the season's accent for what a visitor can act on, and nothing else.
 - **Do** measure every colour pair of a new theme in both seasons before using it.
 - **Do** right-align prices and use tabular figures.
 - **Do** keep a photo's edges straight and put text on a card in front of it.

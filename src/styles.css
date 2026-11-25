@@ -1453,10 +1453,6 @@
       border: 0;
       border-radius: var(--radius-card);
 
-      > .icon {
-        color: var(--color-accent);
-      }
-
       > :not(.icon) {
         grid-column: 2;
       }
