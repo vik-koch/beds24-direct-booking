@@ -153,3 +153,19 @@ test("the FAQ's list leads to its groups and a question's address opens it, belo
   await below(parking);
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
 });
+
+test('a question opens with a transition where the browser eases to auto, at once with reduced motion', async ({
+  page,
+}) => {
+  const durations = () =>
+    page.locator('details#price').evaluate((details) => ({
+      eases: CSS.supports('interpolate-size: allow-keywords'),
+      answer: getComputedStyle(details, '::details-content').transitionDuration,
+      arrow: getComputedStyle(details.querySelector('summary')!, '::after').transitionDuration,
+    }));
+  await page.goto('/en/faq');
+  const moving = await durations();
+  if (moving.eases) expect(moving.answer).toBe('0.3s, 0.3s');
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  expect(await durations()).toMatchObject({ answer: '0s', arrow: '0s' });
+});

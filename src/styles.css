@@ -1508,6 +1508,29 @@
       > :last-child:not(summary) {
         margin-bottom: var(--row-padding);
       }
+
+      /* Opens as the accordion's rows do, where the browser eases a height to auto. */
+      @media (prefers-reduced-motion: no-preference) {
+        @supports (interpolate-size: allow-keywords) {
+          interpolate-size: allow-keywords;
+
+          /* A new formatting context, so that the answer's last margin stays inside as it
+             opens; clipped with room for a focus ring on its first line. */
+          &::details-content {
+            display: flow-root;
+            block-size: 0;
+            overflow: clip;
+            overflow-clip-margin: 0.375rem;
+            transition:
+              block-size 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              content-visibility 0.3s allow-discrete;
+          }
+
+          &[open]::details-content {
+            block-size: auto;
+          }
+        }
+      }
     }
 
     summary {
