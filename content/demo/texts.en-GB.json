@@ -8,7 +8,9 @@
     "imprint": "imprint",
     "privacy": "privacy",
     "terms": "terms",
-    "credits": "picture-credits"
+    "credits": "picture-credits",
+    "arrival": "getting-here",
+    "guide": "guide"
   },
   "anchors": {
     "weeks": "free-weeks",
@@ -56,7 +58,9 @@
     "imprint": "Imprint",
     "privacy": "Privacy",
     "terms": "Rental terms",
-    "credits": "Picture credits"
+    "credits": "Picture credits",
+    "arrival": "Getting here",
+    "guide": "Apartment guide"
   },
   "credits": {
     "lead": "The photographs on this site and whom they are owed to.",
