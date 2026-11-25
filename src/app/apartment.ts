@@ -465,7 +465,8 @@ export class Apartment {
       title: title[this.language.code],
       html: html[this.language.code].replace(
         /href="(\/[^"]*)"/g,
-        (_, href: string) => `href="${this.choice.link(href).replaceAll('&', '&amp;')}"`,
+        (_, href: string) =>
+          `href="${this.choice.link(href.replaceAll('&amp;', '&')).replaceAll('&', '&amp;')}"`,
       ),
     })),
   );
