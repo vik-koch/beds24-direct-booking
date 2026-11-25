@@ -10,9 +10,10 @@ content. The application has no wording, no colour and no typeface of its own. T
 | File | What it holds |
 |---|---|
 | `site.json` | The site's name, its languages in order as language tags, the apartments' slugs in their order, the seasons, the hero's features, the apartment page's rooms and amenities, the age up to which a guest is a child, the contact, the credits of the pages' pictures, the content pages and the header's and the footer's links. |
-| `apartments/<slug>.json` | One apartment: its Beds24 room ID, its name, its pictures and optionally its floor plan. One file for each slug `site.json` lists, and no other. |
+| `apartments/<slug>.json` | One apartment: its Beds24 room ID, its name, its pictures and optionally its floor plan and its own pages. One file for each slug `site.json` lists, and no other. |
 | `texts.<tag>.json` | Everything one language says: the wording, the address parts and the anchors. One file per language listed in `site.json`, such as `texts.en-GB.json`. |
 | `pages/<key>.<tag>.md` | A content page in one language, such as `pages/faq.en-GB.md`: one file for each page and language `site.json` lists, and no other. |
+| `pages/<slug>/<key>.<tag>.md` | One of an apartment's own pages in one language, such as `pages/zirbe/arrival.en-GB.md`: one file for each page its file lists and each language, and no other. |
 | `theme.css` | The palette, the typeface and its two weights as custom properties on `:root`, and the typeface's `@font-face`. |
 | `fonts/` | Optional: the font files `theme.css` refers to, as `fonts/<file>`. |
 | `pictures/` | The pictures `site.json` names, such as each season's hero photo, and the apartments' pictures and plans. |
@@ -37,7 +38,9 @@ content. The application has no wording, no colour and no typeface of its own. T
   page's top, nor an id the pages hold (`content`, `booking`, `booking-title`, `booking-season`,
   `guests-note`, `description`, `amenities`, `map-more`, `month-…`). An apartment's slug is the same
   in every language. Each content page has its address there too, by its key; no two pages share
-  one.
+  one, and no two of the apartments' pages share one with each other or with `book`. A page whose
+  address a QR code prints, such as a guide's, keeps it: changing `paths.<key>` breaks every code
+  already printed.
 - **A content page** is a page of text the deployment adds, such as the FAQ, the imprint or a guest
   guide: `site.json` lists its key in `pages`, each texts file gives its address under `paths.<key>`
   and the text of a link to it under `pages.<key>`, and `pages/<key>.<tag>.md` holds it in each
@@ -89,6 +92,20 @@ content. The application has no wording, no colour and no typeface of its own. T
   one listed that no page shows stops the build. A picture made by an image model belongs to an
   apartment's pictures, which label it: a page has no such label.
 
+- **An apartment's own pages** (`pages` in its file, optional) are content pages that belong to it,
+  such as how its heating works or how to reach it: `"pages": ["arrival", "guide"]`, each in
+  `pages/<slug>/<key>.<tag>.md` and written like any content page. Each is served below the
+  apartment's address, `/en/apartments/zirbe/getting-here`, with its address part from `paths.<key>`
+  and its link text from `pages.<key>`, as a site page's: a key that several apartments list shares
+  both, so `arrival` is the same word under every apartment. A key is a site page's or the
+  apartments', not both. Those its page links under "Good to know" are listed in `public`,
+  `"public": ["arrival"]`; they stay linked while Beds24 cannot be reached, since the pages are
+  built with the site.
+- **Public or unlisted:** a content page the site's navigation links is public: for a site page the
+  header or the footer, for an apartment's page its `public`. Any other is unlisted: the page tells
+  search engines not to index it (`noindex`), and a guest reaches it by its address, such as a QR
+  code in the apartment. Unlisted is not secret: anyone with the address can read it, so a door's or
+  a key box's code goes in Beds24's messages to the guest, never on a page.
 - **The header's links** (`header` in `site.json`) are up to two content pages, in their order,
   after the header's own links to the free weeks, the apartments and the location. The page shown is
   marked there, and the footer does not link to it again.
@@ -350,8 +367,9 @@ does not list, a point outside the map's box or an apartment's point without a m
 the way to no place of the map, a place without its name or with a text for a season the site does
 not list, tiles cut for another box or a tile missing, a `map/` folder without a map, a map without
 a `.woff2` font in `theme.css`, a route missing, left over or computed before a point moved, a
-content page without its file, address or link text in a language, a page file `site.json` does not
-list, a header or footer link to no page, a footer link the header has, two pages at one address, a
+content page without its file, address or link text in a language, a page file `site.json` or its
+apartment does not list, an apartment's `public` page it does not list or a page key the site lists
+too, a header or footer link to no page, a footer link the header has, two pages at one address, a
 page that does not open with its title or holds an element, an attribute, a link or a question's
 `id` the pages do not take, a `##` heading whose text gives no `id` or one the page has already, a
 `#` link to no `id` on its page, a page's picture without its file or alternative text or beside
