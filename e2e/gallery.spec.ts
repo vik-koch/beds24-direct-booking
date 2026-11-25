@@ -379,7 +379,10 @@ test('on a phone the pictures are a strip, and the viewer’s buttons sit under 
       element.scrollTo({ left: element.clientWidth * 3, behavior: 'instant' }),
     );
   await expect(page.locator('.strip-count')).toHaveText('4 / 9');
-  // A tap on the count reaches the picture under it.
+  // A tap on the count reaches the picture under it; mid-screen, clear of the booking bar.
+  await page
+    .locator('.tiles')
+    .evaluate((element) => element.scrollIntoView({ block: 'center', behavior: 'instant' }));
   const counter = await box(page.locator('.strip-count'));
   await page.mouse.click(counter.x + counter.width / 2, counter.y + counter.height / 2);
   await expect(viewer(page).locator('.viewer-count')).toHaveText('Bild 4 von 9');

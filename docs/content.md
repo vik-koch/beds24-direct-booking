@@ -209,9 +209,10 @@ content. The application has no wording, no colour and no typeface of its own. T
   facts line (`guests` and `bedrooms` take `{count}`, with a `one` and an `other` form), and the
   arrival and departure times as Beds24's `HH:MM`: `checkIn.both` takes `{from}` and `{until}`,
   `checkIn.from` and `checkIn.until` serve a property that sets only one bound, and `checkOut` takes
-  `{until}`. The name and the pictures come from the apartment's file. The guests, size, address,
-  times, description and house rules come from Beds24, in the page's language by its address prefix,
-  such as `de`.
+  `{until}`. `permit` takes `{number}` exactly once, the property's registration number, and is
+  shown only where Beds24 has one. The name and the pictures come from the apartment's file. The
+  guests, size, address, registration number, times, description and house rules come from Beds24,
+  in the page's language by its address prefix, such as `de`.
 - **The gallery** (`gallery` in a texts file) is the wording of the pictures' mosaic and viewer:
   `name` for both, `position` such as "Picture {index} of {count}", `previous` and `next` for the
   viewer's buttons, and `more` for the last cell of the mosaic when pictures follow beyond it,

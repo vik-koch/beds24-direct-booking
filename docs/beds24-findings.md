@@ -162,9 +162,9 @@ Checked on 20 November 2026 on a real account with a read-only token.
 - **A room is the listing; a property groups rooms.** Every inventory call is keyed by `roomId` and
   returns `propertyId` beside it.
 - **Facts:** on the property the address, city, country, coordinates, check-in and check-out times
-  (`checkInStart`, `checkInEnd`, `checkOutEnd` as `HH:MM`; midnight is `"24:00"`), `permit` and
-  `featureCodes`; on the room `roomSize`, `maxPeople`, `maxAdult`, `maxChildren`, `minStay`,
-  `maxStay` and its own `featureCodes`.
+  (`checkInStart`, `checkInEnd`, `checkOutEnd` as `HH:MM`; midnight is `"24:00"`), `permit` (the
+  registration number, `""` where none is set) and `featureCodes`; on the room `roomSize`,
+  `maxPeople`, `maxAdult`, `maxChildren`, `minStay`, `maxStay` and its own `featureCodes`.
 - **Feature codes** come as two lists, the property's and the room's. The control panel shows the
   property's codes as applied to each of its rooms; the API does not merge them. Each entry is a
   group: a property code is a group of one (`["WIFI"]`), and a room's groups carry the sleeping

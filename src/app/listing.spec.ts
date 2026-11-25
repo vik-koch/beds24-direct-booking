@@ -21,6 +21,7 @@ describe('listing', () => {
     asksChildren: false,
     size: 34,
     address: '',
+    permit: '',
     checkIn: { from: null, until: null },
     checkOut: null,
     features: [],

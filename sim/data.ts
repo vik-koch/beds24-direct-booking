@@ -21,6 +21,7 @@ export interface Property {
   id: number;
   name: string;
   address: string;
+  permit?: string;
   latitude: number;
   longitude: number;
   featureCodes: string[];

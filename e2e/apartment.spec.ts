@@ -19,14 +19,20 @@ test('each apartment shows its facts, pictures, description, rooms, amenities an
     [
       '/de/wohnungen/laerche',
       'Lärche',
-      ['Bis 4 Gäste', '2 Schlafzimmer', '61 m²'],
+      ['Bis 4 Gäste', '2 Schlafzimmer', '61 m²', 'Musterweg 1, Saalbach'],
       ['Schlafzimmer 1', 'Schlafzimmer 2', 'Bad'],
       ['Anreise und Abreise', 'Hausordnung'],
     ],
     [
       '/en/apartments/ahorn',
       'Ahorn',
-      ['Up to 6 guests', '3 bedrooms', '96 m²', 'Musterweg 7, Saalbach'],
+      [
+        'Up to 6 guests',
+        '3 bedrooms',
+        '96 m²',
+        'Musterweg 7, Saalbach',
+        'Registration no. 00000-000001',
+      ],
       ['Bedroom 1', 'Bedroom 2', 'Bedroom 3', 'Bathroom 1', 'Bathroom 2'],
       ['Arrival and departure', 'House rules'],
     ],
@@ -34,7 +40,8 @@ test('each apartment shows its facts, pictures, description, rooms, amenities an
     const response = await page.goto(path);
     expect(response!.status()).toBe(200);
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(name);
-    for (const fact of facts) await expect(page.locator('.facts')).toContainText(fact);
+    // Only Ahorn's house has a registration number in the simulator.
+    await expect(page.locator('.facts li')).toHaveText([...facts]);
     // The shown season's: a seasonal first picture loads lazily, once laid out.
     const picture = page.locator('.tile img:visible').first();
     await expect(picture).toHaveAttribute('alt', /.{20}/);
@@ -180,6 +187,29 @@ test('an open row keeps one arrow, turned', async ({ page }) => {
   await expect(trigger).toHaveAttribute('aria-expanded', 'true');
   await expect(arrows).toHaveCount(1);
   await expect(arrows).toHaveCSS('rotate', '180deg');
+});
+
+test('at 320 px a registration number takes its own line, and breaks only when wider than it', async ({
+  page,
+}) => {
+  await phoneWidth(page, 320, 700);
+  await page.goto('/en/apartments/ahorn');
+  const number = page.locator('.facts li').last().locator('span span');
+  const box = () =>
+    number.evaluate((span) => {
+      const { top, height } = span.getBoundingClientRect();
+      return { top: Math.round(top), height: Math.round(height) };
+    });
+  const short = await box();
+  // Too long to stand beside the label, short enough for a line of its own.
+  await number.evaluate((span) => (span.textContent = 'ATR-2026-000000000123'));
+  const long = await box();
+  expect(long.top).toBeGreaterThan(short.top);
+  expect(long.height).toBe(short.height);
+  await number.evaluate((span) => (span.textContent = 'X'.repeat(60)));
+  expect(await page.locator('html').evaluate((html) => html.scrollWidth - html.offsetWidth)).toBe(
+    0,
+  );
 });
 
 test('without JavaScript every text can be read in full', async ({ browser }) => {
@@ -432,6 +462,9 @@ test('at 320 px nothing scrolls sideways, in both seasons and languages', async 
   for (const path of ['/de/wohnungen/ahorn', '/en/apartments/laerche'])
     for (const season of ['winter', 'summer']) {
       await page.goto(`${path}?season=${season}`);
+      // Ahorn's facts line ends with the registration number, the longest fact.
+      if (path.endsWith('ahorn'))
+        await expect(page.locator('.facts li').last()).toHaveText('Registriernummer 00000-000001');
       await expect
         .poll(() => page.locator('html').evaluate((html) => html.scrollWidth - html.offsetWidth), {
           message: path,

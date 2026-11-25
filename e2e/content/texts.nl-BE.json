@@ -104,6 +104,7 @@
     },
     "checkOut": "Vertrek tegen {until}.",
     "houseRules": "Huisregels",
+    "permit": "Registratienummer {number}",
     "unavailable": "De gegevens van dit appartement kunnen nu niet worden geladen.",
     "generated": "AI-beeld"
   },
