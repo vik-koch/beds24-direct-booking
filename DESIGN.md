@@ -313,6 +313,9 @@ downwards, so it reads as lying on the page rather than floating.
 - **Shadow Strategy:** the card shadow, see Elevation & Depth.
 - **Border:** none.
 - **Internal Padding:** 1.5rem 1.25rem on a phone; 2.25rem 2.5rem from 48rem up.
+- **A content page's note** (a quote that opens with an icon) is a sheet like the questions': white,
+  no shadow, 1rem 1.25rem inside. Its icon takes the accent, the one icon beside text that does, so
+  the note reads apart from a plain quote.
 
 ### Season switch
 
