@@ -9,17 +9,14 @@ export const LANGUAGE = new InjectionToken<Language>('language');
 // A page of the application, or a content page by its key.
 export type Page = 'home' | 'apartment' | 'notFound' | 'book' | 'confirmation' | 'credits' | string;
 
+// A page below an apartment's, such as the booking step or one of its content pages, by its slug.
 export function address(language: Language, page: Page, slug?: string): string {
   const paths = language.paths;
-  const apartment = `/${paths.apartments}/${slug}`;
-  const rest =
-    page === 'home' || page === 'notFound'
+  const rest = slug
+    ? `/${paths.apartments}/${slug}${page === 'apartment' ? '' : `/${paths[page]}`}`
+    : page === 'home' || page === 'notFound'
       ? ''
-      : page === 'apartment'
-        ? apartment
-        : page === 'book'
-          ? `${apartment}/${paths.book}`
-          : `/${paths[page]}`;
+      : `/${paths[page]}`;
   return `/${language.code}${rest}`;
 }
 

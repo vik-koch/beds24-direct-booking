@@ -3,6 +3,17 @@
   "name": "Zirbe",
   "lat": 47.38782,
   "lon": 12.64654,
+  "pages": ["arrival", "guide"],
+  "goodToKnow": [
+    {
+      "icon": "map-pinned",
+      "title": { "de-AT": "Anfahrt", "en-GB": "Getting here" },
+      "text": {
+        "de-AT": "Wie Sie das Haus finden, wo Sie parken und wo der Skiraum ist: [Anfahrt zur Zirbe](/de/wohnungen/zirbe/anfahrt).",
+        "en-GB": "How to find the house, where to park and where the ski room is: [Getting to Zirbe](/en/apartments/zirbe/getting-here)."
+      }
+    }
+  ],
   "via": { "tourist-office": [{ "lat": 47.38938, "lon": 12.64275 }] },
   "pictures": [
     {

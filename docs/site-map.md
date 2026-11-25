@@ -16,6 +16,9 @@ slug is the same in both languages and comes from the deployment's content.
 | Home | `/de` | `/en` |
 | An apartment | `/de/wohnungen/<slug>` | `/en/apartments/<slug>` |
 | Booking step | `/de/wohnungen/<slug>/buchen` | `/en/apartments/<slug>/book` |
+| An apartment's own page | `/de/wohnungen/<slug>/<path>` | `/en/apartments/<slug>/<path>` |
+| Zirbe's way there | `/de/wohnungen/zirbe/anfahrt` | `/en/apartments/zirbe/getting-here` |
+| Zirbe's guide, unlisted | `/de/wohnungen/zirbe/wohnungsmappe` | `/en/apartments/zirbe/guide` |
 | Booking confirmation | `/de/buchungsbestaetigung` | `/en/booking-confirmation` |
 | FAQ | `/de/haeufige-fragen` | `/en/faq` |
 | Company, with contact | `/de/ueber-uns` | `/en/about` |
@@ -40,9 +43,19 @@ slug is the same in both languages and comes from the deployment's content.
   without a stay, or with one that is not free, it redirects to the apartment's page and its stay
   picker.
 - **The confirmation** has one address per language, because Beds24 returns the guest to it.
-- **The FAQ** is one page for all apartments and keeps its address once it is published, so a
-  printed QR code can point to it. Further guest guides (self check-in, waste) get their addresses
-  when their shape is decided: a guide may differ by apartment.
+- **An apartment's own pages** are content pages that belong to it, below its address. Its page
+  links them from folds of its own under "Good to know", after Beds24's, each with an icon, a title
+  and a text the content gives.
+- **Public or unlisted:** a site page is public when the header or the footer links it, an
+  apartment's page when a fold under "Good to know" does; a fold's link to a site page does not make
+  it public. A public page is indexed. Any other is unlisted: it carries `noindex`, no navigation
+  links to it, and a guest reaches it by its address, such as a QR code in the apartment. Anyone
+  with the address can read it, so no door's or key box's code is written on a page.
+- **A guide** is a content page: one for every apartment is a page of the site, one that differs by
+  apartment is a page of each. A part every guide shares, such as how waste is sorted, is written
+  into each one's file. The FAQ is one page for all apartments.
+- **A printed address stays:** a page a QR code points to, such as the FAQ or a guide, keeps its
+  address once the code is printed.
 - **The rental terms** are the business's own conditions for a stay: payment, cancellation and the
   house's rules. Who receives a guest's data (Beds24, the payment provider) is said on the privacy
   page.

@@ -1,6 +1,7 @@
 import {
   afterRenderEffect,
   Component,
+  computed,
   ElementRef,
   inject,
   signal,
@@ -195,11 +196,11 @@ type Fold = ReturnType<typeof fold>;
           }
         </div>
         <app-booking-panel />
-        @if (checkIn || listing?.checkOut || text.houseRules) {
+        @if (checkIn || listing?.checkOut || text.houseRules || apartment.goodToKnow.length) {
           <section>
             <h2>{{ texts.apartment.goodToKnow }}</h2>
             <div hlmAccordion>
-              @if (checkIn || listing!.checkOut) {
+              @if (checkIn || listing?.checkOut) {
                 <div hlmAccordionItem>
                   <hlm-accordion-trigger>
                     <ng-icon name="lucideClock" aria-hidden="true" /><span>{{
@@ -230,6 +231,16 @@ type Fold = ReturnType<typeof fold>;
                   </hlm-accordion-content>
                 </div>
               }
+              @for (note of notes(); track $index) {
+                <div hlmAccordionItem>
+                  <hlm-accordion-trigger>
+                    <ng-icon [name]="note.icon" aria-hidden="true" /><span>{{ note.title }}</span>
+                  </hlm-accordion-trigger>
+                  <hlm-accordion-content>
+                    <div class="prose" [innerHTML]="note.html"></div>
+                  </hlm-accordion-content>
+                </div>
+              }
             </div>
           </section>
         }
@@ -251,6 +262,11 @@ type Fold = ReturnType<typeof fold>;
     @layer components {
       /* The apartment page: from 64rem the pictures and the content on the left, the right column
          free for the booking panel. */
+      /* A fold's text ends at the fold's padding, as the house rules do. */
+      .spartan-accordion-content-inner .prose > :last-child {
+        margin-bottom: 0;
+      }
+
       .apartment {
         padding-top: 1rem;
 
@@ -442,6 +458,18 @@ export class Apartment {
     const text = from && until ? wording.both : from ? wording.from : until ? wording.until : null;
     return text && fill(text, { from: from ?? '', until: until ?? '' });
   })();
+  // The site's links in a fold carry the visitor's choice, as every link between the pages does.
+  protected readonly notes = computed(() =>
+    this.apartment.goodToKnow.map(({ icon, title, html }) => ({
+      icon,
+      title: title[this.language.code],
+      html: html[this.language.code].replace(
+        /href="(\/[^"]*)"/g,
+        (_, href: string) =>
+          `href="${this.choice.link(href.replaceAll('&amp;', '&')).replaceAll('&', '&amp;')}"`,
+      ),
+    })),
+  );
   protected readonly back = `${address(this.language, 'home')}#${this.language.anchors.apartments}`;
   protected readonly choice = inject(Choice);
   protected readonly hasMap = !!site.map;

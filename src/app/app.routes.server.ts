@@ -9,6 +9,14 @@ export const serverRoutes: ServerRoute[] = [
       renderMode: RenderMode.Prerender as const,
     })),
   ),
+  ...site.languages.flatMap(({ code, paths }) =>
+    [...new Set(site.apartments.flatMap(({ pages = [] }) => pages))].map((page) => ({
+      path: `${code}/${paths.apartments}/:slug/${paths[page]}`,
+      renderMode: RenderMode.Prerender as const,
+      getPrerenderParams: async () =>
+        site.apartments.filter(({ pages }) => pages?.includes(page)).map(({ slug }) => ({ slug })),
+    })),
+  ),
   // An apartment page renders the booking panel's view that the visitor's cookie names.
   ...site.languages.map(({ code, paths }) => ({
     path: `${code}/${paths.apartments}/*`,

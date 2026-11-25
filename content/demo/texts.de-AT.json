@@ -8,7 +8,9 @@
     "imprint": "impressum",
     "privacy": "datenschutz",
     "terms": "agb",
-    "credits": "bildnachweis"
+    "credits": "bildnachweis",
+    "arrival": "anfahrt",
+    "guide": "wohnungsmappe"
   },
   "anchors": {
     "weeks": "freie-wochen",
@@ -56,7 +58,9 @@
     "imprint": "Impressum",
     "privacy": "Datenschutz",
     "terms": "AGB",
-    "credits": "Bildnachweis"
+    "credits": "Bildnachweis",
+    "arrival": "Anfahrt",
+    "guide": "Wohnungsmappe"
   },
   "credits": {
     "lead": "Die Fotos auf dieser Website und wem sie zu verdanken sind.",

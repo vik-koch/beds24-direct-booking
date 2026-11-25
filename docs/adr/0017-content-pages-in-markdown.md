@@ -36,6 +36,16 @@ the choice:
 4. **One component shows every content page,** with the description's typography from
    `src/styles.css`. A `<details>` looks like the apartment page's accordion and opens when the
    address names its `id`; a table wider than the column scrolls in a frame of its own.
+5. **An apartment may have pages of its own,** listed in its file and written in
+   `pages/<slug>/<key>.<tag>.md`, served below its address and prerendered like the site's. **A page
+   the site's navigation links is public; any other is unlisted:** `noindex`, reached by its
+   address, such as a QR code in the apartment. The navigation is the header and the footer for the
+   site's pages, and for an apartment's the folds its file adds under "Good to know", each with an
+   icon, a title and a short Markdown text per language whose links the build reads: a page a fold
+   links to is public, so nothing else has to list it. Unlisted is not secret, so no code to a door
+   or a key box goes on a page. Amended on 2026-11-25 (#59): a guide is partly the same everywhere
+   and partly one apartment's, and some help a guest at the apartment but are no use to a visitor
+   choosing one.
 
 ## Options
 
@@ -46,6 +56,10 @@ the choice:
 | Markdown, converted with markdown-it | Strict CommonMark, plugins for heading ids and attributes | Six dependencies of its own | Rejected. |
 | HTML files, sanitised like Beds24's texts | No parser | Harder to write and review; an editor's export brings styling to strip, and stripping hides the mistake | Rejected. |
 | Texts in the texts files' JSON | No new file kind | Long texts with structure as JSON strings; no preview | Rejected. |
+| An apartment's pages as site pages with the slug in their key, such as `zirbe-heating` | No new kind of page | The address does not say which apartment; the apartment page cannot find its own | Rejected (#59). |
+| An apartment's public pages listed in its file and shown as link rows under "Good to know" | No text to write | A row that leaves the page among rows that fold open; no word around the link; the list and the links can disagree | Rejected (#59, PR 327). |
+| Public pages listed in its file beside the folds that link them | Indexing said in one place | Says twice what the links already say; the build must check that both agree | Rejected (#59). |
+| Unlisted pages behind a code or a booking's token | A guide only guests read | A login or a link per booking, for text that holds nothing secret | Rejected (#59). |
 | A headless CMS | Editing in a browser | A service, accounts and a data flow for a few pages; the brief has no content editor in phase 1 | Rejected. |
 
 ## Consequences
@@ -54,4 +68,7 @@ the choice:
   file, and its files; the routes, the prerendering and the language switch follow from them.
 - **Markdown inside an HTML block needs a blank line before it,** as CommonMark has it. The build
   names text that stays bare, such as an answer written right after `<summary>`.
+- **An apartment's page** shares its address part and link text with every apartment that lists the
+  same key, and a key is a site page's or the apartments', not both.
+- **A page's address is fixed once a QR code prints it.**
 - **A new element** is added to the list in `scripts/content.mjs` together with its style.
