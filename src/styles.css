@@ -181,11 +181,13 @@
     font-weight: var(--font-weight-medium);
   }
 
-  /* As tall as a control by its padding, so its line has the text's baseline (text with an icon,
-     below). */
+  /* Its icon stays centred on the button: its text may wrap, and an arrow between the lines reads
+     better than one beside the first. */
   .button {
     display: inline-flex;
-    padding: calc((var(--size-control) - 1lh) / 2) 1.5rem;
+    align-items: center;
+    min-height: var(--size-control);
+    padding: 0 1.5rem;
     border-radius: var(--radius-control);
     background: var(--color-accent);
     color: var(--color-on-accent);
@@ -454,6 +456,7 @@
       padding: 0;
 
       > ng-icon {
+        margin-top: 0;
         translate: none;
       }
     }
@@ -1591,8 +1594,9 @@
       &::after {
         content: '';
         flex: none;
-        width: 1.125rem;
-        height: 1.125rem;
+        --ng-icon__size: 1.125rem;
+        width: var(--ng-icon__size);
+        height: var(--ng-icon__size);
         background: currentColor;
         mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")
           center / contain no-repeat;
@@ -1614,7 +1618,6 @@
   :is(
     .back,
     .text-button,
-    .button,
     .plan-pill,
     .season-switch label,
     .taken.small,
@@ -1637,17 +1640,12 @@
     align-items: baseline;
 
     /* Lowered from the baseline; only its part above the baseline takes room in the line. */
-    > :is(ng-icon, .icon) {
+    > :is(ng-icon, .icon),
+    &:is(summary)::after {
       --drop: calc(var(--ng-icon__size, 1em) / 2 - 0.5cap);
       margin-top: calc(-1 * var(--drop));
       translate: 0 var(--drop);
     }
-  }
-
-  .prose summary::after {
-    --drop: calc(1.125rem / 2 - 0.5cap);
-    margin-top: calc(-1 * var(--drop));
-    translate: 0 var(--drop);
   }
 
   /* A row taller than its line keeps the line in its middle; it is as wide as its place, and its
