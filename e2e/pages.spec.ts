@@ -173,20 +173,18 @@ test('a question opens with a transition where the browser eases to auto, at onc
   await expect.poll(durations).toEqual({ answer: '0s', arrow: '0s' });
 });
 
-test("an apartment's public page is linked under Good to know and indexed, in both languages", async ({
+test("an apartment's page a fold links to is public, with the visitor's choice, in both languages", async ({
   page,
 }) => {
-  await page.goto('/en/apartments/zirbe');
-  const section = page.locator('section', {
-    has: page.getByRole('heading', { level: 2, name: 'Good to know' }),
-  });
-  await section.getByRole('link', { name: 'Getting here', exact: true }).click();
-  await expect(page).toHaveURL('/en/apartments/zirbe/getting-here');
+  await page.goto('/en/apartments/zirbe?adults=3');
+  await page.getByRole('button', { name: 'Getting here' }).click();
+  await page.getByRole('link', { name: 'Getting to Zirbe' }).click();
+  await expect(page).toHaveURL('/en/apartments/zirbe/getting-here?adults=3');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Getting to Zirbe');
   await expect(page).toHaveTitle('Getting to Zirbe · Firn & Farn');
   await expect(page.locator('meta[name=robots]')).toHaveCount(0);
   await toLanguage(page, 'Language: English', 'Deutsch');
-  await expect(page).toHaveURL('/de/wohnungen/zirbe/anfahrt');
+  await expect(page).toHaveURL('/de/wohnungen/zirbe/anfahrt?adults=3');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Anfahrt zur Zirbe');
   await expect(page.locator('meta[name=robots]')).toHaveCount(0);
 });
@@ -195,7 +193,8 @@ test('an unlisted page is not indexed and linked from nowhere, and only its apar
   page,
 }) => {
   await page.goto('/en/apartments/zirbe');
-  await expect(page.getByRole('link', { name: 'Getting here', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Getting here' }).click();
+  await expect(page.getByRole('link', { name: 'Getting to Zirbe' })).toBeVisible();
   await expect(page.locator('a[href*="/guide"]')).toHaveCount(0);
   await page.goto('/de/wohnungen/zirbe/wohnungsmappe');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Ihre Wohnungsmappe zur Zirbe');
@@ -209,7 +208,7 @@ test('an unlisted page is not indexed and linked from nowhere, and only its apar
   await expect(page.locator('meta[name=robots]')).toHaveCount(0);
   expect((await page.goto('/en/apartments/laerche/guide'))!.status()).toBe(404);
   await page.goto('/en/apartments/laerche');
-  await expect(page.getByRole('link', { name: 'Getting here', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Getting here' })).toHaveCount(0);
 });
 
 test(

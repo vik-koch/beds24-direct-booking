@@ -8,24 +8,27 @@ const section = (page: Page, name: string) =>
 test('each apartment shows its facts, pictures, description, rooms, amenities and terms', async ({
   page,
 }) => {
-  for (const [path, name, facts, rooms] of [
+  for (const [path, name, facts, rooms, folds] of [
     [
       '/de/wohnungen/zirbe',
       'Zirbe',
       ['Bis 2 Gäste', '1 Schlafzimmer', '34 m²', 'Musterweg 1, Saalbach'],
       ['Schlafzimmer', 'Bad'],
+      ['Anreise und Abreise', 'Hausordnung', 'Anfahrt'],
     ],
     [
       '/de/wohnungen/laerche',
       'Lärche',
       ['Bis 4 Gäste', '2 Schlafzimmer', '61 m²'],
       ['Schlafzimmer 1', 'Schlafzimmer 2', 'Bad'],
+      ['Anreise und Abreise', 'Hausordnung'],
     ],
     [
       '/en/apartments/ahorn',
       'Ahorn',
       ['Up to 6 guests', '3 bedrooms', '96 m²', 'Musterweg 7, Saalbach'],
       ['Bedroom 1', 'Bedroom 2', 'Bedroom 3', 'Bathroom 1', 'Bathroom 2'],
+      ['Arrival and departure', 'House rules'],
     ],
   ] as const) {
     const response = await page.goto(path);
@@ -40,10 +43,11 @@ test('each apartment shows its facts, pictures, description, rooms, amenities an
     await expect(page.locator('.tile .ai-label').first()).toHaveText(
       path.startsWith('/de') ? 'KI-Bild' : 'AI image',
     );
-    await expect(page.locator('.prose')).not.toBeEmpty();
+    await expect(page.locator('#description')).not.toBeEmpty();
     await expect(page.locator('.rooms h3')).toHaveText([...rooms]);
     await expect(page.locator('.amenities')).toBeVisible();
-    await expect(page.locator('hlm-accordion-trigger')).toHaveCount(2);
+    // Beds24's, then the apartment's own.
+    await expect(page.locator('hlm-accordion-trigger')).toHaveText([...folds]);
   }
 });
 
@@ -52,7 +56,7 @@ test(
   { tag: '@any-engine' },
   async ({ page }) => {
     await page.goto('/de/wohnungen/ahorn');
-    const prose = page.locator('.prose');
+    const prose = page.locator('#description');
     await expect(prose.locator('h2')).toHaveText('Zwei Etagen');
     await expect(prose.locator('p')).toHaveText([
       'Unten – Wohnküche, Bad, Sauna',
@@ -214,14 +218,14 @@ test('on a phone a long description opens with its button, a short one has none'
   // a smooth scroll still running would carry the page away from the link.
   await page.evaluate(() => scrollTo({ top: 0, behavior: 'instant' }));
   await page.locator('.back').focus();
-  const link = page.locator('.prose').getByRole('link');
+  const link = page.locator('#description').getByRole('link');
   for (let i = 0; i < 10 && !(await link.evaluate((a) => a === document.activeElement)); i++)
     await page.keyboard.press('Tab');
   await expect(link).toBeFocused();
   await expect(more).toHaveAttribute('aria-expanded', 'true');
   await expect(link).toBeInViewport();
   await page.goto('/en/apartments/laerche');
-  await expect(page.locator('.prose')).toBeVisible();
+  await expect(page.locator('#description')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Read more' })).toBeHidden();
   // Wide enough, the whole description shows and no button, also after it was opened on a
   // phone; narrowed again, the button is back and still open.
@@ -304,14 +308,14 @@ test('on a phone a description that fits above the cut but for its last margin i
   const more = page.getByRole('button', { name: 'Read more' });
   await expect(more).toBeVisible();
   // A paragraph 4 px shorter than the cut; its 10 px bottom margin passes it.
-  await page.locator('.prose').evaluate((prose) => {
+  await page.locator('#description').evaluate((prose) => {
     const cut = parseFloat(getComputedStyle(prose.parentElement!).getPropertyValue('--cut'));
     prose.innerHTML = `<p style="height: calc(${cut}rem - 4px)">Short.</p>`;
   });
   await expect(more).toBeHidden();
   await expect(page.locator('.prose-fold')).not.toHaveAttribute('data-long');
   // Text after a rule is cut by less than the rule's margin: the button stays.
-  await page.locator('.prose').evaluate((prose) => {
+  await page.locator('#description').evaluate((prose) => {
     const cut = parseFloat(getComputedStyle(prose.parentElement!).getPropertyValue('--cut'));
     prose.innerHTML = '<p>Short.</p><hr>Last words.';
     const first = prose.firstElementChild as HTMLElement;
@@ -330,10 +334,12 @@ test('a link in the description’s last line shows its whole focus ring', async
     await page.setViewportSize({ width, height: 800 });
     await page.goto('/en/apartments/zirbe');
     if (rule)
-      await page.locator('.prose').evaluate((prose) => prose.prepend(document.createElement('hr')));
+      await page
+        .locator('#description')
+        .evaluate((prose) => prose.prepend(document.createElement('hr')));
     await page.evaluate(() => scrollTo({ top: 0, behavior: 'instant' }));
     await page.locator('.back').focus();
-    const link = page.locator('.prose').getByRole('link');
+    const link = page.locator('#description').getByRole('link');
     for (let i = 0; i < 10 && !(await link.evaluate((a) => a === document.activeElement)); i++)
       await page.keyboard.press('Tab');
     await expect(link).toHaveCSS('outline-style', 'solid');
@@ -366,7 +372,7 @@ test(
     await page.goto('http://localhost:4002/it/appartamenti/castagno');
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Sotto i Castagni Due');
     await expect(page.locator('.facts')).toContainText('Fino a 4 ospiti');
-    await expect(page.locator('.prose')).toHaveCount(0);
+    await expect(page.locator('#description')).toHaveCount(0);
     await expect(page.locator('.rooms h3')).toHaveText(['Camera 1', 'Camera 2', 'Bagno']);
     await expect(page.locator('.amenities')).toContainText('Wi-Fi');
     await expect(page.locator('hlm-accordion-trigger')).toHaveText(['Arrivo e partenza']);
@@ -384,9 +390,9 @@ test(
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Zirbe');
     await expect(page.locator('.tile img').first()).toBeVisible();
     await expect(page.getByText('cannot be loaded just now')).toBeVisible();
-    await expect(page.locator('.facts, .prose, .rooms, .amenities')).toHaveCount(0);
-    // Its own pages are prerendered, so they stay linked.
-    await expect(page.locator('.spartan-accordion-item')).toHaveText(['Getting here']);
+    await expect(page.locator('.facts, #description, .rooms, .amenities')).toHaveCount(0);
+    // Its folds come from the content, and the pages they link are prerendered.
+    await expect(page.locator('hlm-accordion-trigger')).toHaveText(['Getting here']);
     await expect(page.locator('.panel')).toContainText('The free weeks cannot be shown just now.');
   },
 );
