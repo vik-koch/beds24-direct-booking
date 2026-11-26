@@ -3,6 +3,9 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import { open, toLanguage } from './header';
 
+// The demo's own address, which its head's links name.
+const site = 'https://beds24.vikkoch.com';
+
 // The site map's table: every page in both languages.
 const pages = [
   ['/de', '/en'],
@@ -41,8 +44,8 @@ test(
         expect(html, path).toContain(
           '<link rel="preload" as="font" type="font/woff2" href="/fonts/jost-latin-wght-normal.woff2" crossorigin="">',
         );
-        expect(html, path).toContain(`<link rel="alternate" hreflang="de-AT" href="${de}">`);
-        expect(html, path).toContain(`<link rel="alternate" hreflang="en-GB" href="${en}">`);
+        expect(html, path).toContain(`<link rel="alternate" hreflang="de-AT" href="${site}${de}">`);
+        expect(html, path).toContain(`<link rel="alternate" hreflang="en-GB" href="${site}${en}">`);
       }
   },
 );
@@ -837,7 +840,10 @@ test('a second content folder changes languages, name, wording and theme', async
 
   await page.goto(`${other}/it`);
   await expect(page.locator('html')).toHaveAttribute('lang', 'it');
-  await expect(page.locator('link[hreflang="nl-BE"]')).toHaveAttribute('href', '/nl');
+  await expect(page.locator('link[hreflang="nl-BE"]')).toHaveAttribute(
+    'href',
+    'https://casa-prova.example/nl',
+  );
   await expect(page.getByRole('link', { name: 'Casa Prova Alta' })).toBeVisible();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Appartamenti per le vacanze');
   await expect(page.getByText('Demo:')).toHaveCount(0);

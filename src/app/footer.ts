@@ -19,8 +19,10 @@ import { LANGUAGE, pageLinks, TEXTS } from './texts';
             @if (contact.name; as name) {
               <span>{{ name }}</span>
             }
-            @for (line of contact.address; track $index) {
-              <span>{{ line }}</span>
+            @if (contact.address; as postal) {
+              <span>{{ postal.street }}</span>
+              <span>{{ postal.postalCode }} {{ postal.locality }}</span>
+              <span>{{ postal.country }}</span>
             }
             @if (contact.phone; as phone) {
               <a [href]="'tel:' + phone.replaceAll(' ', '')">{{ phone }}</a>

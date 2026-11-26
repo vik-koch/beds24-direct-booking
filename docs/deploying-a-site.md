@@ -54,8 +54,8 @@ All in the environment `site` (Settings, Environments).
 | Secret | `SITE_PASSWORD` | Optional. The site then answers only with this password, under any user name, as a site under test should. It holds only letters, digits, `-` and `_`, or the run stops before it deploys, and it needs release `0.2.0` or later. The deployment's check then expects 401 without it and 200 with it. |
 | Variable | `DEPLOY_HOST` | The machine's address or name, as SSH reaches it. |
 | Variable | `DEPLOY_KNOWN_HOSTS` | The output of `ssh-keyscan` from step 5, for the same address or name as `DEPLOY_HOST`. |
-| Variable | `APP_DOMAIN` | The site's host name. |
-| Variable | `INDEXED` | `true` opens the site to search engines. Anything else, or no variable, keeps them out. |
+| Variable | `APP_DOMAIN` | The site's host name, the one `url` in the content's `site.json` names. |
+| Variable | `INDEXED` | `true` opens the site to search engines. Anything else, or no variable, keeps them out with an `X-Robots-Tag` header on every answer; `robots.txt` and the sitemap are served either way. |
 | Variable | `SIM_IMAGE` | Optional. A simulator image, for example `ghcr.io/vik-koch/beds24-direct-booking-sim:0.1.0`: the site then runs against the simulator and needs no token. The published image is built for x64. |
 
 ## What a deployment does

@@ -40,6 +40,17 @@
   "home": {
     "title": "Holiday apartments in the middle of Saalbach"
   },
+  "descriptions": {
+    "home": "Three holiday apartments for 2 to 6 guests in the centre of Saalbach, let by the week from Saturday to Saturday and booked directly with the hosts.",
+    "about": "Who lets the apartments: Firn & Farn, two houses in Saalbach rebuilt in wood from the region, with three apartments named after their woods.",
+    "faq": "Answers before and during your stay in Saalbach: booking and payment, arrival and keys, the apartment, departure and getting here.",
+    "parking": "Where to park in Saalbach: the parking spaces of our houses, and the car parks in the village centre and at the Schattberg gondola.",
+    "imprint": "The legal details of Firn & Farn Appartements GmbH in Saalbach: address, contact and company register.",
+    "privacy": "Which data this website and your booking use, who receives them and what rights you have.",
+    "terms": "The rental terms for our holiday apartments in Saalbach: booking, payment, cancellation, arrival and the house rules.",
+    "credits": "Who took the photos this website shows, under which licence, and what was changed in them.",
+    "zirbe/arrival": "How to get to Zirbe in Saalbach by car, train and bus, where to park and where the ski room is."
+  },
   "hero": {
     "winter": "A view from the piste into the snowy Glemm valley, with mist lying over it.",
     "summer": "A view over an alpine meadow and spruces to the green slopes above Saalbach.",

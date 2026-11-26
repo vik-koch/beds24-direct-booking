@@ -1,5 +1,6 @@
 {
   "name": "Firn & Farn",
+  "url": "https://beds24.vikkoch.com",
   "languages": ["de-AT", "en-GB"],
   "apartments": ["zirbe", "laerche", "ahorn"],
   "seasons": {
@@ -63,7 +64,12 @@
   ],
   "contact": {
     "name": "Firn & Farn Appartements",
-    "address": ["Musterweg 0", "5753 Saalbach", "Österreich"],
+    "address": {
+      "street": "Musterweg 0",
+      "postalCode": "5753",
+      "locality": "Saalbach",
+      "country": "Österreich"
+    },
     "phone": "+43 000 0000000",
     "email": "demo@vikkoch.com"
   },

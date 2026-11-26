@@ -191,6 +191,11 @@ const pageKeys = z
 // The limits docs/content.md lists, each with its reason there.
 export const siteSchema = z.strictObject({
   name: text.refine((value) => letters(value) <= 15, 'at most 15 characters'),
+  // The site's own address, for canonical links, link previews and the sitemap: the pages are
+  // prerendered, when no request names the host.
+  url: z
+    .url({ protocol: /^https$/ })
+    .refine((value) => new URL(value).origin === value, 'only https:// and the host, no path'),
   languages: z
     .array(tag)
     .length(2, 'exactly two languages')
@@ -241,7 +246,11 @@ export const siteSchema = z.strictObject({
   contact: z
     .strictObject({
       name: text.optional(),
-      address: z.array(text).min(1).optional(),
+      // The footer writes it as three lines: the street, the postal code before the place, and
+      // the country.
+      address: z
+        .strictObject({ street: text, postalCode: text, locality: text, country: text })
+        .optional(),
       phone: text.optional(),
       email: z.email().optional(),
     })
@@ -385,6 +394,12 @@ export const textsSchema = z.strictObject({
   // The names of the seasons site.json lists, and no other; the content script checks it.
   seasons: z.strictObject({ label: text, winter: text.optional(), summer: text.optional() }),
   home: z.strictObject({ title: text }),
+  // What a search result and a link's preview say of a page, by its key, an apartment's own
+  // page's as <slug>/<key>; every indexed page but an apartment's, whose headline Beds24 holds.
+  descriptions: z.record(
+    z.string(),
+    text.refine((value) => letters(value) <= 160, 'at most 160 characters'),
+  ),
   hero: z.strictObject({
     // The photo's alternative text per season.
     winter: text.optional(),
@@ -541,9 +556,10 @@ export interface Picture {
 type Files = Pick<Picture, 'width' | 'height' | 'sources'>;
 type Seasons = z.infer<typeof siteSchema>['seasons'];
 // A season's hero photo as converted files, its centre crop of 3:4 too unless it is that narrow,
-// and its credit.
+// its link preview's address, and its credit.
 export type Hero = Files & {
   portrait?: Files;
+  preview: string;
   credit?: NonNullable<Seasons['winter']>['hero']['credit'];
 };
 // A floor plan as the page draws it: its file's address, its viewBox as [x, y, width, height],
@@ -583,10 +599,12 @@ export interface Note {
   title: Record<string, string>;
   html: Record<string, string>;
 }
-// An apartment as the site shows it; public names its pages that a fold links to.
+// An apartment as the site shows it; public names its pages that a fold links to, previews its
+// link preview's address per season.
 export type Apartment = {
   slug: string;
   pictures: Picture[];
+  previews: Partial<Record<SeasonName, string>>;
   plan?: Plan;
   goodToKnow: Note[];
   public: string[];

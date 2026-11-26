@@ -26,7 +26,7 @@ import {
   siteSchema,
   textsSchema,
 } from '../src/content/schema.ts';
-import { convertHero, convertPicture, convertPictures } from './pictures.mjs';
+import { convertHero, convertPicture, convertPictures, convertPreview } from './pictures.mjs';
 
 // Every key one of two texts has and the other lacks, and whether the second lacks it.
 function differences(a, b, path = []) {
@@ -689,6 +689,26 @@ export function readContent(dir) {
         `${join(dir, `texts.${tag}.json`)}\n  ${path.join('.')}: ${missing ? `missing, as texts.${first}.json has it` : `not in texts.${first}.json`}`,
       );
   }
+  // Every indexed page but an apartment's has a description, and each names a page.
+  const indexed = [
+    'home',
+    ...new Set([...site.header, ...site.footer]),
+    ...apartments.flatMap(({ slug, public: keys }) => keys.map((key) => `${slug}/${key}`)),
+  ];
+  const described = [
+    ...indexed,
+    ...site.pages,
+    'credits',
+    ...apartments.flatMap(({ slug, pages = [] }) => pages.map((key) => `${slug}/${key}`)),
+  ];
+  for (const tag of site.languages) {
+    const { descriptions } = texts[prefix(tag)];
+    const fail = (key, reason) =>
+      new Error(`${join(dir, `texts.${tag}.json`)}\n  descriptions.${key}: ${reason}`);
+    for (const key of indexed) if (!descriptions[key]) throw fail(key, 'missing');
+    for (const key of Object.keys(descriptions))
+      if (!described.includes(key)) throw fail(key, 'not a page of the site');
+  }
   // Every change a credit lists is named in every language.
   const credits = [
     ...listed.map((name) => site.seasons[name].hero.credit),
@@ -821,11 +841,33 @@ export async function writeContent(dir, out, cache) {
   );
   let converted = apartmentFiles;
   const heroOut = join(out, 'pictures', 'hero');
+  const previewsAt = [join(out, 'pictures', 'previews'), '/pictures/previews', cache];
   const seasons = {};
   for (const [name, season] of Object.entries(site.seasons)) {
     const files = await convertHero(dir, season.hero.file, `hero-${name}`, heroOut, cache);
     converted += files.converted;
-    seasons[name] = { ...season, hero: { credit: season.hero.credit, ...files.hero } };
+    const preview = await convertPreview(dir, season.hero.file, `hero-${name}`, ...previewsAt);
+    converted += preview.converted;
+    seasons[name] = {
+      ...season,
+      hero: { credit: season.hero.credit, ...files.hero, preview: preview.url },
+    };
+  }
+  // Each apartment's preview in each season is its gallery's first picture then.
+  const previews = {};
+  for (const { slug, pictures: list } of site.apartments) {
+    previews[slug] = {};
+    for (const name of Object.keys(site.seasons)) {
+      const index = list.findIndex(({ season }) => !season || season === name);
+      const preview = await convertPreview(
+        dir,
+        list[index].file,
+        `${slug}-${index + 1}`,
+        ...previewsAt,
+      );
+      converted += preview.converted;
+      previews[slug][name] = preview.url;
+    }
   }
   const shown = {};
   for (const [at, { file, width }] of pagePictures) {
@@ -898,6 +940,7 @@ export async function writeContent(dir, out, cache) {
   };
   const apartments = site.apartments.map(({ plan, ...apartment }) => ({
     ...apartment,
+    previews: previews[apartment.slug],
     pictures: pictures[apartment.slug].map((picture) => ({
       ...picture,
       alt: byPrefix(picture.alt),

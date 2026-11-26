@@ -1,5 +1,6 @@
 {
   "name": "Casa Prova Alta",
+  "url": "https://casa-prova.example",
   "languages": ["it", "nl-BE"],
   "apartments": ["vista", "castagno", "zonneterras", "fienile"],
   "seasons": {
