@@ -202,3 +202,24 @@ test(
     expect((await head(request, `${other}/nl`)).meta('og:locale')).toEqual(['nl_BE']);
   },
 );
+
+test(
+  "a shared link's preview shows the season it names, by itself or by its week",
+  { tag: '@any-engine' },
+  async ({ request }) => {
+    for (const [query, season] of [
+      ['?season=summer', 'summer'],
+      ['?season=winter', 'winter'],
+      ['?arrival=2027-07-03', 'summer'],
+      ['?arrival=2027-01-02', 'winter'],
+    ]) {
+      const apartment = await head(request, `/en/apartments/zirbe${query}`);
+      const [picture, alt] = season === 'summer' ? [1, 'Stone pine studio with'] : [2, 'in winter'];
+      expect(apartment.meta('og:image')[0], query).toContain(`/zirbe-${picture}.`);
+      expect(apartment.meta('og:image:alt')[0], query).toContain(alt);
+      expect(apartment.link('canonical'), query).toEqual([`${site}/en/apartments/zirbe`]);
+      const home = await head(request, `/en${query}`);
+      expect(home.meta('og:image')[0], query).toContain(`/hero-${season}.`);
+    }
+  },
+);

@@ -18,7 +18,7 @@ import type { Language, Site, Texts } from '../content/schema';
 import { Choice } from './choice';
 import { Footer } from './footer';
 import { Header } from './header';
-import { Season } from './season';
+import { Season, seasonState, starts } from './season';
 import { address, fallback, indexed, LANGUAGE, TEXTS, type Page } from './texts';
 
 const leaf = (route: ActivatedRouteSnapshot): ActivatedRouteSnapshot =>
@@ -65,14 +65,14 @@ export class Shell {
   private readonly meta = inject(Meta);
   private readonly router = inject(Router);
   private readonly location = inject(Location);
-  // Sets the season on the page, and on the server writes the script that chooses it.
-  private readonly season = inject(Season);
   protected alternates: Record<string, string> = {};
   protected home = false;
   protected notFound = false;
 
   constructor() {
     this.document.documentElement.lang = this.language.tag;
+    // Sets the season on the page, and on the server writes the script that chooses it.
+    inject(Season);
     this.preloadFonts();
     // A jump from a link lands below the sticky header, with a little air, moved by the
     // target's scroll-margin as the browser's own jump is.
@@ -148,7 +148,8 @@ export class Shell {
     const shown = !this.notFound;
     const url = (language: Language) => site.url + address(language, page, slug);
     const apartment = site.apartments.find((one) => one.slug === slug);
-    const season = this.season.current();
+    // The season a shared link names, by itself or by its week, as the page opens at it.
+    const season = seasonState(starts, query, null, new Date()).season;
     const description =
       page === 'apartment'
         ? (route.data['weeks'] as FreeWeeks | null)?.apartments.find((one) => one.slug === slug)
