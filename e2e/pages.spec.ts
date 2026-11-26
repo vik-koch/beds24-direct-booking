@@ -263,6 +263,8 @@ test(
 
 // One test per page and width, as the apartment page's scans.
 for (const path of [
+  '/de/parken',
+  '/en/parking',
   '/de/wohnungen/zirbe/anfahrt',
   '/en/apartments/zirbe/getting-here',
   '/de/wohnungen/zirbe/wohnungsmappe',
