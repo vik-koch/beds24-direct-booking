@@ -1,20 +1,25 @@
 # Beds24: what the API and the booking page really do
 
-Findings from a spike in five rounds (2026-11-10 and 11) against a real account on a trial plan.
-Trust this file over the Beds24 documentation and the OpenAPI file, and extend it when the wire
-shows something new. The round-by-round log, the recordings and the scripts are kept privately,
-because they hold the account's data. Amounts here are example figures.
+Findings from a spike in five rounds (2026-11-10 and 11) against a real account on a trial plan, and
+a sixth round on the booking step (2026-11-26), when the same account could take bookings with its
+Stripe gateway in test mode. Trust this file over the Beds24 documentation and the OpenAPI file, and
+extend it when the wire shows something new. The round-by-round log, the recordings and the scripts
+are kept privately, because they hold the account's data. Amounts here are example figures.
 
 ## Access and limits
 
 - **Base URL:** `https://api.beds24.com/v2`, with the header `token: <token>`.
 - **OpenAPI file:** public at `https://beds24.com/api/v2/apiV2.yaml` (263 kB). Good enough to
   generate types and to check the simulator against, but wrong in places: see the rate limit.
-- **Tokens:** a long-life token is used directly and expires after about 90 days. A refresh token is
-  exchanged for a 24-hour access token at `GET /authentication/token`. `GET /authentication/details`
-  reports scopes and expiry.
-- **Scopes:** the site needs `read:inventory` and `read:properties` only. A call without its scope
-  answers 401 `Token not valid`, the same body as a bad token.
+- **Tokens:** a long-life token is used directly and expires after about 90 days. An invite code
+  from the control panel is exchanged once, at `GET /authentication/setup`, for a refresh token that
+  lives as long as it is used within 30 days. A refresh token is exchanged for a 24-hour access
+  token at `GET /authentication/token`. `GET /authentication/details` reports scopes and expiry.
+- **Scopes:** reading the listings needs `read:inventory` and `read:properties`. Booking adds
+  `write:bookings`, `write:bookings-personal` and `write:bookings-financial`. A write scope does not
+  include reading: a token with only these five runs the whole booking step but cannot read a
+  booking. It can change any existing booking by its ID. A call without its scope answers 401
+  `Token not valid`, the same body as a bad token.
 - **Rate limit:** 100 credits per 5 minutes per account. A call costs 1 credit, the full
   `properties` call 1.6. The headers on the wire are `X-Request-Cost`, `X-Five-Min-Limit-Remaining`
   and `X-Five-Min-Limit-Resets-In`; the OpenAPI file names them `X-FiveMinCreditLimit-*`. A 401
@@ -235,6 +240,7 @@ Checked on 20 November 2026 on a real account with a read-only token.
   site must link bookable weeks only.
 - **Session:** the ID is in a `booking` cookie without a `SameSite` attribute, and also in a hidden
   field and in the page's links. The form posts to the same page.
+- **Labels:** no field has a `<label>`; each input is named by an `aria-label` only.
 - **Back buttons** are links to the Beds24 calendar (`book_bookingback`, `book_bookingbackright`).
   No parameter for a return address exists.
 - **An unpublished page** answers "Online booking isn't available for this property yet"; so does a
@@ -258,20 +264,83 @@ that injected what the settings below would carry):
   framed document and `scrolling="no"` on the iframe.
 - **Phone:** the summary stacks above the form; fields at 16 px avoid the iOS focus zoom.
 
-**After "Confirm Booking"** (settings read in the control panel, untested):
+**After "Confirm Booking"** (2026-11-26, in Chromium, Firefox and Playwright's WebKit, the guest
+form framed by a page on another site):
 
+- **The booking exists before the payment:** the submit saves it as `cancelled` and opens a payment
+  page ("Payment Required", Stripe's card field, a "Cancel Booking" button) that repeats every
+  field. A booking abandoned there stays cancelled and never blocks the week. A paid one gets a
+  payment item (`type: payment`, `subType` 203, status `Paid`) and the info items `CARDTOSTRIPE` and
+  `STRIPEPAYMENT`.
+- **The framed form posts without its cookie.** Chromium and WebKit refuse the `booking` cookie in a
+  frame on another site, where a cookie without `SameSite` counts as `Lax`; Firefox keeps it,
+  partitioned. The post still reaches the payment page, because the session travels in the hidden
+  field.
+- **The payment page breaks out of the frame** with
+  `if (top != self) top.location.replace(location)` while "Open in New Window" is set to its frame
+  killer. In Chromium and WebKit that loads the form's address at top level as a new request: a new
+  session and an empty form, the guest's details gone. Firefox blocks the navigation, and the
+  payment page stays in the frame. With the frame killer off: not tried.
 - **On a trial account** the submit answers a bare page reading "An error has occured" and creates
-  no booking. The page stays in the frame; the script reports it as step `other` with a height of 78
-  px.
-- **"Booking Return URL" and "Booking Failed URL"** redirect to the site's own pages. The return
-  carries the booking as query parameters: `bookid`, `propid`, `roomid`, `roomname`, `propname`,
-  `status` (1 or 2 confirmed, 3 on request), `firstnight`, `lastnight`, `checkout`, `numnight`,
-  `numadult`, `numchild`, `lang`, `price`, `qty`, `pricenum`, `referer`, `ratedesc`, and the guest's
-  `guestname`, `guestfirstname`, `guesttitle`, `guestemail` and `guestphone`. They are unsigned.
-- **"Open in New Window: Frame Killer On Secure Payment"** may take the page out of the frame at the
-  payment step.
+  no booking.
+- **"Booking Return URL" and "Booking Failed URL"** redirect to the site's own pages (settings read
+  in the control panel, not tried). The return carries the booking as query parameters: `bookid`,
+  `propid`, `roomid`, `roomname`, `propname`, `status` (1 or 2 confirmed, 3 on request),
+  `firstnight`, `lastnight`, `checkout`, `numnight`, `numadult`, `numchild`, `lang`, `price`, `qty`,
+  `pricenum`, `referer`, `ratedesc`, and the guest's `guestname`, `guestfirstname`, `guesttitle`,
+  `guestemail` and `guestphone`. They are unsigned.
+- **"Booking Redirect"** (a setting, not tried) sends a visitor of the booking page to another
+  address, immediately or when "Book" is pressed, with the stay in template variables such as
+  `[ROOMID]`, `[FIRSTNIGHTYYYY-MM-DD]`, `[NUMADULT]` and `[GUESTLANGUAGE]`.
 - **Also there:** guest verification (captcha, e-mail code) and "Confirmation Page Insert in HTML
   <HEAD>".
+
+## Booking through the API
+
+Checked on 2026-11-26 with a token holding the five scopes above, on both rooms of the account.
+
+- **`POST /bookings`** takes an array and answers per item. A new booking with `status: new`, the
+  stay, `numAdult`, the guest's name, e-mail, `country2` and `lang` is saved with `referer: API`,
+  `price: 0` and no invoice items: Beds24 prices nothing. The site sends `price` and the invoice
+  items (`type: charge`, `description`, `qty`, `amount`) itself. Without `price` Beds24 shows 0
+  beside the items.
+- **A `new` booking blocks the week** at once: `calendar` shows `numAvail` 0 and `offers` returns no
+  offer for it.
+- **An overlapping booking is saved without complaint,** unless the item carries
+  `actions: { checkAvailability: true }`. Then Beds24 refuses it with `"no availability"` and saves
+  nothing.
+- **`actions: { notifyGuest: true }`** sends Beds24's guest confirmation, also for an existing
+  booking. With the account's settings at the time, an API booking without it got no e-mail. The
+  confirmation lists the invoice items' descriptions word for word.
+- **An update** goes through the same call with the booking's `id`: a status (`confirmed`,
+  `cancelled`), invoice items to add, any guest field.
+- **A payment** is an invoice item with `type: payment` and a positive `amount`. Beds24 keeps it as
+  a negative line (`subType` 204) and shows the outstanding amount as 0.
+- **`POST /channels/stripe`** (marked Alpha) has an action `createStripeSession` for a booking. On
+  this account, whose Stripe gateway is set up with API keys, it answered `[{"success":false}]` for
+  a valid booking whatever the parameters, and "access denied" for an unknown one. Its documentation
+  describes sessions on Beds24's Stripe Connect platform, with a live publishable key; not tried
+  further. Its action `addPaymentMethod` takes raw card numbers.
+
+## Paying through Stripe Checkout
+
+Checked on 2026-11-26 in Chromium with the business's own Stripe account in test mode. The site
+talks to Stripe directly; Beds24 is told afterwards.
+
+- **A restricted key** allowed only "Checkout Sessions" creates, reads and lists sessions;
+  customers, charges and the balance answer "Permission denied". It belongs to the same Stripe
+  account as Beds24's gateway, so both kinds of payment arrive in one place.
+- **A session** carries one line with the total in cents, `customer_email`, the booking ID in
+  `client_reference_id` and `metadata`, `locale`, `payment_method_types[0]=card`, an `expires_at` 30
+  minutes ahead and a `success_url` with `{CHECKOUT_SESSION_ID}`. Its `url` opens Stripe's page in
+  the same tab, in the language asked for.
+- **Without `payment_method_types`** the page offers whatever the account has switched on; the test
+  account had Klarna, Bancontact and EPS beside cards. Such methods can complete after the guest has
+  returned.
+- **After the payment** Stripe redirects to `success_url` with the session's ID. Reading the session
+  gives `status: complete`, `payment_status: paid`, `amount_total` and the metadata. A plain test
+  card and a 3-D Secure test card, its challenge passed, both worked. From the booking to
+  `confirmed` in Beds24 took about ten seconds.
 
 ## What follows for the site
 
@@ -281,21 +350,26 @@ that injected what the settings below would carry):
   with `offers`, edge of the lead time included.
 - **The content files keep what the API lacks:** per listing the room ID, a slug and the pictures
   with alternative texts. The site converts and serves its own copies of the pictures.
-- **The booking step sits behind one seam:** one function builds the deep link, one route holds the
-  frame. A full-page link is then a setting.
-- **The confirmation page** shows what the return URL carries, then removes the query from the
-  address bar. The server never logs that query, and the page never treats it as proof of a booking.
-- **The simulator's surface is small:** `authentication/details`, `properties`, `calendar`, `offers`
-  and a fake booking page with the same deep-link parameters. Its data includes a week with unequal
-  daily prices, a taken week and a week inside the lead time.
+- **The booking step is the site's own form** (ADR 18). The server checks the offer, creates the
+  booking with `checkAvailability`, the price and invoice items in the guest's language, and sends
+  the guest to Stripe Checkout. On the return it reads the session, records the payment, confirms
+  the booking and has Beds24 send the confirmation. The site stores none of it.
+- **One token does everything,** with the five scopes above, renewed from a refresh token. It can
+  change any booking, so Beds24's IP allowlist limits it to the server's address.
+- **The simulator's surface is small:** `authentication/details` and the token refresh,
+  `properties`, `calendar`, `offers`, `POST /bookings`, and Stripe's Checkout Sessions with a fake
+  checkout page. Its data includes a week with unequal daily prices, a taken week and a week inside
+  the lead time.
 
 ## Not verified
 
-- **Everything after "Confirm Booking":** the payment, the frame killer, the return URL. Needs a
-  paid account.
-- **The frame's session cookie in Safari:** a third-party cookie there. The proxy made it
-  first-party, so it showed nothing. Fallbacks: the deep link as a full page, then an own form on
-  `POST /bookings`.
+- **The framed guest form with the frame killer off,** and in Safari on a real device. ADR 18 no
+  longer needs either.
+- **`createStripeSession` on Beds24's Stripe Connect,** which needs a Stripe account approved for
+  live payments.
+- **Stripe in live mode:** live keys, wallets, and a real card's 3-D Secure.
+- **Stripe's cancel return and a session left to expire:** documented by Stripe, not run.
+- **Whether a Beds24 auto action** fires for a booking made through the API.
 - **The time zone of the lead time's days,** near midnight.
 - **Whether the override reaches the channels** as closed to arrival and departure.
 - **A property with several rooms:** known from the API's structure only.
