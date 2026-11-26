@@ -25,15 +25,16 @@ import { handover } from './map-handover';
       <h1 class="headline">{{ page.title }}</h1>
       <div #prose class="prose text-prose mt-6" [innerHTML]="html"></div>
     </div>
-    @if (page.places; as places) {
+    @if (page.map; as map) {
       <!-- The map's code loads when it comes into view; a map the last page left shows at once. -->
-      <div class="mt-10">
+      <section class="map-section">
+        <h2 class="column">{{ map.title }}</h2>
         @defer (on viewport; when handover.drawn; hydrate on viewport) {
-          <app-location-map [page]="key" [apartment]="slug" [places]="places" />
+          <app-location-map [page]="key" [apartment]="slug" [places]="map.places" />
         } @placeholder {
           <div class="map-size"></div>
         }
-      </div>
+      </section>
     }
   `,
   styles: `

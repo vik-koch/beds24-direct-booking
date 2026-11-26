@@ -313,31 +313,41 @@ function flavor(p: ReturnType<typeof palette>): Flavor {
             {{ texts.more }}<ng-icon name="lucideChevronDown" aria-hidden="true" />
           </button>
         }
+        <!-- A map's only place stays chosen: its line is no button. -->
         <ng-template #line let-place>
           <li>
-            <button
-              type="button"
-              class="map-line"
-              [attr.aria-pressed]="place.key === picked()"
-              (click)="pick(place.key)"
-            >
-              <ng-icon [name]="lucideName(place.icon)" aria-hidden="true" />
-              <span class="map-place-name">
-                <span class="min-w-0 font-medium hyphens-auto">{{ place.name }}</span>
-                @if (route(place.key); as route) {
-                  <span class="text-ink-soft whitespace-nowrap tabular-nums">{{
-                    distance(route)
-                  }}</span>
-                }
-              </span>
-              <!-- Both seasons' texts, so that the first paint shows the page's season. -->
-              @for (name of season.names; track name) {
-                @if (place[name]; as note) {
-                  <span class="text-ink-soft" [attr.data-for]="name">{{ note }}</span>
-                }
-              }
-            </button>
+            @if (single()) {
+              <div class="map-line">
+                <ng-container *ngTemplateOutlet="entry; context: { $implicit: place }" />
+              </div>
+            } @else {
+              <button
+                type="button"
+                class="map-line"
+                [attr.aria-pressed]="place.key === picked()"
+                (click)="pick(place.key)"
+              >
+                <ng-container *ngTemplateOutlet="entry; context: { $implicit: place }" />
+              </button>
+            }
           </li>
+        </ng-template>
+        <ng-template #entry let-place>
+          <ng-icon [name]="lucideName(place.icon)" aria-hidden="true" />
+          <span class="map-place-name">
+            <span class="min-w-0 font-medium hyphens-auto">{{ place.name }}</span>
+            @if (route(place.key); as route) {
+              <span class="text-ink-soft whitespace-nowrap tabular-nums">{{
+                distance(route)
+              }}</span>
+            }
+          </span>
+          <!-- Both seasons' texts, so that the first paint shows the page's season. -->
+          @for (name of season.names; track name) {
+            @if (place[name]; as note) {
+              <span class="text-ink-soft" [attr.data-for]="name">{{ note }}</span>
+            }
+          }
         </ng-template>
       </div>
       <!-- After the panel, so that the keyboard reaches the choices first, also on a phone, where
@@ -395,6 +405,7 @@ function flavor(p: ReturnType<typeof palette>): Flavor {
           <span
             #marker
             class="map-label"
+            [class.cursor-auto]="single()"
             aria-hidden="true"
             data-anchor="left"
             [attr.data-lat]="place.lat"
@@ -433,18 +444,31 @@ function flavor(p: ReturnType<typeof palette>): Flavor {
         }
       }
       @for (place of shown(); track place.key) {
-        <button
-          #marker
-          type="button"
-          class="map-pin map-place"
-          [attr.aria-label]="place.name"
-          [attr.data-lat]="place.lat"
-          [attr.data-lon]="place.lon"
-          [attr.aria-pressed]="place.key === picked()"
-          (click)="pick(place.key)"
-        >
-          <ng-icon [name]="lucideName(place.icon)" aria-hidden="true" />
-        </button>
+        @if (single()) {
+          <span
+            #marker
+            class="map-pin map-place"
+            role="img"
+            [attr.aria-label]="place.name"
+            [attr.data-lat]="place.lat"
+            [attr.data-lon]="place.lon"
+          >
+            <ng-icon [name]="lucideName(place.icon)" aria-hidden="true" />
+          </span>
+        } @else {
+          <button
+            #marker
+            type="button"
+            class="map-pin map-place"
+            [attr.aria-label]="place.name"
+            [attr.data-lat]="place.lat"
+            [attr.data-lon]="place.lon"
+            [attr.aria-pressed]="place.key === picked()"
+            (click)="pick(place.key)"
+          >
+            <ng-icon [name]="lucideName(place.icon)" aria-hidden="true" />
+          </button>
+        }
       }
     </div>
   `,
@@ -596,7 +620,7 @@ function flavor(p: ReturnType<typeof palette>): Flavor {
         color: var(--color-ink);
         --outline: var(--color-ink);
 
-        &[aria-pressed='true'] {
+        &:is([aria-pressed='true'], span) {
           color: var(--color-surface);
           --pin: var(--color-ink);
         }
@@ -747,7 +771,6 @@ function flavor(p: ReturnType<typeof palette>): Flavor {
         padding: 0.5rem 0.75rem;
         border-radius: var(--radius-card);
         text-align: start;
-        cursor: pointer;
         transition: background-color 0.2s;
         --ng-icon__color: var(--color-ink-soft);
         --ng-icon__size: 1.375rem;
@@ -756,8 +779,12 @@ function flavor(p: ReturnType<typeof palette>): Flavor {
           grid-column: 2;
         }
 
+        &:is(button) {
+          cursor: pointer;
+        }
+
         @media (hover: hover) {
-          &:hover {
+          &:is(button):hover {
             background: var(--color-ground);
           }
         }
@@ -811,7 +838,11 @@ export class LocationMap {
   protected readonly far = signal(!!handover.drawn && this.zoom() < 16);
   protected readonly lucideName = lucideName;
   protected readonly chosen = linkedSignal(() => this.apartment() ?? handover.chosen);
-  protected readonly picked = signal(handover.picked);
+  // A map's only place is chosen, as an apartment is on its own page.
+  protected readonly single = computed(() => this.list().length === 1);
+  protected readonly picked = linkedSignal(() =>
+    this.single() ? this.list()[0]!.key : handover.picked,
+  );
   protected readonly all = signal(handover.all ?? false);
   protected readonly shown = computed(() => this.list().filter((p) => this.all() || !p.more));
   protected readonly drawn = signal<MapLibre | undefined>(undefined);
@@ -1091,7 +1122,7 @@ export class LocationMap {
   }
 
   protected pick(place: string) {
-    this.picked.set(this.picked() === place ? undefined : place);
+    if (!this.single()) this.picked.set(this.picked() === place ? undefined : place);
   }
 
   // A chosen place that folds away is chosen no more.

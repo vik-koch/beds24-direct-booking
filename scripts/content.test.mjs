@@ -948,7 +948,7 @@ test('one route for each apartment and place, from the points they have now', ()
   const missing = changed('map/routes.json', (routes) => routes.features.pop());
   assert.throws(
     () => readContent(missing),
-    /map\/routes\.json\n {2}zirbe\/arrival: zirbe to car-park: missing; run scripts\/map-routes\.mjs/,
+    /map\/routes\.json\n {2}zirbe\/arrival: zirbe to bus-stop: missing; run scripts\/map-routes\.mjs/,
   );
   const moved = changed('apartments/zirbe.json', (apartment) => (apartment.lat += 0.0001));
   assert.throws(
@@ -966,9 +966,9 @@ test('one route for each apartment and place, from the points they have now', ()
   assert.throws(() => readContent(viaAdded), /ahorn to tourist-office: computed before a point/);
   const pageVia = changed(
     'pages/zirbe/arrival.map.json',
-    (map) => (map.places[1].via = { zirbe: [{ lat: 47.39, lon: 12.64 }] }),
+    (map) => (map.places[0].via = { zirbe: [{ lat: 47.39, lon: 12.64 }] }),
   );
-  assert.throws(() => readContent(pageVia), /zirbe\/arrival: zirbe to car-park: computed before/);
+  assert.throws(() => readContent(pageVia), /zirbe\/arrival: zirbe to bus-stop: computed before/);
   const fewer = changed('site.json', (site) => site.map.places.pop());
   assert.throws(
     () => readContent(fewer),
@@ -1039,9 +1039,12 @@ test('a map writes its labels in the font theme.css names, which must be a file'
   );
 });
 
-test("a page's map lists places inside the box, each with a Lucide icon and a name in every language", () => {
+test("a page's map has a title and lists places inside the box, each with a Lucide icon and a name in every language", () => {
   const sidecar = 'pages/parking.map.json';
   const cases = [
+    [(map) => delete map.title, /parking\.map\.json\n {2}title: /],
+    [(map) => delete map.title['en-GB'], /parking\.map\.json\n {2}title\.en-GB: missing/],
+    [(map) => (map.title.fr = 'Parking'), /title\.fr: a language site\.json does not list/],
     [
       (map) => (map.places[0].lat = 47.5),
       /parking\.map\.json\n {2}places\.0: outside the map's box/,
@@ -1067,11 +1070,14 @@ test("a page's map lists places inside the box, each with a Lucide icon and a na
 
 test("a page's map walks from each apartment, or from its own apartment alone", () => {
   const { pages } = readContent('content/demo');
+  const { title, places } = pages.en['zirbe/arrival'].map;
+  assert.equal(title, 'From the bus stop');
   assert.deepEqual(
-    pages.en['zirbe/arrival'].places.map(({ key }) => key),
-    ['bus-stop', 'car-park'],
+    places.map(({ key }) => key),
+    ['bus-stop'],
   );
-  assert.equal(pages.en.faq.places, undefined);
+  assert.equal(pages.de.parking.map.title, 'Der Weg vom Auto');
+  assert.equal(pages.en.faq.map, undefined);
   const moved = changed('pages/zirbe/arrival.map.json', (map) => (map.places[0].lon += 1e-4));
   assert.throws(
     () => readContent(moved),
@@ -1091,7 +1097,6 @@ test("a page's map walks from each apartment, or from its own apartment alone", 
     'parking ahorn zentrum',
     'parking ahorn schattberg',
     'zirbe/arrival zirbe bus-stop',
-    'zirbe/arrival zirbe car-park',
   ]);
 });
 

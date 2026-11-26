@@ -132,8 +132,9 @@ const map = z
     }),
   );
 
-// A content page's map, after its text: the places it marks, as site.json's map's.
-export const pageMapSchema = z.strictObject({ places });
+// A content page's map, after its text: its heading by language tag, and the places it marks, as
+// site.json's map's.
+export const pageMapSchema = z.strictObject({ title: z.record(z.string(), text), places });
 
 // With two seasons each starts on its day and lasts until the other starts; a single season
 // covers the year and has no start.
@@ -550,12 +551,11 @@ export interface Place {
   winter?: Record<string, string>;
   summer?: Record<string, string>;
 }
-// A content page as the page shows it: its title, the rest of its file as HTML, and its map's
-// places.
+// A content page as the page shows it: its title, the rest of its file as HTML, and its map.
 export interface ContentPage {
   title: string;
   html: string;
-  places?: Place[];
+  map?: { title: string; places: Place[] };
 }
 // A fold under "Good to know": its icon's name, its title and its text as HTML by address prefix.
 export interface Note {

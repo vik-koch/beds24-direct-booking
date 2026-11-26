@@ -16,7 +16,7 @@ der Lärche frei. Ohne Stellplatz parken Sie im Parkhaus Zentrum im Ortszentrum.
 ## Mit Zug und Bus
 
 Vom Bahnhof Zell am See hält der Regionalbus durch das Glemmtal in Saalbach Ronachgrund: Die Karte
-am Ende dieser Seite zeigt den Weg von der Haltestelle und vom Parkhaus.
+am Ende dieser Seite zeigt den Weg von der Haltestelle.
 
 ## Am Haus
 

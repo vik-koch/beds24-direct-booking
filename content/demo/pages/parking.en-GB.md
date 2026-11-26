@@ -10,7 +10,3 @@ the space your booking names: the others belong to the guests of the other apart
 
 Park in the Parkhaus Zentrum, a multi-storey car park in the village centre, or in the car park at
 the Schattberg X-Press gondola, which is handy on a ski day.
-
-## The way from the car
-
-The map shows both car parks and the way from your apartment to each.

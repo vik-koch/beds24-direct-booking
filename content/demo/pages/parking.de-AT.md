@@ -10,7 +10,3 @@ dem Stellplatz, den Ihre Buchung nennt: Die anderen gehören den Gästen der and
 
 Parken Sie im Parkhaus Zentrum im Ortszentrum oder auf dem Parkplatz an der Gondel Schattberg
 X-Press, der an einem Skitag praktisch liegt.
-
-## Der Weg vom Auto
-
-Die Karte zeigt beide Parkplätze und den Weg von Ihrer Wohnung zu jedem.

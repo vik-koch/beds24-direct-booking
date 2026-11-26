@@ -16,7 +16,7 @@ one, park in the Parkhaus Zentrum in the village centre.
 ## By train and bus
 
 From Zell am See station, the regional bus up the Glemm valley stops at Saalbach Ronachgrund: the
-map at the end of this page shows the way from the stop and from the car park.
+map at the end of this page shows the way from the stop.
 
 ## At the house
 
