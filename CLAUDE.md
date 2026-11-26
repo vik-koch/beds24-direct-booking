@@ -1,8 +1,8 @@
 # beds24-direct-booking
 
 `beds24-direct-booking` is a direct-booking website for weekly holiday apartments. Beds24 is the
-property management system: it holds availability, prices and listing texts, and takes the booking
-and the payment. The site shows what Beds24 knows and hands over to its guest form.
+property management system: it holds availability, prices, listing texts and the bookings. The site
+shows what Beds24 knows, books through its API and takes the payment through Stripe Checkout.
 
 The repository is public as a portfolio piece and carries a fictional demo only. **Nothing about the
 real business** (its name, place, country, languages, IDs) goes into it: that is a private
@@ -55,8 +55,8 @@ adding a dependency, a route, a content key or an environment variable.
   table, the site map, or the pull request.
 - Wording, pictures and theme values are content, never code. A picture without an alternative text
   fails the build.
-- The Beds24 token stays on the server. Guest data from the return URL is shown, then dropped: never
-  logged, never stored.
+- The Beds24 token and the Stripe key stay on the server. Guest data passes through it to Beds24 and
+  Stripe: never logged, never stored.
 - **Touching old code is the moment to question it.** Simplify what the change makes awkward, in the
   same pull request if it stays small and in a commit of its own. If it does not stay small, open a
   `debt` issue and name it in the pull request. Never leave a known wart unsaid.
