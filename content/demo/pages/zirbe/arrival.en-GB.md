@@ -1,6 +1,6 @@
 # Getting to Zirbe
 
-> Firn & Farn is made up: this page is a demo, and the house and its apartment are examples.
+> :info: Firn & Farn is made up: this page is a demo, and the house and its apartment are examples.
 
 Zirbe is on the first floor of Haus Firn, at the end of Musterweg, a few minutes' walk from the
 village centre. Arrival is on Saturday from 4 pm to 8 pm; the [FAQ](/en/faq#arrival) says how the

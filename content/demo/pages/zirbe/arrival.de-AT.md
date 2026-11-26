@@ -1,6 +1,7 @@
 # Anfahrt zur Zirbe
 
-> Firn & Farn ist erfunden: Diese Seite ist eine Demo, das Haus und seine Wohnung sind Beispiele.
+> :info: Firn & Farn ist erfunden: Diese Seite ist eine Demo, das Haus und seine Wohnung sind
+> Beispiele.
 
 Die Zirbe liegt im ersten Stock von Haus Firn, am Ende des Musterwegs, ein paar Gehminuten vom
 Ortszentrum. Anreise ist am Samstag von 16 bis 20 Uhr; wie Sie zu den Schlüsseln kommen, steht in

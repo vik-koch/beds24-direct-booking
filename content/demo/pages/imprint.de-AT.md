@@ -1,7 +1,7 @@
 # Impressum
 
-> Firn & Farn ist erfunden: Diese Website ist eine Demo. Das Unternehmen und alle Angaben auf dieser
-> Seite sind Beispiele, die zeigen, was ein österreichischer Vermieter hier angibt, außer der
+> :info: Firn & Farn ist erfunden: Diese Website ist eine Demo. Das Unternehmen und alle Angaben auf
+> dieser Seite sind Beispiele, die zeigen, was ein österreichischer Vermieter hier angibt, außer der
 > E-Mail-Adresse: Sie ist echt und erreicht die Person, die die Demo betreibt.
 
 ## Angaben nach § 5 E-Commerce-Gesetz und § 14 Unternehmensgesetzbuch

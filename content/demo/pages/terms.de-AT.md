@@ -1,8 +1,8 @@
 # Allgemeine Geschäfts&shy;bedingungen
 
-> Firn & Farn ist erfunden: Diese Website ist eine Demo, und diese Bedingungen sind ein Beispiel
-> dafür, was ein österreichischer Vermieter von Ferienwohnungen hier regelt. Sie sind keine Vorlage
-> für echte Verträge.
+> :info: Firn & Farn ist erfunden: Diese Website ist eine Demo, und diese Bedingungen sind ein
+> Beispiel dafür, was ein österreichischer Vermieter von Ferienwohnungen hier regelt. Sie sind keine
+> Vorlage für echte Verträge.
 
 Diese Bedingungen gelten für die Miete unserer Ferienwohnungen in Saalbach. Vermieterin ist die Firn
 & Farn Appartements GmbH (siehe [Impressum](/de/impressum)).

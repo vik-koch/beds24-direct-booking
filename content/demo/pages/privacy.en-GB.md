@@ -1,8 +1,8 @@
 # Privacy
 
-> Firn & Farn is made up: this website is a demo, and the company is an example. What this page says
-> about your visit and your browser is true of this website, though. It describes booking as an
-> example: the demo takes no bookings.
+> :info: Firn & Farn is made up: this website is a demo, and the company is an example. What this
+> page says about your visit and your browser is true of this website, though. It describes booking
+> as an example: the demo takes no bookings.
 
 ## Who is responsible
 

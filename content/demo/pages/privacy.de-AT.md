@@ -1,8 +1,8 @@
 # Datenschutz
 
-> Firn & Farn ist erfunden: Diese Website ist eine Demo, und das Unternehmen ist ein Beispiel. Was
-> diese Seite über den Besuch und Ihren Browser sagt, stimmt aber für diese Website. Die Buchung
-> beschreibt sie als Beispiel: Auf der Demo ist keine möglich.
+> :info: Firn & Farn ist erfunden: Diese Website ist eine Demo, und das Unternehmen ist ein
+> Beispiel. Was diese Seite über den Besuch und Ihren Browser sagt, stimmt aber für diese Website.
+> Die Buchung beschreibt sie als Beispiel: Auf der Demo ist keine möglich.
 
 ## Wer verantwortlich ist
 

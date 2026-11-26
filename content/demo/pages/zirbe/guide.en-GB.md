@@ -1,6 +1,7 @@
 # Your guide to Zirbe
 
-> Firn & Farn is made up: this page is a demo, and the apartment and its fittings are examples.
+> :info: Firn & Farn is made up: this page is a demo, and the apartment and its fittings are
+> examples.
 
 Welcome to Zirbe. This page is for your stay: the QR code by the door leads here. If something does
 not work, call us at [+43 000 0000000](tel:+430000000000).
