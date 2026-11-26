@@ -604,7 +604,9 @@ function flavor(p: ReturnType<typeof palette>): Flavor {
       /* Beside a pin's head: an apartment's name, the way to a place, a chosen place's name. */
       .map-label {
         display: none;
-        padding: 0.125rem 0.5rem;
+        /* As a button's: wrapped lines kept together at 1.25, one line as tall as at 1.5. */
+        padding: calc(0.125rem + 0.125em) 0.5rem;
+        line-height: 1.25;
         border-radius: var(--radius-control);
         background: var(--color-surface);
         box-shadow: var(--shadow-control);
@@ -613,7 +615,11 @@ function flavor(p: ReturnType<typeof palette>): Flavor {
         font-family: var(--font-sans);
         font-size: 0.8125rem;
         font-weight: var(--font-weight-medium);
-        white-space: nowrap;
+        /* A long place name takes a second line rather than run under the controls: beside a chosen
+           place's pin there is half the window less 34 px on a phone, 166 px at 768 px. */
+        width: max-content;
+        max-width: min(10rem, 50vw - 2.5rem);
+        text-wrap: balance;
         cursor: pointer;
         /* Its near edge beside the pin's head, level with its middle. */
         translate: calc(var(--head) * 0.67) calc(var(--head) * -0.71);

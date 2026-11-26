@@ -405,7 +405,7 @@ beyond a limit fails its build, with the limit named.
 | A content page's title | A word as wide as the column at 300 px, or one with a soft hyphen (`&shy;`) where it may break, as the demo's `Geschäfts&shy;bedingungen` | Headlines are not hyphenated, and the layout holds down to 300 px (DESIGN.md): a longer word would make the page scroll sideways | Not checked: a deployment looks at its titles at 300 px |
 | The map's box | At most 0.1° each way, within 85° of latitude | The tiles grow with the area, and the repository and the image carry them; the demo's 0.07° by 0.03° is 773 kB | The schema |
 | The map's places | 1 to 10 | One route for each apartment and place, and the map's list of places | The schema |
-| A place's name | 24 characters | A chosen place's name stands beside its pin: at 320 px 182 px are left there, and the demo's names of 28 letters took 185 to 197 px | The schema; an e2e test puts 24 letters into the label at 320 px |
+| A place's name | Two lines beside its pin at 320 px, about 30 characters | A chosen place's name stands beside its pin, 120 px wide at most at 320 px so that it clears the zoom buttons; a longer name takes a third line | Not the build: an e2e test puts 28 letters into the label at 320 and 768 px |
 | A page's map | One, after the page's text, with 1 to 10 places | A map within the text would split the page around a block that loads late; the routes and the list as the home map's | The schema and the content script |
 | The map's error link (`map.report`) | 32 characters | The opened attribution keeps to two lines at 320 px, below the gesture hint; 55 characters still did | The schema; an e2e test puts 32 wide letters into it at every width |
 

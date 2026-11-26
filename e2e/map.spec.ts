@@ -822,25 +822,31 @@ for (const [width, path] of [
     expect(hidden).toEqual([]);
   });
 
-test("at 320 px a chosen place's name of 24 letters, the most it may have, fits beside its pin", async ({
-  page,
-}) => {
-  await page.setViewportSize({ width: 320, height: 844 });
-  // The map moves to the place at once.
-  await page.emulateMedia({ reducedMotion: 'reduce' });
-  await openMap(page, '/de/parken', scrollToPageMap);
-  await places(page).first().getByRole('button').click();
-  const label = page.locator('.map-label', { hasText: 'Parkhaus Zentrum' });
-  await expect(label).toBeVisible();
-  const [right, frame] = await label.evaluate((element) => {
-    element.textContent = 'Wertstoffsammelstelle Au';
-    return [
-      element.getBoundingClientRect().right,
-      document.querySelector('.map-frame')!.getBoundingClientRect().right,
-    ];
+for (const width of [320, 768])
+  test(`at ${width} px a chosen place's long name takes two lines, clear of the controls`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 844 });
+    // The map moves to the place at once.
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await openMap(page, '/de/parken', scrollToPageMap);
+    await places(page).first().getByRole('button').click();
+    const label = page.locator('.map-label', { hasText: 'Parkhaus Zentrum' });
+    await expect(label).toBeVisible();
+    const [one, two, right, controls] = await label.evaluate((element) => {
+      const height = () => element.getBoundingClientRect().height;
+      const short = height();
+      element.textContent = 'Télécabine du Schattberg-Ost';
+      return [
+        short,
+        height(),
+        element.getBoundingClientRect().right,
+        document.querySelector('.map-zoom')!.getBoundingClientRect().left,
+      ];
+    });
+    expect(two).toBeGreaterThan(one * 1.5);
+    expect(right).toBeLessThanOrEqual(controls);
   });
-  expect(right).toBeLessThanOrEqual(frame);
-});
 
 test("an apartment's address leads to its map, which then loads", async ({ page }) => {
   const asked: string[] = [];

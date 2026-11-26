@@ -889,10 +889,6 @@ test('a place is named in every language, with texts for listed seasons only', (
       (site) => delete site.map.places[0].winter['de-AT'],
       /site\.json\n {2}map\.places\.0\.winter\.de-AT: missing/,
     ],
-    [
-      (site) => (site.map.places[3].name['en-GB'] = 'x'.repeat(25)),
-      /map\.places\.3\.name\.en-GB: at most 24 characters/,
-    ],
   ];
   for (const [change, error] of cases)
     assert.throws(() => readContent(changed('site.json', change)), error);

@@ -90,8 +90,7 @@ const boxLongitude = z.number().min(-180).lt(180);
 const span = 0.1 + 1e-9;
 
 // A place a map marks, with a Lucide icon for its kind, shown always or only behind the switch for
-// more places, and its name and a text for each season in each of the site's languages by tag. Its
-// name stands beside its pin too, where a longer one would run past the map's edge on a phone. A
+// more places, and its name and a text for each season in each of the site's languages by tag. A
 // route to it goes through the points given by the apartment's slug, in their order.
 const place = z.strictObject({
   key: segment,
@@ -99,10 +98,7 @@ const place = z.strictObject({
   lat: latitude,
   lon: longitude,
   more: z.literal(true).optional(),
-  name: z.record(
-    z.string(),
-    text.refine((value) => letters(value) <= 24, 'at most 24 characters'),
-  ),
+  name: z.record(z.string(), text),
   winter: z.record(z.string(), text).optional(),
   summer: z.record(z.string(), text).optional(),
   via: z
