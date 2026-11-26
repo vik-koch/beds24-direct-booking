@@ -166,10 +166,8 @@
     "rooms": { "BEDROOM": "Camera", "BATHROOM": "Bagno" }
   },
   "book": {
-    "text": "La prenotazione online arriva presto. Fino ad allora, prenotate per e-mail.",
-    "mail": "Prenota per e-mail",
-    "subject": "Richiesta di prenotazione: {apartment}, {week}",
-    "body": "Buongiorno,\n\nvorrei prenotare {apartment} per la settimana {week}, per {guests}.\n",
+    "text": "La prenotazione diretta arriva presto. Fino ad allora, prenotate su Booking.com.",
+    "link": "Prenota questa settimana su Booking.com",
     "children": { "one": "{count} bambino", "other": "{count} bambini" },
     "invalid": "Questo indirizzo non indica una settimana prenotabile.",
     "taken": "Questa settimana non è più libera.",

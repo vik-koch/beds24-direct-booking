@@ -218,10 +218,8 @@
     }
   },
   "book": {
-    "text": "Die Online-Buchung kommt bald. Bis dahin buchen Sie bitte per E-Mail: Wir antworten mit einer Bestätigung und wie Sie bezahlen.",
-    "mail": "Per E-Mail buchen",
-    "subject": "Buchungsanfrage: {apartment}, {week}",
-    "body": "Guten Tag,\n\nich möchte {apartment} für die Woche {week} buchen, für {guests}.\n\nMit freundlichen Grüßen\n",
+    "text": "Die Direktbuchung kommt bald. Diese Demo nimmt keine Buchungen an.",
+    "link": "Diese Woche auf Booking.com buchen",
     "children": { "one": "{count} Kind", "other": "{count} Kinder" },
     "invalid": "Diese Adresse nennt keine Woche, die sich buchen lässt.",
     "taken": "Diese Woche ist nicht mehr frei.",

@@ -8,8 +8,8 @@ import { heading } from './shell';
 import { addDays, address, fill, formatStay, isDay, LANGUAGE, TEXTS } from './texts';
 
 // The booking step until online booking opens: the stay from the address, checked against the
-// apartment's weeks and limits, and an e-mail that asks for it. While Beds24 cannot be reached
-// the stay goes unchecked: the host confirms it in the reply.
+// apartment's weeks and limits, and a link to book it elsewhere, such as on a booking site. While
+// Beds24 cannot be reached the stay goes unchecked: the site linked checks it.
 @Component({
   selector: 'app-book',
   template: `
@@ -30,9 +30,9 @@ import { addDays, address, fill, formatStay, isDay, LANGUAGE, TEXTS } from './te
           <dd>{{ guests }}</dd>
         </dl>
         <p class="mt-6">{{ texts.book.text }}</p>
-        @if (mail) {
+        @if (elsewhere) {
           <p class="mt-6">
-            <a class="button" [href]="mail">{{ texts.book.mail }}</a>
+            <a class="button" [href]="elsewhere">{{ texts.book.link }}</a>
           </p>
         }
       }
@@ -47,7 +47,8 @@ export class Book {
   private readonly route = inject(ActivatedRoute).snapshot;
   protected readonly heading = heading(this.texts, this.route);
   private readonly slug: string = this.route.params['slug'];
-  protected readonly name = site.apartments.find(({ slug }) => slug === this.slug)!.name;
+  private readonly apartment = site.apartments.find(({ slug }) => slug === this.slug)!;
+  protected readonly name = this.apartment.name;
 
   private readonly plural = new Intl.PluralRules(this.language.tag);
   // A count and its noun stay on one line.
@@ -62,20 +63,20 @@ export class Book {
   protected readonly guests: string;
   protected readonly problem: string | null;
   protected readonly back: string;
-  protected readonly mail: string | null;
+  protected readonly elsewhere: string | null;
 
   constructor() {
     const weeks: FreeWeeks | null = this.route.data['weeks'];
     const limits: Listing | null = this.route.data['listing'];
     const [adults, children] = [this.choice.adults(), this.choice.children()];
     // Where the apartment asks for no children, they are guests like the adults.
-    this.guests =
-      limits && !limits.asksChildren
-        ? this.count(this.texts.weeks.guests, adults + children)
-        : new Intl.ListFormat(this.language.tag).format([
-            this.count(this.texts.panel.adults, adults),
-            ...(children ? [this.count(this.texts.book.children, children)] : []),
-          ]);
+    const plain = limits && !limits.asksChildren;
+    this.guests = plain
+      ? this.count(this.texts.weeks.guests, adults + children)
+      : new Intl.ListFormat(this.language.tag).format([
+          this.count(this.texts.panel.adults, adults),
+          ...(children ? [this.count(this.texts.book.children, children)] : []),
+        ]);
     const season = weeks && seasonOf(weeks, this.arrival);
     const valid = weeks ? !!season : isDay(this.arrival);
     const free =
@@ -104,12 +105,15 @@ export class Book {
     // The apartment's panel shows the week chosen, as blocked where it is no longer free.
     const page = address(this.language, 'apartment', this.slug);
     this.back = this.choice.link(`${page}${valid ? `?arrival=${this.arrival}` : ''}#booking`);
-    const email = site.contact?.email;
-    const values = { apartment: this.name, week: this.week, guests: this.guests };
-    // Encoded by hand: URLSearchParams writes a space as "+", which a mail program keeps.
-    this.mail = email
-      ? `mailto:${email}?subject=${encodeURIComponent(fill(this.texts.book.subject, values))}` +
-        `&body=${encodeURIComponent(fill(this.texts.book.body, values))}`
+    // The site linked counts them as adults too.
+    const url = this.apartment.elsewhere;
+    this.elsewhere = url
+      ? fill(url, {
+          arrival: this.arrival,
+          departure: addDays(this.arrival, 7),
+          adults: plain ? adults + children : adults,
+          children: plain ? 0 : children,
+        })
       : null;
   }
 }

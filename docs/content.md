@@ -188,7 +188,11 @@ content. The application has no wording, no colour and no typeface of its own. T
   ```
 
   The room ID is the Beds24 room the apartment is, and the name is how the site calls it in every
-  language.
+  language. Until online booking opens, `elsewhere` (optional) is where the apartment can be booked
+  meanwhile, such as its page on a booking site. The booking step links it beside `book.text` with
+  the words of `book.link`, and fills in `{arrival}`, `{departure}`, `{adults}` and `{children}`:
+  `"https://www.booking.com/hotel/at/example.html?checkin={arrival}&checkout={departure}&group_adults={adults}&group_children={children}&no_rooms=1"`.
+  Without it the step shows its text alone.
 
 - **An apartment's pictures** (`pictures` in its file) are listed in the order the site shows them,
   at least one, each a `file` and its alternative text `alt` in each of the site's languages by tag.
@@ -310,9 +314,7 @@ content. The application has no wording, no colour and no typeface of its own. T
   address. The footer shows what is listed, and no contact column without `contact`, so a site can
   keep its footer short and give the full details on its imprint page. A site with a map gives an
   email address of its operator that reaches someone, on its imprint page at least: the map's
-  walking routes come from FOSSGIS's routing servers, whose usage policy asks for one. Until online
-  booking opens, the booking step offers to book by email to the contact's address, with the stay in
-  the mail (`book` in the texts); without an address it shows its text alone.
+  walking routes come from FOSSGIS's routing servers, whose usage policy asks for one.
 - **The map** (`map` in `site.json`) is optional. Its `box` is the area the map covers, as
   `{ "west": 12.6, "south": 47.375, "east": 12.67, "north": 47.405 }` in degrees, and its `places`
   are what it marks, in their order:

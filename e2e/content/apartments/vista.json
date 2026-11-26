@@ -1,6 +1,7 @@
 {
   "roomId": 9001011,
   "name": "Vista sul Ghiacciaio",
+  "elsewhere": "https://booking.example/vista?checkin={arrival}&checkout={departure}&group_adults={adults}&group_children={children}&no_rooms=1",
   "pictures": [
     {
       "file": "pictures/square.png",

@@ -2,6 +2,9 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 import { toLanguage } from './header';
 
+const plus = (date: string, days: number) =>
+  new Date(Date.parse(date) + days * 864e5).toISOString().slice(0, 10);
+
 // A free or a booked week of the apartment's later season, as its page offers it.
 async function weekOf(page: Page, path: string, kind: 'free' | 'full') {
   await page.goto(path);
@@ -12,41 +15,17 @@ async function weekOf(page: Page, path: string, kind: 'free' | 'full') {
   return (await cells.first().getAttribute('data-date'))!;
 }
 
-const mailOf = async (page: Page) => {
-  const href = (await page.locator('main a.button').getAttribute('href'))!;
-  const url = new URL(href);
-  return {
-    to: url.pathname,
-    subject: url.searchParams.get('subject'),
-    body: url.searchParams.get('body'),
-    raw: href,
-  };
-};
-
-for (const [lang, path, week, guests, text, mail, subject] of [
+for (const [lang, path, week, guests, text] of [
   [
     'de',
     '/de/wohnungen/laerche',
     'Woche',
     '2 Erwachsene und 1 Kind',
-    'Die Online-Buchung kommt bald.',
-    'Per E-Mail buchen',
-    'Buchungsanfrage: Lärche, ',
+    'Die Direktbuchung kommt bald.',
   ],
-  [
-    'en',
-    '/en/apartments/laerche',
-    'Week',
-    '2 adults and 1 child',
-    'Online booking opens soon.',
-    'Book by email',
-    'Booking request: Lärche, ',
-  ],
+  ['en', '/en/apartments/laerche', 'Week', '2 adults and 1 child', 'Direct booking opens soon.'],
 ] as const)
-  test(`the booking step shows the stay and books it by e-mail (${lang})`, async ({
-    page,
-    browser,
-  }) => {
+  test(`the booking step shows the stay (${lang})`, async ({ page, browser }) => {
     const arrival = await weekOf(page, path, 'free');
     // As the panel's button links it.
     const book = `${path}/${lang === 'de' ? 'buchen' : 'book'}?arrival=${arrival}&adults=2&children=1`;
@@ -65,20 +44,9 @@ for (const [lang, path, week, guests, text, mail, subject] of [
       week,
       lang === 'de' ? 'Gäste' : 'Guests',
     ]);
-    const dates = await page.locator('main dd').nth(1).innerText();
     await expect(page.locator('main')).toContainText(text);
-    const link = page.getByRole('link', { name: mail });
-    const { to, subject: got, body, raw } = await mailOf(page);
-    expect(to).toBe('demo@vikkoch.com');
-    expect(got).toBe(`${subject}${dates}`);
-    expect(body!.replaceAll('\u00a0', ' ')).toContain(guests);
-    expect(body).toContain(dates);
-    // A mail program shows "+" as it is: spaces are written as %20.
-    expect(raw).not.toContain('+');
-    // By keyboard: the link follows the header's.
-    for (let i = 0; i < 30 && !(await link.evaluate((a) => a === document.activeElement)); i++)
-      await page.keyboard.press('Tab');
-    await expect(link).toBeFocused();
+    // The demo's apartments give no other place to book them.
+    await expect(page.locator('main a')).toHaveCount(0);
     expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
 
     // Rendered in the browser: the other language keeps the stay.
@@ -93,6 +61,27 @@ for (const [lang, path, week, guests, text, mail, subject] of [
       lang === 'de' ? '2 adults and 1 child' : '2 Erwachsene und 1 Kind',
     );
   });
+
+test('the booking step links where the apartment can be booked meanwhile, with the stay', async ({
+  page,
+}) => {
+  const path = 'http://localhost:4002/it/appartamenti/vista';
+  const arrival = await weekOf(page, path, 'free');
+  // Vista asks for no children: the site linked counts them as adults.
+  await page.goto(`${path}/prenota?arrival=${arrival}&adults=1&children=1`);
+  await expect(page.locator('html')).toHaveAttribute('data-started', '');
+  const link = page.getByRole('link', { name: 'Prenota questa settimana su Booking.com' });
+  await expect(link).toHaveAttribute(
+    'href',
+    `https://booking.example/vista?checkin=${arrival}&checkout=${plus(arrival, 7)}` +
+      '&group_adults=2&group_children=0&no_rooms=1',
+  );
+  // By keyboard: after the header's links.
+  for (let i = 0; i < 30 && !(await link.evaluate((a) => a === document.activeElement)); i++)
+    await page.keyboard.press('Tab');
+  await expect(link).toBeFocused();
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+});
 
 for (const [lang, path, invalid, taken, back] of [
   [
@@ -153,7 +142,6 @@ test(
       'Sat, 2 January 2027 – Sat, 9 January 2027',
       '2 adults',
     ]);
-    await expect(page.getByRole('link', { name: 'Book by email' })).toBeVisible();
   },
 );
 

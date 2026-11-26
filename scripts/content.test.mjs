@@ -62,6 +62,16 @@ test('a registration label without its number once is refused', () => {
   }
 });
 
+test('a link to book elsewhere is an https address with only the stay to fill in', () => {
+  const link = (value) => changed('apartments/zirbe.json', (zirbe) => (zirbe.elsewhere = value));
+  readContent(link('https://booking.example/z?checkin={arrival}&adults={adults}'));
+  assert.throws(
+    () => readContent(link('https://booking.example/z?n={nights}')),
+    /only \{arrival\}/,
+  );
+  assert.throws(() => readContent(link('http://booking.example/z')), /zirbe\.json\n {2}elsewhere/);
+});
+
 test('a key the schema does not know is refused', () => {
   const dir = changed('texts.de-AT.json', (texts) => (texts.nav.extra = 'x'));
   assert.throws(() => readContent(dir), /texts\.de-AT\.json\n {2}nav/);

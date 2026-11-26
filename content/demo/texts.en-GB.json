@@ -218,10 +218,8 @@
     }
   },
   "book": {
-    "text": "Online booking opens soon. Until then, please book by email: we reply with a confirmation and how to pay.",
-    "mail": "Book by email",
-    "subject": "Booking request: {apartment}, {week}",
-    "body": "Hello,\n\nI would like to book {apartment} for the week {week}, for {guests}.\n\nKind regards\n",
+    "text": "Direct booking opens soon. This demo takes no bookings.",
+    "link": "Book this week on Booking.com",
     "children": { "one": "{count} child", "other": "{count} children" },
     "invalid": "This address names no week that can be booked.",
     "taken": "This week is no longer free.",
