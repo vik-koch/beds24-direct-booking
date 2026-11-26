@@ -74,9 +74,10 @@ const iconZoom: ExpressionSpecification = [
 ];
 // MapLibre lays a dash pattern out at the tile's whole zoom and stretches it up to twice as long
 // until the next: the routes' dashes shrink as much, in eighths, so that they keep their length.
+// Their caps are butt: round caps keep their size and fill the shrunk gaps.
 const dashes = (zoom: number) => {
   const stretch = Math.round(2 ** (zoom % 1) * 8) / 8;
-  return [1 / stretch, 1.6 / stretch];
+  return [2.4 / stretch, 1.2 / stretch];
 };
 
 // A Lucide icon as an image in a colour, at a size in pixels, its lines as wide as given in its 24
@@ -1540,7 +1541,7 @@ export class LocationMap {
           type: 'line',
           source: 'routes',
           filter: ['!', ['get', 'picked']],
-          layout: { 'line-cap': 'round', 'line-join': 'round' },
+          layout: { 'line-cap': 'butt', 'line-join': 'round' },
           paint: {
             'line-color': this.picked() ? p.faded : p.route,
             'line-width': 3.5,
