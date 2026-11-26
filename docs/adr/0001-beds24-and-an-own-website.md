@@ -1,6 +1,7 @@
 # ADR 1: Beds24 holds the bookings, an own website shows them
 
-Status: accepted, 2026-11-12. Group: product.
+Status: accepted, 2026-11-12. Group: product. Its booking step, the hand-over to the Beds24 guest
+form, is replaced by [ADR 18](0018-booking-through-the-api-and-stripe-checkout.md).
 
 ## Context
 
@@ -107,6 +108,10 @@ The decision rests on a spike with a trial account. These are still open and mus
 
 If the hand-over cannot be made to work even as a full page, an own checkout is the remaining
 option. It reverses a boundary of this decision and needs a new ADR.
+
+The spike of 2026-11-26 found that the framed form loses the guest's details at the payment, and
+[ADR 18](0018-booking-through-the-api-and-stripe-checkout.md) made that new decision: an own form,
+the booking through the API, the payment through Stripe Checkout. Beds24 still holds the bookings.
 
 ## Consequences
 

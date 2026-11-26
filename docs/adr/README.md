@@ -11,8 +11,9 @@ What is built, for whom, and where its boundaries are.
 <!-- prettier-ignore -->
 | ADR | Decision | Status |
 |---|---|---|
-| [1](0001-beds24-and-an-own-website.md) | Beds24 holds the bookings, an own website shows them | Accepted |
+| [1](0001-beds24-and-an-own-website.md) | Beds24 holds the bookings, an own website shows them | Accepted; its booking step replaced by 18 |
 | [16](0016-the-floor-plan.md) | The floor plan: one drawing without text shown as a picture, its zones and their names in the apartment's file | Accepted |
+| [18](0018-booking-through-the-api-and-stripe-checkout.md) | The booking step: an own form books the week through the Beds24 API, the guest pays on Stripe Checkout, the server records the payment and stores nothing | Accepted |
 
 ## Stack
 
