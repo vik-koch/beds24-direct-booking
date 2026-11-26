@@ -304,10 +304,7 @@ export const apartmentSchema = z.strictObject({
   elsewhere: z
     .url({ protocol: /^https$/, hostname: z.regexes.domain })
     .refine(
-      (value) =>
-        [...value.matchAll(/\{(\w*)\}/g)].every(([, key]) =>
-          ['arrival', 'departure', 'adults', 'children'].includes(key),
-        ),
+      (value) => !/[{}]/.test(value.replace(/\{(arrival|departure|adults|children)\}/g, '')),
       'only {arrival}, {departure}, {adults} and {children}',
     )
     .optional(),

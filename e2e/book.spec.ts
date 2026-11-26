@@ -76,6 +76,11 @@ test('the booking step links where the apartment can be booked meanwhile, with t
     `https://booking.example/vista?checkin=${arrival}&checkout=${plus(arrival, 7)}` +
       '&group_adults=2&group_children=0&no_rooms=1',
   );
+  // Without a stay there is nothing to link.
+  await page.goto(`${path}/prenota`);
+  await expect(page.getByRole('link', { name: 'Torna a Vista sul Ghiacciaio' })).toBeVisible();
+  await expect(page.getByRole('link', { name: /Booking\.com/ })).toHaveCount(0);
+  await page.goto(`${path}/prenota?arrival=${arrival}&adults=1&children=1`);
   // By keyboard: after the header's links.
   for (let i = 0; i < 30 && !(await link.evaluate((a) => a === document.activeElement)); i++)
     await page.keyboard.press('Tab');
@@ -114,7 +119,17 @@ for (const [lang, path, invalid, taken, back] of [
     const arrival = await weekOf(page, path, 'full');
     await page.goto(`${step}?arrival=${arrival}&adults=3`);
     await expect(page.locator('main p').first()).toHaveText(taken);
-    await page.getByRole('link', { name: back }).click();
+    await expect(page.locator('html')).toHaveAttribute('data-started', '');
+    const link = page.getByRole('link', { name: back });
+    await expect(link).toHaveAttribute('href', new RegExp(`arrival=${arrival}&adults=3#booking$`));
+    // The season switched to on the step goes with the link.
+    const shown = await page.locator('html').getAttribute('data-season');
+    const other = shown === 'winter' ? 'summer' : 'winter';
+    await page.locator(`.season-switch label[data-for=${other}]`).click();
+    await expect(link).toHaveAttribute('href', new RegExp(`&season=${other}#booking$`));
+    await page.locator(`.season-switch label[data-for=${shown}]`).click();
+    await expect(link).toHaveAttribute('href', new RegExp(`arrival=${arrival}&adults=3#booking$`));
+    await link.click();
     await expect(page).toHaveURL(new RegExp(`arrival=${arrival}&adults=3#booking$`));
     await expect(page.locator('.panel')).toHaveAttribute('data-blocked', '');
   });
@@ -152,7 +167,8 @@ test('at 320 px the booking step does not scroll sideways, in both seasons', asy
     for (const path of ['/de/wohnungen/ahorn/buchen', '/en/apartments/ahorn/book']) {
       await page.goto(`${path}?arrival=${arrival}&adults=4&children=2&season=${season}`);
       await expect(page.locator('main dl')).toBeVisible();
-      const { scrollWidth, clientWidth } = await page.evaluate(() => document.documentElement);
-      expect(scrollWidth).toBe(clientWidth);
+      await expect
+        .poll(() => page.locator('html').evaluate((html) => html.scrollWidth - html.offsetWidth))
+        .toBe(0);
     }
 });

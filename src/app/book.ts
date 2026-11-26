@@ -1,6 +1,5 @@
 import { Component, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import type { Listing } from '../beds24/client';
 import type { FreeWeeks } from '../beds24/weeks';
 import site from '../content/generated/site';
 import { Choice, fits, seasonOf } from './choice';
@@ -18,7 +17,9 @@ import { addDays, address, fill, formatStay, isDay, LANGUAGE, TEXTS } from './te
       @if (problem) {
         <p class="text-ink-soft mt-6">{{ problem }}</p>
         <p class="mt-6">
-          <a class="button" [href]="back">{{ fill(texts.book.back, { apartment: name }) }}</a>
+          <a class="button" [href]="choice.link(back)">{{
+            fill(texts.book.back, { apartment: name })
+          }}</a>
         </p>
       } @else {
         <dl class="mt-6 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1">
@@ -43,7 +44,7 @@ export class Book {
   protected readonly texts = inject(TEXTS);
   protected readonly fill = fill;
   private readonly language = inject(LANGUAGE);
-  private readonly choice = inject(Choice);
+  protected readonly choice = inject(Choice);
   private readonly route = inject(ActivatedRoute).snapshot;
   protected readonly heading = heading(this.texts, this.route);
   private readonly slug: string = this.route.params['slug'];
@@ -67,7 +68,7 @@ export class Book {
 
   constructor() {
     const weeks: FreeWeeks | null = this.route.data['weeks'];
-    const limits: Listing | null = this.route.data['listing'];
+    const limits = weeks?.capacities[this.slug];
     const [adults, children] = [this.choice.adults(), this.choice.children()];
     // Where the apartment asks for no children, they are guests like the adults.
     const plain = limits && !limits.asksChildren;
@@ -104,16 +105,18 @@ export class Book {
           : null;
     // The apartment's panel shows the week chosen, as blocked where it is no longer free.
     const page = address(this.language, 'apartment', this.slug);
-    this.back = this.choice.link(`${page}${valid ? `?arrival=${this.arrival}` : ''}#booking`);
+    // Its season is the one shown when it is followed.
+    this.back = `${page}${valid ? `?arrival=${this.arrival}` : ''}#booking`;
     // The site linked counts them as adults too.
     const url = this.apartment.elsewhere;
-    this.elsewhere = url
-      ? fill(url, {
-          arrival: this.arrival,
-          departure: addDays(this.arrival, 7),
-          adults: plain ? adults + children : adults,
-          children: plain ? 0 : children,
-        })
-      : null;
+    this.elsewhere =
+      url && valid
+        ? fill(url, {
+            arrival: this.arrival,
+            departure: addDays(this.arrival, 7),
+            adults: plain ? adults + children : adults,
+            children: plain ? 0 : children,
+          })
+        : null;
   }
 }
