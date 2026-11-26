@@ -44,15 +44,16 @@ weighs:
 5. **A timer settles the rest.** Every few minutes the server lists the sessions whose expiry time
    passed more than ten minutes ago: one paid and not marked is recorded as on the return, one
    unpaid has its booking cancelled. A guest can pay only before the expiry time and is sent back
-   straight after paying, so the margin keeps the timer away from a return still at work.
+   straight after paying, so the margin makes it unlikely that the two handle one session at once.
 6. **Failures the site cannot settle go to the host.** The server logs what the host needs to find
    the booking in Beds24, never guest data, and the host settles it there by hand:
    - Beds24's answer to a new booking is lost: the room and the stay. A `new` booking from the API
      without a payment, older than an hour, is such a hold, and is cancelled.
    - Stripe's answer to a new session is lost: the booking's ID. Its session, if it exists, is
      settled by the timer; otherwise the booking is cancelled.
-   - Beds24 took the payment, but marking the session failed: the timer records it again, and the
-     second payment item is removed.
+   - Beds24 took the payment, but marking the session failed, or the return and the timer handled
+     one session at once: the session is recorded twice: the second payment item is removed, and the
+     guest may have a second confirmation.
    - The session is marked, but Beds24's confirmation was not sent: the booking's ID, and the host
      sends the confirmation from Beds24.
 7. **The site stores nothing.** Beds24 holds the booking, Stripe the payment. Guest data passes
@@ -101,10 +102,10 @@ Within the chosen option:
 ## Consequences
 
 - **Keeping Beds24 and Stripe in step is ours.** The booking exists before the payment and is
-  confirmed after it, and every step must survive a reload or a closed tab. A failed or lost call
-  between the two services is rare at a few dozen bookings a year; the site logs it and the host
-  settles it by hand (decision 6), rather than the site carrying a store of its own to settle it
-  alone.
+  confirmed after it, and every step must survive a reload or a closed tab. The host accepts
+  settling a failed or lost call between the two services by hand (decision 6) at a few dozen
+  bookings a year, rather than the site carrying a store of its own to settle it alone. How often
+  that will be needed was not measured.
 - **The site carries two secrets:** the Beds24 token, which can change any booking, and the Stripe
   key. Both stay on the server and out of logs.
 - **Guest data passes through the site** on its way to Beds24 and Stripe, so the privacy page says
