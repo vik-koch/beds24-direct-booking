@@ -495,6 +495,18 @@ export const textsSchema = z.strictObject({
       gestures: z.strictObject({ windows: text, mac: text, touch: text }),
     })
     .optional(),
+  // The booking step until online booking opens: the stay and an e-mail to book it by.
+  // {apartment}, {week}, {guests} and {count} are filled in by the page.
+  book: z.strictObject({
+    text,
+    mail: text,
+    subject: text,
+    body: text,
+    children: z.strictObject({ one: text, other: text }),
+    invalid: text,
+    taken: text,
+    back: text,
+  }),
   placeholder: text,
   notFound: z.strictObject({ title: text, text, home: text }),
   footer: z.strictObject({ label: text, contact: text, more: text }),

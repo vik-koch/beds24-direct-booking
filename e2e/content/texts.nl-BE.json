@@ -165,6 +165,16 @@
     },
     "rooms": { "BEDROOM": "Slaapkamer", "BATHROOM": "Badkamer" }
   },
+  "book": {
+    "text": "Online boeken kan binnenkort. Boek tot dan per e-mail.",
+    "mail": "Boek per e-mail",
+    "subject": "Boekingsaanvraag: {apartment}, {week}",
+    "body": "Goedendag,\n\nik wil {apartment} boeken voor de week {week}, voor {guests}.\n",
+    "children": { "one": "{count} kind", "other": "{count} kinderen" },
+    "invalid": "Dit adres noemt geen week die te boeken is.",
+    "taken": "Deze week is niet meer vrij.",
+    "back": "Terug naar {apartment}"
+  },
   "placeholder": "Deze pagina wordt nog gemaakt.",
   "notFound": {
     "title": "Pagina niet gevonden",

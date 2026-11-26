@@ -217,6 +217,16 @@
       "touch": "Use two fingers to move the map"
     }
   },
+  "book": {
+    "text": "Online booking opens soon. Until then, please book by email: we reply with a confirmation and how to pay.",
+    "mail": "Book by email",
+    "subject": "Booking request: {apartment}, {week}",
+    "body": "Hello,\n\nI would like to book {apartment} for the week {week}, for {guests}.\n\nKind regards\n",
+    "children": { "one": "{count} child", "other": "{count} children" },
+    "invalid": "This address names no week that can be booked.",
+    "taken": "This week is no longer free.",
+    "back": "Back to {apartment}"
+  },
   "placeholder": "This page is still being built.",
   "notFound": {
     "title": "Page not found",

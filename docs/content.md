@@ -310,7 +310,9 @@ content. The application has no wording, no colour and no typeface of its own. T
   address. The footer shows what is listed, and no contact column without `contact`, so a site can
   keep its footer short and give the full details on its imprint page. A site with a map gives an
   email address of its operator that reaches someone, on its imprint page at least: the map's
-  walking routes come from FOSSGIS's routing servers, whose usage policy asks for one.
+  walking routes come from FOSSGIS's routing servers, whose usage policy asks for one. Until online
+  booking opens, the booking step offers to book by email to the contact's address, with the stay in
+  the mail (`book` in the texts); without an address it shows its text alone.
 - **The map** (`map` in `site.json`) is optional. Its `box` is the area the map covers, as
   `{ "west": 12.6, "south": 47.375, "east": 12.67, "north": 47.405 }` in degrees, and its `places`
   are what it marks, in their order:

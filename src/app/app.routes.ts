@@ -45,7 +45,12 @@ const pages = ({ code, paths }: Language): Routes => [
         resolve: { listing, weeks },
         data: { page: 'apartment' },
       },
-      { path: paths.book, component: Placeholder, data: { page: 'book' } },
+      {
+        path: paths.book,
+        loadComponent: () => import('./book').then((m) => m.Book),
+        resolve: { listing, weeks },
+        data: { page: 'book' },
+      },
     ],
   },
   { path: paths.confirmation, component: Placeholder, data: { page: 'confirmation' } },
