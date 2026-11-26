@@ -1,5 +1,6 @@
 {
   "name": "Casa Prova Alta",
+  "url": "https://casa-prova.example",
   "languages": ["it", "nl-BE"],
   "apartments": ["vista", "castagno", "zonneterras", "fienile"],
   "seasons": {
@@ -34,7 +35,14 @@
   ],
   "contact": {
     "name": "Casa Prova",
-    "email": "ciao@casa-prova.example"
+    "address": {
+      "street": "Via di Prova 1",
+      "postalCode": "39030",
+      "locality": "Prova",
+      "country": "Italia"
+    },
+    "email": "ciao@casa-prova.example",
+    "footer": ["name", "email"]
   },
   "pages": ["about", "faq", "imprint", "privacy", "terms"],
   "header": ["about", "faq"],

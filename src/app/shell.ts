@@ -10,14 +10,16 @@ import {
   RouterOutlet,
 } from '@angular/router';
 import { filter } from 'rxjs';
+import type { Listing } from '../beds24/client';
+import type { FreeWeeks } from '../beds24/weeks';
 import { fonts } from '../content/generated/fonts';
 import site from '../content/generated/site';
-import type { Texts } from '../content/schema';
+import type { Language, Site, Texts } from '../content/schema';
 import { Choice } from './choice';
 import { Footer } from './footer';
 import { Header } from './header';
-import { Season } from './season';
-import { address, LANGUAGE, TEXTS, type Page } from './texts';
+import { Season, seasonState, starts } from './season';
+import { address, fallback, indexed, LANGUAGE, TEXTS, type Page } from './texts';
 
 const leaf = (route: ActivatedRouteSnapshot): ActivatedRouteSnapshot =>
   route.firstChild ? leaf(route.firstChild) : route;
@@ -121,18 +123,12 @@ export class Shell {
   private describe() {
     const route = leaf(this.route.snapshot);
     const page: Page = route.data['page'];
+    const slug = slugOf(route);
     this.home = page === 'home';
     this.notFound = page === 'notFound';
     const text = heading(this.texts, route);
-    this.title.setTitle(page === 'home' ? `${site.name}: ${text}` : `${text} · ${site.name}`);
-    // A content page no navigation links is reached by its address only, and not indexed.
-    const slug = slugOf(route);
-    const linked = slug
-      ? (site.apartments.find((apartment) => apartment.slug === slug)?.public ?? [])
-      : [...site.header, ...site.footer];
-    if (route.data['content'] && !linked.includes(page))
-      this.meta.updateTag({ name: 'robots', content: 'noindex' });
-    else this.meta.removeTag("name='robots'");
+    const title = page === 'home' ? `${site.name}: ${text}` : `${text} · ${site.name}`;
+    this.title.setTitle(title);
 
     // The address's season too: with a chosen week it names the week's season, for whoever the
     // link is sent to.
@@ -141,15 +137,146 @@ export class Shell {
     this.alternates = Object.fromEntries(
       site.languages.map((l) => [l.code, address(l, page, slug) + query]),
     );
+    // What search engines and link previews read, of the page's address without its query.
     const head = this.document.head;
-    head.querySelectorAll('link[rel=alternate]').forEach((link) => link.remove());
-    if (page === 'notFound') return;
-    for (const { code, tag } of site.languages) {
-      const link = this.document.createElement('link');
-      link.rel = 'alternate';
-      link.hreflang = tag;
-      link.href = this.alternates[code];
-      head.appendChild(link);
-    }
+    head
+      .querySelectorAll(
+        'link[rel=alternate], link[rel=canonical], script[type="application/ld+json"]',
+      )
+      .forEach((element) => element.remove());
+    const listed = indexed(page, slug);
+    const shown = !this.notFound;
+    const url = (language: Language) => site.url + address(language, page, slug);
+    const apartment = site.apartments.find((one) => one.slug === slug);
+    // The season a shared link names, by itself or by its week, as the page opens at it.
+    const season = seasonState(starts, query, null, new Date()).season;
+    const description =
+      page === 'apartment'
+        ? (route.data['weeks'] as FreeWeeks | null)?.apartments.find((one) => one.slug === slug)
+            ?.headline[this.language.code]
+        : this.texts.descriptions[slug ? `${slug}/${page}` : page];
+    const image = site.url + (apartment?.previews[season] ?? site.seasons[season]!.hero.preview);
+    const alt = apartment
+      ? apartment.pictures.find((one) => !one.season || one.season === season)?.alt[
+          this.language.code
+        ]
+      : this.texts.hero[season];
+    // Open Graph takes language_TERRITORY: it_IT for it.
+    const { language, region } = new Intl.Locale(this.language.tag).maximize();
+    const locale = `${language}_${region}`;
+    const set = (attribute: string, key: string, content?: string | false) =>
+      content
+        ? this.meta.updateTag({ [attribute]: key, content })
+        : this.meta.removeTag(`${attribute}='${key}'`);
+    set('name', 'robots', !listed && 'noindex');
+    set('name', 'description', description);
+    set('name', 'twitter:card', shown && 'summary_large_image');
+    const graph = {
+      type: 'website',
+      site_name: site.name,
+      title,
+      description,
+      url: url(this.language),
+      locale,
+      image,
+      'image:width': '1200',
+      'image:height': '630',
+      'image:alt': alt,
+    };
+    for (const [key, content] of Object.entries(graph))
+      set('property', `og:${key}`, shown && content);
+    if (!shown) return;
+    const link = (attributes: Record<string, string>) => {
+      const element = this.document.createElement('link');
+      for (const [name, value] of Object.entries(attributes)) element.setAttribute(name, value);
+      head.appendChild(element);
+    };
+    for (const language of site.languages)
+      link({ rel: 'alternate', hreflang: language.tag, href: url(language) });
+    if (!listed) return;
+    link({
+      rel: 'alternate',
+      hreflang: 'x-default',
+      href: site.url + fallback(page, slug),
+    });
+    link({ rel: 'canonical', href: url(this.language) });
+    const data = this.home
+      ? {
+          ...business(this.language),
+          image,
+          description,
+          containsPlace: site.apartments.map((one) => ({
+            '@type': 'Apartment',
+            name: one.name,
+            url: site.url + address(this.language, 'apartment', one.slug),
+          })),
+        }
+      : apartment && page === 'apartment'
+        ? place(
+            this.language,
+            apartment,
+            route.data['listing'],
+            url(this.language),
+            image,
+            description,
+          )
+        : null;
+    if (!data) return;
+    const script = this.document.createElement('script');
+    script.type = 'application/ld+json';
+    // A text such as </script> in the content would end the element.
+    script.textContent = JSON.stringify({ '@context': 'https://schema.org', ...data }).replaceAll(
+      '<',
+      '\\u003c',
+    );
+    head.appendChild(script);
   }
+}
+
+// The business as schema.org describes a place that lets rooms, from the footer's contact.
+function business(language: Language) {
+  const { name = site.name, address: postal, phone, email } = site.contact;
+  return {
+    '@type': 'LodgingBusiness',
+    name,
+    url: site.url + address(language, 'home'),
+    ...(phone && { telephone: phone }),
+    ...(email && { email }),
+    address: {
+      '@type': 'PostalAddress',
+      streetAddress: postal.street,
+      postalCode: postal.postalCode,
+      addressLocality: postal.locality,
+      addressCountry: postal.country,
+    },
+  };
+}
+
+// An apartment with what Beds24 knows of it; without its listing, its name and place alone.
+function place(
+  language: Language,
+  apartment: Site['apartments'][number],
+  listing: Listing | null,
+  url: string,
+  image: string,
+  description?: string,
+) {
+  return {
+    '@type': 'Apartment',
+    name: apartment.name,
+    url,
+    image,
+    ...(description && { description }),
+    ...(apartment.lat !== undefined && {
+      geo: { '@type': 'GeoCoordinates', latitude: apartment.lat, longitude: apartment.lon },
+    }),
+    ...(listing && {
+      occupancy: { '@type': 'QuantitativeValue', maxValue: listing.maxPeople },
+      numberOfBedrooms: listing.bedrooms,
+      ...(listing.size && {
+        floorSize: { '@type': 'QuantitativeValue', value: listing.size, unitCode: 'MTK' },
+      }),
+    }),
+    containedInPlace: business(language),
+  };
 }

@@ -33,6 +33,15 @@
   "home": {
     "title": "Vakantieappartementen"
   },
+  "descriptions": {
+    "home": "Vakantieappartementen om te testen.",
+    "about": "Over ons.",
+    "faq": "Veelgestelde vragen.",
+    "imprint": "Colofon.",
+    "privacy": "Privacy.",
+    "terms": "Voorwaarden.",
+    "credits": "Fotoverantwoording."
+  },
   "hero": {
     "summer": "Een verloop van zand naar rood.",
     "lead": "Drie testappartementen.",

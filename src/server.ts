@@ -7,6 +7,7 @@ import {
   writeResponseToNodeResponse,
 } from '@angular/ssr/node';
 import express from 'express';
+import { address, fallback, indexed } from './app/texts';
 import site from './content/generated/site';
 
 const app = express();
@@ -31,6 +32,38 @@ const languages = site.languages.map(({ code }) => code);
 app.get('/', (req, res) => {
   const language = req.acceptsLanguages(languages) || languages[0];
   res.vary('Accept-Language').redirect(`/${language}${req.originalUrl.slice(1)}`);
+});
+
+// The header X-Robots-Tag keeps search engines out of a deployment that is not INDEXED;
+// robots.txt never does, or they would not read that header.
+app.get('/robots.txt', (_req, res) => {
+  res.type('text/plain').send(`User-agent: *\nAllow: /\n\nSitemap: ${site.url}/sitemap.xml\n`);
+});
+// Every indexed page in every language, each with its alternates.
+app.get('/sitemap.xml', (_req, res) => {
+  const pages: [string, string?][] = [
+    ...['home', 'credits', ...site.pages].map((page): [string] => [page]),
+    ...site.apartments.flatMap(({ slug, pages = [] }) =>
+      ['apartment', ...pages].map((page): [string, string] => [page, slug]),
+    ),
+  ].filter(([page, slug]) => indexed(page, slug));
+  const urls = pages.flatMap(([page, slug]) => {
+    const alternates = [
+      ...site.languages.map((language) => [language.tag, site.url + address(language, page, slug)]),
+      ['x-default', site.url + fallback(page, slug)],
+    ]
+      .map(([tag, href]) => `<xhtml:link rel="alternate" hreflang="${tag}" href="${href}"/>`)
+      .join('');
+    return site.languages.map(
+      (language) =>
+        `<url><loc>${site.url + address(language, page, slug)}</loc>${alternates}</url>`,
+    );
+  });
+  res
+    .type('application/xml')
+    .send(
+      `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n${urls.join('\n')}\n</urlset>\n`,
+    );
 });
 
 app.use(

@@ -40,6 +40,17 @@
   "home": {
     "title": "Ferienwohnungen mitten in Saalbach"
   },
+  "descriptions": {
+    "home": "Drei Ferienwohnungen für 2 bis 6 Gäste mitten in Saalbach, wochenweise von Samstag bis Samstag, direkt bei den Gastgebern gebucht.",
+    "about": "Wer die Wohnungen vermietet: Firn & Farn, zwei Häuser in Saalbach, mit Holz aus der Region umgebaut, mit drei Wohnungen, benannt nach ihrem Holz.",
+    "faq": "Antworten vor und während Ihres Aufenthalts in Saalbach: Buchung und Zahlung, Anreise und Schlüssel, die Wohnung, Abreise und Anfahrt.",
+    "parking": "Wo Sie in Saalbach parken: die Stellplätze unserer Häuser und die Parkplätze im Ortszentrum und an der Gondel Schattberg X-Press.",
+    "imprint": "Die rechtlichen Angaben der Firn & Farn Appartements GmbH in Saalbach: Anschrift, Kontakt und Firmenbuch.",
+    "privacy": "Welche Daten diese Website und Ihre Buchung verwenden, wer sie erhält und welche Rechte Sie haben.",
+    "terms": "Die Mietbedingungen unserer Ferienwohnungen in Saalbach: Buchung, Zahlung, Storno, Anreise und Hausordnung.",
+    "credits": "Wer die Fotos dieser Website aufgenommen hat, unter welcher Lizenz, und was an ihnen geändert wurde.",
+    "zirbe/arrival": "Wie Sie mit Auto, Bahn und Bus zur Zirbe in Saalbach kommen, wo Sie parken und wo der Skiraum ist."
+  },
   "hero": {
     "winter": "Blick von der Piste ins verschneite Glemmtal, über dem Tal liegt Nebel.",
     "summer": "Blick über eine Almwiese und Fichten auf die grünen Hänge über Saalbach.",

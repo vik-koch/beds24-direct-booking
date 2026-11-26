@@ -162,3 +162,22 @@ export async function convertHero(dir, file, name, out, cache) {
     converted: full.converted + (portrait ? portrait.converted : 0),
   };
 }
+
+// A picture's link preview: a JPEG of 1200 × 630 cut from its middle, which every app that shows
+// previews reads, written to `out` and served from `url`.
+export async function convertPreview(dir, file, name, out, url, cache) {
+  mkdirSync(cache, { recursive: true });
+  mkdirSync(out, { recursive: true });
+  const { bytes } = await read(dir, file, cache);
+  const kept = join(cache, `${digest(bytes)}-preview-q${quality}.jpg`);
+  let converted = 0;
+  if (!existsSync(kept)) {
+    await place(kept, (part) =>
+      sharp(bytes).rotate().resize(1200, 630).jpeg({ quality, mozjpeg: true }).toFile(part),
+    );
+    converted++;
+  }
+  const served = `${name}.${digest(readFileSync(kept)).slice(0, 8)}.jpg`;
+  copyFileSync(kept, join(out, served));
+  return { url: `${url}/${served}`, converted };
+}

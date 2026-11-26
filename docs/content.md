@@ -9,7 +9,7 @@ content. The application has no wording, no colour and no typeface of its own. T
 <!-- prettier-ignore -->
 | File | What it holds |
 |---|---|
-| `site.json` | The site's name, its languages in order as language tags, the apartments' slugs in their order, the seasons, the hero's features, the apartment page's rooms and amenities, the age up to which a guest is a child, the contact, the credits of the pages' pictures, the content pages and the header's and the footer's links. |
+| `site.json` | The site's name and address, its languages in order as language tags, the apartments' slugs in their order, the seasons, the hero's features, the apartment page's rooms and amenities, the age up to which a guest is a child, the contact, the credits of the pages' pictures, the content pages and the header's and the footer's links. |
 | `apartments/<slug>.json` | One apartment: its Beds24 room ID, its name, its pictures and optionally its floor plan and its own pages. One file for each slug `site.json` lists, and no other. |
 | `texts.<tag>.json` | Everything one language says: the wording, the address parts and the anchors. One file per language listed in `site.json`, such as `texts.en-GB.json`. |
 | `pages/<key>.<tag>.md` | A content page in one language, such as `pages/faq.en-GB.md`: one file for each page and language `site.json` lists, and no other. |
@@ -171,6 +171,20 @@ content. The application has no wording, no colour and no typeface of its own. T
   tells search engines not to index it (`noindex`), and a guest reaches it by its address, such as a
   QR code in the apartment. Unlisted is not secret: anyone with the address can read it, so a door's
   or a key box's code goes in Beds24's messages to the guest, never on a page.
+- **The site's address** (`url` in `site.json`) is `https://` and the host alone, such as
+  `https://beds24.vikkoch.com`: the host `APP_DOMAIN` names in the deployment. Every page's
+  canonical link, its link preview's address and picture and the sitemap name it, also on a test
+  deployment at another host, which so points search engines to the real site.
+- **A page's description** (`descriptions` in a texts file) is what a search result and a link's
+  preview say of it, up to 160 characters, the site's own limit: a search result cuts its text by
+  the screen's width. Every public page has one by its key, such as `faq`, `credits` and `home`, an
+  apartment's own page as `<slug>/<key>`, such as `zirbe/arrival`; an unlisted page may. An
+  apartment's page takes its headline from Beds24 instead, and has none in a language its room has
+  no headline in. The same text goes into the page's `description` and `og:description`, so write it
+  for both: what the page holds, in a sentence. Search engines may show a text of their own instead.
+- **A link's preview picture** is the season's hero, or on an apartment's pages the first picture of
+  its gallery in that season, cut from the middle to 1,200 × 630 and served as a JPEG at
+  `/pictures/previews/`. A prerendered page names the season of the day it was built.
 - **The header's links** (`header` in `site.json`) are up to two content pages, in their order,
   after the header's own links to the free weeks, the apartments and the location. The page shown is
   marked there, and the footer does not link to it again.
@@ -310,11 +324,17 @@ content. The application has no wording, no colour and no typeface of its own. T
   screen showed only that part of the photo anyway. Keep what matters in the photo's middle, and
   give it at least 1920 px. Other pictures, such as the icons, are served at `/pictures/<file>` as
   they are and kept by browsers for a year, like the fonts: give a changed picture a new name.
-- **The contact** in `site.json` lists any of a name, address lines, a phone number and an email
-  address. The footer shows what is listed, and no contact column without `contact`, so a site can
-  keep its footer short and give the full details on its imprint page. A site with a map gives an
-  email address of its operator that reaches someone, on its imprint page at least: the map's
-  walking routes come from FOSSGIS's routing servers, whose usage policy asks for one.
+- **The contact** in `site.json` is the business's details: its address, which every site gives, and
+  optionally a name (the site's name without one), a phone number and an email address. The address
+  is given in its parts,
+  `{ "street": "Musterweg 0", "postalCode": "5753", "locality": "Saalbach", "country": "Österreich" }`,
+  which the footer writes as three lines, the postal code before the place. The home page describes
+  the business to search engines from the contact; Google requires the address. The footer shows the
+  parts `footer` lists, such as `"footer": ["name", "email"]`, or all of them without it, and no
+  contact column with `"footer": []`, so a site can keep its footer short and give the full details
+  on its imprint page while search engines still get the address. A site with a map gives an email
+  address of its operator that reaches someone, on its imprint page at least: the map's walking
+  routes come from FOSSGIS's routing servers, whose usage policy asks for one.
 - **Stripe's review** looks at the contact, the rental terms, the privacy page and how prices are
   shown before it activates payments: [`stripe-review.md`](stripe-review.md) lists what it asks for
   and how the demo meets it.
@@ -407,6 +427,8 @@ beyond a limit fails its build, with the limit named.
 | Apartment name | 20 characters | The list's column headers and the phone's tabs | The schema; the e2e test site's names |
 | Languages | Exactly 2 | The language menu and the address prefixes have not been tried with a third | The schema |
 | Seasons | 1 or 2 | Winter and summer, one each | The schema |
+| A page's description | 160 characters | A search result shows a sentence or two, cut by the screen's width | The schema |
+| The contact's address | A street, a postal code before the place, and a country | The footer's lines; an address written the other way round, as in the United Kingdom, is not supported | The schema |
 | A room's guests in Beds24 | `maxAdult` empty or equal to `maxPeople`; `maxChildren` empty, 0 or at least `maxPeople − 1` | The site takes a room by its total: any guest may be an adult, and with one adult required the children's limit never applies on its own | Not the build: the server logs a warning when it loads a room beyond this, and treats it by its total |
 | Hero features | Up to 5 | The hero's card | The schema |
 | An apartment's picture | Square to 2:1, landscape, with 1% to spare | The gallery's frames; tested with 1:1, 4:3 and 3:2 | The content script; the demo has 3:2, the e2e test site 1:1 and 4:3 |
@@ -454,10 +476,11 @@ has, two pages at one address, a page that does not open with its title or holds
 attribute, a link or a question's `id` the pages do not take, a `##` heading whose text gives no
 `id` or one the page has already, a `#` link to no `id` on its page, an icon Lucide lacks, a page's
 picture without its file or alternative text or beside other text, a credited picture no page shows,
-and a part beyond its boundary stop the build with the file and the key named; for the tiles and the
-routes, with the script to run. The schema, not the demo's files, defines the keys, so the compiler
-checks every template against the same keys for every site. Every language has the same keys, so
-every language renders the same elements and a change of language finds the reader's place.
+a public page without its description or a description of no page, and a part beyond its boundary
+stop the build with the file and the key named; for the tiles and the routes, with the script to
+run. The schema, not the demo's files, defines the keys, so the compiler checks every template
+against the same keys for every site. Every language has the same keys, so every language renders
+the same elements and a change of language finds the reader's place.
 
 ## Another folder
 

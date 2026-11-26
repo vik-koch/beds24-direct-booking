@@ -1,5 +1,6 @@
 import type { Location } from '@angular/common';
 import { InjectionToken } from '@angular/core';
+import site from '../content/generated/site';
 import type { Language, Texts } from '../content/schema';
 
 // Provided on a language's routes: the texts and the address parts of the page's language.
@@ -19,6 +20,19 @@ export function address(language: Language, page: Page, slug?: string): string {
       : `/${paths[page]}`;
   return `/${language.code}${rest}`;
 }
+
+// A page search engines may list: the home page, an apartment's, and a page the header, the
+// footer or one of an apartment's folds links to. The booking step and the confirmation are not.
+export const indexed = (page: Page, slug?: string): boolean =>
+  slug
+    ? page === 'apartment' ||
+      !!site.apartments.find((one) => one.slug === slug)?.public.includes(page)
+    : page === 'home' || [...site.header, ...site.footer].includes(page);
+
+// Where a page leads a search engine whose visitor speaks none of the site's languages: the bare
+// address, which chooses by the browser's, or else the first language's page.
+export const fallback = (page: Page, slug?: string) =>
+  page === 'home' ? '/' : address(site.languages[0], page, slug);
 
 // Links to the pages a list in site.json names, such as the header's or the footer's.
 export const pageLinks = (texts: Texts, language: Language, pages: Page[]) =>

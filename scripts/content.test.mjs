@@ -13,6 +13,7 @@ import {
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { after, test } from 'node:test';
+import sharp from 'sharp';
 import { siteSchema } from '../src/content/schema.ts';
 import { readContent, readPage, waypoints, writeContent } from './content.mjs';
 
@@ -321,10 +322,23 @@ test('the generated site gives each picture its files and its texts by address p
   assert.ok(existsSync(join(out, first.sources[0].url)));
   // A season's hero, with its credit, in its files and its portrait crop's.
   const { hero } = value.seasons.winter;
-  assert.deepEqual(Object.keys(hero), ['credit', 'width', 'height', 'sources', 'portrait']);
+  assert.deepEqual(Object.keys(hero), [
+    'credit',
+    'width',
+    'height',
+    'sources',
+    'portrait',
+    'preview',
+  ]);
   assert.match(hero.sources[0].url, /^\/pictures\/hero\/hero-winter-480\.[0-9a-f]{8}\.webp$/);
   assert.match(hero.portrait.sources[0].url, /^\/pictures\/hero\/hero-winter-portrait-480\./);
   assert.ok(existsSync(join(out, hero.portrait.sources[0].url)));
+  // Link previews: the hero's, and each apartment's first picture in each season, as JPEGs.
+  assert.match(hero.preview, /^\/pictures\/previews\/hero-winter\.[0-9a-f]{8}\.jpg$/);
+  assert.match(value.apartments[0].previews.summer, /^\/pictures\/previews\/zirbe-1\./);
+  assert.match(value.apartments[0].previews.winter, /^\/pictures\/previews\/zirbe-2\./);
+  const size = await sharp(join(out, hero.preview)).metadata();
+  assert.deepEqual([size.format, size.width, size.height], ['jpeg', 1200, 630]);
   // The sources are served only as their converted files.
   assert.ok(!existsSync(join(out, 'pictures', 'zirbe-1.webp')));
   assert.ok(!existsSync(join(out, 'pictures', 'hero-winter.webp')));
@@ -751,16 +765,70 @@ test('a room names a Lucide icon once, and every language names exactly the list
   );
 });
 
-test('the contact may list any of its lines, or be left out', () => {
-  const name = changed('site.json', (site) => (site.contact = { name: 'Only a name' }));
-  assert.deepEqual(readContent(name).site.contact, { name: 'Only a name' });
-  const none = changed('site.json', (site) => delete site.contact);
-  assert.equal(readContent(none).site.contact, undefined);
+test('the contact gives its address, the other parts as the site likes', () => {
+  const address = (site) => site.contact.address;
+  const only = changed('site.json', (site) => (site.contact = { address: address(site) }));
+  assert.deepEqual(Object.keys(readContent(only).site.contact), ['address']);
+  for (const change of [(site) => delete site.contact, (site) => delete site.contact.address])
+    assert.throws(() => readContent(changed('site.json', change)), /contact/);
 });
 
-test('a contact that lists nothing is refused', () => {
-  const dir = changed('site.json', (site) => (site.contact = {}));
-  assert.throws(() => readContent(dir), /contact: lists nothing/);
+test('a contact address is given in its parts', () => {
+  const dir = changed('site.json', (site) => (site.contact.address = ['Musterweg 0']));
+  assert.throws(() => readContent(dir), /contact\.address/);
+  const part = changed('site.json', (site) => delete site.contact.address.postalCode);
+  assert.throws(() => readContent(part), /contact\.address\.postalCode/);
+});
+
+test("the site's address is https and its host alone", () => {
+  for (const url of [
+    'http://example.com',
+    'https://example.com/',
+    'https://example.com/de',
+    'https://a&b.example',
+  ])
+    assert.throws(() => readContent(changed('site.json', (site) => (site.url = url))), /url/);
+  assert.throws(() => readContent(changed('site.json', (site) => delete site.url)), /url/);
+});
+
+test('every indexed page but an apartment has a description, and each names a page', () => {
+  // In both languages, which must have the same keys.
+  const both = (change) => changed('texts.de-AT.json', change, 'texts.en-GB.json', change);
+  const fails = (change, message) =>
+    assert.throws(
+      () => readContent(both(change)),
+      (error) => error.message.endsWith(`texts.de-AT.json\n  descriptions.${message}`),
+    );
+  for (const key of ['home', 'faq', 'credits', 'zirbe/arrival'])
+    fails((texts) => delete texts.descriptions[key], `${key}: missing`);
+  fails((texts) => (texts.descriptions.zirbe = 'An apartment'), 'zirbe: not a page of the site');
+  assert.throws(
+    () => readContent(both((texts) => (texts.descriptions.faq = 'x'.repeat(161)))),
+    /descriptions\.faq: at most 160 characters/,
+  );
+  // An unlisted page may have one.
+  assert.doesNotThrow(() =>
+    readContent(both((texts) => (texts.descriptions['zirbe/guide'] = 'A'))),
+  );
+});
+
+test('the footer shows the parts of the contact it names, each one the contact gives', () => {
+  const footer = (list) => changed('site.json', (site) => (site.contact.footer = list));
+  assert.deepEqual(readContent(footer(['name', 'email'])).site.contact.footer, ['name', 'email']);
+  assert.throws(
+    () =>
+      readContent(
+        changed('site.json', (site) => {
+          delete site.contact.phone;
+          site.contact.footer = ['phone'];
+        }),
+      ),
+    /contact: footer names a part the contact does not give/,
+  );
+  assert.throws(() => readContent(footer(['fax'])), /contact\.footer\.0/);
+  assert.throws(() => readContent(footer(['name', 'name'])), /a part is listed twice/);
+  // An empty list hides the contact in the footer.
+  assert.deepEqual(readContent(footer([])).site.contact.footer, []);
 });
 
 test('a change the schema does not know is refused', () => {

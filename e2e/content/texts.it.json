@@ -33,6 +33,15 @@
   "home": {
     "title": "Appartamenti per le vacanze"
   },
+  "descriptions": {
+    "home": "Appartamenti per le vacanze di prova.",
+    "about": "Chi siamo.",
+    "faq": "Domande frequenti.",
+    "imprint": "Note legali.",
+    "privacy": "Privacy.",
+    "terms": "Condizioni.",
+    "credits": "Crediti delle foto."
+  },
   "hero": {
     "summer": "Una sfumatura dal sabbia al rosso.",
     "lead": "Tre appartamenti di prova.",

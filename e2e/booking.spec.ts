@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Locator, type Page } from '@playwright/test';
+import { open as openMenu } from './header';
 
 const panel = (page: Page) => page.locator('.panel');
 // Controls used before the application has started are outside what the site supports, and
@@ -71,6 +72,14 @@ const options = async (page: Page, id: 'adults' | 'children') => {
   return names.map((name) => Number(name.trim()));
 };
 
+// The language menu's link to the English page, which carries the address's query.
+async function englishLink(page: Page) {
+  await openMenu(page, 'Sprache: Deutsch');
+  const href = await page.getByRole('link', { name: 'English' }).getAttribute('href');
+  await page.keyboard.press('Escape');
+  return href;
+}
+
 test(
   'a week and the guests make the total, and the button takes them on to booking',
   { tag: '@any-engine' },
@@ -102,10 +111,7 @@ test(
     expect(kept.has('departure')).toBe(false);
     expect(kept.has('season')).toBe(false);
     // So does the other language's link.
-    const english = new URL(
-      (await page.locator('link[rel=alternate][hreflang=en-GB]').getAttribute('href'))!,
-      'http://localhost',
-    );
+    const english = new URL((await englishLink(page))!, 'http://localhost');
     expect(english.search).toBe(new URL(page.url()).search);
     await page.reload();
     await expect(page.locator('#adults')).toHaveText('3');
@@ -434,7 +440,7 @@ test(
     await panel(page).locator('.other-season').click();
     await expect(page).not.toHaveURL(/season=/);
     // Opened afresh, in this language and in the other.
-    const english = await page.locator('link[rel=alternate][hreflang=en-GB]').getAttribute('href');
+    const english = await englishLink(page);
     for (const [link, book] of [
       [page.url(), 'Weiter zur Buchung'],
       [english!, 'Continue to booking'],
