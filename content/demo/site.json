@@ -11,10 +11,7 @@
           "title": "Saalbach (8450786397).jpg",
           "author": "Ian Gratton",
           "source": "https://commons.wikimedia.org/wiki/File:Saalbach_(8450786397).jpg",
-          "licence": {
-            "name": "CC BY 2.0",
-            "url": "https://creativecommons.org/licenses/by/2.0"
-          },
+          "licence": { "name": "CC BY 2.0", "url": "https://creativecommons.org/licenses/by/2.0" },
           "changes": ["cropped", "scaled"]
         }
       },
@@ -39,18 +36,9 @@
     }
   },
   "features": [
-    {
-      "key": "guests",
-      "icon": "house"
-    },
-    {
-      "key": "saturdays",
-      "icon": "calendar-days"
-    },
-    {
-      "key": "no-commission",
-      "icon": "tag"
-    }
+    { "key": "guests", "icon": "house" },
+    { "key": "saturdays", "icon": "calendar-days" },
+    { "key": "no-commission", "icon": "tag" }
   ],
   "rooms": [
     { "code": "BEDROOM", "icon": "bed-double" },
@@ -82,15 +70,46 @@
   "map": {
     "box": { "west": 12.6, "south": 47.375, "east": 12.67, "north": 47.405 },
     "places": [
-      { "key": "schattberg", "icon": "cable-car", "lat": 47.39031, "lon": 12.63528 },
-      { "key": "kohlmais", "icon": "cable-car", "lat": 47.39208, "lon": 12.64018 },
-      { "key": "tourist-office", "icon": "info", "lat": 47.3891, "lon": 12.64102, "more": true },
+      {
+        "key": "schattberg",
+        "icon": "cable-car",
+        "lat": 47.39031,
+        "lon": 12.63528,
+        "name": { "de-AT": "Schattberg X-press", "en-GB": "Schattberg X-press" },
+        "winter": { "de-AT": "Gondel ins Skigebiet", "en-GB": "Gondola to the slopes" },
+        "summer": {
+          "de-AT": "Gondel zu Wander- und Bikewegen",
+          "en-GB": "Gondola to hiking and bike trails"
+        }
+      },
+      {
+        "key": "kohlmais",
+        "icon": "cable-car",
+        "lat": 47.39208,
+        "lon": 12.64018,
+        "name": { "de-AT": "Kohlmaisbahn", "en-GB": "Kohlmaisbahn" },
+        "winter": { "de-AT": "Gondel ins Skigebiet", "en-GB": "Gondola to the slopes" },
+        "summer": {
+          "de-AT": "Gondel zu Wander- und Bikewegen",
+          "en-GB": "Gondola to hiking and bike trails"
+        }
+      },
+      {
+        "key": "tourist-office",
+        "icon": "info",
+        "lat": 47.3891,
+        "lon": 12.64102,
+        "more": true,
+        "name": { "de-AT": "Tourismusverband", "en-GB": "Tourist office" },
+        "via": { "zirbe": [{ "lat": 47.38938, "lon": 12.64275 }] }
+      },
       {
         "key": "supermarket",
         "icon": "shopping-cart",
         "lat": 47.3887,
         "lon": 12.6454,
-        "more": true
+        "more": true,
+        "name": { "de-AT": "Supermarkt", "en-GB": "Supermarket" }
       }
     ]
   },

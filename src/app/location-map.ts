@@ -34,22 +34,25 @@ import type {
   Map as MapLibre,
   StyleSpecification,
 } from 'maplibre-gl';
-import { icons } from '../content/generated/icons';
 import lifts from '../content/generated/lifts';
-import { drawings } from '../content/generated/map-icons';
+import { drawings, marks } from '../content/generated/map-icons';
+import sitePlaces from '../content/generated/places';
 import routes from '../content/generated/routes';
 import site from '../content/generated/site';
 import { groups } from '../content/map-kinds';
 import { lucideName } from '../content/names';
-import type { PagePlace, Route } from '../content/schema';
+import type { Place, Route } from '../content/schema';
 import { handover } from './map-handover';
 import { Season } from './season';
 import { address, LANGUAGE, TEXTS } from './texts';
 
 const map = site.map!;
-// A place the map marks, named in the page's language: site.json's with its texts per season and
-// maybe behind the switch for more, or a content page's.
-type Place = PagePlace & { more?: true; winter?: string; summer?: string };
+// A place the map marks, with its texts in the page's language.
+type Shown = Omit<Place, 'name' | 'winter' | 'summer'> & {
+  name: string;
+  winter?: string;
+  summer?: string;
+};
 const kinds = Object.fromEntries(
   Object.entries(groups).flatMap(([group, icons]) =>
     Object.entries(icons).map(([kind, icon]) => [kind, { group, svg: drawings[icon]! }]),
@@ -256,7 +259,7 @@ function flavor(p: ReturnType<typeof palette>): Flavor {
   imports: [NgIcon, NgTemplateOutlet],
   providers: [
     provideIcons({
-      ...icons,
+      ...marks,
       lucideChevronDown,
       lucideHouse,
       lucideFocus,
@@ -771,10 +774,14 @@ export class LocationMap {
   readonly apartment = input<string>();
   // On a content page, its key, or <slug>/<key> for an apartment's, and its places.
   readonly page = input<string>();
-  readonly places = input<PagePlace[]>();
-  private readonly list = computed<Place[]>(
-    () =>
-      this.places() ?? map.places.map((place) => ({ ...place, ...this.texts.places[place.key]! })),
+  readonly places = input<Place[]>();
+  private readonly list = computed<Shown[]>(() =>
+    (this.places() ?? sitePlaces).map(({ name, winter, summer, ...place }) => ({
+      ...place,
+      name: name[this.language.code]!,
+      winter: winter?.[this.language.code],
+      summer: summer?.[this.language.code],
+    })),
   );
   // The walks to the places this map marks.
   private readonly walks = computed(() => routes.filter((r) => r.page === this.page()));

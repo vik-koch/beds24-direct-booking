@@ -215,20 +215,6 @@
       "windows": "Zum Zoomen Strg gedrückt halten und scrollen",
       "mac": "Zum Zoomen ⌘ gedrückt halten und scrollen",
       "touch": "Die Karte mit zwei Fingern bewegen"
-    },
-    "places": {
-      "schattberg": {
-        "name": "Schattberg X-press",
-        "winter": "Gondel ins Skigebiet",
-        "summer": "Gondel zu Wander- und Bikewegen"
-      },
-      "kohlmais": {
-        "name": "Kohlmaisbahn",
-        "winter": "Gondel ins Skigebiet",
-        "summer": "Gondel zu Wander- und Bikewegen"
-      },
-      "tourist-office": { "name": "Tourismusverband" },
-      "supermarket": { "name": "Supermarkt" }
     }
   },
   "placeholder": "Diese Seite entsteht noch.",

@@ -298,10 +298,9 @@ export function readPage(file, markdown, path) {
   return { title: text, html: template.innerHTML.trim(), pictures };
 }
 
-// With a map every apartment has its point inside the box; without one none has a point. Its
-// routes' points lie in the box too, on the way to a place of the map.
+// With a map every apartment has its point inside the box; without one none has a point.
 export function checkPoints(dir, site, apartments) {
-  for (const { slug, lat, lon, via = {} } of apartments) {
+  for (const { slug, lat, lon } of apartments) {
     const file = join(dir, 'apartments', `${slug}.json`);
     const given = [lat, lon].filter((value) => value !== undefined).length;
     if (given !== (site.map ? 2 : 0))
@@ -310,20 +309,28 @@ export function checkPoints(dir, site, apartments) {
       );
     if (site.map && !inBox(site.map.box, { lat, lon }))
       throw new Error(`${file}\n  lat, lon: outside the map's box`);
-    for (const [key, points] of Object.entries(via)) {
-      if (!site.map?.places.some((place) => place.key === key))
-        throw new Error(`${file}\n  via.${key}: not a place of site.json's map`);
-      points.forEach((point, index) => {
-        if (!inBox(site.map.box, point))
-          throw new Error(`${file}\n  via.${key}.${index}: outside the map's box`);
-      });
-    }
   }
 }
 
-// The points an apartment's route to a place goes through, by an own key: a place may be called
+// A route's points lie in the box, on the way from an apartment the map walks from.
+function checkVia(file, path, box, places, from) {
+  places.forEach(({ via = {} }, index) => {
+    for (const [slug, points] of Object.entries(via)) {
+      if (!from.includes(slug))
+        throw new Error(
+          `${file}\n  ${path}.${index}.via.${slug}: not an apartment the map walks from`,
+        );
+      points.forEach((point, at) => {
+        if (!inBox(box, point))
+          throw new Error(`${file}\n  ${path}.${index}.via.${slug}.${at}: outside the map's box`);
+      });
+    }
+  });
+}
+
+// The points a route to a place goes through, by an own key: an apartment may be called
 // constructor.
-export const waypoints = ({ via = {} }, key) => (Object.hasOwn(via, key) ? via[key] : []);
+export const waypoints = ({ via = {} }, slug) => (Object.hasOwn(via, slug) ? via[slug] : []);
 
 export function readJson(dir, file, schema) {
   let value;
@@ -346,10 +353,19 @@ const listingsOf = (site, apartments) => [
     .map(({ slug, pages }) => ({ slug, folder: `pages/${slug}`, keys: pages })),
 ];
 
-// The maps of the pages that have one, each beside its page as <key>.map.json: the page as its
-// key or <slug>/<key>, the apartments it walks from (an apartment's page: that apartment alone),
-// and its places, which lie in the box of site.json's map.
-export function pageMaps(dir, site, apartments) {
+// site.json's map, and the maps of the pages that have one, each beside its page as
+// <key>.map.json: the page as its key or <slug>/<key>, the apartments it walks from (an
+// apartment's page: that apartment alone), and its places, which lie in the box of site.json's map.
+export function readMaps(dir, site, apartments) {
+  const pages = pageMaps(dir, site, apartments);
+  if (!site.map) return pages;
+  const slugs = apartments.map((apartment) => apartment.slug);
+  const file = join(dir, 'site.json');
+  checkVia(file, 'map.places', site.map.box, site.map.places, slugs);
+  return [{ file, path: 'map.places', from: slugs, places: site.map.places }, ...pages];
+}
+
+function pageMaps(dir, site, apartments) {
   return listingsOf(site, apartments).flatMap(({ slug, folder, keys }) =>
     keys
       .filter((key) => existsSync(join(dir, folder, `${key}.map.json`)))
@@ -362,23 +378,28 @@ export function pageMaps(dir, site, apartments) {
             throw new Error(`${join(dir, file)}\n  places.${index}: outside the map's box`);
         });
         const from = slug ? [slug] : apartments.map((apartment) => apartment.slug);
-        return { page: slug ? `${slug}/${key}` : key, file: join(dir, file), from, places };
+        checkVia(join(dir, file), 'places', site.map.box, places, from);
+        return {
+          page: slug ? `${slug}/${key}` : key,
+          file: join(dir, file),
+          path: 'places',
+          from,
+          places,
+        };
       }),
   );
 }
 
-// Every walk the maps draw: from each apartment to each place of site.json's map, through the
-// apartment's points for it, and to each place of a page's map from the apartments it walks from.
-export const walks = (site, apartments, maps) => [
-  ...apartments.flatMap((apartment) =>
-    site.map.places.map((place) => ({ apartment, place, via: waypoints(apartment, place.key) })),
-  ),
-  ...maps.flatMap(({ page, from, places }) =>
+// Every walk the maps draw: to each place of a map from each apartment it walks from, through the
+// place's points for that apartment.
+export const walks = (apartments, maps) =>
+  maps.flatMap(({ page, from, places }) =>
     apartments
       .filter(({ slug }) => from.includes(slug))
-      .flatMap((apartment) => places.map((place) => ({ page, apartment, place, via: [] }))),
-  ),
-];
+      .flatMap((apartment) =>
+        places.map((place) => ({ page, apartment, place, via: waypoints(place, apartment.slug) })),
+      ),
+  );
 
 export function readContent(dir) {
   const read = (file, schema) => readJson(dir, file, schema);
@@ -519,37 +540,25 @@ export function readContent(dir) {
   for (const name of ['normal', 'medium'])
     if (!new RegExp(`--font-weight-${name}\\s*:`).test(root ?? ''))
       throw new Error(`${join(dir, 'theme.css')}\n  --font-weight-${name}: missing`);
-  const maps = pageMaps(dir, site, apartments);
-  for (const { file, places } of maps)
-    places.forEach(({ icon, name }, index) => {
-      if (!(lucideName(icon) in lucide))
-        throw new Error(`${file}\n  places.${index}.icon: ${icon} is not a Lucide icon`);
-      inLanguages(file, `places.${index}.name`, name);
+  const maps = readMaps(dir, site, apartments);
+  // Each place is named in every language, with a text only for a season the site lists.
+  for (const { file, path, places } of maps)
+    places.forEach((place, index) => {
+      if (!(lucideName(place.icon) in lucide))
+        throw new Error(`${file}\n  ${path}.${index}.icon: ${place.icon} is not a Lucide icon`);
+      inLanguages(file, `${path}.${index}.name`, place.name);
+      for (const name of seasonNames.filter((name) => place[name])) {
+        if (!listed.includes(name))
+          throw new Error(`${file}\n  ${path}.${index}.${name}: a season site.json does not list`);
+        inLanguages(file, `${path}.${index}.${name}`, place[name]);
+      }
     });
   const map = site.map && { ...readMap(dir, site, apartments, maps), font: `/${font}` };
-  // Each place is named in every language, with a text only for a season the site lists.
-  const places = site.map?.places.map((place) => place.key) ?? [];
-  for (const tag of site.languages) {
-    const file = join(dir, `texts.${tag}.json`);
-    const named = texts[prefix(tag)].map?.places;
-    if (!site.map !== !named)
-      throw new Error(`${file}\n  map: ${site.map ? 'missing' : 'no map in site.json'}`);
-    for (const key of new Set([...places, ...Object.keys(named ?? {})])) {
-      if (!places.includes(key) || !Object.hasOwn(named, key))
-        throw new Error(
-          `${file}\n  map.places.${key}: ${places.includes(key) ? 'missing' : 'a place site.json does not list'}`,
-        );
-      for (const name of seasonNames)
-        if (named[key][name] !== undefined && !listed.includes(name))
-          throw new Error(`${file}\n  map.places.${key}.${name}: a season site.json does not list`);
-    }
-  }
-  site.map?.places.forEach(({ icon }, index) => {
-    if (!(lucideName(icon) in lucide))
+  for (const tag of site.languages)
+    if (!site.map !== !texts[prefix(tag)].map)
       throw new Error(
-        `${join(dir, 'site.json')}\n  map.places.${index}.icon: ${icon} is not a Lucide icon`,
+        `${join(dir, `texts.${tag}.json`)}\n  map: ${site.map ? 'missing' : 'no map in site.json'}`,
       );
-  });
   // Each content page has its address, its link text and its file in every language, and the
   // header and the footer link only to pages the site has, the footer not to the header's.
   for (const part of ['header', 'footer'])
@@ -601,9 +610,7 @@ export function readContent(dir) {
             if (!existsSync(join(dir, file)))
               throw new Error(`${page}\n  shows ${file}, which does not exist`);
           const id = slug ? `${slug}/${key}` : key;
-          const places = maps
-            .find(({ page }) => page === id)
-            ?.places.map(({ name, ...place }) => ({ ...place, name: name[tag] }));
+          const places = maps.find(({ page }) => page === id)?.places;
           return [id, { ...read, ...(places && { places }) }];
         }),
       ),
@@ -745,7 +752,7 @@ function readMap(dir, { map, ...site }, apartments, maps) {
   const routes = json('routes.json', 'map-routes.mjs').features.map((f) => f.properties);
   const same = (a, b) => a.lat === b.lat && a.lon === b.lon;
   const sameVia = (a = [], b) => a.length === b.length && a.every((p, i) => same(p, b[i]));
-  const expected = walks({ ...site, map }, apartments, maps);
+  const expected = walks(apartments, maps);
   const named = ({ page, apartment, place }) =>
     `${page ? `${page}: ` : ''}${apartment} to ${place}`;
   for (const { page, apartment, place, via } of expected) {
@@ -850,12 +857,18 @@ export async function writeContent(dir, out, cache) {
       img.setAttribute('height', height);
       img.setAttribute('loading', 'lazy');
     }
-    return { title, html: template.innerHTML, ...(places && { places }) };
+    return { title, html: template.innerHTML, ...(places && { places: places.map(marked) }) };
   };
   // Texts by address prefix, as the texts are; the routes' points stay with the routes. A plan is
   // served under a name that changes with it, as a converted picture is.
   const byPrefix = (texts) =>
     Object.fromEntries(Object.entries(texts).map(([tag, text]) => [prefix(tag), text]));
+  const marked = ({ via, name, winter, summer, ...place }) => ({
+    ...place,
+    name: byPrefix(name),
+    ...(winter && { winter: byPrefix(winter) }),
+    ...(summer && { summer: byPrefix(summer) }),
+  });
   const served = (slug, plan) => {
     const bytes = readFileSync(join(dir, plan.file));
     const name = `${slug}-plan.${createHash('sha256').update(bytes).digest('hex').slice(0, 8)}.svg`;
@@ -867,7 +880,7 @@ export async function writeContent(dir, out, cache) {
       zones: plan.zones.map((zone) => ({ ...zone, name: byPrefix(zone.name) })),
     };
   };
-  const apartments = site.apartments.map(({ via, plan, ...apartment }) => ({
+  const apartments = site.apartments.map(({ plan, ...apartment }) => ({
     ...apartment,
     pictures: pictures[apartment.slug].map((picture) => ({
       ...picture,
@@ -882,9 +895,17 @@ export async function writeContent(dir, out, cache) {
   }));
   const module = (type, value) =>
     `import type { ${type} } from '../schema';\n\nconst value: ${type} = ${JSON.stringify(value, null, 2)};\nexport default value;\n`;
-  writeFileSync(join(out, 'site.ts'), module('Site', { ...site, seasons, apartments }));
-  // The routes have a module of their own, which only the map's chunk imports; 5 decimals of a
-  // degree are about a metre.
+  // The map's places, as a page's, and its routes have modules of their own, which only the map's
+  // chunk imports; 5 decimals of a degree are about a metre.
+  const { places = [], ...map } = site.map ?? {};
+  writeFileSync(
+    join(out, 'site.ts'),
+    module('Site', { ...site, seasons, apartments, ...(site.map && { map }) }),
+  );
+  writeFileSync(
+    join(out, 'places.ts'),
+    module('Place[]', places.map(marked)).replace('{ Place[] }', '{ Place }'),
+  );
   const round = (value) => Math.round(value * 1e5) / 1e5;
   const routes = site.map
     ? JSON.parse(readFileSync(join(dir, 'map', 'routes.json'), 'utf8')).features.map(
@@ -955,11 +976,7 @@ export async function writeContent(dir, out, cache) {
         ...site.features,
         ...site.amenities,
         ...site.rooms,
-        ...(site.map?.places ?? []),
         ...site.apartments.flatMap(({ goodToKnow }) => goodToKnow),
-        ...Object.values(pages).flatMap((list) =>
-          Object.values(list).flatMap(({ places = [] }) => places),
-        ),
       ].map((f) => lucideName(f.icon)),
     ),
   ];
@@ -974,8 +991,14 @@ export async function writeContent(dir, out, cache) {
     (icons.length ? `import { ${icons.join(', ')} } from '@ng-icons/lucide';\n\n` : '') +
       `export const icons: Record<string, string> = { ${icons.join(', ')} };\n`,
   );
-  // The map's icons as their drawings: an import from @ng-icons/lucide would put them in the
-  // first page's bundle, which imports that module too.
+  // The map's icons, the tiles' and the places' of every map, as their drawings: an import from
+  // @ng-icons/lucide would put them in the first page's bundle, which imports that module too.
+  const marks = Object.fromEntries(
+    Object.values(pages)
+      .flatMap((list) => Object.values(list).flatMap(({ places = [] }) => places))
+      .concat(site.map?.places ?? [])
+      .map(({ icon }) => [lucideName(icon), lucide[lucideName(icon)]]),
+  );
   const drawings = Object.fromEntries(
     Object.values(groups)
       .flatMap(Object.values)
@@ -987,7 +1010,8 @@ export async function writeContent(dir, out, cache) {
   );
   writeFileSync(
     join(out, 'map-icons.ts'),
-    `export const drawings: Record<string, string> = ${JSON.stringify(drawings)};\n`,
+    `export const drawings: Record<string, string> = ${JSON.stringify(drawings)};\n` +
+      `export const marks: Record<string, string> = ${JSON.stringify(marks)};\n`,
   );
   // The pictures are served unhashed at /pictures/ too: give a changed picture a new name.
   if (existsSync(join(dir, 'pictures')))

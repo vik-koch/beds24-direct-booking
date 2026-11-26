@@ -49,10 +49,10 @@ A spike (#254, branch `spike/254-map`, not merged) tried the decision below in t
 5. **Lifts too are taken by a script** (#268): the aerial lifts inside the box, from OpenStreetMap
    through the Overpass API, into a committed file. The tiles have none.
 6. **The places are content:** the coordinates of an apartment in its file, the places in
-   `site.json` with a name per language, a kind, and a text per season. The gondolas show by
-   default, the others once the list of more places is unfolded. A content page may end with a map
-   of places of its own, listed beside the page ([ADR 17](0017-content-pages-in-markdown.md), point
-   6).
+   `site.json` with a name per language, a kind, a text per season and the points a route from an
+   apartment goes through. The gondolas show by default, the others once the list of more places is
+   unfolded. A content page may end with a map of places of its own, listed beside the page
+   ([ADR 17](0017-content-pages-in-markdown.md), point 6).
 7. **A list beside the map carries the same facts** for keyboard and screen reader users and for a
    browser that cannot draw the map. The map adds to the list; it never replaces it.
 8. **Points of interest carry Lucide icons** (#268), in their group's theme colour, filled white,

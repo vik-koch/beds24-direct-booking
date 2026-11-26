@@ -1,12 +1,12 @@
-// Computes the walking route from every apartment to every place of the map, through the points the
-// apartment gives for it, and to every place of a content page's map from the apartments it walks
-// from, with Valhalla's pedestrian costing on valhalla1.openstreetmap.de, and writes them to the
-// content folder's map/routes.json.
+// Computes the walking route to every place of site.json's map and of a content page's map from
+// each apartment it walks from, through the points the place gives for that apartment, with
+// Valhalla's pedestrian costing on valhalla1.openstreetmap.de, and writes them to the content
+// folder's map/routes.json.
 // node scripts/map-routes.mjs
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { apartmentSchema, siteSchema } from '../src/content/schema.ts';
-import { checkPoints, pageMaps, readJson, walks } from './content.mjs';
+import { checkPoints, readJson, readMaps, walks } from './content.mjs';
 
 const dir = resolve(process.env.CONTENT_DIR || 'content/demo');
 const site = readJson(dir, 'site.json', siteSchema);
@@ -44,8 +44,7 @@ const decode = (shape) => {
 };
 
 const features = [];
-const maps = pageMaps(dir, site, apartments);
-for (const { page, apartment, place, via } of walks(site, apartments, maps)) {
+for (const { page, apartment, place, via } of walks(apartments, readMaps(dir, site, apartments))) {
   const { slug, lat, lon } = apartment;
   const pair = `${page ? `${page}: ` : ''}${slug} to ${place.key}`;
   const locations = [
