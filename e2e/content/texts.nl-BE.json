@@ -165,6 +165,14 @@
     },
     "rooms": { "BEDROOM": "Slaapkamer", "BATHROOM": "Badkamer" }
   },
+  "book": {
+    "text": "Rechtstreeks boeken kan binnenkort. Boek tot dan via Booking.com.",
+    "link": "Boek deze week via Booking.com",
+    "children": { "one": "{count} kind", "other": "{count} kinderen" },
+    "invalid": "Dit adres noemt geen week die te boeken is.",
+    "taken": "Deze week is niet meer vrij.",
+    "back": "Terug naar {apartment}"
+  },
   "placeholder": "Deze pagina wordt nog gemaakt.",
   "notFound": {
     "title": "Pagina niet gevonden",

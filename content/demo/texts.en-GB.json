@@ -217,6 +217,14 @@
       "touch": "Use two fingers to move the map"
     }
   },
+  "book": {
+    "text": "Direct booking opens soon. This demo takes no bookings.",
+    "link": "Book this week on Booking.com",
+    "children": { "one": "{count} child", "other": "{count} children" },
+    "invalid": "This address names no week that can be booked.",
+    "taken": "This week is no longer free.",
+    "back": "Back to {apartment}"
+  },
   "placeholder": "This page is still being built.",
   "notFound": {
     "title": "Page not found",

@@ -188,7 +188,11 @@ content. The application has no wording, no colour and no typeface of its own. T
   ```
 
   The room ID is the Beds24 room the apartment is, and the name is how the site calls it in every
-  language.
+  language. Until online booking opens, `elsewhere` (optional) is where the apartment can be booked
+  meanwhile, such as its page on a booking site. The booking step links it beside `book.text` with
+  the words of `book.link`, and fills in `{arrival}`, `{departure}`, `{adults}` and `{children}`:
+  `"https://www.booking.com/hotel/at/example.html?checkin={arrival}&checkout={departure}&group_adults={adults}&group_children={children}&no_rooms=1"`.
+  Without it the step shows its text alone.
 
 - **An apartment's pictures** (`pictures` in its file) are listed in the order the site shows them,
   at least one, each a `file` and its alternative text `alt` in each of the site's languages by tag.

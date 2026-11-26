@@ -165,6 +165,14 @@
     },
     "rooms": { "BEDROOM": "Camera", "BATHROOM": "Bagno" }
   },
+  "book": {
+    "text": "La prenotazione diretta arriva presto. Fino ad allora, prenotate su Booking.com.",
+    "link": "Prenota questa settimana su Booking.com",
+    "children": { "one": "{count} bambino", "other": "{count} bambini" },
+    "invalid": "Questo indirizzo non indica una settimana prenotabile.",
+    "taken": "Questa settimana non è più libera.",
+    "back": "Torna a {apartment}"
+  },
   "placeholder": "Questa pagina è in costruzione.",
   "notFound": {
     "title": "Pagina non trovata",

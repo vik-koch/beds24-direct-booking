@@ -217,6 +217,14 @@
       "touch": "Die Karte mit zwei Fingern bewegen"
     }
   },
+  "book": {
+    "text": "Die Direktbuchung kommt bald. Diese Demo nimmt keine Buchungen an.",
+    "link": "Diese Woche auf Booking.com buchen",
+    "children": { "one": "{count} Kind", "other": "{count} Kinder" },
+    "invalid": "Diese Adresse nennt keine Woche, die sich buchen lässt.",
+    "taken": "Diese Woche ist nicht mehr frei.",
+    "back": "Zurück zu {apartment}"
+  },
   "placeholder": "Diese Seite entsteht noch.",
   "notFound": {
     "title": "Seite nicht gefunden",

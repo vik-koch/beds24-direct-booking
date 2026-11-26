@@ -299,6 +299,15 @@ export const apartmentSchema = z.strictObject({
   // Its name on the map left of its pin, for one that would cover a neighbour's.
   mapLabel: z.literal('left').optional(),
   name: text.refine((value) => letters(value) <= 20, 'at most 20 characters'),
+  // Where the apartment can be booked until online booking opens, such as its page on a booking
+  // site: an https address in which the booking step fills in the stay.
+  elsewhere: z
+    .url({ protocol: /^https$/, hostname: z.regexes.domain })
+    .refine(
+      (value) => !/[{}]/.test(value.replace(/\{(arrival|departure|adults|children)\}/g, '')),
+      'only {arrival}, {departure}, {adults} and {children}',
+    )
+    .optional(),
   pictures: z
     .array(
       z.strictObject({
@@ -495,6 +504,16 @@ export const textsSchema = z.strictObject({
       gestures: z.strictObject({ windows: text, mac: text, touch: text }),
     })
     .optional(),
+  // The booking step until online booking opens: the stay, and a link to book it elsewhere where
+  // the apartment's file gives one. {apartment} and {count} are filled in by the page.
+  book: z.strictObject({
+    text,
+    link: text,
+    children: z.strictObject({ one: text, other: text }),
+    invalid: text,
+    taken: text,
+    back: text,
+  }),
   placeholder: text,
   notFound: z.strictObject({ title: text, text, home: text }),
   footer: z.strictObject({ label: text, contact: text, more: text }),
