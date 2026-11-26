@@ -996,8 +996,14 @@ test("an apartment's page's map shows that apartment alone, its one place chosen
   await expect(page.locator('.location-map').getByRole('button', { pressed: true })).toHaveCount(0);
   await expect(page.locator('.location-map .map-place')).toHaveCount(1);
   await expect(panel(page).locator('.map-places').getByRole('button')).toHaveCount(0);
+  // Chosen, its route is solid: cleared, it would be dashed, about half as many pixels.
   await expect.poll(() => accentPixels(page)).toBeGreaterThan(500);
+  const solid = await accentPixels(page);
   await page.locator('.map-label').filter({ hasNotText: 'Zirbe' }).click();
+  await page.evaluate(
+    () => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))),
+  );
+  expect(await accentPixels(page)).toBeGreaterThan(solid * 0.9);
   await expect(stop).toBeVisible();
   await page
     .locator('.maplibregl-canvas')
