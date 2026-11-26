@@ -34,6 +34,8 @@ in Saalbach in Austria, in German and English. Its Beds24 is a [simulator](sim/R
   reviewed.
 - [docs/deploying-a-site.md](docs/deploying-a-site.md): from an empty machine to a live site of its
   own, built in a private repository from a release.
+- [docs/stripe-review.md](docs/stripe-review.md): what Stripe's review of a site asks for, and how
+  the demo meets it.
 - [CLAUDE.md](CLAUDE.md): the instructions the coding agent works under.
 
 ## Running it

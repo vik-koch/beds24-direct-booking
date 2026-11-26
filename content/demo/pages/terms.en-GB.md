@@ -15,8 +15,8 @@ Appartements GmbH (see the [imprint](/en/imprint)).
 
 ## 2. Prices and payment
 
-1. The week's price is for the apartment, not per person. It includes bed linen, towels,
-   electricity, heating, Wi-Fi and the final cleaning.
+1. Prices are in euros (EUR) and include VAT. The week's price is for the apartment, not per person.
+   It includes bed linen, towels, electricity, heating, Wi-Fi and the final cleaning.
 2. When you book, you pay 30% of the price; the rest is due 28 days before arrival. If you book
    later, you pay the whole amount at once.
 3. You pay through the booking form, with the methods it offers.
