@@ -848,6 +848,34 @@ for (const width of [320, 768])
     expect(right).toBeLessThanOrEqual(controls);
   });
 
+test("at 320 px a wrapped place name's label fits its lines, with more room at its ends", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 844 });
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await openMap(page, '/de/parken', scrollToPageMap);
+  await places(page).nth(1).getByRole('button').click();
+  const label = page.locator('.map-label', { hasText: 'Parkplatz Schattberg' });
+  await expect(label).toHaveAttribute('data-wrapped', '');
+  const [width, text, padding] = await label.evaluate((element) => {
+    const range = document.createRange();
+    range.selectNodeContents(element);
+    const lines = [...range.getClientRects()];
+    return [
+      element.getBoundingClientRect().width,
+      Math.max(...lines.map((line) => line.right)) - Math.min(...lines.map((line) => line.left)),
+      parseFloat(getComputedStyle(element).paddingLeft),
+    ];
+  });
+  expect(padding).toBe(12);
+  expect(width - text - 2 * padding).toBeLessThan(1);
+  // A short name stays on one line with the narrower padding.
+  await places(page).first().getByRole('button').click();
+  await expect(page.locator('.map-label', { hasText: 'Parkhaus Zentrum' })).not.toHaveAttribute(
+    'data-wrapped',
+  );
+});
+
 test("an apartment's address leads to its map, which then loads", async ({ page }) => {
   const asked: string[] = [];
   page.on('request', (request) => asked.push(request.url()));

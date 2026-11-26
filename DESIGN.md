@@ -465,8 +465,9 @@ keyboard. In the sheet the apartments are indented under their entry at weight 4
   left of its pin. The label is an apartment's name, a place's distance from the chosen apartment
   ("900 m"), or a chosen place's name; a walking time depends on too much to promise. A long name
   takes a second line rather than run under the zoom buttons, at most half the window less 2.5rem
-  and 10rem wide, with a button's line height of 1.25 and a one-line label's height. Pins and
-  buttons take the site's focus ring.
+  and 10rem wide, with a button's line height of 1.25 and a one-line label's height; on two lines
+  its box fits the longer line, with 0.75rem at the sides instead of 0.5rem. Pins and buttons take
+  the site's focus ring.
 - **Zoom:** plus and minus as the site's round buttons in a white pill, level with the panel's top.
 - **Hint:** a scroll over the map without Ctrl, or one finger on a phone, shows how to move it as a
   white pill above the attribution, in the map's middle; where the map is too narrow for that beside

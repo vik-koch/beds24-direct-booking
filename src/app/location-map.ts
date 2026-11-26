@@ -1,5 +1,6 @@
 import { DOCUMENT, NgTemplateOutlet } from '@angular/common';
 import {
+  afterEveryRender,
   afterNextRender,
   Component,
   computed,
@@ -628,6 +629,11 @@ function flavor(p: ReturnType<typeof palette>): Flavor {
           translate: calc(var(--head) * -0.67) calc(var(--head) * -0.71);
         }
 
+        /* Two lines keep their text further from the round ends. */
+        &[data-wrapped] {
+          padding-inline: 0.75rem;
+        }
+
         [data-drawn] & {
           display: block;
         }
@@ -809,6 +815,31 @@ export class LocationMap {
   protected readonly all = signal(handover.all ?? false);
   protected readonly shown = computed(() => this.list().filter((p) => this.all() || !p.more));
   protected readonly drawn = signal<MapLibre | undefined>(undefined);
+  // A wrapped label's box keeps its widest width, so it is fitted to its lines; a label is measured
+  // again only once its text changes, and only while it shows.
+  private readonly fitted = new WeakMap<HTMLElement, string>();
+  private readonly fitLabels = afterEveryRender(() => {
+    for (const { nativeElement: label } of this.markers()) {
+      const text = label.textContent;
+      if (!label.classList.contains('map-label') || !label.getClientRects().length) continue;
+      if (this.fitted.get(label) === text) continue;
+      this.fitted.set(label, text);
+      // A label that wraps is measured again with a wrapped label's padding.
+      label.style.width = '';
+      delete label.dataset['wrapped'];
+      const range = this.document.createRange();
+      range.selectNodeContents(label);
+      const lines = () => [...range.getClientRects()];
+      if (new Set(lines().map((line) => Math.round(line.top))).size < 2) continue;
+      label.dataset['wrapped'] = '';
+      const wrapped = lines();
+      const width =
+        Math.max(...wrapped.map((line) => line.right)) -
+        Math.min(...wrapped.map((line) => line.left));
+      const padding = parseFloat(getComputedStyle(label).paddingInline);
+      label.style.width = `${Math.ceil(width) + 2 * padding}px`;
+    }
+  });
   private readonly injector = inject(Injector);
   private readonly router = inject(Router);
   protected fit?: (keep: boolean) => void;
