@@ -899,11 +899,18 @@ test("a site page's map follows its text, loads once in view and marks the page'
   await page.goto('/en/parking');
   await expect(page.locator('html')).toHaveAttribute('data-started', '');
   await expect(page.locator('.map-size')).not.toBeInViewport();
-  const scripts = () => asked.filter((url) => url.endsWith('.js') && !url.includes('/map/'));
-  const before = scripts();
+  // The map's own chunk, the one file with its template.
+  const browser = 'dist/beds24-direct-booking/browser';
+  const chunks = readdirSync(browser).filter(
+    (file) =>
+      file.endsWith('.js') && readFileSync(`${browser}/${file}`, 'utf8').includes('map-places'),
+  );
+  expect(chunks).toHaveLength(1);
+  const loaded = () => asked.some((url) => url.endsWith(`/${chunks[0]}`));
+  expect(loaded()).toBe(false);
   expect(asked.filter((url) => url.includes('/map/'))).toEqual([]);
   await drawMap(page, scrollToPageMap);
-  expect(scripts().length).toBeGreaterThan(before.length);
+  expect(loaded()).toBe(true);
   await page.setViewportSize({ width: 1280, height: 900 });
   // The page's places alone, not the home map's.
   await expect(places(page)).toHaveText(['Parkhaus Zentrum', 'Schattberg car park']);
