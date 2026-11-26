@@ -811,6 +811,24 @@ test('every indexed page but an apartment has a description, and each names a pa
   );
 });
 
+test('the footer shows the parts of the contact it names, each one the contact gives', () => {
+  const footer = (list) => changed('site.json', (site) => (site.contact.footer = list));
+  assert.deepEqual(readContent(footer(['name', 'email'])).site.contact.footer, ['name', 'email']);
+  assert.throws(
+    () =>
+      readContent(
+        changed('site.json', (site) => (site.contact = { name: 'A', footer: ['phone'] })),
+      ),
+    /contact: footer names a part the contact does not give/,
+  );
+  assert.throws(() => readContent(footer(['fax'])), /contact\.footer\.0/);
+  assert.throws(() => readContent(footer(['name', 'name'])), /a part is listed twice/);
+  assert.throws(
+    () => readContent(changed('site.json', (site) => (site.contact = { footer: [] }))),
+    /contact: lists nothing/,
+  );
+});
+
 test('a contact that lists nothing is refused', () => {
   const dir = changed('site.json', (site) => (site.contact = {}));
   assert.throws(() => readContent(dir), /contact: lists nothing/);

@@ -324,15 +324,16 @@ content. The application has no wording, no colour and no typeface of its own. T
   screen showed only that part of the photo anyway. Keep what matters in the photo's middle, and
   give it at least 1920 px. Other pictures, such as the icons, are served at `/pictures/<file>` as
   they are and kept by browsers for a year, like the fonts: give a changed picture a new name.
-- **The contact** in `site.json` lists any of a name, an address, a phone number and an email
-  address. The address is given in its parts,
+- **The contact** in `site.json` is the business's details: any of a name, an address, a phone
+  number and an email address. The address is given in its parts,
   `{ "street": "Musterweg 0", "postalCode": "5753", "locality": "Saalbach", "country": "Österreich" }`,
-  which the footer writes as three lines, the postal code before the place, and the home page's
-  structured data names for search engines. The footer shows what is listed, and no contact column
-  without `contact`, so a site can keep its footer short and give the full details on its imprint
-  page. A site with a map gives an email address of its operator that reaches someone, on its
-  imprint page at least: the map's walking routes come from FOSSGIS's routing servers, whose usage
-  policy asks for one.
+  which the footer writes as three lines, the postal code before the place. The home page describes
+  the business to search engines from the contact, and only with its address, which Google requires.
+  The footer shows the parts `footer` lists, such as `"footer": ["name", "email"]`, or all of them
+  without it, and no contact column with none, so a site can keep its footer short and give the full
+  details on its imprint page while search engines still get the address. A site with a map gives an
+  email address of its operator that reaches someone, on its imprint page at least: the map's
+  walking routes come from FOSSGIS's routing servers, whose usage policy asks for one.
 - **Stripe's review** looks at the contact, the rental terms, the privacy page and how prices are
   shown before it activates payments: [`stripe-review.md`](stripe-review.md) lists what it asks for
   and how the demo meets it.

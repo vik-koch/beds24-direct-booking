@@ -35,7 +35,14 @@
   ],
   "contact": {
     "name": "Casa Prova",
-    "email": "ciao@casa-prova.example"
+    "address": {
+      "street": "Via di Prova 1",
+      "postalCode": "39030",
+      "locality": "Prova",
+      "country": "Italia"
+    },
+    "email": "ciao@casa-prova.example",
+    "footer": ["name", "email"]
   },
   "pages": ["about", "faq", "imprint", "privacy", "terms"],
   "header": ["about", "faq"],

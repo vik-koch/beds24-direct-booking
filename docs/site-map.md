@@ -55,11 +55,11 @@ slug is the same in both languages and comes from the deployment's content.
   with the address can read it, so no door's or key box's code is written on a page.
 - **Indexed:** the home page, the apartments' pages and the public pages, each with its description,
   a canonical link, its alternates in both languages and `x-default`, and a link preview. The home
-  page describes the business and an apartment's page the apartment as schema.org data. The booking
-  step, the confirmation, an unlisted page and a missing one carry `noindex`. `/sitemap.xml` lists
-  the indexed pages in both languages; `/robots.txt` names it and keeps no one out: a deployment
-  that is not `INDEXED` keeps search engines out by its `X-Robots-Tag` header, which a crawler kept
-  out by `robots.txt` would never read.
+  page describes the business, when the contact gives its address, and an apartment's page the
+  apartment as schema.org data. The booking step, the confirmation, an unlisted page and a missing
+  one carry `noindex`. `/sitemap.xml` lists the indexed pages in both languages; `/robots.txt` names
+  it and keeps no one out: a deployment that is not `INDEXED` keeps search engines out by its
+  `X-Robots-Tag` header, which a crawler kept out by `robots.txt` would never read.
 - **A guide** is a content page: one for every apartment is a page of the site, one that differs by
   apartment is a page of each. A part every guide shares, such as how waste is sorted, is written
   into each one's file. The FAQ is one page for all apartments.

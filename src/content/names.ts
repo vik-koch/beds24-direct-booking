@@ -45,3 +45,7 @@ export const heroSizes = ({ width, height }: Pick<Picture, 'width' | 'height'>) 
 // @ng-icons/lucide, lucideCalendarDays.
 export const lucideName = (name: string) =>
   'lucide' + name.replace(/(^|-)([a-z0-9])/g, (_, _dash, char: string) => char.toUpperCase());
+
+// The parts of the site's contact, in the footer's order.
+export const contactParts = ['name', 'address', 'phone', 'email'] as const;
+export type ContactPart = (typeof contactParts)[number];

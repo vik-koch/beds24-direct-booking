@@ -847,10 +847,13 @@ test('a second content folder changes languages, name, wording and theme', async
   await expect(page.getByRole('link', { name: 'Casa Prova Alta' })).toBeVisible();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Appartamenti per le vacanze');
   await expect(page.getByText('Demo:')).toHaveCount(0);
-  // This site lists no address and no phone: the footer shows the name and the email.
+  // This site gives no phone and keeps its address out of the footer: the footer shows the name
+  // and the email.
   const footer = page.getByRole('contentinfo');
   await expect(footer.getByRole('link', { name: 'ciao@casa-prova.example' })).toBeVisible();
+  await expect(footer.getByText('Casa Prova', { exact: true })).toBeVisible();
   await expect(footer.locator('a[href^="tel:"]')).toHaveCount(0);
+  await expect(footer.getByText('Via di Prova 1')).toHaveCount(0);
   expect(await page.evaluate(() => getComputedStyle(document.body).backgroundColor)).toBe(
     'rgb(244, 241, 234)',
   );

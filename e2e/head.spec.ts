@@ -191,12 +191,16 @@ test(
 );
 
 test(
-  "a site without the contact's address has no business data, and a locale without a region gets one",
+  'the business data gives an address the footer leaves out, and a locale without a region gets one',
   { tag: '@any-engine' },
   async ({ request }) => {
     const other = 'http://localhost:4002';
     const italian = await head(request, `${other}/it`);
-    expect(italian.data).toEqual([]);
+    expect(italian.data[0]).toMatchObject({
+      '@type': 'LodgingBusiness',
+      name: 'Casa Prova',
+      address: { streetAddress: 'Via di Prova 1', postalCode: '39030', addressLocality: 'Prova' },
+    });
     expect(italian.meta('og:locale')).toEqual(['it_IT']);
     expect(italian.link('canonical')).toEqual(['https://casa-prova.example/it']);
     expect((await head(request, `${other}/nl`)).meta('og:locale')).toEqual(['nl_BE']);

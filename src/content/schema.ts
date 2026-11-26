@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { letters, seasonNames, type SeasonName } from './names.ts';
+import { contactParts, letters, seasonNames, type SeasonName } from './names.ts';
 
 export { lucideName, seasonNames, type SeasonName } from './names.ts';
 
@@ -244,8 +244,9 @@ export const siteSchema = z.strictObject({
   rooms: z
     .array(z.strictObject({ code: text, icon: segment }))
     .refine((list) => unique(list, (room) => room.code), 'a room code is listed twice'),
-  // The footer shows what is listed, and no contact without one: a site may give its details
-  // on its imprint page instead.
+  // The business's details, which search engines read too; the footer shows those `footer`
+  // names, or all of them without it, and no contact with none: a site may give its details on
+  // its imprint page instead.
   contact: z
     .strictObject({
       name: text.optional(),
@@ -256,8 +257,19 @@ export const siteSchema = z.strictObject({
         .optional(),
       phone: text.optional(),
       email: z.email().optional(),
+      footer: z
+        .array(z.enum(contactParts))
+        .refine((list) => unique(list, (part) => part), 'a part is listed twice')
+        .optional(),
     })
-    .refine((value) => Object.keys(value).length > 0, 'lists nothing: leave the contact out')
+    .refine(
+      (value) => contactParts.some((part) => part in value),
+      'lists nothing: leave the contact out',
+    )
+    .refine(
+      ({ footer = [], ...value }) => footer.every((part) => part in value),
+      'footer names a part the contact does not give',
+    )
     .optional(),
   map: map.optional(),
   // Who to credit for a picture the content pages show, once for every language; a page's
