@@ -50,6 +50,16 @@ the choice:
    or a key box goes on a page. Amended on 2026-11-25 (#59): a guide is partly the same everywhere
    and partly one apartment's, and some help a guest at the apartment but are no use to a visitor
    choosing one.
+6. **A page may end with a map of places of its own** (#325), such as the nearest car parks or the
+   bins, listed in a file beside the page, `<key>.map.json`, written as `site.json`'s map's places.
+   It is the home map with these places instead of `site.json`'s: on an apartment's page it walks
+   from that apartment, on a site page from the one the visitor chooses. The routes come from the
+   same script and weekly workflow as the home map's, so the places lie in its box. **One map, after
+   the text:** the sidecar alone says a page has one, and the Markdown needs no marker. Added on
+   2026-11-25: a guide about parking or waste is clearest with the way from the apartment drawn on
+   the map the site already has. Amended on 2026-11-26 (PR 336): both maps' places have one shape,
+   with their names and season texts per language and their waypoints by apartment, so a page's
+   place takes waypoints too.
 
 ## Options
 
@@ -64,6 +74,10 @@ the choice:
 | An apartment's public pages listed in its file and shown as link rows under "Good to know" | No text to write | A row that leaves the page among rows that fold open; no word around the link; the list and the links can disagree | Rejected (#59, PR 327). |
 | Public pages listed in its file beside the folds that link them | Indexing said in one place | Says twice what the links already say; the build must check that both agree | Rejected (#59). |
 | Unlisted pages behind a code or a booking's token | A guide only guests read | A login or a link per booking, for text that holds nothing secret | Rejected (#59). |
+| A page's map marked in the Markdown, such as a line of `:map:`, and placed there | The map beside the section it belongs to | A late-loading block splits the page's text; `:map:` is also a Lucide icon's name, which a heading's shortcode takes | Rejected (#325). |
+| A route's waypoints in the apartment's file, by the place's key | The apartment's points beside it | A page's place may share its key with one of `site.json`'s, as the demo's `schattberg`; an apartment's file would name other files' places | Rejected (PR 336). |
+| A place's texts in the texts files, by its key | Words beside the other wording | A page's places named apart from its sidecar, under the page's key too | Rejected (PR 336). |
+| A page's places as tile kinds, such as `recycling`, which give the icon and its group's colour | The tiles' own icons and colours | Pins unlike the home map's places, which name a Lucide icon | Rejected (#325). |
 | A headless CMS | Editing in a browser | A service, accounts and a data flow for a few pages; the brief has no content editor in phase 1 | Rejected. |
 
 ## Consequences

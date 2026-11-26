@@ -89,8 +89,29 @@ const boxLongitude = z.number().min(-180).lt(180);
 // A span of 0.1° given in decimals, such as 47.3 to 47.4, comes out a hair above it.
 const span = 0.1 + 1e-9;
 
-// The map: the box its tiles cover and the places it marks, each with a Lucide icon for its kind,
-// shown always or only behind the switch for more places. Each language's texts name them.
+// A place a map marks, with a Lucide icon for its kind, shown always or only behind the switch for
+// more places, and its name and a text for each season in each of the site's languages by tag. A
+// route to it goes through the points given by the apartment's slug, in their order.
+const place = z.strictObject({
+  key: segment,
+  icon: segment,
+  lat: latitude,
+  lon: longitude,
+  more: z.literal(true).optional(),
+  name: z.record(z.string(), text),
+  winter: z.record(z.string(), text).optional(),
+  summer: z.record(z.string(), text).optional(),
+  via: z
+    .record(segment, z.array(z.strictObject({ lat: latitude, lon: longitude })).min(1))
+    .optional(),
+});
+const places = z
+  .array(place)
+  .min(1, 'at least one place')
+  .max(10, 'at most ten places')
+  .refine((list) => unique(list, (p) => p.key), 'a place key is listed twice');
+
+// The map: the box its tiles cover and its places.
 const map = z
   .strictObject({
     box: z
@@ -102,19 +123,7 @@ const map = z
       })
       .refine((b) => b.west < b.east && b.south < b.north, 'west and south below east and north')
       .refine((b) => b.east - b.west <= span && b.north - b.south <= span, 'at most 0.1° each way'),
-    places: z
-      .array(
-        z.strictObject({
-          key: segment,
-          icon: segment,
-          lat: latitude,
-          lon: longitude,
-          more: z.literal(true).optional(),
-        }),
-      )
-      .min(1, 'at least one place')
-      .max(10, 'at most ten places')
-      .refine((list) => unique(list, (place) => place.key), 'a place key is listed twice'),
+    places,
   })
   .superRefine(({ box, places }, context) =>
     places.forEach((place, index) => {
@@ -122,6 +131,9 @@ const map = z
         context.addIssue({ code: 'custom', path: ['places', index], message: 'outside the box' });
     }),
   );
+
+// A content page's map, after its text: the places it marks, as site.json's map's.
+export const pageMapSchema = z.strictObject({ places });
 
 // With two seasons each starts on its day and lasts until the other starts; a single season
 // covers the year and has no start.
@@ -284,10 +296,6 @@ export const apartmentSchema = z.strictObject({
   lon: longitude.optional(),
   // Its name on the map left of its pin, for one that would cover a neighbour's.
   mapLabel: z.literal('left').optional(),
-  // The points a route to a place goes through in their order, by the place's key.
-  via: z
-    .record(segment, z.array(z.strictObject({ lat: latitude, lon: longitude })).min(1))
-    .optional(),
   name: text.refine((value) => letters(value) <= 20, 'at most 20 characters'),
   pictures: z
     .array(
@@ -470,9 +478,8 @@ export const textsSchema = z.strictObject({
     codes: z.record(text, text),
     rooms: z.record(text, text),
   }),
-  // The map's wording: the panel's, MapLibre's own (its title, controls and the hints shown when
-  // a scroll or one finger would move the map), and each place by its key with its name and a
-  // text for each season the site lists.
+  // The map's wording: the panel's, and MapLibre's own (its title, controls and the hints shown
+  // when a scroll or one finger would move the map).
   map: z
     .strictObject({
       label: text,
@@ -484,10 +491,6 @@ export const textsSchema = z.strictObject({
       attribution: text,
       report: text.refine((value) => letters(value) <= 32, 'at most 32 characters'),
       gestures: z.strictObject({ windows: text, mac: text, touch: text }),
-      places: z.record(
-        segment,
-        z.strictObject({ name: text, winter: text.optional(), summer: text.optional() }),
-      ),
     })
     .optional(),
   placeholder: text,
@@ -535,10 +538,24 @@ export interface Plan {
     label: [number, number];
   }[];
 }
-// A content page as the page shows it: its title, and the rest of its file as HTML.
+// A place as a map marks it: its texts by address prefix, and behind the switch for more places
+// or not.
+export interface Place {
+  key: string;
+  icon: string;
+  lat: number;
+  lon: number;
+  more?: true;
+  name: Record<string, string>;
+  winter?: Record<string, string>;
+  summer?: Record<string, string>;
+}
+// A content page as the page shows it: its title, the rest of its file as HTML, and its map's
+// places.
 export interface ContentPage {
   title: string;
   html: string;
+  places?: Place[];
 }
 // A fold under "Good to know": its icon's name, its title and its text as HTML by address prefix.
 export interface Note {
@@ -553,10 +570,12 @@ export type Apartment = {
   plan?: Plan;
   goodToKnow: Note[];
   public: string[];
-} & Omit<z.infer<typeof apartmentSchema>, 'pictures' | 'via' | 'plan' | 'goodToKnow'>;
+} & Omit<z.infer<typeof apartmentSchema>, 'pictures' | 'plan' | 'goodToKnow'>;
 type Map = NonNullable<z.infer<typeof siteSchema>['map']>;
-// A walking route as the map draws it: its line as [longitude, latitude] pairs.
+// A walking route as the map draws it: its line as [longitude, latitude] pairs. A route to a
+// content page's place names the page, as its key or <slug>/<key>.
 export interface Route {
+  page?: string;
   apartment: string;
   place: string;
   meters: number;
@@ -574,7 +593,7 @@ export type Site = Omit<
 > & {
   // The tiles' address, /map/tiles/<build>, by the Protomaps build they were cut from, and the
   // theme's font file, in which the map writes its labels.
-  map?: Map & { tiles: string; font: string };
+  map?: Omit<Map, 'places'> & { tiles: string; font: string };
   languages: Language[];
   apartments: Apartment[];
   seasons: { [name in keyof Seasons]: Omit<NonNullable<Seasons[name]>, 'hero'> & { hero: Hero } };

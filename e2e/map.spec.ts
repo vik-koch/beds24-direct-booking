@@ -29,16 +29,16 @@ async function accentPixels(page: Page, color = 'accent') {
 }
 
 const panel = (page: Page) => page.locator('.map-panel');
-// A walk's distance as the English page writes it, from the committed routes, which the weekly map
-// data run may change.
-const walk = (apartment: string, place = 'schattberg') => {
+// A walk's distance as the page writes it, English unless given, from the committed routes, which
+// the weekly map data run may change; to a content page's place, by the page.
+const walk = (apartment: string, place = 'schattberg', page?: string, language = 'en-GB') => {
   const { features } = JSON.parse(readFileSync('content/demo/map/routes.json', 'utf8'));
   const { meters } = features.find(
     ({ properties: p }: { properties: Record<string, string> }) =>
-      p['apartment'] === apartment && p['place'] === place,
+      p['page'] === page && p['apartment'] === apartment && p['place'] === place,
   ).properties;
   const [value, unit] = meters < 1000 ? [meters, 'meter'] : [meters / 1000, 'kilometer'];
-  return new Intl.NumberFormat('en-GB', { style: 'unit', unit, maximumFractionDigits: 1 }).format(
+  return new Intl.NumberFormat(language, { style: 'unit', unit, maximumFractionDigits: 1 }).format(
     value,
   );
 };
@@ -49,15 +49,22 @@ const places = (page: Page) => panel(page).locator('.map-places:not([inert]) li'
 const scrollToMap = (page: Page) =>
   page.getByRole('heading', { name: /^(Location|Lage)$/ }).scrollIntoViewIfNeeded();
 
+// A content page's map follows its text, just before the footer.
+const scrollToPageMap = (page: Page) => page.locator('footer').scrollIntoViewIfNeeded();
+
 // The home page's map, scrolled into view and drawn. CI's headless Firefox has no WebGL and draws
 // none (ADR 14); Chromium and WebKit must.
-async function openMap(page: Page, path = '/en') {
+async function openMap(page: Page, path = '/en', scroll = scrollToMap) {
   await page.goto(path);
+  await drawMap(page, scroll);
+}
+
+async function drawMap(page: Page, scroll: (page: Page) => Promise<void>) {
   const webgl = await page.evaluate(() => !!document.createElement('canvas').getContext('webgl2'));
   const firefox = page.context().browser()?.browserType().name() === 'firefox';
   test.skip(firefox && !webgl, 'No WebGL in this Firefox; the panel is tested without the map.');
   expect(webgl, 'WebGL in Chromium and WebKit').toBe(true);
-  await scrollToMap(page);
+  await scroll(page);
   await expect(page.locator('.location-map[data-drawn]')).toBeVisible({ timeout: 20000 });
 }
 
@@ -781,12 +788,16 @@ test("an apartment's page shows its map with it alone, chosen for good", async (
   expect(results.violations.map((v) => v.id)).toEqual([]);
 });
 
-for (const width of [320, 390])
-  test(`at ${width} px an apartment's map shows its pins and labels clear of the controls`, async ({
+for (const [width, path] of [
+  [320, '/en/apartments/ahorn'],
+  [390, '/en/apartments/ahorn'],
+  [320, '/en/parking'],
+] as const)
+  test(`at ${width} px the map on ${path} shows its pins and labels clear of the controls`, async ({
     page,
   }) => {
     await page.setViewportSize({ width, height: 844 });
-    await openMap(page, '/en/apartments/ahorn');
+    await openMap(page, path, path.includes('parking') ? scrollToPageMap : scrollToMap);
     const hidden = await page.evaluate(() => {
       const box = (element: Element) => element.getBoundingClientRect();
       const frame = box(document.querySelector('.map-frame')!);
@@ -810,6 +821,60 @@ for (const width of [320, 390])
     });
     expect(hidden).toEqual([]);
   });
+
+for (const width of [320, 768])
+  test(`at ${width} px a chosen place's long name takes two lines, clear of the controls`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 844 });
+    // The map moves to the place at once.
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await openMap(page, '/de/parken', scrollToPageMap);
+    await places(page).first().getByRole('button').click();
+    const label = page.locator('.map-label', { hasText: 'Parkhaus Zentrum' });
+    await expect(label).toBeVisible();
+    const [one, two, right, controls] = await label.evaluate((element) => {
+      const height = () => element.getBoundingClientRect().height;
+      const short = height();
+      element.textContent = 'Télécabine du Schattberg-Ost';
+      return [
+        short,
+        height(),
+        element.getBoundingClientRect().right,
+        document.querySelector('.map-zoom')!.getBoundingClientRect().left,
+      ];
+    });
+    expect(two).toBeGreaterThan(one * 1.5);
+    expect(right).toBeLessThanOrEqual(controls);
+  });
+
+test("at 320 px a wrapped place name's label fits its lines, with more room at its ends", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 844 });
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await openMap(page, '/de/parken', scrollToPageMap);
+  await places(page).nth(1).getByRole('button').click();
+  const label = page.locator('.map-label', { hasText: 'Parkplatz Schattberg' });
+  await expect(label).toHaveAttribute('data-wrapped', '');
+  const [width, text, padding] = await label.evaluate((element) => {
+    const range = document.createRange();
+    range.selectNodeContents(element);
+    const lines = [...range.getClientRects()];
+    return [
+      element.getBoundingClientRect().width,
+      Math.max(...lines.map((line) => line.right)) - Math.min(...lines.map((line) => line.left)),
+      parseFloat(getComputedStyle(element).paddingLeft),
+    ];
+  });
+  expect(padding).toBe(12);
+  expect(width - text - 2 * padding).toBeLessThan(1);
+  // A short name stays on one line with the narrower padding.
+  await places(page).first().getByRole('button').click();
+  await expect(page.locator('.map-label', { hasText: 'Parkhaus Zentrum' })).not.toHaveAttribute(
+    'data-wrapped',
+  );
+});
 
 test("an apartment's address leads to its map, which then loads", async ({ page }) => {
   const asked: string[] = [];
@@ -856,4 +921,89 @@ test("an apartment's panel lists its distances in every engine, without the map 
     new RegExp(`Kohlmaisbahn.*${RegExp.escape(walk('ahorn', 'kohlmais'))}`),
   ]);
   await expect(panel(page).getByRole('radio')).toHaveCount(0);
+});
+
+test("a site page's map follows its text, loads once in view and marks the page's places", async ({
+  page,
+}) => {
+  // Low enough that the map starts below the window.
+  await page.setViewportSize({ width: 1280, height: 400 });
+  const asked: string[] = [];
+  page.on('request', (request) => asked.push(request.url()));
+  await page.goto('/en/parking');
+  await expect(page.locator('html')).toHaveAttribute('data-started', '');
+  await expect(page.locator('.map-size')).not.toBeInViewport();
+  // The map's own chunk, the one file with its template.
+  const browser = 'dist/beds24-direct-booking/browser';
+  const chunks = readdirSync(browser).filter(
+    (file) =>
+      file.endsWith('.js') && readFileSync(`${browser}/${file}`, 'utf8').includes('map-places'),
+  );
+  expect(chunks).toHaveLength(1);
+  const loaded = () => asked.some((url) => url.endsWith(`/${chunks[0]}`));
+  expect(loaded()).toBe(false);
+  expect(asked.filter((url) => url.includes('/map/'))).toEqual([]);
+  await drawMap(page, scrollToPageMap);
+  expect(loaded()).toBe(true);
+  await page.setViewportSize({ width: 1280, height: 900 });
+  // The page's places alone, not the home map's.
+  await expect(places(page)).toHaveText(['Parkhaus Zentrum', 'Schattberg car park']);
+  await expect(page.locator('.map-place')).toHaveCount(2);
+  await expect(panel(page).getByRole('button', { name: 'More places' })).toHaveCount(0);
+  await expect.poll(() => accentPixels(page)).toBeLessThan(50);
+  await panel(page).getByText('Lärche').click();
+  await expect.poll(() => accentPixels(page)).toBeGreaterThan(500);
+  const line = places(page).first().getByRole('button');
+  await expect(line).toHaveAccessibleName(
+    new RegExp(`Parkhaus Zentrum.*${walk('laerche', 'zentrum', 'parking')}`),
+  );
+  await line.focus();
+  await page.keyboard.press('Enter');
+  await expect(line).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByRole('button', { name: 'Parkhaus Zentrum', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  const results = await new AxeBuilder({ page }).include('app-location-map').analyze();
+  expect(results.violations.map((v) => v.id)).toEqual([]);
+});
+
+test("an apartment's page's map shows that apartment alone and goes with a change of language", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await countLost(page);
+  await openMap(page, '/de/wohnungen/zirbe/anfahrt', scrollToPageMap);
+  await expect(panel(page).getByRole('radio')).toHaveCount(0);
+  await expect(page.locator('.location-map').getByRole('img', { name: 'Zirbe' })).toBeVisible();
+  await expect(page.locator('.map-pin:not(.map-place)')).toHaveCount(1);
+  await expect(places(page)).toHaveText(
+    [
+      ['Haltestelle Ronachgrund', 'bus-stop'],
+      ['Parkhaus Zentrum', 'car-park'],
+    ].map(
+      ([name, place]) =>
+        new RegExp(`^${name}${RegExp.escape(walk('zirbe', place, 'zirbe/arrival', 'de-AT'))}$`),
+    ),
+  );
+  await expect.poll(() => accentPixels(page)).toBeGreaterThan(500);
+  await page
+    .locator('.maplibregl-canvas')
+    .evaluate((canvas) => canvas.setAttribute('data-old', ''));
+  await toLanguage(page, 'Sprache: Deutsch', 'English');
+  await expect(page).toHaveURL(/\/en\/apartments\/zirbe\/getting-here$/);
+  await expect(page.locator('.location-map[data-drawn] canvas[data-old]')).toBeVisible();
+  await expect(places(page)).toHaveText([
+    new RegExp(
+      `^Ronachgrund bus stop${RegExp.escape(walk('zirbe', 'bus-stop', 'zirbe/arrival'))}$`,
+    ),
+    new RegExp(`^Parkhaus Zentrum${RegExp.escape(walk('zirbe', 'car-park', 'zirbe/arrival'))}$`),
+  ]);
+  expect(await lost(page)).toBe(0);
+});
+
+test('a page without a map shows none', { tag: '@any-engine' }, async ({ page }) => {
+  await page.goto('/en/apartments/zirbe/guide');
+  await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+  await expect(page.locator('app-location-map, .map-size')).toHaveCount(0);
 });

@@ -14,6 +14,7 @@ content. The application has no wording, no colour and no typeface of its own. T
 | `texts.<tag>.json` | Everything one language says: the wording, the address parts and the anchors. One file per language listed in `site.json`, such as `texts.en-GB.json`. |
 | `pages/<key>.<tag>.md` | A content page in one language, such as `pages/faq.en-GB.md`: one file for each page and language `site.json` lists, and no other. |
 | `pages/<slug>/<key>.<tag>.md` | One of an apartment's own pages in one language, such as `pages/zirbe/arrival.en-GB.md`: one file for each page its file lists and each language, and no other. |
+| `pages/<key>.map.json`, `pages/<slug>/<key>.map.json` | Optional, with a map: the map that ends that page, with its places and their names in every language. |
 | `theme.css` | The palette, the typeface and its two weights as custom properties on `:root`, and the typeface's `@font-face`. |
 | `fonts/` | Optional: the font files `theme.css` refers to, as `fonts/<file>`. |
 | `pictures/` | The pictures `site.json` names, such as each season's hero photo, and the apartments' pictures and plans. |
@@ -135,6 +136,31 @@ content. The application has no wording, no colour and no typeface of its own. T
   The text is Markdown with paragraphs, lists, **bold**, _italic_ and links, which lead where a
   content page's may; a link to an apartment's page must name one it has. The folds show while
   Beds24 cannot be reached, and the pages they link are built with the site.
+
+- **A page's map** ends a content page, after its text, when a file beside the page's files holds
+  its places: `pages/parking.map.json` for a site page, `pages/zirbe/arrival.map.json` for an
+  apartment's. It is the home map in its look, with the page's places instead of `site.json`'s; on
+  an apartment's page it walks from that apartment alone, on a site page from the apartment the
+  visitor chooses. Its places are written as those of `site.json`'s map, below, with their texts and
+  waypoints, and lie inside its box:
+
+  ```json
+  {
+    "places": [
+      {
+        "key": "bus-stop",
+        "icon": "bus",
+        "lat": 47.387771,
+        "lon": 12.647203,
+        "name": { "de-AT": "Haltestelle Ronachgrund", "en-GB": "Ronachgrund bus stop" }
+      }
+    ]
+  }
+  ```
+
+  The author picks the places, such as the nearest bins or car parks; the map searches for none. A
+  place's point is the one OpenStreetMap has for it, so that the tiles' own icon for it gives way to
+  the pin. The page's last section leads into the map, which has no heading of its own.
 
 - **Public or unlisted:** a content page the site's navigation links is public: for a site page the
   header or the footer, for an apartment's page a fold under "Good to know" of any apartment, in any
@@ -285,24 +311,26 @@ content. The application has no wording, no colour and no typeface of its own. T
 - **The map** (`map` in `site.json`) is optional. Its `box` is the area the map covers, as
   `{ "west": 12.6, "south": 47.375, "east": 12.67, "north": 47.405 }` in degrees, and its `places`
   are what it marks, in their order:
-  `{ "key": "schattberg", "icon": "cable-car", "lat": 47.39031, "lon": 12.63528 }`. The icon is any
-  Lucide icon and shows the place's kind; a place with `"more": true` is shown only once the map's
-  list of more places is unfolded. With a map, every apartment's file gives `lat` and `lon`, the
-  point where a guest leaves the house; without one, none does. An apartment whose name would cover
-  a neighbour's pin can give `"mapLabel": "left"` to show it left of its pin. Every point lies
-  inside the box. Pins of points close together, such as two apartments 50 m apart, may overlap in
-  the map's first view on a phone: each pin's tip still marks its point, a chosen pin lies over the
-  others, and zooming in separates them. A texts file names each place under `map.places.<key>` with
-  its `name`, and optionally a text for each season the site lists, such as
-  `"winter": "Gondola to the slopes"`. How the map is built is [ADR 14](adr/0014-the-map.md).
-- **The map's wording** (`map` in a texts file, beside `places`): `label` names the map for screen
-  readers; `from` heads the panel's choice of apartment and `more` labels its switch. The page
-  writes each walk's distance in its own language, such as "900 m" or "1,4 km". `zoomIn`, `zoomOut`,
-  `reset` (back to the view of the choices) and `attribution` name the map's buttons, `report`
-  labels the attribution's link to report an error in the map, as plain text, and `gestures` holds
-  the hints the map shows when a scroll without Ctrl (`windows`) or ⌘ (`mac`), or one finger
-  (`touch`), would move it. The map writes its labels in the theme's typeface: the first `.woff2`
-  file in `fonts/` that `theme.css` names, which a site with a map must have.
+  `{ "key": "supermarket", "icon": "shopping-cart", "lat": 47.3887, "lon": 12.6454, "name": { "de-AT": "Supermarkt", "en-GB": "Supermarket" } }`.
+  The icon is any Lucide icon and shows the place's kind; a place with `"more": true` is shown only
+  once the map's list of more places is unfolded. Its `name` is given in each of the site's
+  languages by tag, as a picture's `alt`, and optionally a text for each season the site lists,
+  `winter` and `summer`, by tag too, such as
+  `"winter": { "de-AT": "Gondel ins Skigebiet", "en-GB": "Gondola to the slopes" }`. With a map,
+  every apartment's file gives `lat` and `lon`, the point where a guest leaves the house; without
+  one, none does. An apartment whose name would cover a neighbour's pin can give
+  `"mapLabel": "left"` to show it left of its pin. Every point lies inside the box. Pins of points
+  close together, such as two apartments 50 m apart, may overlap in the map's first view on a phone:
+  each pin's tip still marks its point, a chosen pin lies over the others, and zooming in separates
+  them. How the map is built is [ADR 14](adr/0014-the-map.md).
+- **The map's wording** (`map` in a texts file): `label` names the map for screen readers; `from`
+  heads the panel's choice of apartment and `more` labels its switch. The page writes each walk's
+  distance in its own language, such as "900 m" or "1,4 km". `zoomIn`, `zoomOut`, `reset` (back to
+  the view of the choices) and `attribution` name the map's buttons, `report` labels the
+  attribution's link to report an error in the map, as plain text, and `gestures` holds the hints
+  the map shows when a scroll without Ctrl (`windows`) or ⌘ (`mac`), or one finger (`touch`), would
+  move it. The map writes its labels in the theme's typeface: the first `.woff2` file in `fonts/`
+  that `theme.css` names, which a site with a map must have.
 - **The map's tiles** are `map/tiles/<build>/`, cut out of a
   [Protomaps](https://maps.protomaps.com/builds/) planet build of OpenStreetMap at zoom 12 to 15
   inside the box, with `map/tiles.json` naming the build, the box and the number of tiles. They are
@@ -312,17 +340,18 @@ content. The application has no wording, no colour and no typeface of its own. T
   `node scripts/map-tiles.mjs 20261122` that day's. The old tiles stay until every new one has
   arrived, and keep their build when the newer build's tiles are the same. The demo's box is 62
   tiles, 773 kB.
-- **The walking routes** are `map/routes.json`: one line from each apartment to each place, with its
-  metres and minutes on foot, from Valhalla's pedestrian costing on FOSSGIS's server, which had
-  built its data the same day when checked on 2026-11-25. Compute them with
-  `node scripts/map-routes.mjs` when a point is added, moved or removed; it asks for one route a
-  second, as the service asks. The routes follow OpenStreetMap's ways, which do not say what is
-  closed or a piste in winter: walk them before a site shows them.
+- **The walking routes** are `map/routes.json`: one line from each apartment to each place, and from
+  each apartment a page's map walks from to each of its places, with its metres and minutes on foot,
+  from Valhalla's pedestrian costing on FOSSGIS's server, which had built its data the same day when
+  checked on 2026-11-25. Compute them with `node scripts/map-routes.mjs` when a point is added,
+  moved or removed; it asks for one route a second, as the service asks. The routes follow
+  OpenStreetMap's ways, which do not say what is closed or a piste in winter: walk them before a
+  site shows them.
 - **A route's waypoints** lead it the way people walk where the router takes another, such as a road
-  around the centre: an apartment's `via` gives, by a place's key, the points its route to that
-  place goes through, in their order:
-  `"via": { "tourist-office": [{ "lat": 47.38938, "lon": 12.64275 }] }`. The metres shown are the
-  route's through them. Try them first on
+  around the centre: a place's `via` gives, by an apartment's slug, the points the route from that
+  apartment goes through, in their order, as the demo's tourist office does:
+  `"via": { "zirbe": [{ "lat": 47.38938, "lon": 12.64275 }] }`. A page's place takes them too, from
+  an apartment its page walks from. The metres shown are the route's through them. Try them first on
   [valhalla.openstreetmap.de](https://valhalla.openstreetmap.de/) with the profile set to
   pedestrian: a right click on the map adds a via point, and the address lists the points as
   `wps=lon,lat,lon,lat,…`, longitude first. The router moves a point to the nearest way and never
@@ -376,6 +405,8 @@ beyond a limit fails its build, with the limit named.
 | A content page's title | A word as wide as the column at 300 px, or one with a soft hyphen (`&shy;`) where it may break, as the demo's `Geschäfts&shy;bedingungen` | Headlines are not hyphenated, and the layout holds down to 300 px (DESIGN.md): a longer word would make the page scroll sideways | Not checked: a deployment looks at its titles at 300 px |
 | The map's box | At most 0.1° each way, within 85° of latitude | The tiles grow with the area, and the repository and the image carry them; the demo's 0.07° by 0.03° is 773 kB | The schema |
 | The map's places | 1 to 10 | One route for each apartment and place, and the map's list of places | The schema |
+| A place's name | Two lines beside its pin at 320 px, about 30 characters | A chosen place's name stands beside its pin, 120 px wide at most at 320 px so that it clears the zoom buttons; a longer name takes a third line | Not the build: an e2e test puts 28 letters into the label at 320 and 768 px |
+| A page's map | One, after the page's text, with 1 to 10 places | A map within the text would split the page around a block that loads late; the routes and the list as the home map's | The schema and the content script |
 | The map's error link (`map.report`) | 32 characters | The opened attribution keeps to two lines at 320 px, below the gesture hint; 55 characters still did | The schema; an e2e test puts 32 wide letters into it at every width |
 
 **The site name's size comes from its length,** at an assumed 0.55em per letter: the widest
@@ -400,12 +431,13 @@ a missing picture, an apartment picture that is not one, does not answer, is por
 `viewBox`, has text, a script or a reference to another file, a zone or its label outside the
 `viewBox`, a zone no picture shows or a picture's zone the plan lacks, a plan's or a zone's text
 missing in a language, an apartment without its file or a file in `apartments/` that `site.json`
-does not list, a point outside the map's box or an apartment's point without a map, a waypoint on
-the way to no place of the map, a place without its name or with a text for a season the site does
-not list, tiles cut for another box or a tile missing, a `map/` folder without a map, a map without
-a `.woff2` font in `theme.css`, a route missing, left over or computed before a point moved, a
-content page without its file, address or link text in a language, a page file `site.json` or its
-apartment does not list, a page key the site lists too, a fold without its title or text in a
+does not list, a point outside the map's box or an apartment's point without a map, a waypoint from
+an apartment the map does not walk from, a place's name or text missing in a language or a text for
+a season the site does not list, tiles cut for another box or a tile missing, a `map/` folder
+without a map, a map without a `.woff2` font in `theme.css`, a route missing, left over or computed
+before a point moved, a content page without its file, address or link text in a language, a page
+file `site.json` or its apartment does not list, a page's map for a site without a map or with a
+place outside the box, a page key the site lists too, a fold without its title or text in a
 language, with an icon that is not Lucide's, an element its text does not show or a link to no
 apartment's page, a header or footer link to no page, a footer link the header has, two pages at one
 address, a page that does not open with its title or holds an element, an attribute, a link or a

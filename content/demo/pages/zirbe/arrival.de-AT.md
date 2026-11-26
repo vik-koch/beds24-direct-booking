@@ -11,12 +11,12 @@ den [häufigen Fragen](/de/haeufige-fragen#ankunft).
 Folgen Sie der Straße durch das Glemmtal nach Saalbach und biegen Sie bei der Kirche rechts in den
 Musterweg. Haus Firn ist das letzte Haus links, mit seinem Namen über der Tür. Ihr Stellplatz, wenn
 Sie einen gebucht haben, ist der erste neben dem Haus; bitte lassen Sie die anderen für die Gäste
-der Lärche frei.
+der Lärche frei. Ohne Stellplatz parken Sie im Parkhaus Zentrum im Ortszentrum.
 
 ## Mit Zug und Bus
 
-Vom Bahnhof Zell am See hält der Regionalbus durch das Glemmtal in Saalbach Ort. Von dort gehen Sie
-an der Kirche vorbei hinauf in den Musterweg: etwa fünf Minuten, am Ende ein kurzes Stück bergauf.
+Vom Bahnhof Zell am See hält der Regionalbus durch das Glemmtal in Saalbach Ronachgrund: Die Karte
+am Ende dieser Seite zeigt den Weg von der Haltestelle und vom Parkhaus.
 
 ## Am Haus
 

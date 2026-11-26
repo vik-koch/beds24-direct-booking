@@ -9,6 +9,7 @@
     "privacy": "privacy",
     "terms": "terms",
     "credits": "picture-credits",
+    "parking": "parking",
     "arrival": "getting-here",
     "guide": "guide"
   },
@@ -59,6 +60,7 @@
     "privacy": "Privacy",
     "terms": "Rental terms",
     "credits": "Picture credits",
+    "parking": "Parking",
     "arrival": "Getting here",
     "guide": "Apartment guide"
   },
@@ -213,20 +215,6 @@
       "windows": "Hold Ctrl and scroll to zoom the map",
       "mac": "Hold ⌘ and scroll to zoom the map",
       "touch": "Use two fingers to move the map"
-    },
-    "places": {
-      "schattberg": {
-        "name": "Schattberg X-press",
-        "winter": "Gondola to the slopes",
-        "summer": "Gondola to hiking and bike trails"
-      },
-      "kohlmais": {
-        "name": "Kohlmaisbahn",
-        "winter": "Gondola to the slopes",
-        "summer": "Gondola to hiking and bike trails"
-      },
-      "tourist-office": { "name": "Tourist office" },
-      "supermarket": { "name": "Supermarket" }
     }
   },
   "placeholder": "This page is still being built.",
