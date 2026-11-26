@@ -1,6 +1,6 @@
 # Imprint
 
-> Firn & Farn is made up: this website is a demo. The company and everything on this page are
+> :info: Firn & Farn is made up: this website is a demo. The company and everything on this page are
 > examples of what an Austrian landlord gives here, except the email address: it is real and reaches
 > the person who runs the demo.
 

@@ -1,7 +1,7 @@
 # Parking
 
-> Firn & Farn is made up: this page is a demo, and the parking spaces at the houses are examples;
-> the car parks are Saalbach's own.
+> :info: Firn & Farn is made up: this page is a demo, and the parking spaces at the houses are
+> examples; the car parks are Saalbach's own.
 
 Each house has a few parking spaces of its own, which you book with your week. Please park only in
 the space your booking names: the others belong to the guests of the other apartments.

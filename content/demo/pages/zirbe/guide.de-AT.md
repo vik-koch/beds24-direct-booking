@@ -1,6 +1,6 @@
 # Ihre Wohnungsmappe zur Zirbe
 
-> Firn & Farn ist erfunden: Diese Seite ist eine Demo, die Wohnung und ihre Ausstattung sind
+> :info: Firn & Farn ist erfunden: Diese Seite ist eine Demo, die Wohnung und ihre Ausstattung sind
 > Beispiele.
 
 Willkommen in der Zirbe. Diese Seite ist für Ihren Aufenthalt: Der QR-Code bei der Tür führt

@@ -1,7 +1,7 @@
 # Rental terms
 
-> Firn & Farn is made up: this website is a demo, and these terms are an example of what an Austrian
-> landlord of holiday apartments sets out here. They are not a template for real contracts.
+> :info: Firn & Farn is made up: this website is a demo, and these terms are an example of what an
+> Austrian landlord of holiday apartments sets out here. They are not a template for real contracts.
 
 These terms apply to renting our holiday apartments in Saalbach. The landlord is Firn & Farn
 Appartements GmbH (see the [imprint](/en/imprint)).
