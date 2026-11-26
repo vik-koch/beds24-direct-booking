@@ -1112,7 +1112,14 @@ test('the routes go into a module of their own, for the map alone', async () => 
     );
   for (const file of ['site.ts', 'places.ts', 'page.en.parking.ts'])
     assert.doesNotMatch(readFileSync(join(out, file), 'utf8'), /"line"|"via"/);
-  assert.match(readFileSync(join(out, 'places.ts'), 'utf8'), /"tourist-office"/);
+  assert.match(
+    readFileSync(join(out, 'places.ts'), 'utf8'),
+    /"Tourismusverband"[^]*"Tourist office"/,
+  );
+  // A page's map names its places in its page's language alone.
+  const arrival = readFileSync(join(out, 'page.en.zirbe.arrival.ts'), 'utf8');
+  assert.match(arrival, /"en": "Ronachgrund bus stop"/);
+  assert.doesNotMatch(arrival, /Haltestelle/);
 });
 
 test('the lifts go into a module of their own, for the map alone', async () => {

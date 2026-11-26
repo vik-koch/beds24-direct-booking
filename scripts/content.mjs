@@ -837,7 +837,7 @@ export async function writeContent(dir, out, cache) {
     converted += page.converted;
     shown[at] = page.picture;
   }
-  const withFiles = ({ title, html, places }) => {
+  const withFiles = ({ title, html, places }, code) => {
     const template = parse(html);
     for (const img of template.content.querySelectorAll('img')) {
       const sized = img.getAttribute('width');
@@ -857,18 +857,27 @@ export async function writeContent(dir, out, cache) {
       img.setAttribute('height', height);
       img.setAttribute('loading', 'lazy');
     }
-    return { title, html: template.innerHTML, ...(places && { places: places.map(marked) }) };
+    return {
+      title,
+      html: template.innerHTML,
+      ...(places && { places: places.map((place) => marked(place, code)) }),
+    };
   };
   // Texts by address prefix, as the texts are; the routes' points stay with the routes. A plan is
   // served under a name that changes with it, as a converted picture is.
   const byPrefix = (texts) =>
     Object.fromEntries(Object.entries(texts).map(([tag, text]) => [prefix(tag), text]));
-  const marked = ({ via, name, winter, summer, ...place }) => ({
-    ...place,
-    name: byPrefix(name),
-    ...(winter && { winter: byPrefix(winter) }),
-    ...(summer && { summer: byPrefix(summer) }),
-  });
+  // A place's texts: a page's in its page's language alone, site.json's in every language.
+  const marked = ({ via, name, winter, summer, ...place }, code) => {
+    const texts = (value) =>
+      Object.fromEntries(Object.entries(byPrefix(value)).filter(([key]) => !code || key === code));
+    return {
+      ...place,
+      name: texts(name),
+      ...(winter && { winter: texts(winter) }),
+      ...(summer && { summer: texts(summer) }),
+    };
+  };
   const served = (slug, plan) => {
     const bytes = readFileSync(join(dir, plan.file));
     const name = `${slug}-plan.${createHash('sha256').update(bytes).digest('hex').slice(0, 8)}.svg`;
@@ -904,7 +913,10 @@ export async function writeContent(dir, out, cache) {
   );
   writeFileSync(
     join(out, 'places.ts'),
-    module('Place[]', places.map(marked)).replace('{ Place[] }', '{ Place }'),
+    module(
+      'Place[]',
+      places.map((place) => marked(place)),
+    ).replace('{ Place[] }', '{ Place }'),
   );
   const round = (value) => Math.round(value * 1e5) / 1e5;
   const routes = site.map
@@ -943,7 +955,7 @@ export async function writeContent(dir, out, cache) {
     for (const [key, page] of Object.entries(list))
       writeFileSync(
         join(out, `page.${code}.${key.replace('/', '.')}.ts`),
-        module('ContentPage', withFiles(page)),
+        module('ContentPage', withFiles(page, code)),
       );
   const pageLoaders = Object.entries(pages).map(
     ([code, list]) =>
