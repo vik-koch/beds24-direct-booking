@@ -17,8 +17,9 @@ Diese Bedingungen gelten für die Miete unserer Ferienwohnungen in Saalbach. Ver
 
 ## 2. Preise und Zahlung
 
-1. Der Wochenpreis gilt für die Wohnung, nicht pro Person. Er enthält Bettwäsche, Handtücher, Strom,
-   Heizung, WLAN und die Endreinigung.
+1. Die Preise sind in Euro (EUR) und enthalten die Umsatzsteuer. Der Wochenpreis gilt für die
+   Wohnung, nicht pro Person. Er enthält Bettwäsche, Handtücher, Strom, Heizung, WLAN und die
+   Endreinigung.
 2. Bei der Buchung zahlen Sie 30 % des Preises an, den Rest bis 28 Tage vor der Anreise. Buchen Sie
    später, zahlen Sie den ganzen Betrag sofort.
 3. Sie zahlen über das Buchungsformular mit den Zahlungsarten, die es anbietet.
