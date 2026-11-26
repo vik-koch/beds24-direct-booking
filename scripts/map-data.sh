@@ -44,7 +44,7 @@ const now = (file) => JSON.parse(readFileSync(`${map}/${file}`, 'utf8'));
 const lines = [];
 const [tiles, newTiles] = [was('tiles.json'), now('tiles.json')];
 if (tiles.build !== newTiles.build) lines.push(`- Tiles of build ${newTiles.build}, were ${tiles.build}`);
-const key = ({ properties: p }) => `${p.apartment} to ${p.place}`;
+const key = ({ properties: p }) => `${p.page ? `${p.page}: ` : ''}${p.apartment} to ${p.place}`;
 const walk = ({ properties: p }) => `${p.meters} m, ${p.minutes} min`;
 const routes = new Map(was('routes.json').features.map((route) => [key(route), route]));
 for (const route of now('routes.json').features) {

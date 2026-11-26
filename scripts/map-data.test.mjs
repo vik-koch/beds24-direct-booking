@@ -13,9 +13,9 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
 
-const route = (meters, minutes, end = [12.61, 47.39]) => ({
+const route = (meters, minutes, end = [12.61, 47.39], page) => ({
   type: 'Feature',
-  properties: { apartment: 'ahorn', place: 'lake', meters, minutes },
+  properties: { ...(page && { page }), apartment: 'ahorn', place: 'lake', meters, minutes },
   geometry: { type: 'LineString', coordinates: [[12.6, 47.38], end] },
 });
 const lift = (name, top = 47.4) => ({
@@ -30,6 +30,9 @@ const lift = (name, top = 47.4) => ({
 });
 const lifts = (...features) => ({ type: 'FeatureCollection', features });
 
+// A page's map may have a place of the same key as site.json's map.
+const committed = [route(1000, 13), route(960, 12, undefined, 'parking')];
+
 // A site's repository with its map committed and pushed, the script beside stand-ins for the map
 // scripts, which write `writes` into the map, for the content check, which refuses the map when
 // `invalid`, and for gh, which notes its calls and knows `pr`.
@@ -43,7 +46,7 @@ function site(writes, { pr = '', invalid = false } = {}) {
   git('init', '-q', '-b', 'main');
   git('remote', 'add', 'origin', join(root, 'origin.git'));
   writeFileSync(join(map, 'tiles.json'), JSON.stringify({ build: '20261122' }));
-  writeFileSync(join(map, 'routes.json'), JSON.stringify({ features: [route(1000, 13)] }));
+  writeFileSync(join(map, 'routes.json'), JSON.stringify({ features: committed }));
   writeFileSync(join(map, 'lifts.json'), JSON.stringify(lifts(lift('Ahornbahn'))));
   git('add', '.');
   git('-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-q', '-m', 'map');
@@ -122,7 +125,7 @@ test('data the content build refuses is not proposed', () => {
 test('changed data is pushed to map-data and opens a pull request that names the changes', () => {
   const { run, gh, proposed, git } = site({
     'tiles.json': { build: '20261130' },
-    'routes.json': { features: [route(900, 12, [12.62, 47.39])] },
+    'routes.json': { features: [route(900, 12, [12.62, 47.39]), committed[1]] },
     'lifts.json': lifts(lift('Ahornbahn'), lift('Gipfelbahn'), lift('Gipfelbahn')),
   });
   assert.equal(run.status, 0, run.stderr);
@@ -152,10 +155,13 @@ test('a run with a pull request open replaces its branch and its description', (
 
 test('a walk that takes longer on the same line, and a lift that moved, are named', () => {
   const { proposed } = site({
-    'routes.json': { features: [route(1000, 15)] },
+    'routes.json': { features: [committed[0], route(960, 13, undefined, 'parking')] },
     'lifts.json': lifts(lift('Ahornbahn', 47.41)),
   });
-  assert.match(proposed, /- Route ahorn to lake: 1000 m, 15 min, was 1000 m, 13 min/);
+  assert.match(
+    proposed,
+    /- Route parking: ahorn to lake: 960 m, 13 min, was 960 m, 12 min\n- Lift/,
+  );
   assert.match(
     proposed,
     /- Lift new or changed: gondola Ahornbahn\n- Lift gone or changed: gondola Ahornbahn/,
