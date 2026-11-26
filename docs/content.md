@@ -315,6 +315,9 @@ content. The application has no wording, no colour and no typeface of its own. T
   keep its footer short and give the full details on its imprint page. A site with a map gives an
   email address of its operator that reaches someone, on its imprint page at least: the map's
   walking routes come from FOSSGIS's routing servers, whose usage policy asks for one.
+- **Stripe's review** looks at the contact, the rental terms, the privacy page and how prices are
+  shown before it activates payments: [`stripe-review.md`](stripe-review.md) lists what it asks for
+  and how the demo meets it.
 - **The map** (`map` in `site.json`) is optional. Its `box` is the area the map covers, as
   `{ "west": 12.6, "south": 47.375, "east": 12.67, "north": 47.405 }` in degrees, and its `places`
   are what it marks, in their order:
