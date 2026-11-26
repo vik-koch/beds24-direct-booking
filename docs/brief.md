@@ -10,8 +10,8 @@ mountain resort: two apartments now, four soon. Today the apartments are bookabl
 only. The website offers the same weeks at a lower price, because no commission is paid.
 
 Beds24 is the property management system: it holds availability, prices and bookings, connects the
-channels (Booking.com now, Airbnb next), and takes the booking and the payment. The website shows
-what Beds24 knows and hands over to it for checkout.
+channels (Booking.com now, Airbnb next), and holds the bookings. The website shows what Beds24
+knows, books the chosen week through its API and takes the payment through Stripe Checkout.
 
 The repository is public as a portfolio piece and carries a fictional demo only: _Firn & Farn_, an
 invented business with three apartments in two houses in Saalbach in Austria, in German and English.
@@ -44,8 +44,8 @@ repository publishes. Nothing about the real business goes into the public repos
 |---|---|---|
 | PMS | Beds24 | Strongest API for the price at this size. |
 | Framework | Angular with SSR, content pages prerendered | Known framework; the new things are the workflow and the UI. |
-| Server | One Node process: the SSR server with one availability route and an in-memory cache | The API token stays on the server; Beds24 limits calls to 100 credits per 5 minutes; a refresh costs about 3. No Redis, no separate backend. |
-| Booking step | Own week view, then hand over to the Beds24 booking page with apartment and week preselected | Own checkout would bring payments and persistence. The hand-over is an iframe; see the open decisions for what is untested. |
+| Server | One Node process: the SSR server with its availability route, the booking step and an in-memory cache | The API token stays on the server; Beds24 limits calls to 100 credits per 5 minutes; a refresh costs about 3. No Redis, no separate backend. |
+| Booking step | Own week view and booking form; the server books the week through the Beds24 API and the guest pays on Stripe Checkout ([ADR 18](adr/0018-booking-through-the-api-and-stripe-checkout.md)) | The framed Beds24 form loses the guest's details at the payment. Beds24 holds the booking and Stripe the payment, so the site still stores nothing. |
 | Primary view | A stay picker per apartment: a list of stays with price or "booked", and a calendar of months behind a switch. The home page shows the list with one price column per apartment | Stays are Saturday to Saturday; not every week is bookable. A week with any night taken shows as unavailable. |
 | Listing | A Beds24 room is the listing (one apartment); a property is the group above it that carries address, coordinates, check-in times and house rules. A property may hold one room or several. Every property of a site prices in one currency: the site shows each price in the first listed room's currency, and properties in different currencies are not supported | The real business uses one property per apartment; the demo can show both shapes. The API keys availability and prices by room, so this costs nothing. |
 | Bookable weeks | Derived from Beds24, not hard-coded: a week starts and ends on days without the "no check-in or out" override, has seven free, priced nights, and starts no sooner than the price rule's lead time | Verified in the spike; the weekday and the lead time stay Beds24 settings. The calendar does not apply the lead time, so the site does. |
@@ -64,9 +64,9 @@ repository publishes. Nothing about the real business goes into the public repos
 | Tracking | None that needs consent | Goal: no cookie banner. |
 | UI | Tailwind with spartan/ui's copy-in components (ADR 4) and Lucide, the icon set those components use; the stay picker is built from native radio buttons and Angular Aria's grid, as a spike decided (ADR 4's conditions); the free-weeks list is an Angular Aria grid | No self-built components; two custom themes stay easy. |
 | Repo shape | One Angular app, no workspace tool, no libraries; the simulator in a second folder | The code is small. |
-| Beds24 simulator | Small own server that answers in the recorded response shapes from fictional data; it is the demo's runtime backend and the e2e tests' backend, and includes a fake booking page | The demo has no real Beds24 account or token; the booking flow needs state. The real recordings stay private as the reference. |
-| Name | Repository `beds24-direct-booking`; the demo at `beds24.vikkoch.com`, not indexed, its booking page plainly marked as simulated | Says what it is and is findable. The seasons go into the tagline: "seasonal rental" means something else. |
-| Beds24 coupling | The site talks to Beds24 directly: one `beds24` module with the client, the cache and the mapping into the site's own weeks. Its code says room, as Beds24 does; "apartment" is a word of the content. One unit per room type. No provider interface | One provider is the truth at this size; a second would change the simulator and the hand-over too. The mapping exists because the wire shapes are awkward, not for swapping. |
+| Beds24 simulator | Small own server that answers in the recorded response shapes from fictional data; it is the demo's runtime backend and the e2e tests' backend; it takes bookings and plays Stripe Checkout | The demo has no real Beds24 account or token; the booking flow needs state. The real recordings stay private as the reference. |
+| Name | Repository `beds24-direct-booking`; the demo at `beds24.vikkoch.com`, not indexed, its checkout plainly marked as simulated | Says what it is and is findable. The seasons go into the tagline: "seasonal rental" means something else. |
+| Beds24 coupling | The site talks to Beds24 directly: one `beds24` module with the client, the cache and the mapping into the site's own weeks. Its code says room, as Beds24 does; "apartment" is a word of the content. One unit per room type. No provider interface | One provider is the truth at this size; a second would change the simulator and the booking step too. The mapping exists because the wire shapes are awkward, not for swapping. |
 | Hosting | One small VM per site (1 GB works with a capped SSR heap and swap, 2 GB is comfortable), images built in CI | The Beds24 production token wants an IP whitelist, so a static address. No database and mostly prerendered pages keep it small. |
 | Proxy | Traefik in front, routing by container labels, on every VM | TLS, redirects and headers need a proxy anyway, and there compression covers rendered pages and static files with no dependency in the app; one compose file then serves the shared demo VM and a site's own VM. |
 | Stack | A `web` container (SSR and the availability route); a `sim` container on the demo only | Nothing else is needed. No observability stack on a site's VM: an external uptime check. |
@@ -84,15 +84,8 @@ repository publishes. Nothing about the real business goes into the public repos
 
 ## Open decisions
 
-- **The booking step** (decided as far as a trial account allows): own stay picker and guest count,
-  then the Beds24 guest form in an iframe by deep link, restyled through the booking engine's CSS
-  and script settings, with an own confirmation page behind the return URL. Payment may leave the
-  frame for Beds24's page. Untested until the account has paid: the confirmation, the payment, the
-  return, and the frame's cookie in Safari (accepted risk, checked in
-  [issue 100](https://github.com/vik-koch/beds24-direct-booking/issues/100)). Fallbacks: the same
-  link as a full page, then an own form through the API.
-- **Token handling in production:** scopes `read:inventory` and `read:properties` only, an IP
-  whitelist, and a refresh token exchanged for 24-hour access tokens. To confirm later.
+- **The production token's IP allowlist:** its scopes and renewal are decided in ADR 18; the
+  allowlist is confirmed when the token is set up.
 - **The real site's name, domain and logo.** `.com` as the main domain; the national domain
   redirects to its language.
 
@@ -113,9 +106,10 @@ repository publishes. Nothing about the real business goes into the public repos
 4. Done: the design round, the structure in `site-map.md`, then the visual direction in `DESIGN.md`.
 5. Slices, each building its part of `site-map.md`: shell with languages and the notice (done);
    seasons with the switch, the hero and the picture credits (done); the free-weeks list (done);
-   apartment pages with the stay picker and the hand-over; map; guides and FAQ; company and legal
-   pages; SEO, accessibility and performance pass.
-6. Once the Beds24 account has paid: the confirmation, the payment and the return URL.
+   apartment pages with the stay picker; map; guides and FAQ; company and legal pages; SEO,
+   accessibility and performance pass.
+6. The site public for the payment provider's review, then the booking step: an own form, the
+   booking through the API, the payment through Stripe Checkout (ADR 18).
 7. The private deployment: real content, legal texts, domain: `1.0.0`.
 
 Beside this runs the business work: the listings' migration to Beds24 and the channel connection.
