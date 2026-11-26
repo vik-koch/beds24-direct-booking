@@ -316,9 +316,9 @@ content. The application has no wording, no colour and no typeface of its own. T
   are what it marks, in their order:
   `{ "key": "supermarket", "icon": "shopping-cart", "lat": 47.3887, "lon": 12.6454, "name": { "de-AT": "Supermarkt", "en-GB": "Supermarket" } }`.
   The icon is any Lucide icon and shows the place's kind; a place with `"more": true` is shown only
-  once the map's list of more places is unfolded. Its `name` is given in each of the site's
-  languages by tag, as a picture's `alt`, and optionally a text for each season the site lists,
-  `winter` and `summer`, by tag too, such as
+  once the map's list of more places is unfolded, so at least one place is not, a map's only place
+  among them. Its `name` is given in each of the site's languages by tag, as a picture's `alt`, and
+  optionally a text for each season the site lists, `winter` and `summer`, by tag too, such as
   `"winter": { "de-AT": "Gondel ins Skigebiet", "en-GB": "Gondola to the slopes" }`. With a map,
   every apartment's file gives `lat` and `lon`, the point where a guest leaves the house; without
   one, none does. An apartment whose name would cover a neighbour's pin can give

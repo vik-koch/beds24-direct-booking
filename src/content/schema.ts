@@ -109,7 +109,8 @@ const places = z
   .array(place)
   .min(1, 'at least one place')
   .max(10, 'at most ten places')
-  .refine((list) => unique(list, (p) => p.key), 'a place key is listed twice');
+  .refine((list) => unique(list, (p) => p.key), 'a place key is listed twice')
+  .refine((list) => list.some((p) => !p.more), 'every place behind more: the list would be empty');
 
 // The map: the box its tiles cover and its places.
 const map = z

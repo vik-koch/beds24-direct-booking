@@ -1060,6 +1060,10 @@ test("a page's map has a title and lists places inside the box, each with a Luci
     ],
     [(map) => (map.places[1].key = map.places[0].key), /places: a place key is listed twice/],
     [(map) => (map.places = []), /places: at least one place/],
+    [
+      (map) => map.places.forEach((place) => (place.more = true)),
+      /places: every place behind more: the list would be empty/,
+    ],
   ];
   for (const [change, error] of cases)
     assert.throws(() => readContent(changed(sidecar, change)), error);
