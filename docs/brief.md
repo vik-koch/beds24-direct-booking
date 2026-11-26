@@ -33,7 +33,8 @@ repository publishes. Nothing about the real business goes into the public repos
 ## Non-goals in phase 1
 
 - No database and no content editor: content comes from files in the repository.
-- No own checkout or payment: Beds24 does both.
+- No booking database and no card entry: Beds24 holds the bookings and Stripe's page takes the card
+  (ADR 18).
 - No accounts, no guest messaging, no own reviews.
 - No second environment: one deployment per site.
 

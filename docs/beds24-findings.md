@@ -12,9 +12,11 @@ are kept privately, because they hold the account's data. Amounts here are examp
 - **OpenAPI file:** public at `https://beds24.com/api/v2/apiV2.yaml` (263 kB). Good enough to
   generate types and to check the simulator against, but wrong in places: see the rate limit.
 - **Tokens:** a long-life token is used directly and expires after about 90 days. An invite code
-  from the control panel is exchanged once, at `GET /authentication/setup`, for a refresh token that
-  lives as long as it is used within 30 days. A refresh token is exchanged for a 24-hour access
-  token at `GET /authentication/token`. `GET /authentication/details` reports scopes and expiry.
+  from the control panel is exchanged once, at `GET /authentication/setup`, for a refresh token
+  (tried). The OpenAPI file says a refresh token lives as long as it is used within 30 days;
+  inactivity was not tried. With the header `refreshToken`, `GET /authentication/token` answers a
+  24-hour access token with the same scopes and no new refresh token (tried).
+  `GET /authentication/details` reports scopes and expiry.
 - **Scopes:** reading the listings needs `read:inventory` and `read:properties`. Booking adds
   `write:bookings`, `write:bookings-personal` and `write:bookings-financial`. A write scope does not
   include reading: a token with only these five runs the whole booking step but cannot read a
@@ -34,7 +36,7 @@ are kept privately, because they hold the account's data. Amounts here are examp
 |---|---|---|
 | `GET /properties` | Facts, texts, price rules, upsell items and the booking page multiplier, per property and room. Needs its `include*` parameters: `includeAllRooms`, `includeTexts=all`, `includeLanguages=all`, `includePriceRules`, `includeUpsellItems`, `includeUnitDetails`. | Listings. |
 | `GET /inventory/rooms/calendar` | Per room, compressed date ranges (`from`, `to`) carrying `numAvail`, `minStay`, `maxStay`, `override`, `multiplier` and `price1`. Returns nothing unless the matching `include*` parameters are passed. | The week grid, in one call. |
-| `GET /inventory/rooms/offers` | The price for one concrete stay (`arrival`, `departure`, `numAdults`), all rooms in one call. An unbookable stay returns the room without an `offers` array, not an error. | The authority on price and bookability. One call per stay, so for tests only, not for the grid. |
+| `GET /inventory/rooms/offers` | The price for one concrete stay (`arrival`, `departure`, `numAdults`), all rooms in one call. An unbookable stay returns the room without an `offers` array, not an error. | The authority on price and bookability. One call per stay: the booking step checks the chosen stay with it, and tests compare the grid with it. |
 | `GET /inventory/rooms/availability` | Per room, a map of date to `true` or `false`. | Not needed: `calendar` carries `numAvail`. |
 
 Seen and not used:

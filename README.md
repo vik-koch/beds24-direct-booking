@@ -2,8 +2,8 @@
 
 A direct-booking website for holiday apartments that are rented by the week. Beds24 is the property
 management system: it holds availability, prices, listing texts and the bookings. The site shows the
-free weeks with their prices. From 0.8.0 its own booking form books the chosen week through the
-Beds24 API, and the guest pays on Stripe Checkout.
+free weeks with their prices. The booking step planned for 0.8.0 is its own form, which books the
+chosen week through the Beds24 API; the guest pays on Stripe Checkout.
 
 **Status:** `0.6.0` is the current release. The home page shows the two seasons, each with its hero
 picture and tab icon, the free weeks of every apartment with their prices from Beds24, and each

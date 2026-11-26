@@ -34,13 +34,19 @@ weighs:
    refuses one taken in the meantime.
 3. **The guest pays on Stripe Checkout,** reached by a redirect in the same tab. The session belongs
    to the business's Stripe account, is created with a key restricted to Checkout Sessions, carries
-   the booking's ID, accepts cards, and expires after 30 minutes.
-4. **The return proves nothing by itself.** The server reads the session from Stripe. Only a paid
-   session for the booking's amount and ID records a payment item in Beds24, confirms the booking
-   and has Beds24 send the confirmation. The session's metadata notes that it was recorded, so
-   nothing is recorded twice.
-5. **A timer settles the rest.** Every few minutes the server lists recent sessions: one paid
-   without its guest returning is recorded, one expired has its booking cancelled.
+   the booking's ID, accepts cards, and expires after 30 minutes. If Stripe refuses the session, the
+   booking is cancelled at once. If the outcome of either call is unknown, the server logs the
+   booking's ID, without guest data, and a booking left `new` without a session is cancelled by
+   hand.
+4. **The return proves nothing by itself.** The server reads the session from Stripe and trusts only
+   what its own key set when it created the session: the booking's ID in the metadata and the
+   amount. A session paid in full, and not yet marked, is recorded in three steps: a payment item
+   and `confirmed` in Beds24, then a mark in the session's metadata, then Beds24's confirmation to
+   the guest.
+5. **A timer settles the rest.** Every few minutes the server lists the sessions past their expiry
+   time: one paid and not marked is recorded as on the return, one unpaid has its booking cancelled.
+   A guest can pay only before that time and returns straight after paying, so the timer and the
+   return do not handle the same session.
 6. **The site stores nothing.** Beds24 holds the booking, Stripe the payment. Guest data passes
    through the server and is never logged.
 7. **One Beds24 token** with write on bookings, guest data and finances and read on inventory and
@@ -66,7 +72,7 @@ Within the chosen option:
 | Checkout as a redirect to Stripe's page | No script of Stripe's on the site; Stripe handles 3-D Secure. | The guest sees Stripe's page, with the business's name and logo, for one step. | Chosen. |
 | Checkout embedded in the site's page | The guest stays on the site. | Stripe's script on the site, an entry in its content policy, and Stripe's fraud cookies. | Rejected for now; its own issue if the redirect feels foreign. |
 | A Stripe webhook for payments that never return | Immediate. | A public endpoint, a second secret, and a sender the simulator and the tests must fake. | Rejected. |
-| A timer that lists recent sessions | No endpoint and no further secret; the restricted key may list sessions. | A paid booking without its guest's return is confirmed minutes later. | Chosen. |
+| A timer that lists recent sessions | No endpoint and no further secret; the restricted key may list sessions. | A paid booking without its guest's return is confirmed only after the session's expiry time, up to about 35 minutes later. | Chosen. |
 
 ## What this rests on
 
@@ -75,15 +81,22 @@ Within the chosen option:
   `notifyGuest` sending the confirmation; a token with only the five scopes running the whole flow
   and failing to read a booking; a Checkout session paid with a plain test card and with a 3-D
   Secure test card, read back on the server, and recorded in Beds24 as a payment and `confirmed`.
-- **Taken from documentation:** that sessions expire, at the earliest after 30 minutes, and can be
-  listed; Beds24's description of `createStripeSession`.
+- **Also verified:** the restricted key lists sessions; the invite code's exchange and the refresh
+  of an access token.
+- **Taken from documentation:** that an unpaid session expires at its `expires_at`, at the earliest
+  30 minutes after it is created; that a refresh token lives while it is used within 30 days;
+  Beds24's description of `createStripeSession`.
 - **Not checked:** Stripe in live mode, wallets and a real card's 3-D Secure; Stripe Checkout in
-  Safari on a real iPhone; the cancel return and an expired session; the IP allowlist; refunds.
+  Safari on a real iPhone; the cancel return and an expired session; the recording steps' order and
+  the timer's window under failure; the IP allowlist; refunds.
 
 ## Consequences
 
 - **Keeping Beds24 and Stripe in step is ours.** The booking exists before the payment and is
-  confirmed after it, and every step must survive a reload, a closed tab or a failed call.
+  confirmed after it, and every step must survive a reload, a closed tab or a failed call. Two cases
+  remain for the host: a booking left `new` when a call's outcome is unknown, and a second payment
+  item when Beds24 took the payment but the session's mark failed, so the timer records it again.
+  The guest gets one confirmation either way, because it follows the mark.
 - **The site carries two secrets:** the Beds24 token, which can change any booking, and the Stripe
   key. Both stay on the server and out of logs.
 - **Guest data passes through the site** on its way to Beds24 and Stripe, so the privacy page says
