@@ -258,9 +258,8 @@ type Fold = ReturnType<typeof fold>;
         }
       </div>
     </div>
-    <!-- As on the home page: the map runs edge to edge, its heading stays in the column. -->
     @if (hasMap) {
-      <section class="apartment-location">
+      <section class="map-section">
         <h2 class="column" [id]="language.anchors.location">{{ texts.nav.location }}</h2>
         @defer (on viewport; when handover.drawn; hydrate on viewport) {
           <app-location-map [apartment]="apartment.slug" />
@@ -285,21 +284,6 @@ type Fold = ReturnType<typeof fold>;
         h1 {
           margin-top: 0.5rem;
         }
-      }
-
-      :is(.apartment, .apartment-location) {
-        --size-heading: clamp(1.375rem, 1.2rem + 0.8vw, 1.75rem);
-
-        h2 {
-          margin-bottom: 1rem;
-          font-size: var(--size-heading);
-          font-weight: var(--font-weight-medium);
-          letter-spacing: -0.01em;
-        }
-      }
-
-      .apartment-location {
-        padding-top: var(--space-section);
       }
 
       .back {

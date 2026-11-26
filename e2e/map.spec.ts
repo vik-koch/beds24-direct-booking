@@ -946,6 +946,13 @@ test("a site page's map follows its text, loads once in view and marks the page'
   await drawMap(page, scrollToPageMap);
   expect(loaded()).toBe(true);
   await page.setViewportSize({ width: 1280, height: 900 });
+  // Its title heads it in the column, as the apartment page's location heads its map.
+  const title = page.locator('.map-section > h2');
+  await expect(title).toHaveText('The way from the car');
+  await expect(title).toHaveClass('column');
+  expect(await title.evaluate((h2) => getComputedStyle(h2).fontWeight)).toBe(
+    await page.locator('h1').evaluate((h1) => getComputedStyle(h1).fontWeight),
+  );
   // The page's places alone, not the home map's.
   await expect(places(page)).toHaveText(['Parkhaus Zentrum', 'Schattberg car park']);
   await expect(page.locator('.map-place')).toHaveCount(2);
@@ -968,37 +975,51 @@ test("a site page's map follows its text, loads once in view and marks the page'
   expect(results.violations.map((v) => v.id)).toEqual([]);
 });
 
-test("an apartment's page's map shows that apartment alone and goes with a change of language", async ({
+test("an apartment's page's map shows that apartment alone, its one place chosen for good, and goes with a change of language", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await countLost(page);
   await openMap(page, '/de/wohnungen/zirbe/anfahrt', scrollToPageMap);
+  await expect(page.getByRole('heading', { level: 2, name: 'Von der Haltestelle' })).toBeVisible();
   await expect(panel(page).getByRole('radio')).toHaveCount(0);
   await expect(page.locator('.location-map').getByRole('img', { name: 'Zirbe' })).toBeVisible();
   await expect(page.locator('.map-pin:not(.map-place)')).toHaveCount(1);
-  await expect(places(page)).toHaveText(
-    [
-      ['Haltestelle Ronachgrund', 'bus-stop'],
-      ['Parkhaus Zentrum', 'car-park'],
-    ].map(
-      ([name, place]) =>
-        new RegExp(`^${name}${RegExp.escape(walk('zirbe', place, 'zirbe/arrival', 'de-AT'))}$`),
+  await expect(places(page)).toHaveText([
+    new RegExp(
+      `^Haltestelle Ronachgrund${RegExp.escape(walk('zirbe', 'bus-stop', 'zirbe/arrival', 'de-AT'))}$`,
     ),
-  );
+  ]);
+  // The one place is chosen and stays so: neither its line, its pin nor its label is a button.
+  const stop = page.locator('.location-map').getByRole('img', { name: 'Haltestelle Ronachgrund' });
+  await expect(stop).toBeVisible();
+  await expect(page.locator('.location-map').getByRole('button', { pressed: true })).toHaveCount(0);
+  await expect(page.locator('.location-map .map-place')).toHaveCount(1);
+  await expect(panel(page).locator('.map-places').getByRole('button')).toHaveCount(0);
+  // Chosen, its route is solid: cleared, it would be dashed, about half as many pixels.
   await expect.poll(() => accentPixels(page)).toBeGreaterThan(500);
+  const solid = await accentPixels(page);
+  await page.locator('.map-label').filter({ hasNotText: 'Zirbe' }).click();
+  await page.evaluate(
+    () => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))),
+  );
+  expect(await accentPixels(page)).toBeGreaterThan(solid * 0.9);
+  await expect(stop).toBeVisible();
   await page
     .locator('.maplibregl-canvas')
     .evaluate((canvas) => canvas.setAttribute('data-old', ''));
   await toLanguage(page, 'Sprache: Deutsch', 'English');
   await expect(page).toHaveURL(/\/en\/apartments\/zirbe\/getting-here$/);
   await expect(page.locator('.location-map[data-drawn] canvas[data-old]')).toBeVisible();
+  await expect(page.getByRole('heading', { level: 2, name: 'From the bus stop' })).toBeVisible();
   await expect(places(page)).toHaveText([
     new RegExp(
       `^Ronachgrund bus stop${RegExp.escape(walk('zirbe', 'bus-stop', 'zirbe/arrival'))}$`,
     ),
-    new RegExp(`^Parkhaus Zentrum${RegExp.escape(walk('zirbe', 'car-park', 'zirbe/arrival'))}$`),
   ]);
+  await expect(
+    page.locator('.location-map').getByRole('img', { name: 'Ronachgrund bus stop' }),
+  ).toBeVisible();
   expect(await lost(page)).toBe(0);
 });
 

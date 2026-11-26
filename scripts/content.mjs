@@ -371,7 +371,7 @@ function pageMaps(dir, site, apartments) {
       .filter((key) => existsSync(join(dir, folder, `${key}.map.json`)))
       .map((key) => {
         const file = `${folder}/${key}.map.json`;
-        const { places } = readJson(dir, file, pageMapSchema);
+        const { title, places } = readJson(dir, file, pageMapSchema);
         if (!site.map) throw new Error(`${join(dir, file)}\n  (file): no map in site.json`);
         places.forEach((place, index) => {
           if (!inBox(site.map.box, place))
@@ -384,6 +384,7 @@ function pageMaps(dir, site, apartments) {
           file: join(dir, file),
           path: 'places',
           from,
+          title,
           places,
         };
       }),
@@ -541,8 +542,10 @@ export function readContent(dir) {
     if (!new RegExp(`--font-weight-${name}\\s*:`).test(root ?? ''))
       throw new Error(`${join(dir, 'theme.css')}\n  --font-weight-${name}: missing`);
   const maps = readMaps(dir, site, apartments);
-  // Each place is named in every language, with a text only for a season the site lists.
-  for (const { file, path, places } of maps)
+  // A page's map and each place are named in every language, with a text only for a season the
+  // site lists.
+  for (const { file, path, title, places } of maps) {
+    if (title) inLanguages(file, 'title', title);
     places.forEach((place, index) => {
       if (!(lucideName(place.icon) in lucide))
         throw new Error(`${file}\n  ${path}.${index}.icon: ${place.icon} is not a Lucide icon`);
@@ -553,6 +556,7 @@ export function readContent(dir) {
         inLanguages(file, `${path}.${index}.${name}`, place[name]);
       }
     });
+  }
   const map = site.map && { ...readMap(dir, site, apartments, maps), font: `/${font}` };
   for (const tag of site.languages)
     if (!site.map !== !texts[prefix(tag)].map)
@@ -610,8 +614,11 @@ export function readContent(dir) {
             if (!existsSync(join(dir, file)))
               throw new Error(`${page}\n  shows ${file}, which does not exist`);
           const id = slug ? `${slug}/${key}` : key;
-          const places = maps.find(({ page }) => page === id)?.places;
-          return [id, { ...read, ...(places && { places }) }];
+          const map = maps.find(({ page }) => page === id);
+          return [
+            id,
+            { ...read, ...(map && { map: { title: map.title[tag], places: map.places } }) },
+          ];
         }),
       ),
     );
@@ -837,7 +844,7 @@ export async function writeContent(dir, out, cache) {
     converted += page.converted;
     shown[at] = page.picture;
   }
-  const withFiles = ({ title, html, places }, code) => {
+  const withFiles = ({ title, html, map }, code) => {
     const template = parse(html);
     for (const img of template.content.querySelectorAll('img')) {
       const sized = img.getAttribute('width');
@@ -860,7 +867,7 @@ export async function writeContent(dir, out, cache) {
     return {
       title,
       html: template.innerHTML,
-      ...(places && { places: places.map((place) => marked(place, code)) }),
+      ...(map && { map: { ...map, places: map.places.map((place) => marked(place, code)) } }),
     };
   };
   // Texts by address prefix, as the texts are; the routes' points stay with the routes. A plan is
@@ -1007,7 +1014,7 @@ export async function writeContent(dir, out, cache) {
   // @ng-icons/lucide would put them in the first page's bundle, which imports that module too.
   const marks = Object.fromEntries(
     Object.values(pages)
-      .flatMap((list) => Object.values(list).flatMap(({ places = [] }) => places))
+      .flatMap((list) => Object.values(list).flatMap(({ map }) => map?.places ?? []))
       .concat(site.map?.places ?? [])
       .map(({ icon }) => [lucideName(icon), lucide[lucideName(icon)]]),
   );

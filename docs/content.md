@@ -14,7 +14,7 @@ content. The application has no wording, no colour and no typeface of its own. T
 | `texts.<tag>.json` | Everything one language says: the wording, the address parts and the anchors. One file per language listed in `site.json`, such as `texts.en-GB.json`. |
 | `pages/<key>.<tag>.md` | A content page in one language, such as `pages/faq.en-GB.md`: one file for each page and language `site.json` lists, and no other. |
 | `pages/<slug>/<key>.<tag>.md` | One of an apartment's own pages in one language, such as `pages/zirbe/arrival.en-GB.md`: one file for each page its file lists and each language, and no other. |
-| `pages/<key>.map.json`, `pages/<slug>/<key>.map.json` | Optional, with a map: the map that ends that page, with its places and their names in every language. |
+| `pages/<key>.map.json`, `pages/<slug>/<key>.map.json` | Optional, with a map: the map that ends that page, with its title and its places' names in every language. |
 | `theme.css` | The palette, the typeface and its two weights as custom properties on `:root`, and the typeface's `@font-face`. |
 | `fonts/` | Optional: the font files `theme.css` refers to, as `fonts/<file>`. |
 | `pictures/` | The pictures `site.json` names, such as each season's hero photo, and the apartments' pictures and plans. |
@@ -138,14 +138,16 @@ content. The application has no wording, no colour and no typeface of its own. T
   Beds24 cannot be reached, and the pages they link are built with the site.
 
 - **A page's map** ends a content page, after its text, when a file beside the page's files holds
-  its places: `pages/parking.map.json` for a site page, `pages/zirbe/arrival.map.json` for an
-  apartment's. It is the home map in its look, with the page's places instead of `site.json`'s; on
-  an apartment's page it walks from that apartment alone, on a site page from the apartment the
-  visitor chooses. Its places are written as those of `site.json`'s map, below, with their texts and
-  waypoints, and lie inside its box:
+  its title and places: `pages/parking.map.json` for a site page, `pages/zirbe/arrival.map.json` for
+  an apartment's. It is the home map in its look, with the page's places instead of `site.json`'s;
+  on an apartment's page it walks from that apartment alone, on a site page from the apartment the
+  visitor chooses. Its `title`, in each of the site's languages, heads the map as the apartment
+  page's location heads its map. Its places are written as those of `site.json`'s map, below, with
+  their texts and waypoints, and lie inside its box:
 
   ```json
   {
+    "title": { "de-AT": "Von der Haltestelle", "en-GB": "From the bus stop" },
     "places": [
       {
         "key": "bus-stop",
@@ -160,7 +162,8 @@ content. The application has no wording, no colour and no typeface of its own. T
 
   The author picks the places, such as the nearest bins or car parks; the map searches for none. A
   place's point is the one OpenStreetMap has for it, so that the tiles' own icon for it gives way to
-  the pin. The page's last section leads into the map, which has no heading of its own.
+  the pin. A map with one place opens with it chosen, its way drawn, as an apartment's page opens
+  with its apartment.
 
 - **Public or unlisted:** a content page the site's navigation links is public: for a site page the
   header or the footer, for an apartment's page a fold under "Good to know" of any apartment, in any
@@ -313,9 +316,9 @@ content. The application has no wording, no colour and no typeface of its own. T
   are what it marks, in their order:
   `{ "key": "supermarket", "icon": "shopping-cart", "lat": 47.3887, "lon": 12.6454, "name": { "de-AT": "Supermarkt", "en-GB": "Supermarket" } }`.
   The icon is any Lucide icon and shows the place's kind; a place with `"more": true` is shown only
-  once the map's list of more places is unfolded. Its `name` is given in each of the site's
-  languages by tag, as a picture's `alt`, and optionally a text for each season the site lists,
-  `winter` and `summer`, by tag too, such as
+  once the map's list of more places is unfolded, so at least one place is not, a map's only place
+  among them. Its `name` is given in each of the site's languages by tag, as a picture's `alt`, and
+  optionally a text for each season the site lists, `winter` and `summer`, by tag too, such as
   `"winter": { "de-AT": "Gondel ins Skigebiet", "en-GB": "Gondola to the slopes" }`. With a map,
   every apartment's file gives `lat` and `lon`, the point where a guest leaves the house; without
   one, none does. An apartment whose name would cover a neighbour's pin can give
@@ -436,18 +439,18 @@ an apartment the map does not walk from, a place's name or text missing in a lan
 a season the site does not list, tiles cut for another box or a tile missing, a `map/` folder
 without a map, a map without a `.woff2` font in `theme.css`, a route missing, left over or computed
 before a point moved, a content page without its file, address or link text in a language, a page
-file `site.json` or its apartment does not list, a page's map for a site without a map or with a
-place outside the box, a page key the site lists too, a fold without its title or text in a
-language, with an icon that is not Lucide's, an element its text does not show or a link to no
-apartment's page, a header or footer link to no page, a footer link the header has, two pages at one
-address, a page that does not open with its title or holds an element, an attribute, a link or a
-question's `id` the pages do not take, a `##` heading whose text gives no `id` or one the page has
-already, a `#` link to no `id` on its page, an icon Lucide lacks, a page's picture without its file
-or alternative text or beside other text, a credited picture no page shows, and a part beyond its
-boundary stop the build with the file and the key named; for the tiles and the routes, with the
-script to run. The schema, not the demo's files, defines the keys, so the compiler checks every
-template against the same keys for every site. Every language has the same keys, so every language
-renders the same elements and a change of language finds the reader's place.
+file `site.json` or its apartment does not list, a page's map for a site without a map, without its
+title in a language or with a place outside the box, a page key the site lists too, a fold without
+its title or text in a language, with an icon that is not Lucide's, an element its text does not
+show or a link to no apartment's page, a header or footer link to no page, a footer link the header
+has, two pages at one address, a page that does not open with its title or holds an element, an
+attribute, a link or a question's `id` the pages do not take, a `##` heading whose text gives no
+`id` or one the page has already, a `#` link to no `id` on its page, an icon Lucide lacks, a page's
+picture without its file or alternative text or beside other text, a credited picture no page shows,
+and a part beyond its boundary stop the build with the file and the key named; for the tiles and the
+routes, with the script to run. The schema, not the demo's files, defines the keys, so the compiler
+checks every template against the same keys for every site. Every language has the same keys, so
+every language renders the same elements and a change of language finds the reader's place.
 
 ## Another folder
 

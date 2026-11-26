@@ -59,7 +59,9 @@ the choice:
    2026-11-25: a guide about parking or waste is clearest with the way from the apartment drawn on
    the map the site already has. Amended on 2026-11-26 (PR 336): both maps' places have one shape,
    with their names and season texts per language and their waypoints by apartment, so a page's
-   place takes waypoints too.
+   place takes waypoints too. Amended on 2026-11-26 (#338): the sidecar names the map's title per
+   language, which heads it as the apartment page's location heading does, rather than the
+   Markdown's last section; a map with one place opens with it chosen.
 
 ## Options
 
