@@ -780,7 +780,12 @@ test('a contact address is given in its parts', () => {
 });
 
 test("the site's address is https and its host alone", () => {
-  for (const url of ['http://example.com', 'https://example.com/', 'https://example.com/de'])
+  for (const url of [
+    'http://example.com',
+    'https://example.com/',
+    'https://example.com/de',
+    'https://a&b.example',
+  ])
     assert.throws(() => readContent(changed('site.json', (site) => (site.url = url))), /url/);
   assert.throws(() => readContent(changed('site.json', (site) => delete site.url)), /url/);
 });

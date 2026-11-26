@@ -6,6 +6,8 @@ const site = 'https://beds24.vikkoch.com';
 const indexed = [
   ['/de', '/en', 'Three holiday apartments for 2 to 6 guests'],
   ['/de/wohnungen/zirbe', '/en/apartments/zirbe', 'For two, with a rain shower'],
+  ['/de/wohnungen/laerche', '/en/apartments/laerche', 'For four, with a south-facing balcony'],
+  ['/de/wohnungen/ahorn', '/en/apartments/ahorn', 'For six, with a terrace and a sauna'],
   ['/de/wohnungen/zirbe/anfahrt', '/en/apartments/zirbe/getting-here', 'How to get to Zirbe'],
   ['/de/haeufige-fragen', '/en/faq', 'Answers before and during your stay'],
   ['/de/ueber-uns', '/en/about', 'Who lets the apartments'],
@@ -16,10 +18,12 @@ const indexed = [
   ['/de/bildnachweis', '/en/picture-credits', 'Who took the photos'],
 ];
 const unlisted = [
+  '/de/wohnungen/zirbe/buchen',
   '/en/apartments/zirbe/book',
+  '/de/buchungsbestaetigung',
   '/en/booking-confirmation',
-  '/en/apartments/zirbe/guide',
   '/de/wohnungen/zirbe/wohnungsmappe',
+  '/en/apartments/zirbe/guide',
 ];
 
 // To an apartment's page by the home page's first link to it.
@@ -129,11 +133,13 @@ test(
       expect(link('alternate', 'x-default'), path).toEqual([]);
       expect(data, path).toEqual([]);
     }
-    const missing = await request.get('/en/nothing-here');
-    expect(missing.status()).toBe(404);
-    const html = (await missing.text()).split('</head>')[0];
-    expect(html).toContain('<meta name="robots" content="noindex">');
-    expect(html).not.toMatch(/og:|rel="canonical"|rel="alternate"|ld\+json/);
+    for (const path of ['/de/nichts-hier', '/en/nothing-here']) {
+      const missing = await request.get(path);
+      expect(missing.status(), path).toBe(404);
+      const html = (await missing.text()).split('</head>')[0];
+      expect(html, path).toContain('<meta name="robots" content="noindex">');
+      expect(html, path).not.toMatch(/og:|rel="canonical"|rel="alternate"|ld\+json/);
+    }
   },
 );
 
@@ -173,13 +179,7 @@ test(
     const xml = await response.text();
     const urls = [...xml.matchAll(/<url><loc>([^<]*)<\/loc>(.*?)<\/url>/g)];
     expect(urls.map(([, loc]) => loc.slice(site.length)).sort()).toEqual(
-      [
-        ...indexed.flatMap(([de, en]) => [de, en]),
-        '/de/wohnungen/laerche',
-        '/en/apartments/laerche',
-        '/de/wohnungen/ahorn',
-        '/en/apartments/ahorn',
-      ].sort(),
+      indexed.flatMap(([de, en]) => [de, en]).sort(),
     );
     const faq = urls.find(([, loc]) => loc === `${site}/en/faq`)![2];
     expect(faq).toBe(
@@ -187,5 +187,18 @@ test(
         `<xhtml:link rel="alternate" hreflang="en-GB" href="${site}/en/faq"/>` +
         `<xhtml:link rel="alternate" hreflang="x-default" href="${site}/de/haeufige-fragen"/>`,
     );
+  },
+);
+
+test(
+  "a site without the contact's address has no business data, and a locale without a region gets one",
+  { tag: '@any-engine' },
+  async ({ request }) => {
+    const other = 'http://localhost:4002';
+    const italian = await head(request, `${other}/it`);
+    expect(italian.data).toEqual([]);
+    expect(italian.meta('og:locale')).toEqual(['it_IT']);
+    expect(italian.link('canonical')).toEqual(['https://casa-prova.example/it']);
+    expect((await head(request, `${other}/nl`)).meta('og:locale')).toEqual(['nl_BE']);
   },
 );

@@ -160,24 +160,30 @@ export class Shell {
           this.language.code
         ]
       : this.texts.hero[season];
-    const tags: [string, string, string | false | undefined][] = [
-      ['name', 'robots', !listed && 'noindex'],
-      ['name', 'description', description],
-      ['property', 'og:type', shown && 'website'],
-      ['property', 'og:site_name', shown && site.name],
-      ['property', 'og:title', shown && title],
-      ['property', 'og:description', shown && description],
-      ['property', 'og:url', shown && url(this.language)],
-      ['property', 'og:locale', shown && this.language.tag.replace('-', '_')],
-      ['property', 'og:image', shown && image],
-      ['property', 'og:image:width', shown && '1200'],
-      ['property', 'og:image:height', shown && '630'],
-      ['property', 'og:image:alt', shown && alt],
-      ['name', 'twitter:card', shown && 'summary_large_image'],
-    ];
-    for (const [attribute, key, content] of tags)
-      if (content) this.meta.updateTag({ [attribute]: key, content });
-      else this.meta.removeTag(`${attribute}='${key}'`);
+    // Open Graph takes language_TERRITORY: it_IT for it.
+    const { language, region } = new Intl.Locale(this.language.tag).maximize();
+    const locale = `${language}_${region}`;
+    const set = (attribute: string, key: string, content?: string | false) =>
+      content
+        ? this.meta.updateTag({ [attribute]: key, content })
+        : this.meta.removeTag(`${attribute}='${key}'`);
+    set('name', 'robots', !listed && 'noindex');
+    set('name', 'description', description);
+    set('name', 'twitter:card', shown && 'summary_large_image');
+    const graph = {
+      type: 'website',
+      site_name: site.name,
+      title,
+      description,
+      url: url(this.language),
+      locale,
+      image,
+      'image:width': '1200',
+      'image:height': '630',
+      'image:alt': alt,
+    };
+    for (const [key, content] of Object.entries(graph))
+      set('property', `og:${key}`, shown && content);
     if (!shown) return;
     const link = (attributes: Record<string, string>) => {
       const element = this.document.createElement('link');
@@ -193,8 +199,9 @@ export class Shell {
       href: site.url + fallback(page, slug),
     });
     link({ rel: 'canonical', href: url(this.language) });
+    // Google takes a business only with its address.
     const data = this.home
-      ? {
+      ? site.contact?.address && {
           ...business(this.language),
           image,
           description,

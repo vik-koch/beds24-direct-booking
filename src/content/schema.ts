@@ -194,8 +194,11 @@ export const siteSchema = z.strictObject({
   // The site's own address, for canonical links, link previews and the sitemap: the pages are
   // prerendered, when no request names the host.
   url: z
-    .url({ protocol: /^https$/ })
-    .refine((value) => new URL(value).origin === value, 'only https:// and the host, no path'),
+    .string()
+    .regex(
+      /^https:\/\/[a-z0-9-]+(\.[a-z0-9-]+)+$/,
+      'not https:// and a host name alone, such as https://example.com',
+    ),
   languages: z
     .array(tag)
     .length(2, 'exactly two languages')

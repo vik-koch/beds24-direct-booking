@@ -176,12 +176,12 @@ content. The application has no wording, no colour and no typeface of its own. T
   canonical link, its link preview's address and picture and the sitemap name it, also on a test
   deployment at another host, which so points search engines to the real site.
 - **A page's description** (`descriptions` in a texts file) is what a search result and a link's
-  preview say of it, up to 160 characters; Google cuts a result's text at about 155. Every public
-  page has one by its key, such as `faq`, `credits` and `home`, an apartment's own page as
-  `<slug>/<key>`, such as `zirbe/arrival`; an unlisted page may. An apartment's page takes its
-  headline from Beds24 instead. The same text goes into the page's `description` and
-  `og:description`, so write it for both: what the page holds, in a sentence. Search engines may
-  show a text of their own instead.
+  preview say of it, up to 160 characters, the site's own limit: a search result cuts its text by
+  the screen's width. Every public page has one by its key, such as `faq`, `credits` and `home`, an
+  apartment's own page as `<slug>/<key>`, such as `zirbe/arrival`; an unlisted page may. An
+  apartment's page takes its headline from Beds24 instead, and has none in a language its room has
+  no headline in. The same text goes into the page's `description` and `og:description`, so write it
+  for both: what the page holds, in a sentence. Search engines may show a text of their own instead.
 - **A link's preview picture** is the season's hero, or on an apartment's pages the first picture of
   its gallery in that season, cut from the middle to 1,200 × 630 and served as a JPEG at
   `/pictures/previews/`. A prerendered page names the season of the day it was built.
@@ -425,7 +425,7 @@ beyond a limit fails its build, with the limit named.
 | Apartment name | 20 characters | The list's column headers and the phone's tabs | The schema; the e2e test site's names |
 | Languages | Exactly 2 | The language menu and the address prefixes have not been tried with a third | The schema |
 | Seasons | 1 or 2 | Winter and summer, one each | The schema |
-| A page's description | 160 characters | A search result shows about 155 | The schema |
+| A page's description | 160 characters | A search result shows a sentence or two, cut by the screen's width | The schema |
 | The contact's address | A street, a postal code before the place, and a country | The footer's lines; an address written the other way round, as in the United Kingdom, is not supported | The schema |
 | A room's guests in Beds24 | `maxAdult` empty or equal to `maxPeople`; `maxChildren` empty, 0 or at least `maxPeople − 1` | The site takes a room by its total: any guest may be an adult, and with one adult required the children's limit never applies on its own | Not the build: the server logs a warning when it loads a room beyond this, and treats it by its total |
 | Hero features | Up to 5 | The hero's card | The schema |
