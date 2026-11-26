@@ -200,9 +200,8 @@ export class Shell {
       href: site.url + fallback(page, slug),
     });
     link({ rel: 'canonical', href: url(this.language) });
-    // Google takes a business only with its address.
     const data = this.home
-      ? site.contact?.address && {
+      ? {
           ...business(this.language),
           image,
           description,
@@ -236,22 +235,20 @@ export class Shell {
 
 // The business as schema.org describes a place that lets rooms, from the footer's contact.
 function business(language: Language) {
-  const { name = site.name, address: postal, phone, email } = site.contact ?? {};
+  const { name = site.name, address: postal, phone, email } = site.contact;
   return {
     '@type': 'LodgingBusiness',
     name,
     url: site.url + address(language, 'home'),
     ...(phone && { telephone: phone }),
     ...(email && { email }),
-    ...(postal && {
-      address: {
-        '@type': 'PostalAddress',
-        streetAddress: postal.street,
-        postalCode: postal.postalCode,
-        addressLocality: postal.locality,
-        addressCountry: postal.country,
-      },
-    }),
+    address: {
+      '@type': 'PostalAddress',
+      streetAddress: postal.street,
+      postalCode: postal.postalCode,
+      addressLocality: postal.locality,
+      addressCountry: postal.country,
+    },
   };
 }
 

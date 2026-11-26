@@ -765,11 +765,12 @@ test('a room names a Lucide icon once, and every language names exactly the list
   );
 });
 
-test('the contact may list any of its lines, or be left out', () => {
-  const name = changed('site.json', (site) => (site.contact = { name: 'Only a name' }));
-  assert.deepEqual(readContent(name).site.contact, { name: 'Only a name' });
-  const none = changed('site.json', (site) => delete site.contact);
-  assert.equal(readContent(none).site.contact, undefined);
+test('the contact gives its address, the other parts as the site likes', () => {
+  const address = (site) => site.contact.address;
+  const only = changed('site.json', (site) => (site.contact = { address: address(site) }));
+  assert.deepEqual(Object.keys(readContent(only).site.contact), ['address']);
+  for (const change of [(site) => delete site.contact, (site) => delete site.contact.address])
+    assert.throws(() => readContent(changed('site.json', change)), /contact/);
 });
 
 test('a contact address is given in its parts', () => {
@@ -817,21 +818,17 @@ test('the footer shows the parts of the contact it names, each one the contact g
   assert.throws(
     () =>
       readContent(
-        changed('site.json', (site) => (site.contact = { name: 'A', footer: ['phone'] })),
+        changed('site.json', (site) => {
+          delete site.contact.phone;
+          site.contact.footer = ['phone'];
+        }),
       ),
     /contact: footer names a part the contact does not give/,
   );
   assert.throws(() => readContent(footer(['fax'])), /contact\.footer\.0/);
   assert.throws(() => readContent(footer(['name', 'name'])), /a part is listed twice/);
-  assert.throws(
-    () => readContent(changed('site.json', (site) => (site.contact = { footer: [] }))),
-    /contact: lists nothing/,
-  );
-});
-
-test('a contact that lists nothing is refused', () => {
-  const dir = changed('site.json', (site) => (site.contact = {}));
-  assert.throws(() => readContent(dir), /contact: lists nothing/);
+  // An empty list hides the contact in the footer.
+  assert.deepEqual(readContent(footer([])).site.contact.footer, []);
 });
 
 test('a change the schema does not know is refused', () => {

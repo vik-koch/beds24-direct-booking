@@ -244,17 +244,15 @@ export const siteSchema = z.strictObject({
   rooms: z
     .array(z.strictObject({ code: text, icon: segment }))
     .refine((list) => unique(list, (room) => room.code), 'a room code is listed twice'),
-  // The business's details, which search engines read too; the footer shows those `footer`
-  // names, or all of them without it, and no contact with none: a site may give its details on
-  // its imprint page instead.
+  // The business's details, which search engines read too, with the address Google requires; the
+  // footer shows those `footer` names, or all of them without it, and no contact with none: a
+  // site may give its details on its imprint page instead.
   contact: z
     .strictObject({
       name: text.optional(),
       // The footer writes it as three lines: the street, the postal code before the place, and
       // the country.
-      address: z
-        .strictObject({ street: text, postalCode: text, locality: text, country: text })
-        .optional(),
+      address: z.strictObject({ street: text, postalCode: text, locality: text, country: text }),
       phone: text.optional(),
       email: z.email().optional(),
       footer: z
@@ -263,14 +261,9 @@ export const siteSchema = z.strictObject({
         .optional(),
     })
     .refine(
-      (value) => contactParts.some((part) => part in value),
-      'lists nothing: leave the contact out',
-    )
-    .refine(
       ({ footer = [], ...value }) => footer.every((part) => part in value),
       'footer names a part the contact does not give',
-    )
-    .optional(),
+    ),
   map: map.optional(),
   // Who to credit for a picture the content pages show, once for every language; a page's
   // Markdown gives its alternative text.

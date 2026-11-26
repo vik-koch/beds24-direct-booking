@@ -54,7 +54,7 @@ export class Footer {
   protected readonly texts = inject(TEXTS);
   // The parts of the contact its footer list names, or all of them; none, no column.
   protected readonly contact = (() => {
-    const { footer = contactParts, ...details } = site.contact ?? {};
+    const { footer = contactParts, ...details } = site.contact;
     const shown = Object.fromEntries(
       Object.entries(details).filter(([part]) => footer.includes(part as ContactPart)),
     ) as typeof details;
