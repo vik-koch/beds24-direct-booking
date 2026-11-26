@@ -19,7 +19,8 @@ of what it sells that matches what Stripe was told. **By the time it starts sell
 customer service contact details, its refund and dispute policy, its cancellation policy, any legal
 or export restrictions and the terms of any promotion; the FAQ asks for these as soon as possible
 and may want them sooner for businesses it rates as higher risk. Throughout, the site is reachable
-without a password or a regional block and kept working with this information on it.
+without a password and kept working with this information on it, and without a regional block until
+Stripe has verified it.
 
 This project's choice: a deployment applies with everything that does not depend on payments already
 on its site, and adds the rest, such as where the card is entered, before its booking opens (below).
@@ -44,9 +45,10 @@ recommends. Whether a review accepts a page is Stripe's: none of this has been t
 | Privacy policy | "Clearly explaining your website's privacy policy" | Asked | The privacy page; Stripe as a recipient waits for payments (#353) | Its privacy page names Stripe |
 | Business address | "If you have a physical address, listing it on your website adds credibility" | Asked | A made-up address in the footer and on the imprint | Its real address |
 | HTTPS | The site, "especially your payment form", uses HTTPS | Asked | HTTPS with HSTS, plain HTTP redirected (checked 2026-11-26) | Comes with the deployment ([ADR 7](adr/0007-hosting-and-delivery.md)) |
-| Card data handled safely | "explain that your customer's payment information is handled safely"; "know that you comply with the PCI standards" | Asked | Waits for payments: card details are entered on Stripe's page and never reach the server, said in #353 | Its privacy page says where the card is entered |
-| Card testing | The payment form "isn't susceptible to card testing" | Asked | Waits for payments. Stripe says Checkout, where the card is entered, has "rate limiters, AI models, CAPTCHA triggers"; the site's own form before it is #348's and #349's, and not checked | Stripe's dashboard after the first payments |
-| No password, no regional block | "The webpage must be accessible without a password"; "Temporarily remove the blocker until your website has been verified" | Throughout | No password (checked 2026-11-26); the server blocks no region, reached from one network only | `SITE_PASSWORD` is unset ([deploying a site](deploying-a-site.md)), and no firewall or DNS service blocks a region |
+| Card data handled safely | "explain that your customer's payment information is handled safely"; "know that you comply with the PCI standards" | Asked | Waits for payments: card details are entered on Stripe's page and never reach the server, said in #353 | Its privacy page says where the card is entered, in #353's wording; its PCI validation form, which Stripe helps to complete in its dashboard for Checkout ([security](https://docs.stripe.com/security)), is done |
+| Card testing | The payment form "isn't susceptible to card testing" | Asked | Waits for payments. Stripe says Checkout, where the card is entered, has "rate limiters, AI models, CAPTCHA triggers"; #349 checks that the card is entered only there | Stripe's dashboard after the first payments |
+| No password | "The webpage must be accessible without a password" | Throughout | No password (checked 2026-11-26) | `SITE_PASSWORD` is unset ([deploying a site](deploying-a-site.md)) |
+| No regional block | "Temporarily remove the blocker until your website has been verified" | Until verified | The server blocks no region, reached from one network only | No firewall or DNS service blocks a region |
 | Kept up | "maintain a functioning website with the appropriate information at all times" | Throughout | Deployed from `main` | Its content stays in step with its terms |
 | The business is allowed | Stripe's restricted and prohibited businesses | Throughout | Holiday letting is not on the list | — |
 | Shipping, returns | Shipping and return policies, "if physical goods are sold" | Not applicable | No goods are sent or returned | — |
