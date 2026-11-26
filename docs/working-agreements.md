@@ -14,7 +14,7 @@ How the project is built, tested and reviewed. The rules an agent needs in every
   on another model than the author, so the two do not share blind spots. Claude answers or fixes
   there; nobody copies text between agents.
 - **Acceptance** is trying the result in the browser and reading what carries risk (the booking
-  seam, guest data from the return URL, the token), not every line.
+  step, guest data, the Beds24 token and the Stripe key), not every line.
 
 The process is part of what the project shows: issues, pull requests and agent reviews are public.
 
@@ -119,8 +119,8 @@ nothing is built or tested for it.
 - **The screenshot matrix** (2 languages × 2 seasons × phone and desktop) stays on Chromium and the
   WebKit phone, or it is too large to review.
 - **Playwright's WebKit is not Safari.** It is a first signal for layout and forms. Cookie blocking
-  and wallet payments differ, so anything that depends on them (the booking frame) is confirmed in
-  the check on real Apple devices below.
+  and wallet payments differ, so anything that depends on them (wallet payments on Stripe Checkout)
+  is confirmed in the check on real Apple devices below.
 - **A feature's done-when names neither Safari nor VoiceOver.** No feature could meet them: the
   maintainer has no Apple hardware, and no emulator stands in for it. WebKit is the signal for
   Safari's engine, NVDA on Windows the manual screen-reader check. What only Apple devices show is
@@ -145,8 +145,8 @@ Built in from the first slice. A slice is not done while one of these fails:
 - **Motion and zoom:** the season switch and any animation respect reduced motion; pages work at
   200% zoom and 320 px width. The narrowest layout is 300 px, so that a 320 px window also fits
   beside a scrollbar that takes room.
-- **The embedded booking form is Beds24's,** so its accessibility is outside our control. The frame
-  gets a title, and the accessibility statement names the limit.
+- **The payment page is Stripe's,** so its accessibility is outside our control. The booking form
+  before it is ours, and the accessibility statement names the limit of that one step.
 
 ## Agentic practices
 
