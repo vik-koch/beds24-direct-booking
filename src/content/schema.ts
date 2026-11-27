@@ -38,6 +38,16 @@ const tag = z.string().refine((value) => {
 // The address prefix: the tag's language, de for de-AT.
 export const prefix = (value: string) => new Intl.Locale(value).language;
 
+// An ISO 3166-1 alpha-2 code, such as AT, which search engines take and Intl names.
+const country = z
+  .string()
+  .refine(
+    (value) =>
+      /^[A-Z]{2}$/.test(value) &&
+      new Intl.DisplayNames('en', { type: 'region', fallback: 'none' }).of(value) !== undefined,
+    'not a known two-letter country code, such as AT',
+  );
+
 // A day of the year as MM-DD. 29 February is refused: a season would start only in leap years.
 const day = z
   .string()
@@ -251,8 +261,8 @@ export const siteSchema = z.strictObject({
     .strictObject({
       name: text.optional(),
       // The footer writes it as three lines: the street, the postal code before the place, and
-      // the country.
-      address: z.strictObject({ street: text, postalCode: text, locality: text, country: text }),
+      // the country's name in the page's language.
+      address: z.strictObject({ street: text, postalCode: text, locality: text, country }),
       phone: text.optional(),
       email: z.email().optional(),
       footer: z

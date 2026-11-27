@@ -155,7 +155,9 @@ export class Shell {
         ? (route.data['weeks'] as FreeWeeks | null)?.apartments.find((one) => one.slug === slug)
             ?.headline[this.language.code]
         : this.texts.descriptions[slug ? `${slug}/${page}` : page];
-    const image = site.url + (apartment?.previews[season] ?? site.seasons[season]!.hero.preview);
+    const preview = site.seasons[season]!.hero.preview;
+    const hero = site.url + preview;
+    const image = site.url + (apartment?.previews[season] ?? preview);
     const alt = apartment
       ? apartment.pictures.find((one) => !one.season || one.season === season)?.alt[
           this.language.code
@@ -202,8 +204,7 @@ export class Shell {
     link({ rel: 'canonical', href: url(this.language) });
     const data = this.home
       ? {
-          ...business(this.language),
-          image,
+          ...business(this.language, hero),
           description,
           containsPlace: site.apartments.map((one) => ({
             '@type': 'Apartment',
@@ -218,6 +219,7 @@ export class Shell {
             route.data['listing'],
             url(this.language),
             image,
+            hero,
             description,
           )
         : null;
@@ -233,13 +235,15 @@ export class Shell {
   }
 }
 
-// The business as schema.org describes a place that lets rooms, from the footer's contact.
-function business(language: Language) {
+// The business as schema.org describes a place that lets rooms, from the contact, with the home
+// page's picture.
+function business(language: Language, image: string) {
   const { name = site.name, address: postal, phone, email } = site.contact;
   return {
     '@type': 'LodgingBusiness',
     name,
     url: site.url + address(language, 'home'),
+    image,
     ...(phone && { telephone: phone }),
     ...(email && { email }),
     address: {
@@ -259,6 +263,7 @@ function place(
   listing: Listing | null,
   url: string,
   image: string,
+  hero: string,
   description?: string,
 ) {
   return {
@@ -277,6 +282,6 @@ function place(
         floorSize: { '@type': 'QuantitativeValue', value: listing.size, unitCode: 'MTK' },
       }),
     }),
-    containedInPlace: business(language),
+    containedInPlace: business(language, hero),
   };
 }
