@@ -35,9 +35,9 @@ the reasons and says how this differs from the demo's delivery.
    (`ssh-keyscan <address> | ssh-keygen -lf -`) with the one in the provider's console log of the
    first start, then keep the output for the variable `DEPLOY_KNOWN_HOSTS`.
 6. **Set up the repository.** Put the site's content into the folder `content/` of the repository,
-   as [`content.md`](content.md) describes it. Copy `infra/site-deploy.yml` to
-   `.github/workflows/deploy.yml`, set `VERSION` in it to the release the site is built from, and on
-   an ARM machine change `runs-on` to `ubuntu-24.04-arm`. Create the environment `site` with the
+   as [`content.md`](content.md) describes it. Copy `infra/site-deploy.yml` from the release's tag
+   to `.github/workflows/deploy.yml`, set `VERSION` in it to the release the site is built from, and
+   on an ARM machine change `runs-on` to `ubuntu-24.04-arm`. Create the environment `site` with the
    secrets and variables below.
 7. **Push to `main`.** The run builds the image, deploys it and ends green when the site answers 200
    at its address. The first request makes the proxy fetch the certificate, which can take a minute.
@@ -50,13 +50,13 @@ All in the environment `site` (Settings, Environments).
 | Kind | Name | Content |
 |---|---|---|
 | Secret | `DEPLOY_SSH_PRIVATE_KEY` | The content of the private key file from step 1. |
-| Secret | `BEDS24_REFRESH_TOKEN` | The Beds24 refresh token, which an invite code from Beds24's control panel gives once at `GET /authentication/setup` (header `code`). The site takes its access tokens from it. Not needed while `SIM_IMAGE` is set. It must not contain a `$`: Compose reads the settings file and would take it for a variable. |
+| Secret | `BEDS24_REFRESH_TOKEN` | The Beds24 refresh token, which an invite code from Beds24's control panel gives once at `GET /authentication/setup` (header `code`). The site takes its access tokens from it. The invite code needs the scopes `read:inventory` and `read:properties` for the listings and `write:bookings`, `write:bookings-personal` and `write:bookings-financial` for the booking step, and Beds24's IP allowlist limited to the machine's address, as the token can change any booking (ADR 18). A refresh token lives while it is used within 30 days, so a site stopped for longer needs a new one. Not needed while `SIM_IMAGE` is set. It must not contain a `$`: Compose reads the settings file and would take it for a variable. |
 | Secret | `SITE_PASSWORD` | Optional. The site then answers only with this password, under any user name, as a site under test should. It holds only letters, digits, `-` and `_`, or the run stops before it deploys, and it needs release `0.2.0` or later. The deployment's check then expects 401 without it and 200 with it. |
 | Variable | `DEPLOY_HOST` | The machine's address or name, as SSH reaches it. |
 | Variable | `DEPLOY_KNOWN_HOSTS` | The output of `ssh-keyscan` from step 5, for the same address or name as `DEPLOY_HOST`. |
 | Variable | `APP_DOMAIN` | The site's host name, the one `url` in the content's `site.json` names. |
 | Variable | `INDEXED` | `true` opens the site to search engines. Anything else, or no variable, keeps them out with an `X-Robots-Tag` header on every answer; `robots.txt` and the sitemap are served either way. |
-| Variable | `SIM_IMAGE` | Optional. A simulator image, for example `ghcr.io/vik-koch/beds24-direct-booking-sim:0.1.0`: the site then runs against the simulator and needs no token. The published image is built for x64. |
+| Variable | `SIM_IMAGE` | Optional. A simulator image, of the release in `VERSION`, for example `ghcr.io/vik-koch/beds24-direct-booking-sim:0.8.0`: the site then runs against the simulator and needs no token. The published image is built for x64. |
 
 ## What a deployment does
 
@@ -73,7 +73,9 @@ later, ends without deploying.
 
 ## A new release, and going back
 
-- **A new release:** change `VERSION` in the workflow file and push.
+- **A new release:** change `VERSION` in the workflow file and push. When the release notes name a
+  change to the workflow or its settings, first change the settings, then copy the workflow from the
+  new release's tag again, with `VERSION` and `runs-on` as before.
 - **Going back:** revert the commit on the site's `main` and push. The workflow file holds the
   release and the repository the content, so a commit is the whole state of the site, and a revert
   rebuilds and deploys the earlier one. Nothing is rolled back by itself.

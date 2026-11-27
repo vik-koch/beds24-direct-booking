@@ -10,8 +10,9 @@ on:
   workflow_dispatch:
 
 env:
-  # The released version this site is built from. A move to a new release is a change here.
-  VERSION: 0.1.0
+  # The released version this site is built from. A move to a new release is a change here; this
+  # file is copied from the same release, as a release can change it.
+  VERSION: 0.8.0
 
 permissions:
   contents: read
