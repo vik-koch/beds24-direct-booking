@@ -18,8 +18,9 @@ A spike on 2026-11-27 read them through the API and tried bookings against them.
   fields and 10 custom questions a usage out of five and an order, and each custom question a type
   out of six. A custom question's text and choices come per language.
 - **Standard fields come without labels;** Beds24's booking page brings its own.
-- **Beds24 checks nothing.** `POST /bookings` saves a booking without a compulsory answer, with an
-  e-mail `not-an-email` and with any text as a choice.
+- **Beds24 checks almost nothing.** `POST /bookings` saves a booking without a compulsory answer,
+  with an e-mail `not-an-email`, a phone `abc` and any text as a choice. Only an unknown country
+  code is dropped, with a warning.
 - **How Beds24 takes a booking is a property's setting too:** `bookingRules` names a booking type
   (confirmed by paying a deposit, by leaving a card, on request, at once, or closed), for normal,
   near-term and exceptional dates, and `paymentCollection` the deposits. The site takes the full
@@ -30,19 +31,22 @@ A spike on 2026-11-27 read them through the API and tried bookings against them.
 1. **Beds24's booking questions decide** which fields and questions the form shows, which must be
    answered and in which order. `optional` is optional; `compulsory` and `compulsoryBookingPage`
    must be answered; `internal` and `notUsed` are not shown. First name, surname and e-mail are
-   always shown and must be answered, as Stripe and the confirmation need them.
+   always shown and must be answered, as Stripe and the confirmation need them; where Beds24 does
+   not show one of them, it goes before every other question, in that order.
 2. **The site maps the 16 standard fields in its code,** as it maps amenities to icons: each with
    its input type, `autocomplete` and validation, and its label as a content key per language that
    the content schema requires. Country names come from `Intl.DisplayNames`.
 3. **A custom question's label is Beds24's text** in the page's language, its choices the bracketed
-   parts. A ticked box is sent as `"1"`, a choice as its option's text. A text missing in a language
-   follows the rule for per-language texts (#360).
+   parts. A ticked box is sent as `"1"`, a choice as its option's text. A question without its text,
+   or a choice question without its choices, in one of the site's languages is not supported, as in
+   decision 5.
 4. **The site validates every answer,** in the form and again on the server: what must be answered,
    the form of an e-mail and a phone number, a country from the list, a choice from its options.
-5. **A question the site does not support,** such as a type it does not know, is found when the
-   property is loaded and on each refresh. An optional one is left out and logged as a warning; one
-   that must be answered closes the property's booking, its apartments showing no booking button,
-   and is logged as an error. Telling the host is #363's.
+5. **A question the site does not support,** such as a type it does not know or one missing its text
+   in a language, is found when the property is loaded and on each refresh. An optional one is left
+   out and logged as a warning; one that must be answered closes the property's booking, its
+   apartments showing no booking button, and is logged as an error. Telling the host is #363's, as
+   for decision 6.
 6. **Beds24's booking rules must say what the site does.** The site takes one payment of the full
    price at booking, through its own Stripe Checkout (ADR 18). A property takes bookings on the site
    only when Beds24 says the same: `bookingType` `confirmedWithDepositCollection1`, deposit 1 at 100
