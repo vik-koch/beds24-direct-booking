@@ -19,6 +19,7 @@ const room = (overrides: Partial<Room> = {}): Room => ({
   features: [],
   texts: {},
   headlines: { de: 'Für vier', en: 'For four' },
+  questions: [],
   ...overrides,
 });
 
@@ -92,7 +93,7 @@ describe('freeWeeks', () => {
     { slug: 'one', roomId: 11, name: 'One' },
   ];
   const inventory = (days: Day[] = calendar(), other: Partial<Room> = {}): Inventory => ({
-    rooms: [room(), room({ id: 12, maxPeople: 2, size: 34, ...other })],
+    rooms: [room(), room({ id: 12, maxPeople: 2, size: 34, questions: null, ...other })],
     days: { 11: days, 12: calendar((_, i) => (i === 3 ? { free: false } : {})) },
   });
   const january: Period = {
@@ -103,7 +104,7 @@ describe('freeWeeks', () => {
   };
   const summer: Period = { name: 'summer', years: '2027', start: '2027-01-16', end: '2027-08-31' };
 
-  it('puts the apartments in the content order and the week into the season of its arrival', () => {
+  it('puts the apartments in the content order, says which take bookings, and puts the week into the season of its arrival', () => {
     const list = freeWeeks(inventory(), apartments, [january, summer], '2026-12-01', ['de', 'fr']);
     expect(list.apartments).toEqual([
       {
@@ -114,6 +115,7 @@ describe('freeWeeks', () => {
         bedrooms: 2,
         tax: { amount: 3.5, per: 'night' },
         headline: { de: 'Für vier', fr: '' },
+        bookable: false,
       },
       {
         slug: 'one',
@@ -123,6 +125,7 @@ describe('freeWeeks', () => {
         bedrooms: 2,
         tax: { amount: 3.5, per: 'night' },
         headline: { de: 'Für vier', fr: '' },
+        bookable: true,
       },
     ]);
     expect(list.seasons[0]).toEqual({

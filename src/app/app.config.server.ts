@@ -19,7 +19,7 @@ const inventory = cached(
   () => {
     const today = dayOf(new Date());
     // A year of arrivals, and the week after the last one.
-    return loadInventory(today, addDays(today, 372));
+    return loadInventory(today, addDays(today, 372), languages);
   },
   2 * minute,
   24 * 60 * minute,

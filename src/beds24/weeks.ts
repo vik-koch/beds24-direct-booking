@@ -33,6 +33,8 @@ export interface FreeWeeks {
     tax: Tax | null;
     // Per Beds24 language code of the site, empty where nothing is written.
     headline: Record<string, string>;
+    // Its property's settings in Beds24 let the site book it.
+    bookable: boolean;
   }[];
   // Per slug, of every listed apartment, also where the weeks are of one apartment alone.
   capacities: Record<string, Capacity>;
@@ -103,6 +105,7 @@ export function freeWeeks(
       bedrooms: room.bedrooms,
       tax: room.tax,
       headline: Object.fromEntries(languages.map((code) => [code, room.headlines[code] ?? ''])),
+      bookable: room.questions !== null,
     })),
     capacities: Object.fromEntries(
       all.map(({ apartment, room: { maxPeople, asksChildren } }) => [

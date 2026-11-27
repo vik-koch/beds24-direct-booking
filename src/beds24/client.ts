@@ -1,3 +1,4 @@
+import { readQuestions, type BookingSetup, type Question } from './questions';
 import { richText } from './rich-text';
 
 // What the site reads of Beds24. Each room is its own room type: one unit per room type is
@@ -13,6 +14,8 @@ export interface Room extends Listing {
   tax: Tax | null;
   // Per Beds24 language code, empty where nothing is written.
   headlines: Record<string, string>;
+  // What the booking form asks, in its order; null where the property takes no booking here.
+  questions: Question[] | null;
 }
 
 // What a room's page shows of it.
@@ -59,7 +62,7 @@ export interface Inventory {
 type Texts<K extends string> = ({ language: string } & Record<K, string>)[];
 
 interface Properties {
-  data: {
+  data: (Omit<BookingSetup, 'texts'> & {
     id: number;
     currency: string;
     address: string;
@@ -70,7 +73,7 @@ interface Properties {
     permit: string;
     featureCodes: string[][];
     // Missing when the property has no text at all.
-    texts?: Texts<'houseRules'>;
+    texts?: Texts<'houseRules' | `customQuestion${number}`>;
     bookingPageMultiplier?: string;
     upsellItems?: { type: string; amount: number; per: string; period: string }[];
     roomTypes: {
@@ -84,7 +87,7 @@ interface Properties {
       texts: Texts<'contentHeadline' | 'roomDescription'>;
       priceRules?: { minDaysUntilCheckin?: number }[];
     }[];
-  }[];
+  })[];
 }
 
 interface Calendars {
@@ -149,7 +152,12 @@ const get = async <T>(path: string): Promise<T> => {
 };
 
 // The rooms of every property and their calendars from the first to the last day: two calls.
-export const loadInventory = async (first: string, last: string): Promise<Inventory> => {
+// The booking form's questions are checked in the site's languages, each property's every time.
+export const loadInventory = async (
+  first: string,
+  last: string,
+  languages: string[],
+): Promise<Inventory> => {
   const [properties, calendars] = await Promise.all([
     get<Properties>(
       '/properties?includeAllRooms=true&includePriceRules=true&includeUpsellItems=true' +
@@ -167,6 +175,7 @@ export const loadInventory = async (first: string, last: string): Promise<Invent
         item.per === 'adult' &&
         ['daily', 'oneTime'].includes(item.period),
     );
+    const questions = readQuestions(property, languages, first);
     return property.roomTypes.map((room) => {
       const { maxPeople, maxAdult, maxChildren } = room;
       if ((maxAdult ?? maxPeople) !== maxPeople || (maxChildren && maxChildren < maxPeople - 1))
@@ -192,6 +201,7 @@ export const loadInventory = async (first: string, last: string): Promise<Invent
         headlines: Object.fromEntries(
           room.texts.map((text) => [text.language, text.contentHeadline.trim()]),
         ),
+        questions,
         texts: Object.fromEntries(
           room.texts.map((text) => [
             text.language,
@@ -253,6 +263,13 @@ export function listingOf(rooms: Room[], id: number, languages: string[]): Listi
       languages.flatMap((code) => (texts[code] ? [[code, texts[code]]] : [])),
     ),
   };
+}
+
+// What a room's booking form asks, or null where its property takes no booking on the site.
+export function questionsOf(rooms: Room[], id: number): Question[] | null {
+  const room = rooms.find((one) => one.id === id);
+  if (!room) throw new Error(`Beds24 has no room ${id}`);
+  return room.questions;
 }
 
 export interface Stay {
