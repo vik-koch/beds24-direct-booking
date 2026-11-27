@@ -10,8 +10,9 @@ on:
   workflow_dispatch:
 
 env:
-  # The released version this site is built from. A move to a new release is a change here.
-  VERSION: 0.1.0
+  # The released version this site is built from. A move to a new release is a change here; this
+  # file is copied from the same release, as a release can change it.
+  VERSION: 0.8.0
 
 permissions:
   contents: read
@@ -59,7 +60,7 @@ jobs:
           DEPLOY_KNOWN_HOSTS: ${{ vars.DEPLOY_KNOWN_HOSTS }}
           DEPLOY_SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
           APP_DOMAIN: ${{ vars.APP_DOMAIN }}
-          BEDS24_TOKEN: ${{ secrets.BEDS24_TOKEN }}
+          BEDS24_REFRESH_TOKEN: ${{ secrets.BEDS24_REFRESH_TOKEN }}
           SITE_PASSWORD: ${{ secrets.SITE_PASSWORD }}
           INDEXED: ${{ vars.INDEXED }}
           SIM_IMAGE: ${{ vars.SIM_IMAGE }}
@@ -98,11 +99,11 @@ jobs:
               echo "SIM_IMAGE=$SIM_IMAGE"
               echo "COMPOSE_PROFILES=sim"
               echo "BEDS24_URL=http://sim:4300/v2"
-              echo "BEDS24_TOKEN=simulator"
+              echo "BEDS24_REFRESH_TOKEN=simulator"
             else
-              : "${BEDS24_TOKEN:?secret BEDS24_TOKEN is not set}"
+              : "${BEDS24_REFRESH_TOKEN:?secret BEDS24_REFRESH_TOKEN is not set}"
               echo "BEDS24_URL=https://api.beds24.com/v2"
-              echo "BEDS24_TOKEN=$BEDS24_TOKEN"
+              echo "BEDS24_REFRESH_TOKEN=$BEDS24_REFRESH_TOKEN"
             fi
             # Search engines are kept out until the variable INDEXED is "true".
             if [ "$INDEXED" = true ]; then echo "ROBOTS_TAG="; fi

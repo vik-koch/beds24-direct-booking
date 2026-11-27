@@ -5,7 +5,7 @@ e2e tests' Beds24; the site itself never knows the difference. The wire shapes f
 [`docs/beds24-findings.md`](../docs/beds24-findings.md).
 
 ```sh
-npm run sim   # http://localhost:4300/v2, header "token: simulator"
+npm run sim   # http://localhost:4300/v2, refresh token "simulator"
 ```
 
 `PORT` moves it to another port. `SIM_PRICES_UNTIL` (a day such as `2026-11-17`) leaves every later
@@ -22,11 +22,14 @@ is described in [`data.json`](data.json); the decisions behind the simulator are
 | Call | Answer |
 |---|---|
 | `GET /v2/properties` | The two houses with their four apartments; the demo lists three, the e2e test site all four. Rooms, texts, price rules and upsell items appear when their `include*` parameter is passed; `id` filters. |
-| `GET /v2/inventory/rooms/calendar` | Per room the compressed date ranges between `startDate` and `endDate`, with the fields whose `include*` parameter is passed; `roomId` and `propertyId` filter. |
+| `GET /v2/authentication/token` | For the header `refreshToken: simulator`, a new access token valid for 24 hours. |
+| `GET /v2/inventory/rooms/calendar` | Per room the compressed date ranges between `startDate` and `endDate`, with the fields whose `include*` parameter is passed; `roomId` and `propertyId` filter. A held booking takes its nights out. |
+| `POST /v2/bookings` | Per item, a new booking or a change to one by its `id`: status, price, invoice and info items, `notifyGuest` counted. A `new` or `confirmed` booking holds its nights; with `checkAvailability` a night already taken refuses it. |
 
-A call without the token answers 401 `Token not valid`, in the body Beds24 sends and, as there,
-without rate limit headers. Every successful answer carries the three headers; the budget is counted
-and never enforced.
+Any other call needs an access token in the header `token`; without one, as with a wrong refresh
+token, it answers 401 `Token not valid`, in the body Beds24 sends and, as there, without rate limit
+headers. Every successful answer carries the three headers; the budget is counted and never
+enforced.
 
 ## The data
 
@@ -43,6 +46,8 @@ days pass:
 - **Bookings** are drawn from the room and the week: about a third of the weeks are taken, more in
   the peak periods, and some weeks have single nights taken.
 - **Apartment Zirbe** is booked out every winter.
+- **Bookings made through the API** live in memory until the simulator restarts. As the demo is
+  public, a booking keeps its stay, status and money, never the guest's details.
 - **The lead time** is seven days, so the nearest Saturday is always inside it.
 
 ## What differs from Beds24
@@ -51,4 +56,5 @@ days pass:
   vouchers, units and the like), every other call, and the booking page.
 - **Not recorded on the wire, so the simulator's own:** what `properties` returns when only some
   `include*` parameters are passed, the calendar's answer without any (a day that carries none of
-  the fields asked for is skipped), and every error other than the 401.
+  the fields asked for is skipped), the answer to a new booking beyond its `id` and to a change, and
+  every error other than the 401, the refused week and the unknown booking.

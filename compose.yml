@@ -9,7 +9,7 @@ services:
       NG_ALLOWED_HOSTS: ${APP_DOMAIN:?}
       NODE_OPTIONS: --max-old-space-size=192
       BEDS24_URL: ${BEDS24_URL:?}
-      BEDS24_TOKEN: ${BEDS24_TOKEN:?}
+      BEDS24_REFRESH_TOKEN: ${BEDS24_REFRESH_TOKEN:?}
       SITE_PASSWORD: ${SITE_PASSWORD:-}
     networks: [default, traefik]
     labels:

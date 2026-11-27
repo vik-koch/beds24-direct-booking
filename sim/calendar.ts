@@ -1,3 +1,4 @@
+import type { Held } from './bookings.ts';
 import { properties, type Room } from './data.ts';
 
 type Level = 'off' | keyof Room['prices'];
@@ -39,7 +40,7 @@ const level = (time: number): Level => {
   return now.start === time && now.level !== 'off' && before !== 'off' ? before : now.level;
 };
 
-const taken = (room: Room, time: number) => {
+export const taken = (room: Room, time: number) => {
   const week = saturdayOnOrBefore(time);
   const season = period(week).level;
   if (room.bookedOutInWinter && (season === 'winter' || season === 'peak')) return true;
@@ -52,10 +53,12 @@ const taken = (room: Room, time: number) => {
 // Nights after this day have no price yet, as when an owner has not opened a season.
 const pricesUntil = process.env['SIM_PRICES_UNTIL'];
 
-const dayOf = (room: Room, time: number, has: (name: string) => boolean) => {
+const dayOf = (room: Room, time: number, has: (name: string) => boolean, held: Held) => {
   const price = pricesUntil && iso(time) > pricesUntil ? 'off' : level(time);
   return {
-    ...(has('includeNumAvail') && { numAvail: taken(room, time) ? 0 : 1 }),
+    ...(has('includeNumAvail') && {
+      numAvail: taken(room, time) || held(room.id, iso(time)) ? 0 : 1,
+    }),
     ...(has('includeMinStay') && { minStay: 7 }),
     ...(has('includeMaxStay') && { maxStay: 7 }),
     ...(has('includeOverride') && {
@@ -66,7 +69,7 @@ const dayOf = (room: Room, time: number, has: (name: string) => boolean) => {
   };
 };
 
-export const roomCalendars = (query: URLSearchParams) => {
+export const roomCalendars = (query: URLSearchParams, held: Held) => {
   const has = (name: string) => query.has(name) && query.get(name) !== 'false';
   const start = Date.parse(query.get('startDate') ?? '');
   const end = Date.parse(query.get('endDate') ?? '');
@@ -82,7 +85,7 @@ export const roomCalendars = (query: URLSearchParams) => {
           const calendar: ({ from: string; to: string } & ReturnType<typeof dayOf>)[] = [];
           let last = '';
           for (let time = start; time <= end; time += day) {
-            const values = dayOf(room, time, has);
+            const values = dayOf(room, time, has, held);
             const key = JSON.stringify(values);
             if (key === last && key !== '{}') calendar.at(-1)!.to = iso(time);
             else if (key !== '{}') calendar.push({ from: iso(time), to: iso(time), ...values });

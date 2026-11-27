@@ -922,7 +922,7 @@ test('the browser bundle does not know the token', { tag: '@any-engine' }, () =>
   const scripts = readdirSync(browser).filter((file) => file.endsWith('.js'));
   expect(scripts.length).toBeGreaterThan(0);
   for (const file of scripts)
-    expect(readFileSync(`${browser}/${file}`, 'utf8')).not.toContain('BEDS24_TOKEN');
+    expect(readFileSync(`${browser}/${file}`, 'utf8')).not.toContain('BEDS24_REFRESH_TOKEN');
 });
 
 // Every tab stop shows the ring: on the element, on what it draws for a hidden input, or on the
