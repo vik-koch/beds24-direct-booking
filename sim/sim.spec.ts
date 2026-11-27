@@ -1,3 +1,4 @@
+import { request } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { sim } from './server.ts';
 
@@ -44,6 +45,29 @@ describe('authentication', () => {
       code: 401,
       error: 'Token not valid',
     });
+  });
+
+  // On a simulator of its own, as the clock it moves also moves the budget's window.
+  it('refuses an access token after its 24 hours', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    const own = sim().listen(0);
+    const url = `http://localhost:${(own.address() as AddressInfo).port}/v2`;
+    const issue = async () =>
+      (
+        await (
+          await fetch(`${url}/authentication/token`, { headers: { refreshToken: 'simulator' } })
+        ).json()
+      ).token;
+    const status = async (token: string) =>
+      (await fetch(`${url}/properties`, { headers: { token } })).status;
+    const token = await issue();
+    vi.advanceTimersByTime(86_400_000 - 1);
+    expect(await status(token)).toBe(200);
+    vi.advanceTimersByTime(1);
+    expect(await status(token)).toBe(401);
+    expect(await status(await issue())).toBe(200);
+    own.close();
+    vi.useRealTimers();
   });
 });
 
@@ -377,6 +401,43 @@ describe('bookings', () => {
     expect(await nights(stay.arrival)).toBe(0);
     await post([{ id: created.id, status: 'cancelled' }]);
     expect(await nights(stay.arrival)).toBe(1);
+  });
+
+  it('answers 400 to a body that is not a list of bookings, and keeps running', async () => {
+    const response = await fetch(at('bookings'), {
+      method: 'POST',
+      headers: { token: access },
+      body: '[{"roomId": 9001012',
+    });
+    expect(response.status).toBe(400);
+    expect((await get('properties')).status).toBe(200);
+  });
+
+  it('keeps a character that arrives split between two chunks', async () => {
+    const stay = await freeWeek();
+    const bytes = Buffer.from(
+      JSON.stringify([
+        {
+          ...stay,
+          invoiceItems: [{ type: 'charge', description: 'Kurtaxe für Gäste', qty: 1, amount: 5 }],
+        },
+      ]),
+    );
+    const split = bytes.indexOf(Buffer.from('ä')) + 1;
+    const answer = await new Promise<string>((resolve) => {
+      const sent = request(
+        at('bookings'),
+        { method: 'POST', headers: { token: access } },
+        (response) => {
+          let text = '';
+          response.on('data', (chunk) => (text += chunk)).on('end', () => resolve(text));
+        },
+      );
+      sent.write(bytes.subarray(0, split));
+      setTimeout(() => sent.end(bytes.subarray(split)), 20);
+    });
+    const [{ new: created }] = JSON.parse(answer);
+    expect(server.bookings.get(created.id)?.invoiceItems[0].description).toBe('Kurtaxe für Gäste');
   });
 
   it('refuses a change to a booking it does not have', async () => {

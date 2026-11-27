@@ -13,16 +13,18 @@ const routes: Record<
   '/v2/inventory/rooms/calendar': { type: 'calendar', cost: 1, data: roomCalendars },
 };
 
+// Decoded once, so a character split between chunks stays whole.
 const body = async (request: IncomingMessage) => {
-  let text = '';
-  for await (const chunk of request) text += chunk;
-  return JSON.parse(text) as Booking[];
+  const chunks: Buffer[] = [];
+  for await (const chunk of request) chunks.push(chunk);
+  return JSON.parse(Buffer.concat(chunks).toString('utf8')) as Booking[];
 };
 
 export const sim = () => {
   let remaining = 100;
   let resets = 0;
-  const tokens = new Set<string>();
+  // Each access token with the time it expires.
+  const tokens = new Map<string, number>();
   const book = bookings();
   const server = createServer(async (request, response) => {
     if (Date.now() >= resets) {
@@ -49,12 +51,16 @@ export const sim = () => {
     if (url.pathname === '/v2/authentication/token') {
       if (request.headers['refreshtoken'] !== refreshToken) return fail(401, 'Token not valid');
       const token = `access-${crypto.randomUUID()}`;
-      tokens.add(token);
+      tokens.set(token, Date.now() + 86_400_000);
       return send(200, { token, expiresIn: 86_400 }, 0.5);
     }
-    if (!tokens.has(String(request.headers['token']))) return fail(401, 'Token not valid');
-    if (url.pathname === '/v2/bookings' && request.method === 'POST')
-      return send(201, book.post(await body(request)), 1.1);
+    const expires = tokens.get(String(request.headers['token']));
+    if (!expires || expires <= Date.now()) return fail(401, 'Token not valid');
+    if (url.pathname === '/v2/bookings' && request.method === 'POST') {
+      const items = await body(request).catch(() => null);
+      if (!Array.isArray(items)) return fail(400, 'A list of bookings is required');
+      return send(201, book.post(items), 1.1);
+    }
     const route = routes[url.pathname];
     if (!route || request.method !== 'GET') return fail(404, 'Not found');
     const data = route.data(url.searchParams, book.held);

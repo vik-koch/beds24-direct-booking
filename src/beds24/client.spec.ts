@@ -357,6 +357,23 @@ describe('the token and the bookings', () => {
     const stay = await freeWeek();
     const id = await client.createBooking(stay, guest, charges);
     expect(id).toEqual(expect.any(Number));
+    // The simulator keeps no guest details, so they are read off the request.
+    const [, sent] = vi
+      .mocked(fetch)
+      .mock.calls.find(([url]) => String(url).endsWith('/bookings'))!;
+    expect(JSON.parse(String(sent?.body))).toEqual([
+      expect.objectContaining({
+        numAdult: 2,
+        numChild: 0,
+        firstName: 'Anna',
+        lastName: 'Muster',
+        email: 'anna@example.com',
+        phone: '+49 30 1234567',
+        country2: 'DE',
+        lang: 'en',
+        actions: { checkAvailability: true },
+      }),
+    ]);
     expect(server.bookings.get(id as number)).toMatchObject({
       roomId: 9001012,
       arrival: stay.arrival,
@@ -397,11 +414,16 @@ describe('the token and the bookings', () => {
     );
   });
 
-  it('fails when Beds24 is unreachable, and logs nothing of the guest', async () => {
-    const logs = ['log', 'info', 'warn', 'error'].map((level) =>
-      vi.spyOn(console, level as 'log').mockImplementation(() => undefined),
-    );
-    vi.stubEnv('BEDS24_URL', 'http://localhost:9/v2');
+  it('drops an access token Beds24 refuses, so that the next call renews it', async () => {
+    await client.loadInventory('2027-01-01', '2027-01-07');
+    vi.mocked(fetch).mockResolvedValueOnce(new Response('{}', { status: 401 }));
+    await expect(client.loadInventory('2027-01-01', '2027-01-07')).rejects.toThrow('401');
+    await client.loadInventory('2027-01-01', '2027-01-07');
+    expect(renewals()).toBe(2);
+  });
+
+  // With a token in hand, so that the booking itself is what fails.
+  describe('when a booking call fails', () => {
     const stay = {
       roomId: 9001012,
       arrival: '2027-07-03',
@@ -409,7 +431,34 @@ describe('the token and the bookings', () => {
       adults: 2,
       children: 0,
     };
-    await expect(client.createBooking(stay, guest, charges)).rejects.toThrow('fetch failed');
-    for (const log of logs) expect(log).not.toHaveBeenCalled();
+    const fails = async (reason: string) => {
+      const logs = ['log', 'info', 'warn', 'error'].map((level) =>
+        vi.spyOn(console, level as 'log').mockImplementation(() => undefined),
+      );
+      const error = await client.createBooking(stay, guest, charges).then(
+        () => undefined,
+        (error: Error) => error.message,
+      );
+      expect(error).toBe(`Beds24 ${reason}`);
+      for (const log of logs) expect(log).not.toHaveBeenCalled();
+    };
+    beforeEach(() => client.loadInventory('2027-01-01', '2027-01-07'));
+
+    it('names only the room when Beds24 is unreachable', async () => {
+      vi.stubEnv('BEDS24_URL', 'http://localhost:9/v2');
+      await fails('did not answer a booking of room 9001012');
+    });
+
+    it('repeats nothing of a broken answer', async () => {
+      vi.mocked(fetch).mockResolvedValueOnce(
+        new Response('[{"success":true,"new":{"id":7,"email":"anna@example.com"', { status: 201 }),
+      );
+      await fails('answered a booking of room 9001012 unreadably');
+    });
+
+    it('takes a success without a booking ID for a failure, not for a taken week', async () => {
+      vi.mocked(fetch).mockResolvedValueOnce(Response.json([{ success: true }], { status: 201 }));
+      await fails('refused a booking of room 9001012');
+    });
   });
 });

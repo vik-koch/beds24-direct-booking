@@ -137,6 +137,7 @@ const get = async <T>(path: string): Promise<T> => {
     headers: { token: await token() },
     signal: AbortSignal.timeout(5000),
   });
+  if (response.status === 401) access = undefined;
   if (!response.ok) throw new Error(`Beds24 answered ${response.status} to ${path}`);
   return response.json();
 };
@@ -280,19 +281,29 @@ interface Answer {
   errors?: { field?: string }[];
 }
 
-// Beds24's answer can repeat the guest's details, so an error names no more than the booking.
-const post = async (booking: object, what: string): Promise<Answer> => {
+// Beds24's answer, or a broken piece of it, can repeat the guest's details, so an error names
+// only the call and its room or booking.
+const post = async (booking: object, what: string) => {
   const response = await fetch(`${base()}/bookings`, {
     method: 'POST',
     headers: { token: await token(), 'Content-Type': 'application/json' },
     body: JSON.stringify([booking]),
     signal: AbortSignal.timeout(5000),
+  }).catch(() => {
+    throw new Error(`Beds24 did not answer ${what}`);
   });
+  if (response.status === 401) access = undefined;
   if (!response.ok) throw new Error(`Beds24 answered ${response.status} to ${what}`);
-  const [answer] = (await response.json()) as Answer[];
-  if (!answer?.success && !answer?.errors?.some(({ field }) => field === 'no availability'))
-    throw new Error(`Beds24 refused ${what}`);
+  const answer = await response.json().then(
+    ([first]: Answer[]) => first,
+    () => undefined,
+  );
+  if (!answer) throw new Error(`Beds24 answered ${what} unreadably`);
   return answer;
+};
+
+const change = async (booking: object, what: string) => {
+  if (!(await post(booking, what)).success) throw new Error(`Beds24 refused ${what}`);
 };
 
 const cents = (amount: number) => Math.round(amount * 100) / 100;
@@ -303,6 +314,7 @@ export const createBooking = async (
   { firstName, lastName, email, phone, country, language }: Guest,
   charges: Charge[],
 ): Promise<number | 'taken'> => {
+  const what = `a booking of room ${roomId}`;
   const answer = await post(
     {
       roomId,
@@ -321,14 +333,17 @@ export const createBooking = async (
       invoiceItems: charges.map((charge) => ({ type: 'charge', ...charge })),
       actions: { checkAvailability: true },
     },
-    `a booking of room ${roomId}`,
+    what,
   );
-  return answer.new?.id ?? 'taken';
+  if (answer.success && answer.new?.id) return answer.new.id;
+  if (!answer.success && answer.errors?.some(({ field }) => field === 'no availability'))
+    return 'taken';
+  throw new Error(`Beds24 refused ${what}`);
 };
 
 // The payment as a line of its own, with Stripe's ID beside it where the guest does not see it.
-export const recordPayment = async (id: number, charge: Omit<Charge, 'qty'>, paymentId: string) => {
-  await post(
+export const recordPayment = (id: number, charge: Omit<Charge, 'qty'>, paymentId: string) =>
+  change(
     {
       id,
       status: 'confirmed',
@@ -337,13 +352,10 @@ export const recordPayment = async (id: number, charge: Omit<Charge, 'qty'>, pay
     },
     `the payment of booking ${id}`,
   );
-};
 
 // Beds24's confirmation e-mail, in the booking's language.
-export const sendConfirmation = async (id: number) => {
-  await post({ id, actions: { notifyGuest: true } }, `the confirmation of booking ${id}`);
-};
+export const sendConfirmation = (id: number) =>
+  change({ id, actions: { notifyGuest: true } }, `the confirmation of booking ${id}`);
 
-export const cancelBooking = async (id: number) => {
-  await post({ id, status: 'cancelled' }, `the cancellation of booking ${id}`);
-};
+export const cancelBooking = (id: number) =>
+  change({ id, status: 'cancelled' }, `the cancellation of booking ${id}`);
