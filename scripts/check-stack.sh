@@ -48,4 +48,9 @@ for path in "${home#"$url"}" "/$script" "/$tile"; do
 done
 answer=$(headers "$picture")
 ! grep -qi "content-encoding:" <<<"$answer" || { echo "COMPRESSED: $picture" >&2; exit 1; }
-echo "OK: the stack serves the apartments with its headers, text compressed"
+# Only the simulator's checkout page is routed to it, with the site's headers; its API is not.
+answer=$(curl -ksi "$url/simulated-checkout/cs_test_none")
+expect 'There is no such payment.'
+expect 'x-robots-tag: noindex, nofollow'
+[ "$(curl -ks -o /dev/null -w "%{http_code}" "$url/v1/checkout/sessions")" = 404 ] || { echo "PUBLIC: the simulator's API" >&2; exit 1; }
+echo "OK: the stack serves the apartments with its headers, text compressed, and the checkout page"

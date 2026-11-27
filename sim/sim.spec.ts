@@ -10,7 +10,7 @@ interface Range {
   price1?: number;
 }
 
-const server = sim().listen(0);
+const server = sim('https://demo.example').listen(0);
 const at = (path: string) =>
   `http://localhost:${(server.address() as AddressInfo).port}/v2/${path}`;
 const refresh = (refreshToken: string) =>
@@ -26,6 +26,25 @@ const post = async (items: object[]) =>
       body: JSON.stringify(items),
     })
   ).json();
+const room = 9001012;
+const addDays = (date: string, days: number) =>
+  new Date(Date.parse(date) + days * 864e5).toISOString().slice(0, 10);
+const ranges = async (start: string, end: string, include = 'includeNumAvail=true') => {
+  const path = `inventory/rooms/calendar?roomId=${room}&startDate=${start}&endDate=${end}`;
+  const [{ calendar }] = (await (await get(`${path}&${include}`)).json()).data;
+  return calendar as Range[];
+};
+const nights = async (arrival: string) => (await ranges(arrival, arrival))[0].numAvail;
+// A Saturday from which the simulator's own calendar leaves seven nights free.
+const freeWeek = async () => {
+  const range = (await ranges('2027-06-05', '2027-09-30')).find(
+    ({ from, to, numAvail }) =>
+      numAvail === 1 &&
+      new Date(from).getUTCDay() === 6 &&
+      Date.parse(to) - Date.parse(from) >= 6 * 864e5,
+  )!;
+  return { roomId: room, arrival: range.from, departure: addDays(range.from, 7) };
+};
 afterAll(() => server.close());
 
 describe('authentication', () => {
@@ -330,24 +349,6 @@ describe('calendar', () => {
 });
 
 describe('bookings', () => {
-  const room = 9001012;
-  const ranges = async (start: string, end: string) => {
-    const path = `inventory/rooms/calendar?roomId=${room}&startDate=${start}&endDate=${end}`;
-    const [{ calendar }] = (await (await get(`${path}&includeNumAvail=true`)).json()).data;
-    return calendar as Range[];
-  };
-  const nights = async (arrival: string) => (await ranges(arrival, arrival))[0].numAvail;
-  // A Saturday from which the simulator's own calendar leaves seven nights free.
-  const freeWeek = async () => {
-    const range = (await ranges('2027-06-05', '2027-09-30')).find(
-      ({ from, to, numAvail }) =>
-        numAvail === 1 &&
-        new Date(from).getUTCDay() === 6 &&
-        Date.parse(to) - Date.parse(from) >= 6 * 864e5,
-    )!;
-    const departure = new Date(Date.parse(range.from) + 7 * 864e5).toISOString().slice(0, 10);
-    return { roomId: room, arrival: range.from, departure };
-  };
   const refusal = {
     success: false,
     errors: [{ action: 'new booking', field: 'no availability', message: 'invalid' }],
@@ -444,5 +445,237 @@ describe('bookings', () => {
     expect(await post([{ id: 1, status: 'cancelled' }])).toEqual([
       { success: false, errors: [{ action: 'modify booking', message: 'access denied' }] },
     ]);
+  });
+});
+
+describe('offers', () => {
+  interface Stay {
+    roomId: number;
+    arrival: string;
+    departure: string;
+  }
+  const ask = ({ roomId, arrival, departure }: Stay, adults = 2, children = 0) =>
+    `inventory/rooms/offers?roomId=${roomId}&arrival=${arrival}&departure=${departure}` +
+    `&numAdults=${adults}&numChildren=${children}`;
+  const offers = async (stay: Stay, adults?: number, children?: number) => {
+    const { data } = await (await get(ask(stay, adults, children))).json();
+    return data[0].offers?.[0]?.price as number | undefined;
+  };
+
+  it('offers a free week at the sum of its nights times the multiplier', async () => {
+    const stay = await freeWeek();
+    const response = await get(
+      `inventory/rooms/offers?arrival=${stay.arrival}&departure=${stay.departure}&numAdults=2`,
+    );
+    expect(response.headers.get('X-Request-Cost')).toBe('1');
+    const body = await response.json();
+    expect(body).toMatchObject({ success: true, type: 'offer', count: 4 });
+    const days = await ranges(stay.arrival, addDays(stay.departure, -1), 'includePrices=true');
+    const sum = days.reduce(
+      (total, { from, to, price1 = 0 }) =>
+        total + price1 * ((Date.parse(to) - Date.parse(from)) / 864e5 + 1),
+      0,
+    );
+    expect(body.data.find(({ roomId }: { roomId: number }) => roomId === room)).toEqual({
+      roomId: room,
+      propertyId: 900101,
+      offers: [{ offerId: 1, offerName: '', price: Math.round(sum * 90) / 100, unitsAvailable: 1 }],
+    });
+  });
+
+  it('offers no week that is held, and the week again once it is cancelled', async () => {
+    const stay = await freeWeek();
+    const [{ new: created }] = await post([{ ...stay, status: 'new' }]);
+    expect(await offers(stay)).toBeUndefined();
+    await post([{ id: created.id, status: 'cancelled' }]);
+    expect(await offers(stay)).toBeGreaterThan(0);
+  });
+
+  it('offers no week its own calendar has taken, and no stay that is not one week', async () => {
+    expect(
+      await offers({ roomId: 9001011, arrival: '2026-12-05', departure: '2026-12-12' }),
+    ).toBeUndefined();
+    const stay = await freeWeek();
+    expect(await offers({ ...stay, departure: addDays(stay.arrival, 4) })).toBeUndefined();
+    expect(await offers({ ...stay, departure: addDays(stay.arrival, 14) })).toBeUndefined();
+    const monday = addDays(stay.arrival, 2);
+    expect(await offers({ ...stay, arrival: monday, departure: addDays(monday, 7) })).toBe(
+      undefined,
+    );
+  });
+
+  // On a simulator of its own, as the clock it moves also moves the budget's window.
+  it('offers a week exactly at the lead time and none a day sooner', async () => {
+    const stay = await freeWeek();
+    vi.useFakeTimers({ toFake: ['Date'] });
+    const own = sim().listen(0);
+    const url = `http://localhost:${(own.address() as AddressInfo).port}/v2`;
+    const price = async () => {
+      const refreshed = await fetch(`${url}/authentication/token`, {
+        headers: { refreshToken: 'simulator' },
+      });
+      const { token } = await refreshed.json();
+      const { data } = await (await fetch(`${url}/${ask(stay)}`, { headers: { token } })).json();
+      return data[0].offers?.[0]?.price;
+    };
+    vi.setSystemTime(`${addDays(stay.arrival, -7)}T20:00:00Z`);
+    expect(await price()).toBeGreaterThan(0);
+    vi.setSystemTime(`${addDays(stay.arrival, -6)}T08:00:00Z`);
+    expect(await price()).toBeUndefined();
+    own.close();
+    vi.useRealTimers();
+  });
+
+  it('keeps to the guest limits, at one price whatever the mix', async () => {
+    const stay = await freeWeek();
+    const price = await offers(stay, 4);
+    expect(price).toBeGreaterThan(0);
+    expect(await offers(stay, 1, 3)).toBe(price);
+    expect(await offers(stay, 0, 1)).toBe(price);
+    expect(await offers(stay, 5)).toBeUndefined();
+    expect(await offers(stay, 0, 4)).toBeUndefined();
+  });
+
+  it('needs both dates', async () => {
+    const response = await get('inventory/rooms/offers?arrival=2027-06-05');
+    expect(response.status).toBe(400);
+    expect((await response.json()).error).toBe('arrival and departure are required');
+  });
+});
+
+describe('Stripe Checkout', () => {
+  const origin = () => `http://localhost:${(server.address() as AddressInfo).port}`;
+  const stripe = (path = '', form?: Record<string, string | number>, key = 'simulator') =>
+    fetch(`${origin()}/v1/checkout/sessions${path}`, {
+      method: form ? 'POST' : 'GET',
+      headers: { Authorization: `Bearer ${key}` },
+      body: form && new URLSearchParams(Object.entries(form).map(([k, v]) => [k, String(v)])),
+    });
+  const order = (fields: Record<string, string | number> = {}) => ({
+    mode: 'payment',
+    'line_items[0][quantity]': 1,
+    'line_items[0][price_data][currency]': 'eur',
+    'line_items[0][price_data][unit_amount]': 98_315,
+    'line_items[0][price_data][product_data][name]': 'Lärche, 5 to 12 June 2027',
+    client_reference_id: '70000001',
+    'metadata[booking]': '70000001',
+    customer_email: 'anna@example.com',
+    'payment_method_types[0]': 'card',
+    locale: 'de',
+    success_url: 'https://demo.example/de/booked?session={CHECKOUT_SESSION_ID}',
+    cancel_url: 'https://demo.example/de/book',
+    ...fields,
+  });
+  const open = async (fields?: Record<string, string | number>) =>
+    (await (await stripe('', order(fields))).json()) as { id: string; url: string };
+  const press = (id: string, action: string) =>
+    fetch(`${origin()}/simulated-checkout/${id}`, {
+      method: 'POST',
+      body: new URLSearchParams({ action }),
+      redirect: 'manual',
+    });
+  const read = async (id: string) => (await stripe(`/${id}`)).json();
+
+  it('creates an open session with its total and page, without the guest e-mail', async () => {
+    const created = await (await stripe('', order())).json();
+    expect(created).toMatchObject({
+      object: 'checkout.session',
+      status: 'open',
+      payment_status: 'unpaid',
+      amount_total: 98_315,
+      currency: 'eur',
+      client_reference_id: '70000001',
+      metadata: { booking: '70000001' },
+      payment_intent: null,
+      url: `https://demo.example/simulated-checkout/${created.id}`,
+    });
+    expect(created.id).toMatch(/^cs_test_/);
+    expect(created.expires_at - created.created).toBe(86_400);
+    expect(JSON.stringify(created)).not.toContain('anna');
+    expect(await read(created.id)).toEqual(created);
+  });
+
+  it('refuses a wrong key, a missing parameter and an unknown session', async () => {
+    const wrong = await stripe('', order(), 'sk_test_other');
+    expect(wrong.status).toBe(401);
+    expect((await wrong.json()).error.type).toBe('invalid_request_error');
+    const { success_url, ...missing } = order();
+    expect(success_url).toBeTruthy();
+    const refused = await stripe('', missing);
+    expect(refused.status).toBe(400);
+    expect((await refused.json()).error.param).toBe('success_url');
+    expect((await stripe('/cs_test_none')).status).toBe(404);
+  });
+
+  it('pays on the page and redirects to the success address with the session', async () => {
+    const { id } = await open();
+    const page = await fetch(`${origin()}/simulated-checkout/${id}`);
+    const html = await page.text();
+    expect(html).toContain('<html lang="de">');
+    expect(html).toContain('Simulierte Zahlung');
+    expect(html).toContain('983,15');
+    const paid = await press(id, 'pay');
+    expect(paid.status).toBe(303);
+    expect(paid.headers.get('Location')).toBe(`https://demo.example/de/booked?session=${id}`);
+    expect(await read(id)).toMatchObject({
+      status: 'complete',
+      payment_status: 'paid',
+      payment_intent: expect.stringMatching(/^pi_/),
+      url: null,
+    });
+    expect((await press(id, 'pay')).status).toBe(200);
+  });
+
+  it('cancels back to the cancel address and leaves the session open', async () => {
+    const { id } = await open();
+    const cancelled = await press(id, 'cancel');
+    expect(cancelled.headers.get('Location')).toBe('https://demo.example/de/book');
+    expect((await read(id)).status).toBe('open');
+  });
+
+  it('lets a session expire on the page, and at its expiry time', async () => {
+    const { id } = await open({ locale: 'en' });
+    const expired = await press(id, 'expire');
+    expect(expired.status).toBe(303);
+    expect(expired.headers.get('Location')).toBe(`/simulated-checkout/${id}`);
+    expect(await read(id)).toMatchObject({ status: 'expired', payment_status: 'unpaid' });
+    const page = await (await fetch(`${origin()}/simulated-checkout/${id}`)).text();
+    expect(page).toContain('This payment has expired.');
+    expect(page).not.toContain('<button');
+    const past = await open({ expires_at: Math.floor(Date.now() / 1000) - 1 });
+    expect((await read(past.id)).status).toBe('expired');
+  });
+
+  it('merges metadata into a session, an empty value removing its key', async () => {
+    const { id } = await open();
+    await stripe(`/${id}`, { 'metadata[recorded]': 'yes' });
+    expect((await read(id)).metadata).toEqual({ booking: '70000001', recorded: 'yes' });
+    await stripe(`/${id}`, { 'metadata[recorded]': '' });
+    expect((await read(id)).metadata).toEqual({ booking: '70000001' });
+  });
+
+  it('lists sessions newest first, by status and creation time, in pages', async () => {
+    const first = await open();
+    const second = await open();
+    await press(second.id, 'expire');
+    const list = async (query: string) =>
+      (await (await stripe(`?${query}`)).json()) as {
+        data: { id: string }[];
+        has_more: boolean;
+      };
+    const page = await list('limit=1');
+    expect(page).toMatchObject({ data: [{ id: second.id }], has_more: true });
+    expect((await list(`limit=1&starting_after=${second.id}`)).data[0].id).toBe(first.id);
+    const expired = await list('status=expired&limit=100');
+    expect(expired.data.map(({ id }) => id)).toContain(second.id);
+    expect(expired.data.map(({ id }) => id)).not.toContain(first.id);
+    const later = Math.floor(Date.now() / 1000) + 60;
+    expect((await list(`created[gte]=${later}`)).data).toEqual([]);
+  });
+
+  it('answers 404 for a page it has no session for', async () => {
+    const response = await fetch(`${origin()}/simulated-checkout/cs_test_none`);
+    expect(response.status).toBe(404);
+    expect(await response.text()).toContain('There is no such payment.');
   });
 });
