@@ -725,6 +725,52 @@
     box-shadow: var(--shadow-card);
   }
 
+  /* A stay's price, its tax and their total: in the booking panel and on the booking step. */
+  .total {
+    font-size: 0.9375rem;
+
+    div {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      padding-block: 0.25rem;
+    }
+
+    dt {
+      color: var(--color-ink-soft);
+    }
+
+    dd {
+      white-space: nowrap;
+    }
+
+    .sum {
+      margin-top: 0.375rem;
+      padding-top: 0.625rem;
+      border-top: 1px solid var(--color-line);
+      font-size: 1.1875rem;
+      font-weight: var(--font-weight-medium);
+
+      dt {
+        color: var(--color-ink);
+      }
+    }
+  }
+
+  /* A button as wide as its card: the booking panel's and the booking step's. */
+  .button.wide {
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+    margin-top: 1rem;
+
+    &:disabled {
+      background: var(--color-line);
+      color: var(--color-ink-soft);
+      box-shadow: none;
+    }
+  }
+
   /* An apartment too small for the chosen guests: on its card and in its panel. */
   .too-small {
     display: flex;

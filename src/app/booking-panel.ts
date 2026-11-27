@@ -29,7 +29,7 @@ import type { FreeWeeks } from '../beds24/weeks';
 import site from '../content/generated/site';
 import type { SeasonName } from '../content/names';
 import { BookingBar, type BarLine } from './booking-bar';
-import { Choice, fits, seasonOf, taxed, taxFor, type View } from './choice';
+import { Choice, fits, seasonOf, taxLine, type View } from './choice';
 import { GuestCounts } from './guest-counts';
 import { Season } from './season';
 import { swapper } from './swap';
@@ -718,54 +718,10 @@ const shownMonths = new InjectionToken('booking panel months', {
         padding-top: 0.625rem;
       }
 
-      .total {
-        font-size: 0.9375rem;
-
-        div {
-          display: flex;
-          justify-content: space-between;
-          gap: 1rem;
-          padding-block: 0.25rem;
-        }
-
-        dt {
-          color: var(--color-ink-soft);
-        }
-
-        dd {
-          white-space: nowrap;
-        }
-
-        .sum {
-          margin-top: 0.375rem;
-          padding-top: 0.625rem;
-          border-top: 1px solid var(--color-line);
-          font-size: 1.1875rem;
-          font-weight: var(--font-weight-medium);
-
-          dt {
-            color: var(--color-ink);
-          }
-        }
-      }
-
       .clear-week {
         display: flex;
         width: fit-content;
         margin: 0.5rem auto 0;
-      }
-
-      .button.wide {
-        justify-content: center;
-        gap: 0.5rem;
-        width: 100%;
-        margin-top: 1rem;
-
-        &:disabled {
-          background: var(--color-line);
-          color: var(--color-ink-soft);
-          box-shadow: none;
-        }
       }
     }
   `,
@@ -852,21 +808,17 @@ export class BookingPanel {
   private readonly swapSeason = swapper();
   private readonly swapMonth = swapper();
 
-  protected readonly taxLine = computed(() => {
-    const tax = this.weeks?.tax;
-    if (!tax || !this.limits) return null;
-    const count = taxed(this.limits, this.choice.adults(), this.choice.children());
-    const forms = this.limits.asksChildren ? this.texts.panel.adults : this.texts.weeks.guests;
-    const guests = fill(this.plural.select(count) === 'one' ? forms.one : forms.other, { count });
-    return {
-      text: fill(this.texts.panel.tax[tax.per], {
-        guests,
-        nights: 7,
-        amount: this.money(tax.amount),
-      }),
-      amount: taxFor(tax, count),
-    };
-  });
+  protected readonly taxLine = computed(() =>
+    taxLine(
+      this.texts,
+      this.plural,
+      (amount) => this.money(amount),
+      this.weeks?.tax,
+      this.limits,
+      this.choice.adults(),
+      this.choice.children(),
+    ),
+  );
 
   // The bar's line per season: the chosen week's price, or the season's lowest. The total with the
   // tax, which depends on the guests, is the panel's.
