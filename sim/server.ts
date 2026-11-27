@@ -124,7 +124,7 @@ export const sim = (publicUrl = 'http://localhost:4300') => {
       route.cost,
     );
   });
-  return Object.assign(server, { bookings: book.saved, sessions: payments.sessions });
+  return Object.assign(server, { bookings: book.saved });
 };
 
 if (import.meta.main) {

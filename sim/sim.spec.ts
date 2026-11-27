@@ -35,9 +35,11 @@ const ranges = async (start: string, end: string, include = 'includeNumAvail=tru
   return calendar as Range[];
 };
 const nights = async (arrival: string) => (await ranges(arrival, arrival))[0].numAvail;
-// A Saturday from which the simulator's own calendar leaves seven nights free.
+// A Saturday next summer, always beyond the lead time, from which the simulator's own calendar
+// leaves seven nights free.
 const freeWeek = async () => {
-  const range = (await ranges('2027-06-05', '2027-09-30')).find(
+  const year = new Date().getUTCFullYear() + 1;
+  const range = (await ranges(`${year}-06-05`, `${year}-09-30`)).find(
     ({ from, to, numAvail }) =>
       numAvail === 1 &&
       new Date(from).getUTCDay() === 6 &&
@@ -605,6 +607,15 @@ describe('Stripe Checkout', () => {
     expect(refused.status).toBe(400);
     expect((await refused.json()).error.param).toBe('success_url');
     expect((await stripe('/cs_test_none')).status).toBe(404);
+  });
+
+  it('keeps a crafted field name off every object, and refuses a value that is also a hash', async () => {
+    const { id } = await open();
+    await stripe(`/${id}`, { '__proto__[paid]': 'yes', 'metadata[__proto__][paid]': 'yes' });
+    expect(({} as Record<string, unknown>)['paid']).toBeUndefined();
+    const mixed = await stripe('', { ...order(), metadata: 'x' });
+    expect(mixed.status).toBe(400);
+    expect((await stripe('')).status).toBe(200);
   });
 
   it('pays on the page and redirects to the success address with the session', async () => {

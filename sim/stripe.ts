@@ -32,12 +32,19 @@ export interface Answer {
   location?: string;
 }
 
-// Stripe's form encoding: `line_items[0][price_data][unit_amount]=100` becomes nested objects.
-export const decode = (text: string) => {
-  const root: Fields = {};
+// Stripe's form encoding: `line_items[0][price_data][unit_amount]=100` becomes nested objects,
+// without prototypes, so no key reaches Object's. A key both a value and nested is refused.
+const decode = (text: string) => {
+  const root: Fields = Object.create(null);
   for (const [key, value] of new URLSearchParams(text)) {
     const path = key.split(/[[\]]+/).filter(Boolean);
-    const node = path.slice(0, -1).reduce((at, part) => (at[part] ??= {}) as Fields, root);
+    let node = root;
+    for (const part of path.slice(0, -1)) {
+      node[part] ??= Object.create(null) as Fields;
+      if (typeof node[part] === 'string') return null;
+      node = node[part];
+    }
+    if (typeof node[path.at(-1)!] === 'object') return null;
     node[path.at(-1)!] = value;
   }
   return root;
@@ -209,13 +216,14 @@ export const stripe = (publicUrl: string) => {
 
   const api = (method: string, path: string, key: string | undefined, text: string): Answer => {
     if (key !== `Bearer ${stripeKey}`) return invalid('Invalid API Key provided.', undefined, 401);
-    if (path === '/v1/checkout/sessions')
-      return method === 'POST' ? create(decode(text)) : list(decode(text));
+    const fields = decode(text);
+    if (!fields) return invalid('A parameter is given both as a value and as a hash.');
+    if (path === '/v1/checkout/sessions') return method === 'POST' ? create(fields) : list(fields);
     const [, id] = path.match(/^\/v1\/checkout\/sessions\/([^/]+)$/) ?? [];
     if (!id) return invalid('Unrecognized request URL.', undefined, 404);
     const session = read(id);
     if (!session) return invalid(`No such checkout.session: '${id}'`, 'id', 404);
-    return method === 'POST' ? update(session, decode(text)) : { status: 200, body: session };
+    return method === 'POST' ? update(session, fields) : { status: 200, body: session };
   };
 
   // The page a guest is sent to; its buttons redirect as Stripe's page does.
@@ -241,5 +249,5 @@ export const stripe = (publicUrl: string) => {
     return { status: session ? 200 : 404, body: page(language, session) };
   };
 
-  return { sessions, api, checkout };
+  return { api, checkout };
 };
