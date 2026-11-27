@@ -26,8 +26,9 @@ on it:
    read by it in the browser.
 4. **When loading fails, the resolver sets the response status to 503** and resolves to nothing,
    which the page renders as its unavailable state. The error goes to the server's log.
-5. **The server reads the Beds24 address and token from `BEDS24_URL` and `BEDS24_TOKEN`** when a
-   call is made. The demo, the tests and development point them at the simulator.
+5. **The server reads the Beds24 address and token from `BEDS24_URL` and `BEDS24_REFRESH_TOKEN`**
+   when a call is made; the token is a refresh token since ADR 18, a long-life one before. The demo,
+   the tests and development point them at the simulator.
 6. **An in-memory cache sits between the loading function and Beds24** (added on 17 November 2026
    with the free-weeks list). One refresh is two calls, `properties` and `calendar` for a year from
    today, about 2.3 of the 100 credits Beds24 allows per 5 minutes. An answer is served as it is for

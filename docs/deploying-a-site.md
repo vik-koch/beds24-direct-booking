@@ -50,7 +50,7 @@ All in the environment `site` (Settings, Environments).
 | Kind | Name | Content |
 |---|---|---|
 | Secret | `DEPLOY_SSH_PRIVATE_KEY` | The content of the private key file from step 1. |
-| Secret | `BEDS24_TOKEN` | The Beds24 token. Not needed while `SIM_IMAGE` is set. It must not contain a `$`: Compose reads the settings file and would take it for a variable. |
+| Secret | `BEDS24_REFRESH_TOKEN` | The Beds24 refresh token, which an invite code from Beds24's control panel gives once at `GET /authentication/setup` (header `code`). The site takes its access tokens from it. Not needed while `SIM_IMAGE` is set. It must not contain a `$`: Compose reads the settings file and would take it for a variable. |
 | Secret | `SITE_PASSWORD` | Optional. The site then answers only with this password, under any user name, as a site under test should. It holds only letters, digits, `-` and `_`, or the run stops before it deploys, and it needs release `0.2.0` or later. The deployment's check then expects 401 without it and 200 with it. |
 | Variable | `DEPLOY_HOST` | The machine's address or name, as SSH reaches it. |
 | Variable | `DEPLOY_KNOWN_HOSTS` | The output of `ssh-keyscan` from step 5, for the same address or name as `DEPLOY_HOST`. |

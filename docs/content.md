@@ -493,7 +493,7 @@ The variable `CONTENT_DIR` names the folder; without it the demo's is used.
 
   ```sh
   CONTENT_DIR=../my-site/content npm start
-  CONTENT_DIR=../my-site/content BEDS24_URL=https://api.beds24.com/v2 BEDS24_TOKEN=<token> npm start
+  CONTENT_DIR=../my-site/content BEDS24_URL=https://api.beds24.com/v2 BEDS24_REFRESH_TOKEN=<refresh token> npm start
   ```
 
   Run `npm start` without the variable to go back to the demo.

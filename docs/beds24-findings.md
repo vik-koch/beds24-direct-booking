@@ -15,8 +15,10 @@ are kept privately, because they hold the account's data. Amounts here are examp
   from the control panel is exchanged once, at `GET /authentication/setup`, for a refresh token
   (tried). The OpenAPI file says a refresh token lives as long as it is used within 30 days;
   inactivity was not tried. With the header `refreshToken`, `GET /authentication/token` answers a
-  24-hour access token with the same scopes and no new refresh token (tried).
-  `GET /authentication/details` reports scopes and expiry.
+  24-hour access token with the same scopes and no new refresh token (tried):
+  `{ token, expiresIn: 86400 }`, for half a credit. A wrong or missing refresh token answers 401
+  `Token not valid` without rate limit headers (tried on 2026-11-27). `GET /authentication/details`
+  reports scopes and expiry.
 - **Scopes:** reading the listings needs `read:inventory` and `read:properties`. Booking adds
   `write:bookings`, `write:bookings-personal` and `write:bookings-financial`. A write scope does not
   include reading: a token with only these five runs the whole booking step but cannot read a
@@ -309,13 +311,16 @@ Checked on 2026-11-26 with a token holding the five scopes above, on both rooms 
 - **A `new` booking blocks the week** at once: `calendar` shows `numAvail` 0 and `offers` returns no
   offer for it.
 - **An overlapping booking is saved without complaint,** unless the item carries
-  `actions: { checkAvailability: true }`. Then Beds24 refuses it with `"no availability"` and saves
-  nothing.
+  `actions: { checkAvailability: true }`. Then Beds24 refuses it and saves nothing. The answer is
+  still 201, its item
+  `{ "success": false, "errors": [{ "action": "new booking", "field": "no availability", "message": "invalid" }] }`,
+  for 1.1 credits (recorded on 2026-11-27 for a week taken on every night).
 - **`actions: { notifyGuest: true }`** sends Beds24's guest confirmation, also for an existing
   booking. With the account's settings at the time, an API booking without it got no e-mail. The
   confirmation lists the invoice items' descriptions word for word.
 - **An update** goes through the same call with the booking's `id`: a status (`confirmed`,
-  `cancelled`), invoice items to add, any guest field.
+  `cancelled`), invoice items to add, any guest field. An unknown `id` answers 201 with
+  `{ "success": false, "errors": [{ "action": "modify booking", "message": "access denied" }] }`.
 - **A payment** is an invoice item with `type: payment` and a positive `amount`. Beds24 keeps it as
   a negative line (`subType` 204) and shows the outstanding amount as 0.
 - **`POST /channels/stripe`** (marked Alpha) has an action `createStripeSession` for a booking. On
