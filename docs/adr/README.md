@@ -33,6 +33,7 @@ The technology the site is built with and runs on.
 | [13](0013-the-booking-view-in-a-cookie.md) | The booking panel's view in a cookie that the server reads, so the remembered view is rendered at the first paint | Accepted |
 | [14](0014-the-map.md) | The map: MapLibre with the town's tiles served by the site, a Protomaps style in the theme's colours, walking routes computed by a script | Accepted |
 | [17](0017-content-pages-in-markdown.md) | Content pages are Markdown files per language, turned into HTML by the content build with marked; what a page would not style is refused; an apartment may have its own; a page no navigation links is unlisted; a page may end with a map of its own places | Accepted |
+| [20](0020-the-booking-form-in-signal-forms.md) | The booking form: Angular's Signal Forms with spartan/ui's fields, native controls where the browser fills them in, each answer checked by a plain function the server shares; zod/mini tried and measured | Accepted |
 
 ## Process
 
