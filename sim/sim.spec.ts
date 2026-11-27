@@ -10,11 +10,42 @@ interface Range {
 }
 
 const server = sim().listen(0);
-const get = (path: string, token = 'simulator') =>
-  fetch(`http://localhost:${(server.address() as AddressInfo).port}/v2/${path}`, {
-    headers: { token },
-  });
+const at = (path: string) =>
+  `http://localhost:${(server.address() as AddressInfo).port}/v2/${path}`;
+const refresh = (refreshToken: string) =>
+  fetch(at('authentication/token'), { headers: { refreshToken } });
+let access = '';
+beforeAll(async () => ({ token: access } = await (await refresh('simulator')).json()));
+const get = (path: string, token = access) => fetch(at(path), { headers: { token } });
+const post = async (items: object[]) =>
+  (
+    await fetch(at('bookings'), {
+      method: 'POST',
+      headers: { token: access, 'Content-Type': 'application/json' },
+      body: JSON.stringify(items),
+    })
+  ).json();
 afterAll(() => server.close());
+
+describe('authentication', () => {
+  it('answers an access token for the refresh token, and refuses any other', async () => {
+    const response = await refresh('simulator');
+    expect(response.headers.get('X-Request-Cost')).toBe('0.5');
+    const { token, expiresIn } = await response.json();
+    expect(expiresIn).toBe(86_400);
+    expect((await get('properties', token)).status).toBe(200);
+    expect((await get('properties', 'simulator')).status).toBe(401);
+    const refused = await refresh('wrong');
+    expect(refused.status).toBe(401);
+    expect(refused.headers.has('X-Request-Cost')).toBe(false);
+    expect(await refused.json()).toEqual({
+      success: false,
+      type: 'error',
+      code: 401,
+      error: 'Token not valid',
+    });
+  });
+});
 
 describe('properties', () => {
   const everything =
@@ -35,7 +66,9 @@ describe('properties', () => {
   it('answers in the envelope with the rate limit headers', async () => {
     const response = await get(everything);
     expect(response.headers.get('X-Request-Cost')).toBe('1.6');
-    expect(response.headers.get('X-Five-Min-Limit-Remaining')).toBe('98.4');
+    const remaining = Number(response.headers.get('X-Five-Min-Limit-Remaining'));
+    const next = await get(everything);
+    expect(Number(next.headers.get('X-Five-Min-Limit-Remaining'))).toBeCloseTo(remaining - 1.6);
     expect(response.headers.get('X-Five-Min-Limit-Resets-In')).toBe('300');
     expect(await response.json()).toMatchObject({
       success: true,
@@ -269,5 +302,86 @@ describe('calendar', () => {
     const winter = weeks.filter((week) => week.month === 12 || week.month <= 3);
     expect(winter.every((week) => week.booked)).toBe(true);
     expect(weeks.some((week) => week.bookable && week.month >= 6 && week.month <= 9)).toBe(true);
+  });
+});
+
+describe('bookings', () => {
+  const room = 9001012;
+  const ranges = async (start: string, end: string) => {
+    const path = `inventory/rooms/calendar?roomId=${room}&startDate=${start}&endDate=${end}`;
+    const [{ calendar }] = (await (await get(`${path}&includeNumAvail=true`)).json()).data;
+    return calendar as Range[];
+  };
+  const nights = async (arrival: string) => (await ranges(arrival, arrival))[0].numAvail;
+  // A Saturday from which the simulator's own calendar leaves seven nights free.
+  const freeWeek = async () => {
+    const range = (await ranges('2027-06-05', '2027-09-30')).find(
+      ({ from, to, numAvail }) =>
+        numAvail === 1 &&
+        new Date(from).getUTCDay() === 6 &&
+        Date.parse(to) - Date.parse(from) >= 6 * 864e5,
+    )!;
+    const departure = new Date(Date.parse(range.from) + 7 * 864e5).toISOString().slice(0, 10);
+    return { roomId: room, arrival: range.from, departure };
+  };
+  const refusal = {
+    success: false,
+    errors: [{ action: 'new booking', field: 'no availability', message: 'invalid' }],
+  };
+
+  it('saves a booking that holds its week, and refuses the week again', async () => {
+    const stay = await freeWeek();
+    const asked = { ...stay, status: 'new', actions: { checkAvailability: true } };
+    const [created] = await post([asked]);
+    expect(created).toMatchObject({
+      success: true,
+      new: { id: expect.any(Number), status: 'new' },
+    });
+    expect(await nights(stay.arrival)).toBe(0);
+    expect(await post([asked])).toEqual([refusal]);
+    // Without the check, Beds24 saves an overlap silently.
+    expect(await post([{ ...stay, status: 'new' }])).toMatchObject([{ success: true }]);
+  });
+
+  it('refuses a week its own calendar has taken', async () => {
+    const stay = { roomId: 9001011, arrival: '2026-12-05', departure: '2026-12-12' };
+    expect(await post([{ ...stay, actions: { checkAvailability: true } }])).toEqual([refusal]);
+  });
+
+  it('records a payment and a confirmation, and frees the week when cancelled', async () => {
+    const stay = await freeWeek();
+    const [{ new: created }] = await post([
+      { ...stay, status: 'new', price: 980, firstName: 'Anna', email: 'anna@example.com' },
+    ]);
+    const payment = { type: 'payment', description: 'Paid by card', qty: 1, amount: 980 };
+    expect(
+      await post([
+        {
+          id: created.id,
+          status: 'confirmed',
+          invoiceItems: [payment],
+          infoItems: [{ code: 'STRIPE_PAYMENT', text: 'pi_1' }],
+        },
+      ]),
+    ).toEqual([{ success: true, modified: { id: created.id } }]);
+    await post([{ id: created.id, actions: { notifyGuest: true } }]);
+    // The guest's details are not kept.
+    expect(server.bookings.get(created.id)).toEqual({
+      ...stay,
+      status: 'confirmed',
+      price: 980,
+      invoiceItems: [payment],
+      infoItems: [{ code: 'STRIPE_PAYMENT', text: 'pi_1' }],
+      notified: 1,
+    });
+    expect(await nights(stay.arrival)).toBe(0);
+    await post([{ id: created.id, status: 'cancelled' }]);
+    expect(await nights(stay.arrival)).toBe(1);
+  });
+
+  it('refuses a change to a booking it does not have', async () => {
+    expect(await post([{ id: 1, status: 'cancelled' }])).toEqual([
+      { success: false, errors: [{ action: 'modify booking', message: 'access denied' }] },
+    ]);
   });
 });

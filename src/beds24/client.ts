@@ -108,11 +108,33 @@ export const addDays = (date: string, days: number) =>
 export const multiplier = (value = '') =>
   value === '' ? 1 : /^\*\d+(\.\d+)?$/.test(value) ? Number(value.slice(1)) : null;
 
-const get = async <T>(path: string): Promise<T> => {
+const base = () => {
   const url = process.env['BEDS24_URL'];
   if (!url) throw new Error('BEDS24_URL is not set: the address of Beds24 or the simulator');
-  const response = await fetch(`${url}${path}`, {
-    headers: { token: process.env['BEDS24_TOKEN'] ?? '' },
+  return url;
+};
+
+let access: { token: string; until: number } | undefined;
+let renewing: Promise<string> | undefined;
+// A 24-hour access token from the refresh token, renewed when less than an hour is left.
+const token = async () => {
+  if (access && access.until - Date.now() > 36e5) return access.token;
+  return (renewing ??= fetch(`${base()}/authentication/token`, {
+    headers: { refreshToken: process.env['BEDS24_REFRESH_TOKEN'] ?? '' },
+    signal: AbortSignal.timeout(5000),
+  })
+    .then(async (response) => {
+      if (!response.ok) throw new Error(`Beds24 answered ${response.status} to the token refresh`);
+      const { token, expiresIn } = (await response.json()) as { token: string; expiresIn: number };
+      access = { token, until: Date.now() + expiresIn * 1000 };
+      return token;
+    })
+    .finally(() => (renewing = undefined)));
+};
+
+const get = async <T>(path: string): Promise<T> => {
+  const response = await fetch(`${base()}${path}`, {
+    headers: { token: await token() },
     signal: AbortSignal.timeout(5000),
   });
   if (!response.ok) throw new Error(`Beds24 answered ${response.status} to ${path}`);
@@ -225,3 +247,103 @@ export function listingOf(rooms: Room[], id: number, languages: string[]): Listi
     ),
   };
 }
+
+export interface Stay {
+  roomId: number;
+  arrival: string;
+  departure: string;
+  adults: number;
+  children: number;
+}
+
+export interface Guest {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  // ISO 3166 alpha-2, such as DE.
+  country: string;
+  // A Beds24 language code, such as de: the language of Beds24's confirmation.
+  language: string;
+}
+
+// An invoice line, worded for the guest: Beds24's confirmation lists it as it is.
+export interface Charge {
+  description: string;
+  qty: number;
+  amount: number;
+}
+
+interface Answer {
+  success: boolean;
+  new?: { id: number };
+  errors?: { field?: string }[];
+}
+
+// Beds24's answer can repeat the guest's details, so an error names no more than the booking.
+const post = async (booking: object, what: string): Promise<Answer> => {
+  const response = await fetch(`${base()}/bookings`, {
+    method: 'POST',
+    headers: { token: await token(), 'Content-Type': 'application/json' },
+    body: JSON.stringify([booking]),
+    signal: AbortSignal.timeout(5000),
+  });
+  if (!response.ok) throw new Error(`Beds24 answered ${response.status} to ${what}`);
+  const [answer] = (await response.json()) as Answer[];
+  if (!answer?.success && !answer?.errors?.some(({ field }) => field === 'no availability'))
+    throw new Error(`Beds24 refused ${what}`);
+  return answer;
+};
+
+const cents = (amount: number) => Math.round(amount * 100) / 100;
+
+// Holds the stay as a new booking, priced by its charges, unless Beds24 has it taken.
+export const createBooking = async (
+  { roomId, arrival, departure, adults, children }: Stay,
+  { firstName, lastName, email, phone, country, language }: Guest,
+  charges: Charge[],
+): Promise<number | 'taken'> => {
+  const answer = await post(
+    {
+      roomId,
+      status: 'new',
+      arrival,
+      departure,
+      numAdult: adults,
+      numChild: children,
+      firstName,
+      lastName,
+      email,
+      phone,
+      country2: country,
+      lang: language,
+      price: cents(charges.reduce((sum, { qty, amount }) => sum + qty * amount, 0)),
+      invoiceItems: charges.map((charge) => ({ type: 'charge', ...charge })),
+      actions: { checkAvailability: true },
+    },
+    `a booking of room ${roomId}`,
+  );
+  return answer.new?.id ?? 'taken';
+};
+
+// The payment as a line of its own, with Stripe's ID beside it where the guest does not see it.
+export const recordPayment = async (id: number, charge: Omit<Charge, 'qty'>, paymentId: string) => {
+  await post(
+    {
+      id,
+      status: 'confirmed',
+      invoiceItems: [{ type: 'payment', qty: 1, ...charge }],
+      infoItems: [{ code: 'STRIPE_PAYMENT', text: paymentId }],
+    },
+    `the payment of booking ${id}`,
+  );
+};
+
+// Beds24's confirmation e-mail, in the booking's language.
+export const sendConfirmation = async (id: number) => {
+  await post({ id, actions: { notifyGuest: true } }, `the confirmation of booking ${id}`);
+};
+
+export const cancelBooking = async (id: number) => {
+  await post({ id, status: 'cancelled' }, `the cancellation of booking ${id}`);
+};

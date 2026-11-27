@@ -202,7 +202,7 @@ jobs:
           SIM_IMAGE=$image-sim:sha-$GITHUB_SHA
           COMPOSE_PROFILES=sim
           BEDS24_URL=http://sim:4300/v2
-          BEDS24_TOKEN=simulator
+          BEDS24_REFRESH_TOKEN=simulator
           EOF
           SSH_OPTS="-i $RUNNER_TEMP/key -o UserKnownHostsFile=$RUNNER_TEMP/known_hosts -o StrictHostKeyChecking=yes -o ConnectTimeout=10" \
             scripts/deploy.sh "$DEPLOY_HOST" "$RUNNER_TEMP/demo.env"

@@ -1,3 +1,5 @@
+import type { AddressInfo } from 'node:net';
+import { sim } from '../../sim/server.ts';
 import { listingOf, loadInventory, multiplier } from './client';
 
 describe('loadInventory', () => {
@@ -94,16 +96,17 @@ describe('loadInventory', () => {
   const answer = (status: number, ...bodies: object[]) =>
     vi.stubGlobal(
       'fetch',
-      vi.fn(
-        async (url: string) =>
-          new Response(JSON.stringify(url.includes('calendar') ? bodies[1] : bodies[0]), {
-            status,
-          }),
+      vi.fn(async (url: string) =>
+        url.endsWith('/authentication/token')
+          ? Response.json({ token: 'secret', expiresIn: 86_400 })
+          : new Response(JSON.stringify(url.includes('calendar') ? bodies[1] : bodies[0]), {
+              status,
+            }),
       ),
     );
   beforeEach(() => {
     vi.stubEnv('BEDS24_URL', 'http://beds24.test/v2');
-    vi.stubEnv('BEDS24_TOKEN', 'secret');
+    vi.stubEnv('BEDS24_REFRESH_TOKEN', 'refresh');
   });
   afterEach(() => {
     vi.unstubAllGlobals();
@@ -268,5 +271,145 @@ describe('listingOf', () => {
 
   it('fails for a room Beds24 does not list', () => {
     expect(() => listingOf([room], 12, ['de'])).toThrow('Beds24 has no room 12');
+  });
+});
+
+// Against the simulator, with the client loaded afresh so that no access token is kept.
+describe('the token and the bookings', () => {
+  const server = sim().listen(0);
+  let client: typeof import('./client');
+  const guest = {
+    firstName: 'Anna',
+    lastName: 'Muster',
+    email: 'anna@example.com',
+    phone: '+49 30 1234567',
+    country: 'DE',
+    language: 'en',
+  };
+  const charges = [
+    { description: 'Stay from 3 to 10 July', qty: 1, amount: 1290 },
+    { description: 'Tourist tax', qty: 14, amount: 2.5 },
+  ];
+  const renewals = () =>
+    vi.mocked(fetch).mock.calls.filter(([url]) => String(url).endsWith('/authentication/token'))
+      .length;
+  // A week the simulator has free for its second apartment.
+  const freeWeek = async () => {
+    const { days } = await client.loadInventory('2027-06-05', '2027-09-30');
+    const list = days[9001012];
+    const index = list.findIndex(
+      (day, i) =>
+        day.changeover &&
+        new Date(day.date).getUTCDay() === 6 &&
+        list.slice(i, i + 7).every(({ free }) => free),
+    );
+    const arrival = list[index].date;
+    return {
+      roomId: 9001012,
+      arrival,
+      departure: client.addDays(arrival, 7),
+      adults: 2,
+      children: 0,
+    };
+  };
+  beforeEach(async () => {
+    vi.stubEnv('BEDS24_URL', `http://localhost:${(server.address() as AddressInfo).port}/v2`);
+    vi.stubEnv('BEDS24_REFRESH_TOKEN', 'simulator');
+    vi.spyOn(globalThis, 'fetch');
+    vi.resetModules();
+    client = await import('./client');
+  });
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllEnvs();
+    vi.useRealTimers();
+  });
+  afterAll(() => server.close());
+
+  it('takes one access token for callers at the same moment, and renews it an hour before it expires', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    await Promise.all([
+      client.loadInventory('2027-01-01', '2027-01-07'),
+      client.loadInventory('2027-01-01', '2027-01-07'),
+    ]);
+    vi.advanceTimersByTime(22 * 36e5);
+    await client.loadInventory('2027-01-01', '2027-01-07');
+    expect(renewals()).toBe(1);
+    vi.advanceTimersByTime(36e5 + 1);
+    await client.loadInventory('2027-01-01', '2027-01-07');
+    expect(renewals()).toBe(2);
+    // Past the expiry too, as after a night without a page view.
+    vi.advanceTimersByTime(2 * 864e5);
+    await client.loadInventory('2027-01-01', '2027-01-07');
+    expect(renewals()).toBe(3);
+  });
+
+  it('fails when Beds24 refuses the refresh token, and tries again on the next call', async () => {
+    vi.stubEnv('BEDS24_REFRESH_TOKEN', 'expired');
+    await expect(client.loadInventory('2027-01-01', '2027-01-07')).rejects.toThrow(
+      'Beds24 answered 401 to the token refresh',
+    );
+    vi.stubEnv('BEDS24_REFRESH_TOKEN', 'simulator');
+    await expect(client.loadInventory('2027-01-01', '2027-01-07')).resolves.toBeDefined();
+  });
+
+  it('books a week, records its payment, confirms and cancels it', async () => {
+    const stay = await freeWeek();
+    const id = await client.createBooking(stay, guest, charges);
+    expect(id).toEqual(expect.any(Number));
+    expect(server.bookings.get(id as number)).toMatchObject({
+      roomId: 9001012,
+      arrival: stay.arrival,
+      departure: stay.departure,
+      status: 'new',
+      price: 1325,
+      invoiceItems: charges.map((charge) => ({ type: 'charge', ...charge })),
+    });
+    await client.recordPayment(id as number, { description: 'Paid by card', amount: 1325 }, 'pi_1');
+    expect(server.bookings.get(id as number)).toMatchObject({
+      status: 'confirmed',
+      invoiceItems: [
+        {},
+        {},
+        { type: 'payment', description: 'Paid by card', qty: 1, amount: 1325 },
+      ],
+      infoItems: [{ code: 'STRIPE_PAYMENT', text: 'pi_1' }],
+      notified: 0,
+    });
+    await client.sendConfirmation(id as number);
+    expect(server.bookings.get(id as number)?.notified).toBe(1);
+    await client.cancelBooking(id as number);
+    expect(server.bookings.get(id as number)?.status).toBe('cancelled');
+  });
+
+  it('answers that a week is taken when Beds24 holds it already', async () => {
+    const stay = await freeWeek();
+    await client.createBooking(stay, guest, charges);
+    expect(await client.createBooking(stay, guest, charges)).toBe('taken');
+  });
+
+  it('fails for a booking Beds24 does not have, naming only the booking', async () => {
+    await expect(
+      client.recordPayment(1, { description: 'Paid by card', amount: 1 }, 'pi_1'),
+    ).rejects.toThrow(/^Beds24 refused the payment of booking 1$/);
+    await expect(client.cancelBooking(1)).rejects.toThrow(
+      /^Beds24 refused the cancellation of booking 1$/,
+    );
+  });
+
+  it('fails when Beds24 is unreachable, and logs nothing of the guest', async () => {
+    const logs = ['log', 'info', 'warn', 'error'].map((level) =>
+      vi.spyOn(console, level as 'log').mockImplementation(() => undefined),
+    );
+    vi.stubEnv('BEDS24_URL', 'http://localhost:9/v2');
+    const stay = {
+      roomId: 9001012,
+      arrival: '2027-07-03',
+      departure: '2027-07-10',
+      adults: 2,
+      children: 0,
+    };
+    await expect(client.createBooking(stay, guest, charges)).rejects.toThrow('fetch failed');
+    for (const log of logs) expect(log).not.toHaveBeenCalled();
   });
 });

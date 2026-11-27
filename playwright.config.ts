@@ -4,7 +4,7 @@ const reuse = { reuseExistingServer: !process.env['CI'] };
 const app = (token: string, sim = 4300) => ({
   NG_ALLOWED_HOSTS: 'localhost',
   BEDS24_URL: `http://localhost:${sim}/v2`,
-  BEDS24_TOKEN: token,
+  BEDS24_REFRESH_TOKEN: token,
 });
 const today = new Date().toISOString().slice(0, 10);
 
@@ -19,7 +19,7 @@ export default defineConfig({
   webServer: [
     { command: 'npm run sim', url: 'http://localhost:4300/v2/properties', ...reuse },
     { command: 'npm run serve', url: 'http://localhost:4000', env: app('simulator'), ...reuse },
-    // A second instance whose token the simulator refuses; its pages answer 503.
+    // A second instance whose refresh token the simulator refuses; its pages answer 503.
     {
       command: 'npm run serve',
       url: 'http://localhost:4001/pictures/icon-winter.svg',
