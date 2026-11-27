@@ -118,15 +118,15 @@ describe('properties', () => {
     expect(await response.json()).toMatchObject({
       success: true,
       type: 'property',
-      count: 2,
+      count: 3,
       pages: { nextPageExists: false, nextPageLink: null },
     });
   });
 
-  it('holds two properties with two rooms each', async () => {
+  it('holds three properties with two rooms, one and one', async () => {
     const { data } = await (await get(everything)).json();
     expect(data.map((property: { roomTypes: unknown[] }) => property.roomTypes.length)).toEqual([
-      2, 2,
+      2, 1, 1,
     ]);
     interface Limits {
       maxPeople: number;
@@ -152,7 +152,7 @@ describe('properties', () => {
   });
 
   it('keeps the oddities of the wire', async () => {
-    const [property, farn] = (await (await get(everything)).json()).data;
+    const [property, farn, moos] = (await (await get(everything)).json()).data;
     expect(property.bookingPageMultiplier).toBe('*0.9');
     expect(property.texts.map((text: { language: string }) => text.language)).toEqual(['de', 'en']);
     expect(property.texts[1].upsellItemName1).toBe('Local tax');
@@ -216,11 +216,34 @@ describe('properties', () => {
     expect(room.texts[1].roomDescription).toContain('\ufeff');
     expect(second.texts[0].roomDescription).toContain('<b>');
     expect(farn.roomTypes[0].featureCodes).toContainEqual(['BOOT_DRYER']);
-    expect(farn.roomTypes[1].texts[1].roomDescription).toBe('<p><br></p>');
+    expect(moos.roomTypes[0].texts[1].roomDescription).toBe('<p><br></p>');
     const rules = property.roomTypes[0].priceRules;
     expect(rules).toHaveLength(16);
     expect(rules[0].minDaysUntilCheckin).toBe(7);
     expect(rules[1]).toEqual({ id: 2 });
+  });
+
+  it('lists every booking question, the unused ones without their order', async () => {
+    const [firn, farn, moos] = (await (await get(everything)).json()).data;
+    expect(Object.keys(firn.bookingQuestions)).toHaveLength(26);
+    expect(firn.bookingQuestions.guestFirstName).toEqual({ usage: 'compulsory', order: 1 });
+    expect(firn.bookingQuestions.guestFax).toEqual({ usage: 'notUsed', order: null });
+    expect(firn.bookingQuestions.customQuestion7).toEqual({
+      usage: 'compulsoryBookingPage',
+      order: 18,
+      type: 'tickBox',
+    });
+    expect(firn.bookingQuestions.customQuestion9).toEqual({
+      usage: 'notUsed',
+      order: null,
+      type: 'singleLineField',
+    });
+    expect(firn.texts[1].customQuestion1).toBe('Arriving by [Car][Train][Plane]');
+    // Haus Farn's breakfast question has no English text; Haus Moos takes requests only.
+    expect(farn.texts[1].customQuestion2).toBe('');
+    expect(firn.bookingRules.bookingType).toBe('confirmedWithDepositCollection1');
+    expect(firn.paymentCollection.depositPayment1.variableAmount.percentageValue).toBe(100);
+    expect(moos.bookingRules.bookingType).toBe('requestWithManualConfirmation');
   });
 
   it('leaves out what was not asked for and filters by id', async () => {

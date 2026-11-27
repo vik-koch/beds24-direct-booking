@@ -75,6 +75,39 @@ const roomType = (property: Property, room: Room, has: (name: string) => boolean
   }),
 });
 
+const guestFields = [
+  'Title',
+  'FirstName',
+  'LastName',
+  'Email',
+  'Phone',
+  'Mobile',
+  'Fax',
+  'Company',
+  'Address',
+  'City',
+  'State',
+  'Postcode',
+  'CountryText',
+  'CountrySelect',
+  'ArrivalTime',
+  'Comments',
+].map((name) => `guest${name}`);
+
+// Beds24 lists every question, an unused one without its order.
+const bookingQuestions = (asked: Property['questions']) => {
+  const order = Object.keys(asked);
+  const entry = (name: string, custom: boolean) => {
+    const [usage = 'notUsed', type = 'singleLineField'] = asked[name]?.split(' ') ?? [];
+    const position = order.indexOf(name);
+    return [name, { usage, order: position < 0 ? null : position + 1, ...(custom && { type }) }];
+  };
+  return Object.fromEntries([
+    ...guestFields.map((name) => entry(name, false)),
+    ...numbered('customQuestion', 1, 10).map((name) => entry(name, true)),
+  ]);
+};
+
 export const propertyList = (query: URLSearchParams) => {
   const has = (name: string) => query.has(name) && query.get(name) !== 'false';
   const ids = query.getAll('id').map(Number);
@@ -98,6 +131,9 @@ export const propertyList = (query: URLSearchParams) => {
       bookingPageMultiplier,
       permit: property.permit ?? '',
       featureCodes: property.featureCodes.map((code) => [code]),
+      bookingQuestions: bookingQuestions(property.questions),
+      bookingRules: property.bookingRules,
+      paymentCollection: property.paymentCollection,
       ...(has('includeTexts') && {
         texts: perLanguage({ ...property.texts, upsellItemName1: tax.name }, [
           'headline',

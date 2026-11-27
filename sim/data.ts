@@ -25,7 +25,12 @@ export interface Property {
   latitude: number;
   longitude: number;
   featureCodes: string[];
-  texts: Record<'houseRules', Text>;
+  texts: Record<'houseRules', Text> & Partial<Record<`customQuestion${number}`, Text>>;
+  // The questions asked, in their order: a guest field's usage, or a custom question's usage and
+  // type, such as "optional tickBox". Every other one is not used.
+  questions: Partial<Record<string, string>>;
+  bookingRules: object;
+  paymentCollection: object;
   rooms: Room[];
 }
 

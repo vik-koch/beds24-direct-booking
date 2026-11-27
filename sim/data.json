@@ -35,6 +35,34 @@
         "houseRules": {
           "de": "Nichtraucherhaus. Haustiere sind nicht erlaubt.\nNachtruhe von 22 bis 7 Uhr.",
           "en": "No smoking in the house. Pets are not allowed.\nQuiet hours from 10 pm to 7 am."
+        },
+        "customQuestion1": {
+          "de": "Anreise mit [Auto][Bahn][Flugzeug]",
+          "en": "Arriving by [Car][Train][Plane]"
+        },
+        "customQuestion2": {
+          "de": "Kissen [Weich][Fest]",
+          "en": "Pillows [Soft][Firm]"
+        },
+        "customQuestion3": {
+          "de": "Babybett",
+          "en": "Cot for a baby"
+        },
+        "customQuestion4": {
+          "de": "Skikurs ab",
+          "en": "Ski school from"
+        },
+        "customQuestion5": {
+          "de": "Kennzeichen des Autos",
+          "en": "Car number plate"
+        },
+        "customQuestion6": {
+          "de": "Allergien",
+          "en": "Allergies"
+        },
+        "customQuestion7": {
+          "de": "Ich habe die Hausordnung gelesen",
+          "en": "I have read the house rules"
         }
       },
       "rooms": [
@@ -94,7 +122,52 @@
             }
           }
         }
-      ]
+      ],
+      "bookingRules": {
+        "bookingType": "confirmedWithDepositCollection1",
+        "bookingNearType": "confirmedWithDepositCollection1",
+        "bookingNearTypeDays": 3,
+        "bookingExceptionalType": null,
+        "bookingExceptionalTypeStart": null,
+        "bookingExceptionalTypeEnd": null
+      },
+      "paymentCollection": {
+        "depositPayment1": {
+          "fixedAmount": 0,
+          "variableAmount": {
+            "type": "percentage",
+            "percentageValue": 100
+          }
+        },
+        "depositPayment2": {
+          "fixedAmount": 0,
+          "variableAmount": {
+            "type": "percentage",
+            "percentageValue": 0
+          }
+        },
+        "depositNonPayment": "cancel"
+      },
+      "questions": {
+        "guestFirstName": "compulsory",
+        "guestLastName": "compulsory",
+        "guestEmail": "compulsoryBookingPage",
+        "guestPhone": "compulsory",
+        "guestMobile": "internal",
+        "guestCountrySelect": "compulsoryBookingPage",
+        "guestAddress": "optional",
+        "guestPostcode": "optional",
+        "guestCity": "optional",
+        "customQuestion1": "compulsory multipleSelect",
+        "customQuestion2": "optional multipleList",
+        "customQuestion3": "optional tickBox",
+        "customQuestion4": "optional dateSelector",
+        "customQuestion5": "optional singleLineField",
+        "customQuestion6": "optional multiLineField",
+        "guestArrivalTime": "optional",
+        "guestComments": "optional",
+        "customQuestion7": "compulsoryBookingPage tickBox"
+      }
     },
     {
       "id": 900102,
@@ -124,6 +197,18 @@
         "houseRules": {
           "de": "Nichtraucherhaus. Haustiere sind nicht erlaubt.\nNachtruhe von 22 bis 7 Uhr.",
           "en": "No smoking in the house. Pets are not allowed.\nQuiet hours from 10 pm to 7 am."
+        },
+        "customQuestion1": {
+          "de": "Wie haben Sie von uns erfahren?",
+          "en": "How did you hear of us?"
+        },
+        "customQuestion2": {
+          "de": "Frühstück [Ja][Nein]",
+          "en": ""
+        },
+        "customQuestion3": {
+          "de": "Notiz",
+          "en": "Note"
         }
       },
       "rooms": [
@@ -157,7 +242,77 @@
               "en": "<p><h4 class=\"\">Two floors</h4><table class=\"table table-bordered\" style=\"width: 100%; border-collapse: collapse; border: 1px solid #dee2e6;\"><tbody><tr><td style=\"border: 1px solid #dee2e6; padding: 8px;\">Below</td><td style=\"border: 1px solid #dee2e6; padding: 8px;\">Kitchen and living room, bathroom, sauna</td></tr><tr><td style=\"border: 1px solid #dee2e6; padding: 8px;\">Above</td><td style=\"border: 1px solid #dee2e6; padding: 8px;\">Three bedrooms, shower room</td></tr></tbody></table></p><p><br></p><p><br></p>"
             }
           }
+        }
+      ],
+      "bookingRules": {
+        "bookingType": "confirmedWithDepositCollection1",
+        "bookingNearType": null,
+        "bookingNearTypeDays": null,
+        "bookingExceptionalType": "requestWithManualConfirmation",
+        "bookingExceptionalTypeStart": "2020-12-20",
+        "bookingExceptionalTypeEnd": "2021-01-06"
+      },
+      "paymentCollection": {
+        "depositPayment1": {
+          "fixedAmount": 0,
+          "variableAmount": {
+            "type": "percentage",
+            "percentageValue": 100
+          }
         },
+        "depositPayment2": {
+          "fixedAmount": 0,
+          "variableAmount": {
+            "type": "percentage",
+            "percentageValue": 0
+          }
+        },
+        "depositNonPayment": "cancel"
+      },
+      "questions": {
+        "guestTitle": "optional",
+        "guestLastName": "compulsory",
+        "guestEmail": "optional",
+        "guestCompany": "optional",
+        "guestCountryText": "compulsory",
+        "guestState": "optional",
+        "guestFax": "optional",
+        "customQuestion1": "optional singleLineField",
+        "customQuestion2": "optional multipleSelect",
+        "customQuestion3": "internal singleLineField"
+      }
+    },
+    {
+      "id": 900103,
+      "name": "Haus Moos",
+      "address": "Musterweg 7",
+      "permit": "00000-000001",
+      "latitude": 47.392,
+      "longitude": 12.638,
+      "featureCodes": [
+        "SMOKING_NOT_ALLOWED",
+        "PETS_NOT_ALLOWED",
+        "HEATING",
+        "LINENS",
+        "TOWELS",
+        "WIFI",
+        "KITCHEN",
+        "DISHWASHER",
+        "COFFEE_MAKER",
+        "DOWNTOWN",
+        "MOUNTAIN_VIEW",
+        "SKI_STORAGE",
+        "PARKING_PAID",
+        "BALCONY",
+        "WASHER"
+      ],
+      "texts": {
+        "houseRules": {
+          "de": "Nichtraucherhaus. Haustiere sind nicht erlaubt.\nNachtruhe von 22 bis 7 Uhr.",
+          "en": "No smoking in the house. Pets are not allowed.\nQuiet hours from 10 pm to 7 am."
+        }
+      },
+      "rooms": [
         {
           "id": 9001022,
           "name": "Fichte",
@@ -185,7 +340,37 @@
             }
           }
         }
-      ]
+      ],
+      "bookingRules": {
+        "bookingType": "requestWithManualConfirmation",
+        "bookingNearType": null,
+        "bookingNearTypeDays": null,
+        "bookingExceptionalType": null,
+        "bookingExceptionalTypeStart": null,
+        "bookingExceptionalTypeEnd": null
+      },
+      "paymentCollection": {
+        "depositPayment1": {
+          "fixedAmount": 0,
+          "variableAmount": {
+            "type": "percentage",
+            "percentageValue": 100
+          }
+        },
+        "depositPayment2": {
+          "fixedAmount": 0,
+          "variableAmount": {
+            "type": "percentage",
+            "percentageValue": 0
+          }
+        },
+        "depositNonPayment": "cancel"
+      },
+      "questions": {
+        "guestFirstName": "compulsory",
+        "guestLastName": "compulsory",
+        "guestEmail": "compulsory"
+      }
     }
   ]
 }
