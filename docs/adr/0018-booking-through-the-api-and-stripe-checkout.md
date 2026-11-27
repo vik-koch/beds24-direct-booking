@@ -1,6 +1,7 @@
 # ADR 18: The booking step: an own form, the Beds24 API and Stripe Checkout
 
-Status: accepted, 2026-11-26. Group: product. Replaces the booking step of ADR 1.
+Status: accepted, 2026-11-26. Group: product. Replaces the booking step of ADR 1. Where the form's
+fields come from is ADR 19.
 
 ## Context
 

@@ -2,9 +2,10 @@
 
 Findings from a spike in five rounds (2026-11-10 and 11) against a real account on a trial plan, and
 a sixth round on the booking step (2026-11-26), when the same account could take bookings with its
-Stripe gateway in test mode. Trust this file over the Beds24 documentation and the OpenAPI file, and
-extend it when the wire shows something new. The round-by-round log, the recordings and the scripts
-are kept privately, because they hold the account's data. Amounts here are example figures.
+Stripe gateway in test mode, and a seventh on its booking questions (2026-11-27). Trust this file
+over the Beds24 documentation and the OpenAPI file, and extend it when the wire shows something new.
+The round-by-round log, the recordings and the scripts are kept privately, because they hold the
+account's data. Amounts here are example figures.
 
 ## Access and limits
 
@@ -162,9 +163,8 @@ Checked on 20 November 2026 on a real account with a read-only token.
   guest counts as an adult.
 - **A tax item can also be per room** (`per: room`, the control panel's "per Apartment"): the guest
   form then charges it once per night, whatever the guests. The site reads only an item per adult.
-- **A booking question,** such as a cot as a tick box, is configured on the property as
-  `bookingQuestions.customQuestion1`, its text per language in `customQuestion1`. Whether the guest
-  form's link can pre-tick it is not checked.
+- **A booking question,** such as a cot as a tick box, is configured on the property; see
+  [Booking questions](#booking-questions).
 
 ## Listing data
 
@@ -323,11 +323,54 @@ Checked on 2026-11-26 with a token holding the five scopes above, on both rooms 
   `{ "success": false, "errors": [{ "action": "modify booking", "message": "access denied" }] }`.
 - **A payment** is an invoice item with `type: payment` and a positive `amount`. Beds24 keeps it as
   a negative line (`subType` 204) and shows the outstanding amount as 0.
+- **A booking saved with a warning answers `success: false`.** An unknown `country2` (`XX`) was
+  dropped and the booking saved without a country; its item carried `success: false`, the `new`
+  booking with its `id` and `warnings: [{ "field": "country2", "message": "invalid value" }]`. The
+  booking holds its week like any other, so an answer is read by its `new.id`, not by `success`.
 - **`POST /channels/stripe`** (marked Alpha) has an action `createStripeSession` for a booking. On
   this account, whose Stripe gateway is set up with API keys, it answered `[{"success":false}]` for
   a valid booking whatever the parameters, and "access denied" for an unknown one. Its documentation
   describes sessions on Beds24's Stripe Connect platform, with a live publishable key; not tried
   further. Its action `addPaymentMethod` takes raw card numbers.
+
+## Booking questions
+
+Checked on 2026-11-27 on two properties set up for it, with the token above; every booking tried was
+cancelled at once.
+
+- **`properties` returns `bookingQuestions`** per property, without an `include*` parameter: for
+  each of 16 standard guest fields (`guestTitle`, `guestFirstName`, `guestLastName`, `guestEmail`,
+  `guestPhone`, `guestMobile`, `guestFax`, `guestCompany`, `guestAddress`, `guestCity`,
+  `guestState`, `guestPostcode`, `guestCountryText`, `guestCountrySelect`, `guestArrivalTime`,
+  `guestComments`) a `usage` and an `order`, and the same for `customQuestion1` to
+  `customQuestion10` with a `type`.
+- **`usage`** is `notUsed`, `optional`, `compulsory`, `compulsoryBookingPage` or `internal`. The
+  control panel's help: `optional` is asked on the booking page, `compulsoryBookingPage` must be
+  answered there, `compulsory` also in the control panel's booking wizard, `internal` only in the
+  control panel, `notUsed` nowhere.
+- **`order`** sorts standard and custom questions together, as the control panel's question order
+  lists them; a question moved there changes its number. A question that is not used may carry
+  `null`.
+- **`type`** is `singleLineField`, `multiLineField`, `multipleSelect`, `multipleList`, `tickBox` or
+  `dateSelector`. On Beds24's booking page `multipleSelect` is a dropdown and `multipleList` a group
+  of radio buttons; both take one choice.
+- **A custom question's text** comes per language in the property's texts as `customQuestion1` to
+  `customQuestion10`. A choice question carries its options in square brackets after the question,
+  in each language: `Arrival by [Car][Train][Plane]`. A text can be missing in a language. The
+  standard fields come without any label.
+- **`POST /bookings` stores the answers** as `custom1` to `custom10` and the standard fields under
+  their own names (`title`, `phone`, `mobile`, `country2`, `arrivalTime`, `comments`, …). A choice
+  is the option's text; a ticked box is `"1"`, which the control panel shows as ticked. Any other
+  text is stored too: `Car, Plane` for a single choice showed in the control panel as one more
+  option.
+- **The API enforces no `usage`.** A booking without a `compulsory` phone, and one without a
+  `compulsory` tick box, were saved.
+- **Nor does it check a value's form:** an e-mail `not-an-email` and a phone `abc` were stored. Only
+  an unknown `country2` was refused, with the warning above.
+- **`paymentCollection`** on the property holds the booking page's deposits: `depositPayment1` and
+  `depositPayment2`, each a fixed amount and a percentage, and `depositNonPayment` (what happens to
+  an unpaid booking). They apply to Beds24's own booking page and payment gateway, not to a booking
+  made through the API.
 
 ## Paying through Stripe Checkout
 
@@ -361,6 +404,9 @@ talks to Stripe directly; Beds24 is told afterwards.
   booking with `checkAvailability`, the price and invoice items in the guest's language, and sends
   the guest to Stripe Checkout. On the return it reads the session, records the payment, confirms
   the booking and has Beds24 send the confirmation. The site stores none of it.
+- **The form asks what Beds24's booking questions ask** (ADR 19): Beds24 decides which fields and
+  questions are shown, which are required and in which order; the site labels the standard fields,
+  validates every answer itself and supports one payment of the full price only.
 - **One token does everything,** with the five scopes above, renewed from a refresh token. It can
   change any booking, so Beds24's IP allowlist limits it to the server's address.
 - **The simulator's surface is small:** `authentication/details` and the token refresh,
@@ -380,3 +426,7 @@ talks to Stripe directly; Beds24 is told afterwards.
 - **The time zone of the lead time's days,** near midnight.
 - **Whether the override reaches the channels** as closed to arrival and departure.
 - **A property with several rooms:** known from the API's structure only.
+- **The form of a date answer and of a title:** `2027-01-03` and `Mr` were stored as sent; how
+  Beds24's own booking page writes them is not checked.
+- **The language of a choice:** whether Beds24's booking page stores the option's text in the
+  guest's language or in the first one.
