@@ -53,8 +53,13 @@ export const taken = (room: Room, time: number) => {
 // Nights after this day have no price yet, as when an owner has not opened a season.
 const pricesUntil = process.env['SIM_PRICES_UNTIL'];
 
-const dayOf = (room: Room, time: number, has: (name: string) => boolean, held: Held) => {
+export const nightPrice = (room: Room, time: number) => {
   const price = pricesUntil && iso(time) > pricesUntil ? 'off' : level(time);
+  return price === 'off' ? undefined : room.prices[price];
+};
+
+const dayOf = (room: Room, time: number, has: (name: string) => boolean, held: Held) => {
+  const price1 = nightPrice(room, time);
   return {
     ...(has('includeNumAvail') && {
       numAvail: taken(room, time) || held(room.id, iso(time)) ? 0 : 1,
@@ -65,7 +70,7 @@ const dayOf = (room: Room, time: number, has: (name: string) => boolean, held: H
       override: new Date(time).getUTCDay() === 6 ? 'none' : 'noCheckInOrCheckOut',
     }),
     ...(has('includeMultiplier') && { multiplier: 1 }),
-    ...(has('includePrices') && price !== 'off' && { price1: room.prices[price] }),
+    ...(has('includePrices') && price1 && { price1 }),
   };
 };
 

@@ -1,0 +1,33 @@
+import AxeBuilder from '@axe-core/playwright';
+import { expect, test } from '@playwright/test';
+
+// The demo's guests pay on the simulator's page, so it is held to the site's accessibility.
+for (const locale of ['de', 'en'])
+  test(`the simulated checkout page is accessible and works by keyboard (${locale})`, async ({
+    page,
+    request,
+    browserName,
+  }) => {
+    const created = await request.post('http://localhost:4300/v1/checkout/sessions', {
+      headers: { Authorization: 'Bearer simulator' },
+      form: {
+        mode: 'payment',
+        locale,
+        'line_items[0][price_data][currency]': 'eur',
+        'line_items[0][price_data][unit_amount]': 98_315,
+        success_url: 'http://localhost:4300/paid',
+        cancel_url: 'http://localhost:4300/back',
+      },
+    });
+    const { url } = await created.json();
+    await page.goto(url);
+    expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+    const expire = page.getByRole('button').last();
+    // Safari tabs only to fields unless told otherwise.
+    if (browserName === 'webkit') await expire.focus();
+    else for (let i = 0; i < 3; i++) await page.keyboard.press('Tab');
+    await expect(expire).toBeFocused();
+    await page.keyboard.press('Enter');
+    await expect(page.getByRole('button')).toHaveCount(0);
+    expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  });

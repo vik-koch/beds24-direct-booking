@@ -48,4 +48,16 @@ for path in "${home#"$url"}" "/$script" "/$tile"; do
 done
 answer=$(headers "$picture")
 ! grep -qi "content-encoding:" <<<"$answer" || { echo "COMPRESSED: $picture" >&2; exit 1; }
-echo "OK: the stack serves the apartments with its headers, text compressed"
+# The checkout page a session links to is served, with the site's headers; the simulator's API is
+# reached only from inside the stack.
+checkout=$(compose exec -T sim node -e "
+  const body = new URLSearchParams({ mode: 'payment', success_url: '$url/en',
+    'line_items[0][price_data][currency]': 'eur', 'line_items[0][price_data][unit_amount]': '100' });
+  fetch('http://localhost:4300/v1/checkout/sessions',
+    { method: 'POST', headers: { Authorization: 'Bearer simulator' }, body })
+    .then((response) => response.json()).then(({ url }) => console.log(url));")
+answer=$(curl -ksi "$checkout")
+expect 'Simulated payment'
+expect 'x-robots-tag: noindex, nofollow'
+[ "$(curl -ks -o /dev/null -w "%{http_code}" "$url/v1/checkout/sessions")" = 404 ] || { echo "PUBLIC: the simulator's API" >&2; exit 1; }
+echo "OK: the stack serves the apartments with its headers, text compressed, and the checkout page"

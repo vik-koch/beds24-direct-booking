@@ -56,7 +56,7 @@ All in the environment `site` (Settings, Environments).
 | Variable | `DEPLOY_KNOWN_HOSTS` | The output of `ssh-keyscan` from step 5, for the same address or name as `DEPLOY_HOST`. |
 | Variable | `APP_DOMAIN` | The site's host name, the one `url` in the content's `site.json` names. |
 | Variable | `INDEXED` | `true` opens the site to search engines. Anything else, or no variable, keeps them out with an `X-Robots-Tag` header on every answer; `robots.txt` and the sitemap are served either way. |
-| Variable | `SIM_IMAGE` | Optional. A simulator image, of the release in `VERSION`, for example `ghcr.io/vik-koch/beds24-direct-booking-sim:0.8.0`: the site then runs against the simulator and needs no token. The published image is built for x64. |
+| Variable | `SIM_IMAGE` | Optional. A simulator image, of the release in `VERSION`, for example `ghcr.io/vik-koch/beds24-direct-booking-sim:0.8.0`: the site then runs against the simulator and needs no token, and the simulator's checkout page is served under `/simulated-checkout/` on the site's domain. The published image is built for x64. |
 
 ## What a deployment does
 

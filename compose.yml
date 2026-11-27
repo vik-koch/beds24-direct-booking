@@ -34,12 +34,24 @@ services:
       # Brotli is the smallest; it wins the tie when a browser lists the encodings at equal weight.
       - traefik.http.middlewares.${STACK_NAME:?}-compress.compress.encodings=br,zstd,gzip
 
-  # The demo's Beds24. It has no route from outside and starts only under the profile.
+  # The demo's Beds24 and Stripe, started only under the profile. From outside, only its checkout
+  # page is routed, on the site's own domain: the rule's greater length outranks the app's router.
   sim:
     profiles: [sim]
     image: ${SIM_IMAGE:-}
     build: ./sim
     restart: unless-stopped
+    environment:
+      SIM_PUBLIC_URL: https://${APP_DOMAIN:?}
+    networks: [default, traefik]
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik
+      - traefik.http.routers.${STACK_NAME:?}-sim.rule=Host(`${APP_DOMAIN:?}`) && PathPrefix(`/simulated-checkout/`)
+      - traefik.http.routers.${STACK_NAME:?}-sim.entrypoints=websecure
+      - traefik.http.routers.${STACK_NAME:?}-sim.tls.certresolver=letsencrypt
+      - traefik.http.routers.${STACK_NAME:?}-sim.middlewares=${STACK_NAME:?}-headers
+      - traefik.http.services.${STACK_NAME:?}-sim.loadbalancer.server.port=4300
 
 networks:
   traefik:
