@@ -340,12 +340,14 @@ const shownMonths = new InjectionToken('booking panel months', {
                     </div>
                   }
                 </dl>
-                @if (!blocked()) {
+                @if (bookable && !blocked()) {
                   <a class="button wide" [href]="bookingLink(stay)"
                     >{{ texts.panel.book }}<ng-icon name="lucideArrowRight" aria-hidden="true"
                   /></a>
-                } @else {
+                } @else if (bookable) {
                   <button type="button" class="button wide" disabled>{{ texts.panel.book }}</button>
+                }
+                @if (blocked()) {
                   <!-- The bar and its cross are not there on a desktop. -->
                   <button type="button" class="text-button clear-week" (click)="clear()">
                     {{ texts.weeks.clear }}
@@ -740,6 +742,8 @@ export class BookingPanel {
   protected readonly views = ['list', 'calendar'] as const;
 
   protected readonly weeks: FreeWeeks | null = this.route.data['weeks'];
+  // Where Beds24's settings do not let the site book it, no button offers it.
+  protected readonly bookable = !!this.weeks?.apartments[0]?.bookable;
   protected readonly limits: Listing | null = this.route.data['listing'];
   private readonly slug: string = this.route.params['slug'];
   private readonly name = site.apartments.find(({ slug }) => slug === this.slug)!.name;
@@ -835,7 +839,7 @@ export class BookingPanel {
             after: '',
             detail: this.stayText(stay),
             link: null,
-            label: this.texts.panel.bar.book,
+            label: this.bookable ? this.texts.panel.bar.book : '',
             chosen: true,
             blocked: !!this.blocked(),
           },
