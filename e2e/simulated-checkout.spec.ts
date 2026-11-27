@@ -6,6 +6,7 @@ for (const locale of ['de', 'en'])
   test(`the simulated checkout page is accessible and works by keyboard (${locale})`, async ({
     page,
     request,
+    browserName,
   }) => {
     const created = await request.post('http://localhost:4300/v1/checkout/sessions', {
       headers: { Authorization: 'Bearer simulator' },
@@ -21,7 +22,11 @@ for (const locale of ['de', 'en'])
     const { url } = await created.json();
     await page.goto(url);
     expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
-    await page.getByRole('button').last().focus();
+    const expire = page.getByRole('button').last();
+    // Safari tabs only to fields unless told otherwise.
+    if (browserName === 'webkit') await expire.focus();
+    else for (let i = 0; i < 3; i++) await page.keyboard.press('Tab');
+    await expect(expire).toBeFocused();
     await page.keyboard.press('Enter');
     await expect(page.getByRole('button')).toHaveCount(0);
     expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
