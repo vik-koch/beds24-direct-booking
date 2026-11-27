@@ -14,7 +14,7 @@ What is built, for whom, and where its boundaries are.
 | [1](0001-beds24-and-an-own-website.md) | Beds24 holds the bookings, an own website shows them | Accepted; its booking step replaced by 18 |
 | [16](0016-the-floor-plan.md) | The floor plan: one drawing without text shown as a picture, its zones and their names in the apartment's file | Accepted |
 | [18](0018-booking-through-the-api-and-stripe-checkout.md) | The booking step: an own form books the week through the Beds24 API, the guest pays on Stripe Checkout, the server records the payment and stores nothing | Accepted; its form's fields settled by 19 |
-| [19](0019-the-booking-form-asks-what-beds24-asks.md) | The booking form asks what Beds24's booking questions ask: Beds24 decides fields, answers required and order; the site labels the standard fields, validates every answer and supports one full payment only | Accepted |
+| [19](0019-the-booking-form-asks-what-beds24-asks.md) | The booking form asks what Beds24's booking questions ask: Beds24 decides fields, answers required and order; the site labels the standard fields and validates every answer; a property books only when its Beds24 booking rules ask for the full payment the site takes | Accepted |
 
 ## Stack
 

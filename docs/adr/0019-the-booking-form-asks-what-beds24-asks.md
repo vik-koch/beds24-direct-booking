@@ -1,6 +1,7 @@
 # ADR 19: The booking form asks what Beds24's booking questions ask
 
-Status: accepted, 2026-11-27. Group: product. Settles where ADR 18's form takes its fields from.
+Status: accepted, 2026-11-27. Group: product. Settles where ADR 18's form takes its fields from, and
+which of Beds24's booking rules the site requires.
 
 ## Context
 
@@ -19,8 +20,10 @@ A spike on 2026-11-27 read them through the API and tried bookings against them.
 - **Standard fields come without labels;** Beds24's booking page brings its own.
 - **Beds24 checks nothing.** `POST /bookings` saves a booking without a compulsory answer, with an
   e-mail `not-an-email` and with any text as a choice.
-- **The deposits** in `paymentCollection` belong to Beds24's booking page and payment gateway, which
-  the site does not use.
+- **How Beds24 takes a booking is a property's setting too:** `bookingRules` names a booking type
+  (confirmed by paying a deposit, by leaving a card, on request, at once, or closed), for normal,
+  near-term and exceptional dates, and `paymentCollection` the deposits. The site takes the full
+  price at booking (ADR 18), which matches one of these settings only.
 
 ## Decision
 
@@ -40,10 +43,13 @@ A spike on 2026-11-27 read them through the API and tried bookings against them.
    property is loaded and on each refresh. An optional one is left out and logged as a warning; one
    that must be answered closes the property's booking, its apartments showing no booking button,
    and is logged as an error. Telling the host is #363's.
-6. **The site supports a subset of Beds24's settings, written down.** It takes one payment of the
-   full price at booking, through its own Stripe Checkout (ADR 18). Beds24's payment gateways and
-   `paymentCollection` play no part and are not read. Deposits, if the business ever wants them, are
-   an issue of their own.
+6. **Beds24's booking rules must say what the site does.** The site takes one payment of the full
+   price at booking, through its own Stripe Checkout (ADR 18). A property takes bookings on the site
+   only when Beds24 says the same: `bookingType` `confirmedWithDepositCollection1`, deposit 1 at 100
+   % without a fixed amount, deposit 2 at nothing, and a near-term or exceptional type either off,
+   past or the same. Otherwise its booking is closed and logged as an error, as for a question in
+   decision 5, so Beds24's settings never promise something the site does not do. Beds24's payment
+   gateways are not read. Deposits, if the business ever wants them, are an issue of their own.
 
 ## Options
 
@@ -53,6 +59,15 @@ A spike on 2026-11-27 read them through the API and tried bookings against them.
 | A fixed form in the code | The least code; one layout to test. | Every deployment asks the same; a question of the business's own needs a release. Beds24's settings say one thing and the form does another. | Rejected. |
 | The fields listed in the deployment's content | Each deployment chooses, without code. | The form is set up in two places, and a custom question's wording per language is kept twice. | Rejected. |
 | Beds24's booking questions | The host sets the form where Beds24's booking page would have it, beside the rest of the listing. The set of usages and types is closed and small. | Validation and layout driven by data; each usage and type needs a test; a new type needs code. | Chosen. |
+
+Within the chosen option, for Beds24's booking rules and deposits:
+
+<!-- prettier-ignore -->
+| Option | For | Against | Result |
+|---|---|---|---|
+| Ignore them, and write the limit down | No code. | Beds24 can say "request only" or "10 % deposit" while the site takes the full price; nothing tells the host. | Rejected. |
+| Follow them | The host's every choice holds. | Requests, card guarantees and part payments are each a booking step of their own. | Rejected. |
+| Accept only the one setting that matches, close the booking otherwise | Beds24 and the site always agree; a mismatch is found, not guessed. | A property set up otherwise takes no booking until the host changes it; a blackout period closes its booking as a whole. | Chosen. |
 
 Within the chosen option, for a question the site does not support:
 
@@ -69,8 +84,11 @@ Within the chosen option, for a question the site does not support:
   six types on Beds24's booking page; `POST /bookings` saving bookings without compulsory answers
   and with malformed values; a ticked box as `"1"` and a choice as its text, as the control panel
   shows them.
-- **Not checked:** how Beds24's booking page writes a date and a title; in which language it stores
-  a choice.
+- **Verified on 2026-11-27:** a date stored as `YYYY-MM-DD`, as the control panel's date picker
+  saves it too; `bookingRules` and `paymentCollection` as `properties` returns them, on two
+  properties set to "confirmed with deposit collection 1" at 100 %.
+- **Not checked:** what Beds24's booking page offers and writes as a title; in which language it
+  stores a choice.
 
 ## Consequences
 
@@ -81,4 +99,5 @@ Within the chosen option, for a question the site does not support:
   or not, so a field switched on in Beds24 never lacks one.
 - **The simulator's properties carry `bookingQuestions`** and custom question texts, with each usage
   and type the tests need.
-- **The setup guide (#352)** names the settings the site follows and the ones it ignores.
+- **The setup guide (#352)** names the settings the site follows, the ones it requires and the ones
+  it ignores.

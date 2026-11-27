@@ -362,15 +362,24 @@ cancelled at once.
   their own names (`title`, `phone`, `mobile`, `country2`, `arrivalTime`, `comments`, …). A choice
   is the option's text; a ticked box is `"1"`, which the control panel shows as ticked. Any other
   text is stored too: `Car, Plane` for a single choice showed in the control panel as one more
-  option.
+  option. A date is `YYYY-MM-DD`: `2027-01-03` sent through the API showed as such, and the control
+  panel's date picker, which displays a long date while it is open, saves the same form.
 - **The API enforces no `usage`.** A booking without a `compulsory` phone, and one without a
   `compulsory` tick box, were saved.
 - **Nor does it check a value's form:** an e-mail `not-an-email` and a phone `abc` were stored. Only
   an unknown `country2` was refused, with the warning above.
 - **`paymentCollection`** on the property holds the booking page's deposits: `depositPayment1` and
-  `depositPayment2`, each a fixed amount and a percentage, and `depositNonPayment` (what happens to
-  an unpaid booking). They apply to Beds24's own booking page and payment gateway, not to a booking
-  made through the API.
+  `depositPayment2`, each a `fixedAmount` and a `variableAmount` (`type: percentage`,
+  `percentageValue`), and `depositNonPayment` (what happens to an unpaid booking, `cancel`).
+- **`bookingRules`** on the property holds how the booking page takes a booking: `bookingType`, one
+  of `autoConfirmed`, `requestWithManualConfirmation`, `requestWithCreditCard`,
+  `confirmedWithCreditCard`, `confirmedWithDepositCollection1`, `confirmedWithDepositCollection2`
+  and `blackoutPeriod`; the same choice as `bookingNearType` for arrivals within
+  `bookingNearTypeDays` days (`null` when off), and as `bookingExceptionalType` between
+  `bookingExceptionalTypeStart` and `bookingExceptionalTypeEnd`. "Confirmed with deposit collection
+  1" with deposit 1 at 100 % and deposit 2 at 0 describes what the site does: the guest pays the
+  full price to confirm. Both settings apply to Beds24's own booking page and gateway, not to a
+  booking made through the API.
 
 ## Paying through Stripe Checkout
 
@@ -406,7 +415,8 @@ talks to Stripe directly; Beds24 is told afterwards.
   the booking and has Beds24 send the confirmation. The site stores none of it.
 - **The form asks what Beds24's booking questions ask** (ADR 19): Beds24 decides which fields and
   questions are shown, which are required and in which order; the site labels the standard fields,
-  validates every answer itself and supports one payment of the full price only.
+  validates every answer itself, and books a property only when its booking rules ask for one
+  payment of the full price.
 - **One token does everything,** with the five scopes above, renewed from a refresh token. It can
   change any booking, so Beds24's IP allowlist limits it to the server's address.
 - **The simulator's surface is small:** `authentication/details` and the token refresh,
@@ -426,7 +436,7 @@ talks to Stripe directly; Beds24 is told afterwards.
 - **The time zone of the lead time's days,** near midnight.
 - **Whether the override reaches the channels** as closed to arrival and departure.
 - **A property with several rooms:** known from the API's structure only.
-- **The form of a date answer and of a title:** `2027-01-03` and `Mr` were stored as sent; how
-  Beds24's own booking page writes them is not checked.
+- **The form of a title:** `Mr` was stored as sent; what Beds24's own booking page offers and writes
+  is not checked.
 - **The language of a choice:** whether Beds24's booking page stores the option's text in the
   guest's language or in the first one.
