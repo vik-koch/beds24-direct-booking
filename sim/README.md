@@ -56,6 +56,5 @@ days pass:
   vouchers, units and the like), every other call, and the booking page.
 - **Not recorded on the wire, so the simulator's own:** what `properties` returns when only some
   `include*` parameters are passed, the calendar's answer without any (a day that carries none of
-  the fields asked for is skipped), the answer to a new booking beyond its `id` and to a change,
-  access tokens that never expire, and every error other than the 401, the refused week and the
-  unknown booking.
+  the fields asked for is skipped), the answer to a new booking beyond its `id` and to a change, and
+  every error other than the 401, the refused week and the unknown booking.

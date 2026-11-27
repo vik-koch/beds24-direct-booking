@@ -422,6 +422,21 @@ describe('the token and the bookings', () => {
     expect(renewals()).toBe(2);
   });
 
+  it('keeps a renewed token when a late answer refuses the one before it', async () => {
+    await client.loadInventory('2027-01-01', '2027-01-07');
+    let answer: ((response: Response) => void) | undefined;
+    vi.mocked(fetch).mockImplementationOnce(() => new Promise((resolve) => (answer = resolve)));
+    const slow = client.cancelBooking(1).catch(() => undefined);
+    await vi.waitFor(() => expect(answer).toBeDefined());
+    vi.mocked(fetch).mockResolvedValueOnce(new Response('{}', { status: 401 }));
+    await expect(client.cancelBooking(1)).rejects.toThrow('401');
+    await client.loadInventory('2027-01-01', '2027-01-07');
+    answer!(new Response('{}', { status: 401 }));
+    await slow;
+    await client.loadInventory('2027-01-01', '2027-01-07');
+    expect(renewals()).toBe(2);
+  });
+
   // With a token in hand, so that the booking itself is what fails.
   describe('when a booking call fails', () => {
     const stay = {

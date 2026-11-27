@@ -132,12 +132,18 @@ const token = async () => {
     .finally(() => (renewing = undefined)));
 };
 
+// A refused token is dropped, unless a renewal has replaced it meanwhile.
+const refused = (sent: string, response: Response) => {
+  if (response.status === 401 && access?.token === sent) access = undefined;
+};
+
 const get = async <T>(path: string): Promise<T> => {
+  const sent = await token();
   const response = await fetch(`${base()}${path}`, {
-    headers: { token: await token() },
+    headers: { token: sent },
     signal: AbortSignal.timeout(5000),
   });
-  if (response.status === 401) access = undefined;
+  refused(sent, response);
   if (!response.ok) throw new Error(`Beds24 answered ${response.status} to ${path}`);
   return response.json();
 };
@@ -284,15 +290,16 @@ interface Answer {
 // Beds24's answer, or a broken piece of it, can repeat the guest's details, so an error names
 // only the call and its room or booking.
 const post = async (booking: object, what: string) => {
+  const sent = await token();
   const response = await fetch(`${base()}/bookings`, {
     method: 'POST',
-    headers: { token: await token(), 'Content-Type': 'application/json' },
+    headers: { token: sent, 'Content-Type': 'application/json' },
     body: JSON.stringify([booking]),
     signal: AbortSignal.timeout(5000),
   }).catch(() => {
     throw new Error(`Beds24 did not answer ${what}`);
   });
-  if (response.status === 401) access = undefined;
+  refused(sent, response);
   if (!response.ok) throw new Error(`Beds24 answered ${response.status} to ${what}`);
   const answer = await response.json().then(
     ([first]: Answer[]) => first,

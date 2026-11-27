@@ -78,7 +78,9 @@ later, ends without deploying.
   new release's tag again, with `VERSION` and `runs-on` as before.
 - **Going back:** revert the commit on the site's `main` and push. The workflow file holds the
   release and the repository the content, so a commit is the whole state of the site, and a revert
-  rebuilds and deploys the earlier one. Nothing is rolled back by itself.
+  rebuilds and deploys the earlier one. Nothing is rolled back by itself, not even the environment's
+  settings: before reverting across a release that changed them, set them back as the earlier
+  release needs them, such as `BEDS24_TOKEN` or `SIM_IMAGE` before 0.8.0.
 - **By hand, when GitHub cannot be used:** the same script runs from a workstation with the release
   checked out, `scripts/deploy.sh <host> <settings file>`, with a settings file as
   [`.env.example`](../.env.example) describes it. The machine keeps the image it runs, so a restart
