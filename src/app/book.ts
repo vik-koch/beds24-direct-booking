@@ -1,16 +1,32 @@
-import { Component, inject } from '@angular/core';
+import { Component, ElementRef, inject, signal, viewChild } from '@angular/core';
+import { form, FormField, FormRoot, validate } from '@angular/forms/signals';
 import { ActivatedRoute } from '@angular/router';
+import { HlmCheckbox } from '@spartan-ng/helm/checkbox';
+import { HlmFieldImports } from '@spartan-ng/helm/field';
+import { HlmInput } from '@spartan-ng/helm/input';
+import { HlmRadioGroupImports } from '@spartan-ng/helm/radio-group';
+import { HlmTextarea } from '@spartan-ng/helm/textarea';
+import type { Question } from '../beds24/questions';
 import type { FreeWeeks } from '../beds24/weeks';
 import site from '../content/generated/site';
-import { Choice, fits, seasonOf } from './choice';
+import { answerRules, blank, countries, guestFields, inputOf, type Answers } from './answers';
+import { Choice, fits, seasonOf, taxLine } from './choice';
 import { heading } from './shell';
-import { addDays, address, fill, formatStay, isDay, LANGUAGE, TEXTS } from './texts';
+import { addDays, address, fill, formatMoney, formatStay, isDay, LANGUAGE, TEXTS } from './texts';
 
-// The booking step until online booking opens: the stay from the address, checked against the
-// apartment's weeks and limits, and a link to book it elsewhere, such as on a booking site. While
-// Beds24 cannot be reached the stay goes unchecked: the site linked checks it.
+// The booking step: the stay from the address, checked against the apartment's weeks and limits,
+// and the form that asks what the property's booking questions in Beds24 ask (ADR 19).
 @Component({
   selector: 'app-book',
+  imports: [
+    FormRoot,
+    FormField,
+    HlmFieldImports,
+    HlmInput,
+    HlmTextarea,
+    HlmCheckbox,
+    HlmRadioGroupImports,
+  ],
   template: `
     <div class="column pt-(--space-section)">
       <h1 class="headline">{{ heading }}</h1>
@@ -22,27 +38,193 @@ import { addDays, address, fill, formatStay, isDay, LANGUAGE, TEXTS } from './te
           }}</a>
         </p>
       } @else {
-        <dl class="mt-6 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1">
-          <dt class="text-ink-soft">{{ texts.weeks.apartment }}</dt>
-          <dd>{{ name }}</dd>
-          <dt class="text-ink-soft">{{ texts.weeks.week }}</dt>
-          <dd>{{ week }}</dd>
-          <dt class="text-ink-soft">{{ texts.panel.guests }}</dt>
-          <dd>{{ guests }}</dd>
-        </dl>
-        <p class="mt-6">{{ texts.book.text }}</p>
-        @if (elsewhere) {
-          <p class="mt-6">
-            <a class="button" [href]="elsewhere">{{ texts.book.link }}</a>
-          </p>
-        }
+        <div class="booking-step">
+          <div class="stay">
+            <dl class="facts">
+              <div>
+                <dt>{{ texts.weeks.apartment }}</dt>
+                <dd>{{ name }}</dd>
+              </div>
+              <div>
+                <dt>{{ texts.panel.guests }}</dt>
+                <dd>{{ guests }}</dd>
+              </div>
+            </dl>
+            <dl class="total">
+              <div>
+                <dt>{{ fill(texts.panel.week, { stay: week }) }}</dt>
+                <dd>{{ money(price) }}</dd>
+              </div>
+              @if (tax) {
+                <div>
+                  <dt>{{ tax.text }}</dt>
+                  <dd>{{ money(tax.amount) }}</dd>
+                </div>
+              }
+              <div class="sum">
+                <dt>{{ texts.panel.total }}</dt>
+                <dd>{{ money(price + (tax?.amount ?? 0)) }}</dd>
+              </div>
+            </dl>
+          </div>
+          <form #element class="answers" method="post" [formRoot]="answers">
+            <h2>{{ texts.book.details }}</h2>
+            @for (question of questions; track question.key) {
+              @let field = answers[question.key];
+              @let id = 'answer-' + question.key;
+              @let label = labelOf(question);
+              @let error = field().errors()[0]?.message;
+              @if (inputOf(question) === 'checkbox') {
+                <div hlmField orientation="horizontal">
+                  <!-- Its error is on the box, which brain's checkbox does not link itself. -->
+                  <hlm-checkbox
+                    [inputId]="id"
+                    [formField]="$any(field)"
+                    [aria-describedby]="error ? id + '-error' : null"
+                  />
+                  <label hlmFieldLabel [for]="id">{{ label }}</label>
+                  <hlm-field-error [id]="id + '-error'">{{ error }}</hlm-field-error>
+                </div>
+              } @else if (inputOf(question) === 'radio') {
+                <fieldset hlmField>
+                  <legend hlmFieldLegend [id]="id + '-label'">{{ label }}</legend>
+                  <div
+                    hlmRadioGroup
+                    [formField]="$any(field)"
+                    [attr.aria-labelledby]="id + '-label'"
+                  >
+                    @for (choice of choicesOf(question); track $index) {
+                      <label class="choice" [for]="id + '-' + $index">
+                        <hlm-radio [value]="'' + $index" [inputId]="id + '-' + $index">
+                          <hlm-radio-indicator indicator />
+                        </hlm-radio>
+                        {{ choice }}
+                      </label>
+                    }
+                  </div>
+                  <hlm-field-error [id]="id + '-error'">{{ error }}</hlm-field-error>
+                </fieldset>
+              } @else {
+                <div hlmField>
+                  <label hlmFieldLabel [for]="id">{{ label }}</label>
+                  @switch (inputOf(question)) {
+                    @case ('select') {
+                      <select
+                        hlmInput
+                        [id]="id"
+                        [formField]="$any(field)"
+                        [attr.autocomplete]="autocompleteOf(question)"
+                        [attr.aria-required]="question.required || null"
+                      >
+                        <option value="">{{ texts.book.choose }}</option>
+                        @for (choice of optionsOf(question); track choice.value) {
+                          <option [value]="choice.value">{{ choice.text }}</option>
+                        }
+                      </select>
+                    }
+                    @case ('textarea') {
+                      <textarea
+                        hlmTextarea
+                        rows="3"
+                        [id]="id"
+                        [formField]="$any(field)"
+                        [attr.aria-required]="question.required || null"
+                      ></textarea>
+                    }
+                    @default {
+                      <input
+                        hlmInput
+                        [id]="id"
+                        [type]="inputOf(question)"
+                        [formField]="$any(field)"
+                        [attr.autocomplete]="autocompleteOf(question)"
+                        [attr.aria-required]="question.required || null"
+                      />
+                    }
+                  }
+                  <hlm-field-error [id]="id + '-error'">{{ error }}</hlm-field-error>
+                </div>
+              }
+            }
+            @let terms = texts.book.terms.text.split('{link}');
+            <p class="terms">
+              {{ terms[0]
+              }}<a [href]="texts.book.terms.link.href">{{ texts.book.terms.link.text }}</a
+              >{{ terms[1] }}
+            </p>
+            <!-- Enter in a field presses it too. -->
+            <button type="submit" class="button wide" (click)="pressed.set(true)">
+              {{ texts.book.submit }}
+            </button>
+          </form>
+        </div>
       }
     </div>
+  `,
+  styles: `
+    @layer components {
+      /* Beside the form from 64rem, the stay stays in view; on a phone it comes first. */
+      .booking-step {
+        display: grid;
+        gap: 2rem;
+        margin-top: 2rem;
+
+        @media (min-width: 64rem) {
+          grid-template-columns: minmax(0, 1fr) 24rem;
+          align-items: start;
+
+          .stay {
+            grid-column: 2;
+            grid-row: 1;
+            position: sticky;
+            top: 5.5rem;
+          }
+        }
+      }
+
+      .stay {
+        padding: 1.5rem 1.25rem;
+
+        .facts {
+          display: grid;
+          gap: 0.75rem;
+          margin-bottom: 1rem;
+
+          dt {
+            color: var(--color-ink-soft);
+            font-size: 0.9375rem;
+          }
+        }
+      }
+
+      .answers {
+        display: grid;
+        gap: 1.25rem;
+        max-width: 36rem;
+
+        .terms {
+          margin-top: 0.5rem;
+          color: var(--color-ink-soft);
+        }
+
+        .button.wide {
+          margin-top: 0;
+        }
+      }
+
+      .choice {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        min-height: var(--size-control-small);
+      }
+    }
   `,
 })
 export class Book {
   protected readonly texts = inject(TEXTS);
   protected readonly fill = fill;
+  protected readonly inputOf = inputOf;
   private readonly language = inject(LANGUAGE);
   protected readonly choice = inject(Choice);
   private readonly route = inject(ActivatedRoute).snapshot;
@@ -56,19 +238,50 @@ export class Book {
   private readonly count = (forms: { one: string; other: string }, count: number) =>
     fill(this.plural.select(count) === 'one' ? forms.one : forms.other, { count }).replaceAll(
       ' ',
-      '\u00a0',
+      ' ',
     );
 
+  private readonly weeks: FreeWeeks | null = this.route.data['weeks'];
+  protected readonly questions: Question[] = this.route.data['questions'] ?? [];
   private readonly arrival = this.route.queryParamMap.get('arrival') ?? '';
   protected readonly week: string;
   protected readonly guests: string;
+  protected readonly price: number;
+  protected readonly tax: { text: string; amount: number } | null;
   protected readonly problem: string | null;
   protected readonly back: string;
-  protected readonly elsewhere: string | null;
+
+  private readonly element = viewChild<ElementRef<HTMLFormElement>>('element');
+  protected readonly pressed = signal(false);
+  private readonly countryNames = new Intl.DisplayNames(this.language.tag, { type: 'region' });
+  protected readonly answers = form(
+    signal<Answers>(blank(this.questions)),
+    // The answers are checked once the button is pressed, then as the guest types. An error shown
+    // on leaving a field would push the button down under a pointer pressing it, and the press
+    // would be lost.
+    (path) => {
+      const rules = answerRules(this.questions, this.texts, this.language.code);
+      for (const { key } of this.questions)
+        validate(path[key], ({ value }) => {
+          const message = this.pressed() && rules[key](value());
+          return message ? { kind: 'answer', message } : null;
+        });
+    },
+    {
+      name: 'answers',
+      submission: {
+        // The server books the week and sends the guest on to pay (#349).
+        action: async () => {
+          this.element()!.nativeElement.submit();
+          return undefined;
+        },
+        onInvalid: (answers) => answers().errorSummary()[0]?.fieldTree().focusBoundControl(),
+      },
+    },
+  );
 
   constructor() {
-    const weeks: FreeWeeks | null = this.route.data['weeks'];
-    const limits = weeks?.capacities[this.slug];
+    const limits = this.weeks?.capacities[this.slug];
     const [adults, children] = [this.choice.adults(), this.choice.children()];
     // Where the apartment asks for no children, they are guests like the adults.
     const plain = limits && !limits.asksChildren;
@@ -78,11 +291,19 @@ export class Book {
           this.count(this.texts.panel.adults, adults),
           ...(children ? [this.count(this.texts.book.children, children)] : []),
         ]);
-    const season = weeks && seasonOf(weeks, this.arrival);
-    const valid = weeks ? !!season : isDay(this.arrival);
-    const free =
-      !weeks ||
-      !!season?.weeks.some(({ arrival, prices }) => arrival === this.arrival && prices[0] !== null);
+    const season = this.weeks && seasonOf(this.weeks, this.arrival);
+    const valid = this.weeks ? !!season : isDay(this.arrival);
+    this.price =
+      season?.weeks.find(({ arrival }) => arrival === this.arrival)?.prices[0] ?? Number.NaN;
+    this.tax = taxLine(
+      this.texts,
+      this.plural,
+      (amount) => this.money(amount),
+      this.weeks?.tax,
+      limits,
+      adults,
+      children,
+    );
     const dates = new Intl.DateTimeFormat(this.language.tag, {
       weekday: 'short',
       day: 'numeric',
@@ -93,30 +314,51 @@ export class Book {
     this.week = valid
       ? formatStay(dates, { arrival: this.arrival, departure: addDays(this.arrival, 7) })
       : '';
+    // Without Beds24 the stay goes unchecked, and the form cannot be asked.
     this.problem = !valid
       ? this.texts.book.invalid
-      : !free
-        ? this.texts.book.taken
-        : limits && !fits(limits, adults, children)
-          ? fill(this.texts.panel.small, {
-              name: this.name,
-              guests: this.count(this.texts.weeks.guests, limits.maxPeople),
-            })
-          : null;
+      : !this.weeks || !this.questions.length || !this.weeks.apartments[0].bookable
+        ? this.texts.book.unavailable
+        : Number.isNaN(this.price)
+          ? this.texts.book.taken
+          : limits && !fits(limits, adults, children)
+            ? fill(this.texts.panel.small, {
+                name: this.name,
+                guests: this.count(this.texts.weeks.guests, limits.maxPeople),
+              })
+            : null;
     // The apartment's panel shows the week chosen, as blocked where it is no longer free.
     const page = address(this.language, 'apartment', this.slug);
     // Its season is the one shown when it is followed.
     this.back = `${page}${valid ? `?arrival=${this.arrival}` : ''}#booking`;
-    // The site linked counts them as adults too.
-    const url = this.apartment.elsewhere;
-    this.elsewhere =
-      url && valid
-        ? fill(url, {
-            arrival: this.arrival,
-            departure: addDays(this.arrival, 7),
-            adults: plain ? adults + children : adults,
-            children: plain ? 0 : children,
-          })
-        : null;
+  }
+
+  protected money(amount: number) {
+    return formatMoney(this.language.tag, this.weeks!.currency, amount);
+  }
+
+  protected labelOf(question: Question) {
+    const label =
+      'type' in question
+        ? question.label[this.language.code]
+        : this.texts.book.fields[question.key].label;
+    return question.required ? label : `${label} (${this.texts.book.optional})`;
+  }
+
+  protected autocompleteOf(question: Question) {
+    return 'type' in question ? 'off' : guestFields[question.key].autocomplete;
+  }
+
+  protected choicesOf(question: Question) {
+    return ('type' in question && question.choices?.[this.language.code]) || [];
+  }
+
+  // A choice's position, or a country's code by its name in the page's language.
+  protected optionsOf(question: Question) {
+    return 'type' in question
+      ? this.choicesOf(question).map((text, index) => ({ value: String(index), text }))
+      : countries
+          .map((value) => ({ value, text: this.countryNames.of(value) ?? value }))
+          .sort((a, b) => a.text.localeCompare(b.text, this.language.tag));
   }
 }

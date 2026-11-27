@@ -1,6 +1,9 @@
 @import 'tailwindcss';
 /* The tests' Playwright selectors, such as [aria-selected=true]:visible, read as classes. */
 @source not '../e2e';
+/* The booking form's spartan/ui parts take their look from ui.css alone: their utilities, such as
+   an outline-none that would hide the focus ring, would add to every page's styles. */
+@source not './ui/{checkbox,field,input,label,radio-group,textarea}';
 @import 'tw-animate-css';
 @import '@spartan-ng/brain/hlm-tailwind-preset.css';
 @import './content/generated/theme.css';
@@ -701,9 +704,10 @@
     }
   }
 
-  /* The apartment page's headings, and a map's section after an apartment's or a content page's
-     text: the map runs edge to edge, its heading stays in the column. */
-  :is(.apartment, .map-section) {
+  /* The apartment page's and the booking step's headings, and a map's section after an
+     apartment's or a content page's text: the map runs edge to edge, its heading stays in the
+     column. */
+  :is(.apartment, .map-section, .booking-step) {
     --size-heading: clamp(1.375rem, 1.2rem + 0.8vw, 1.75rem);
 
     h2 {
@@ -718,8 +722,9 @@
     padding-top: var(--space-section);
   }
 
-  /* A card on the page's ground: the hero's text, the free weeks and the booking panel. */
-  :is(.hero-copy, .sheet, .panel) {
+  /* A card on the page's ground: the hero's text, the free weeks, the booking panel and the
+     booking step's stay. */
+  :is(.hero-copy, .sheet, .panel, .stay) {
     border-radius: var(--radius-card);
     background: var(--color-surface);
     box-shadow: var(--shadow-card);

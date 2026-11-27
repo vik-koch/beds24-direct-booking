@@ -75,7 +75,7 @@
       "other": "{count} gasten"
     },
     "size": {
-      "shown": "{size}\u00a0m²",
+      "shown": "{size} m²",
       "spoken": "{size} vierkante meter"
     },
     "taken": "bezet",
@@ -98,8 +98,14 @@
   },
   "apartment": {
     "back": "Alle appartementen",
-    "guests": { "one": "Tot {count} gast", "other": "Tot {count} gasten" },
-    "bedrooms": { "one": "1 slaapkamer", "other": "{count} slaapkamers" },
+    "guests": {
+      "one": "Tot {count} gast",
+      "other": "Tot {count} gasten"
+    },
+    "bedrooms": {
+      "one": "1 slaapkamer",
+      "other": "{count} slaapkamers"
+    },
     "more": "Lees meer",
     "rooms": "Kamers en bedden",
     "features": "Voorzieningen",
@@ -154,12 +160,17 @@
     "position": "Foto {index} van {count}",
     "previous": "Vorige foto",
     "next": "Volgende foto",
-    "more": { "one": "+{count} foto", "other": "+{count} foto's" },
+    "more": {
+      "one": "+{count} foto",
+      "other": "+{count} foto's"
+    },
     "plan": "Plattegrond",
     "photos": "Foto's"
   },
   "amenities": {
-    "areas": { "comfort": "Comfort" },
+    "areas": {
+      "comfort": "Comfort"
+    },
     "codes": {
       "PETS_NOT_ALLOWED": "Geen huisdieren",
       "WIFI": "Wifi",
@@ -172,15 +183,106 @@
       "BATH_SHOWER": "Douche",
       "BATH_TOILET": "Toilet"
     },
-    "rooms": { "BEDROOM": "Slaapkamer", "BATHROOM": "Badkamer" }
+    "rooms": {
+      "BEDROOM": "Slaapkamer",
+      "BATHROOM": "Badkamer"
+    }
   },
   "book": {
-    "text": "Rechtstreeks boeken kan binnenkort. Boek tot dan via Booking.com.",
-    "link": "Boek deze week via Booking.com",
-    "children": { "one": "{count} kind", "other": "{count} kinderen" },
+    "children": {
+      "one": "{count} kind",
+      "other": "{count} kinderen"
+    },
     "invalid": "Dit adres noemt geen week die te boeken is.",
     "taken": "Deze week is niet meer vrij.",
-    "back": "Terug naar {apartment}"
+    "unavailable": "Dit appartement is op dit moment niet online te boeken.",
+    "back": "Terug naar {apartment}",
+    "details": "Uw gegevens",
+    "optional": "optioneel",
+    "choose": "Kies…",
+    "fields": {
+      "title": {
+        "label": "Aanhef",
+        "missing": "Vul uw aanhef in, zoals mevrouw of dr."
+      },
+      "firstName": {
+        "label": "Voornaam",
+        "missing": "Vul uw voornaam in."
+      },
+      "lastName": {
+        "label": "Achternaam",
+        "missing": "Vul uw achternaam in."
+      },
+      "email": {
+        "label": "E-mailadres",
+        "missing": "Vul uw e-mailadres in.",
+        "invalid": "Vul een e-mailadres in zoals naam@example.com."
+      },
+      "phone": {
+        "label": "Telefoonnummer",
+        "missing": "Vul uw telefoonnummer in.",
+        "invalid": "Vul een telefoonnummer in cijfers in, zoals +32 2 123 45 67."
+      },
+      "mobile": {
+        "label": "Gsm-nummer",
+        "missing": "Vul uw gsm-nummer in.",
+        "invalid": "Vul een gsm-nummer in cijfers in, zoals +32 470 12 34 56."
+      },
+      "fax": {
+        "label": "Faxnummer",
+        "missing": "Vul uw faxnummer in.",
+        "invalid": "Vul een faxnummer in cijfers in, zoals +32 2 123 45 68."
+      },
+      "company": {
+        "label": "Bedrijf",
+        "missing": "Vul de naam van uw bedrijf in."
+      },
+      "address": {
+        "label": "Straat en huisnummer",
+        "missing": "Vul uw straat en huisnummer in."
+      },
+      "city": {
+        "label": "Gemeente",
+        "missing": "Vul uw gemeente in."
+      },
+      "state": {
+        "label": "Provincie of regio",
+        "missing": "Vul uw provincie of regio in."
+      },
+      "postcode": {
+        "label": "Postcode",
+        "missing": "Vul uw postcode in."
+      },
+      "countryText": {
+        "label": "Land",
+        "missing": "Vul uw land in."
+      },
+      "countrySelect": {
+        "label": "Land",
+        "missing": "Kies uw land."
+      },
+      "arrivalTime": {
+        "label": "Aankomsttijd",
+        "missing": "Vul in hoe laat u ongeveer aankomt."
+      },
+      "comments": {
+        "label": "Bericht aan de gastheren",
+        "missing": "Schrijf een bericht aan de gastheren."
+      }
+    },
+    "custom": {
+      "missing": "Beantwoord ‘{question}’.",
+      "choose": "Kies een antwoord op ‘{question}’.",
+      "tick": "Vink ‘{question}’ aan om te boeken."
+    },
+    "terms": {
+      "text": "Wie boekt, aanvaardt de {link}.",
+      "link": {
+        "text": "huurvoorwaarden",
+        "href": "/nl/voorwaarden"
+      }
+    },
+    "submit": "Boeken en betalen"
   },
   "placeholder": "Deze pagina wordt nog gemaakt.",
   "notFound": {
