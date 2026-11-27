@@ -108,10 +108,12 @@ test('the home page comes from the server with the apartments, the notice and th
     '/de/impressum',
   );
   await expect(footer.getByText('5753 Saalbach')).toBeVisible();
+  await expect(footer.getByText('Österreich')).toBeVisible();
   await expect(footer.getByRole('link', { name: '+43 000 0000000' })).toBeVisible();
   expect(await axe(page)).toEqual([]);
 
   await page.goto('/en/privacy');
+  await expect(footer.getByText('Austria')).toBeVisible();
   expect(await axe(page)).toEqual([]);
 });
 

@@ -23,7 +23,7 @@ import { LANGUAGE, pageLinks, TEXTS } from './texts';
             @if (contact.address; as postal) {
               <span>{{ postal.street }}</span>
               <span>{{ postal.postalCode }} {{ postal.locality }}</span>
-              <span>{{ postal.country }}</span>
+              <span>{{ country.of(postal.country) }}</span>
             }
             @if (contact.phone; as phone) {
               <a [href]="'tel:' + phone.replaceAll(' ', '')">{{ phone }}</a>
@@ -61,5 +61,7 @@ export class Footer {
     return Object.keys(shown).length ? shown : null;
   })();
   protected readonly choice = inject(Choice);
-  protected readonly links = pageLinks(this.texts, inject(LANGUAGE), site.footer);
+  private readonly language = inject(LANGUAGE);
+  protected readonly country = new Intl.DisplayNames(this.language.tag, { type: 'region' });
+  protected readonly links = pageLinks(this.texts, this.language, site.footer);
 }

@@ -327,14 +327,16 @@ content. The application has no wording, no colour and no typeface of its own. T
 - **The contact** in `site.json` is the business's details: its address, which every site gives, and
   optionally a name (the site's name without one), a phone number and an email address. The address
   is given in its parts,
-  `{ "street": "Musterweg 0", "postalCode": "5753", "locality": "Saalbach", "country": "Österreich" }`,
-  which the footer writes as three lines, the postal code before the place. The home page describes
-  the business to search engines from the contact; Google requires the address. The footer shows the
-  parts `footer` lists, such as `"footer": ["name", "email"]`, or all of them without it, and no
-  contact column with `"footer": []`, so a site can keep its footer short and give the full details
-  on its imprint page while search engines still get the address. A site with a map gives an email
-  address of its operator that reaches someone, on its imprint page at least: the map's walking
-  routes come from FOSSGIS's routing servers, whose usage policy asks for one.
+  `{ "street": "Musterweg 0", "postalCode": "5753", "locality": "Saalbach", "country": "AT" }`, the
+  country as its two-letter ISO 3166-1 code, which search engines take. The footer writes the
+  address as three lines, the postal code before the place and the country's name in the page's
+  language. The home page describes the business to search engines from the contact; Google requires
+  the address. The footer shows the parts `footer` lists, such as `"footer": ["name", "email"]`, or
+  all of them without it, and no contact column with `"footer": []`, so a site can keep its footer
+  short and give the full details on its imprint page while search engines still get the address. A
+  site with a map gives an email address of its operator that reaches someone, on its imprint page
+  at least: the map's walking routes come from FOSSGIS's routing servers, whose usage policy asks
+  for one.
 - **Stripe's review** looks at the contact, the rental terms, the privacy page and how prices are
   shown before it activates payments: [`stripe-review.md`](stripe-review.md) lists what it asks for
   and how the demo meets it.

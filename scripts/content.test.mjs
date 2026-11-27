@@ -780,6 +780,15 @@ test('a contact address is given in its parts', () => {
   assert.throws(() => readContent(part), /contact\.address\.postalCode/);
 });
 
+test("a contact address's country is a known two-letter code", () => {
+  const country = (value) => changed('site.json', (site) => (site.contact.address.country = value));
+  for (const value of ['Österreich', 'at', 'XX'])
+    assert.throws(
+      () => readContent(country(value)),
+      /contact\.address\.country[^]*not a known two-letter country code/,
+    );
+});
+
 test("the site's address is https and its host alone", () => {
   for (const url of [
     'http://example.com',

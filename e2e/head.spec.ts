@@ -84,18 +84,22 @@ test(
   'the home page and an apartment describe the business and the apartment as structured data',
   { tag: '@any-engine' },
   async ({ request }) => {
-    const [home] = (await head(request, '/en')).data;
+    const {
+      data: [home],
+      meta: homeMeta,
+    } = await head(request, '/en');
     expect(home).toMatchObject({
       '@context': 'https://schema.org',
       '@type': 'LodgingBusiness',
       name: 'Firn & Farn Appartements',
       url: `${site}/en`,
+      image: homeMeta('og:image')[0],
       address: {
         '@type': 'PostalAddress',
         streetAddress: 'Musterweg 0',
         postalCode: '5753',
         addressLocality: 'Saalbach',
-        addressCountry: 'Österreich',
+        addressCountry: 'AT',
       },
     });
     expect(home['containsPlace']).toEqual([
@@ -115,7 +119,12 @@ test(
       occupancy: { '@type': 'QuantitativeValue', maxValue: 2 },
       numberOfBedrooms: 1,
       floorSize: { '@type': 'QuantitativeValue', value: 34, unitCode: 'MTK' },
-      containedInPlace: { '@type': 'LodgingBusiness', url: `${site}/de` },
+      containedInPlace: {
+        '@type': 'LodgingBusiness',
+        url: `${site}/de`,
+        image: home['image'],
+        address: { addressCountry: 'AT' },
+      },
     });
     // Other pages have none.
     expect((await head(request, '/en/faq')).data).toEqual([]);
@@ -199,7 +208,12 @@ test(
     expect(italian.data[0]).toMatchObject({
       '@type': 'LodgingBusiness',
       name: 'Casa Prova',
-      address: { streetAddress: 'Via di Prova 1', postalCode: '39030', addressLocality: 'Prova' },
+      address: {
+        streetAddress: 'Via di Prova 1',
+        postalCode: '39030',
+        addressLocality: 'Prova',
+        addressCountry: 'IT',
+      },
     });
     expect(italian.meta('og:locale')).toEqual(['it_IT']);
     expect(italian.link('canonical')).toEqual(['https://casa-prova.example/it']);
