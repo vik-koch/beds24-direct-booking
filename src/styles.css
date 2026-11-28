@@ -723,8 +723,8 @@
   }
 
   /* A card on the page's ground: the hero's text, the free weeks, the booking panel and the
-     booking step's stay. */
-  :is(.hero-copy, .sheet, .panel, .stay) {
+     booking step's summary. */
+  :is(.hero-copy, .sheet, .panel, .summary) {
     border-radius: var(--radius-card);
     background: var(--color-surface);
     box-shadow: var(--shadow-card);

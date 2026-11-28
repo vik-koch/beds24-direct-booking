@@ -39,7 +39,7 @@ import { addDays, address, fill, formatMoney, formatStay, isDay, LANGUAGE, TEXTS
         </p>
       } @else {
         <div class="booking-step">
-          <div class="stay">
+          <div class="summary">
             <dl class="facts">
               <div>
                 <dt>{{ texts.weeks.apartment }}</dt>
@@ -173,7 +173,7 @@ import { addDays, address, fill, formatMoney, formatStay, isDay, LANGUAGE, TEXTS
           grid-template-columns: minmax(0, 1fr) 24rem;
           align-items: start;
 
-          .stay {
+          .summary {
             grid-column: 2;
             grid-row: 1;
             position: sticky;
@@ -182,7 +182,7 @@ import { addDays, address, fill, formatMoney, formatStay, isDay, LANGUAGE, TEXTS
         }
       }
 
-      .stay {
+      .summary {
         padding: 1.5rem 1.25rem;
 
         .facts {
