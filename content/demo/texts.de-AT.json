@@ -271,17 +271,17 @@
       "phone": {
         "label": "Telefonnummer",
         "missing": "Geben Sie Ihre Telefonnummer an.",
-        "invalid": "Geben Sie eine vollständige Telefonnummer mit Ländervorwahl an, etwa +43 662 123456."
+        "invalid": "Geben Sie eine vollständige Telefonnummer mit Ländervorwahl an, etwa {example}."
       },
       "mobile": {
         "label": "Handynummer",
         "missing": "Geben Sie Ihre Handynummer an.",
-        "invalid": "Geben Sie eine vollständige Handynummer mit Ländervorwahl an, etwa +43 660 1234567."
+        "invalid": "Geben Sie eine vollständige Handynummer mit Ländervorwahl an, etwa {example}."
       },
       "fax": {
         "label": "Faxnummer",
         "missing": "Geben Sie Ihre Faxnummer an.",
-        "invalid": "Geben Sie eine vollständige Faxnummer mit Ländervorwahl an, etwa +43 662 123457."
+        "invalid": "Geben Sie eine vollständige Faxnummer mit Ländervorwahl an, etwa {example}."
       },
       "company": {
         "label": "Firma",

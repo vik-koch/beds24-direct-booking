@@ -228,6 +228,32 @@
   color: var(--color-ink);
 }
 
+/* An example in a field, in soft ink so that it does not read as an answer. */
+:is(.spartan-input, .spartan-textarea)::placeholder {
+  color: var(--color-ink-soft);
+  opacity: 1;
+}
+
+/* A time's and a date's empty parts as wide as their digits, so that the dashes do not jump. */
+.spartan-input {
+  font-variant-numeric: tabular-nums;
+
+  &::-webkit-datetime-edit-hour-field,
+  &::-webkit-datetime-edit-minute-field,
+  &::-webkit-datetime-edit-day-field,
+  &::-webkit-datetime-edit-month-field {
+    display: inline-block;
+    min-width: 2ch;
+    text-align: center;
+  }
+
+  &::-webkit-datetime-edit-year-field {
+    display: inline-block;
+    min-width: 4ch;
+    text-align: center;
+  }
+}
+
 .spartan-textarea {
   field-sizing: content;
   min-height: calc(2lh + 1rem + 2px);
@@ -299,6 +325,8 @@
   /* Chromium's second stop in a date or a time, which opens its picker: its own icon gone, a
      round ring as large as a control around the site's, centred on it. */
   ::-webkit-calendar-picker-indicator {
+    /* Over Chromium's own ring, which a :focus-visible here does not replace. */
+    outline-color: var(--color-accent);
     position: absolute;
     right: calc(1.125rem + 0.5rem - var(--size-control) / 2);
     width: var(--size-control);

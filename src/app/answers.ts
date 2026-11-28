@@ -1,6 +1,7 @@
-import { isValidPhoneNumber, type CountryCode } from 'libphonenumber-js';
+import { getExampleNumber, isValidPhoneNumber, type CountryCode } from 'libphonenumber-js';
+import examples from 'libphonenumber-js/mobile/examples';
 import type { GuestField, Question } from '../beds24/questions';
-import type { Texts } from '../content/schema';
+import type { Language, Texts } from '../content/schema';
 import { fill, isDay } from './texts';
 
 // The booking form's answers by question key: a ticked box is true, a choice its position.
@@ -10,14 +11,26 @@ export type Answers = Record<string, string | boolean>;
 // unusual one, which Beds24's e-mail tells.
 const email = (value: string) => /^[^\s@]+@[^\s@.]+(\.[^\s@.]+)+$/.test(value);
 
+// The country the guest chose, if any.
+const chosen = (answers: Answers) => {
+  const country = String(answers['countrySelect'] ?? '');
+  return countries.includes(country) ? (country as CountryCode) : undefined;
+};
+
 // A number of a length and a start its country's numbers have, by libphonenumber's data: with its
 // country code, or written as at home in the country the guest chose. Not whether it is in use.
-const phone = (value: string, answers: Answers) => {
-  const country = String(answers['countrySelect'] ?? '');
-  return isValidPhoneNumber(
-    value,
-    countries.includes(country) ? (country as CountryCode) : undefined,
-  );
+// Its signs stand between digits only, as libphonenumber would drop a trailing one.
+const phone = (value: string, answers: Answers) =>
+  /^\+?\(?\d([\d\s()./-]*\d)?$/.test(value) &&
+  !/[()./-]{2}/.test(value) &&
+  isValidPhoneNumber(value, chosen(answers));
+
+// A mobile number as written from abroad in the country the guest chose, else in the region of the
+// page's language: the phone fields' example and their error's.
+export const phoneExample = (answers: Answers, tag: string) => {
+  const region = new Intl.Locale(tag).maximize().region ?? '';
+  const country = chosen(answers) ?? (countries.includes(region) ? (region as CountryCode) : 'GB');
+  return getExampleNumber(country, examples)?.formatInternational() ?? '';
 };
 
 // A name has no digits; any letters and signs between them are someone's.
@@ -91,20 +104,20 @@ const answer =
     required: boolean,
     missing: string,
     valid?: (value: string, answers: Answers) => boolean,
-    invalid = missing,
+    invalid: (answers: Answers) => string = () => missing,
   ) =>
   (value: unknown, answers: Answers) => {
     const text = String(value);
     return required && text.trim() === ''
       ? missing
       : text !== '' && valid && !valid(text, answers)
-        ? invalid
+        ? invalid(answers)
         : null;
   };
 
 // Each answer's check, worded in the page's language: the error it has given all the answers, or
 // null. The form checks with them, and the server again (#349).
-export function answerRules(questions: Question[], texts: Texts, code: string) {
+export function answerRules(questions: Question[], texts: Texts, { code, tag }: Language) {
   const { custom, fields } = texts.book;
   const rule = (question: Question): ((value: unknown, answers: Answers) => string | null) => {
     if (!('type' in question)) {
@@ -113,7 +126,9 @@ export function answerRules(questions: Question[], texts: Texts, code: string) {
         question.required,
         words.missing,
         guestFields[question.key].valid,
-        'invalid' in words ? words.invalid : undefined,
+        'invalid' in words
+          ? (answers) => fill(words.invalid, { example: phoneExample(answers, tag) })
+          : undefined,
       );
     }
     const label = { question: question.label[code] };

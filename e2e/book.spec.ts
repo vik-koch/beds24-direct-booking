@@ -21,8 +21,18 @@ async function stepOf(page: Page, path: string, query = 'adults=2') {
   return { arrival, step };
 }
 
-const labels = (page: Page) =>
-  page.locator('form').locator('label[data-slot=field-label], legend').allInnerTexts();
+// A field by its name, by role: Firefox's driver crashes the page when a lookup by label meets
+// brain's checkbox, whose aria-labelledby names the label that names it already.
+const field = (page: Page, name: string) =>
+  page
+    .getByRole('textbox', { name, exact: true })
+    .or(page.getByRole('combobox', { name, exact: true }));
+
+// Each label's text, as read: its name and "(optional)" are two boxes, which innerText breaks.
+const labels = async (page: Page) =>
+  (await page.locator('form').locator('label[data-slot=field-label], legend').allInnerTexts()).map(
+    (text) => text.replace(/\s+/g, ' '),
+  );
 
 // Haus Firn's questions, as Beds24 orders them: its mobile is internal, so not asked.
 const firn = {
@@ -133,7 +143,6 @@ test("each field is asked as Beds24's question and the browser may fill it in", 
     'Cot for a baby (optional)',
     'Message to your hosts (optional)',
   ]);
-  const field = (name: string) => page.getByLabel(name, { exact: true });
   for (const [name, type, autocomplete] of [
     ['First name', 'text', 'given-name'],
     ['Surname', 'text', 'family-name'],
@@ -142,41 +151,50 @@ test("each field is asked as Beds24's question and the browser may fill it in", 
     ['Ski school from (optional)', 'date', 'off'],
     ['Arrival time (optional)', 'time', 'off'],
   ]) {
-    await expect(field(name)).toHaveAttribute('type', type);
-    await expect(field(name)).toHaveAttribute('autocomplete', autocomplete);
+    await expect(field(page, name)).toHaveAttribute('type', type);
+    await expect(field(page, name)).toHaveAttribute('autocomplete', autocomplete);
   }
-  await expect(field('Country')).toHaveAttribute('autocomplete', 'country');
+  await expect(field(page, 'Country')).toHaveAttribute('autocomplete', 'country');
   // Countries by their names in the page's language, the value Beds24's code.
-  await expect(field('Country').locator('option[value=AT]')).toHaveText('Austria');
-  await expect(field('Arriving by').locator('option')).toHaveText([
+  await expect(field(page, 'Country').locator('option[value=AT]')).toHaveText('Austria');
+  await expect(field(page, 'Arriving by').locator('option')).toHaveText([
     'Choose…',
     'Car',
     'Train',
     'Plane',
   ]);
   // A list, radio buttons on Beds24's own page, is a dropdown too.
-  await expect(field('Pillows (optional)').locator('option')).toHaveText([
+  await expect(field(page, 'Pillows (optional)').locator('option')).toHaveText([
     'Choose…',
     'Soft',
     'Firm',
   ]);
+  // The phone's example is a number of the page's language's region, then of the chosen country.
+  await expect(field(page, 'Phone number')).toHaveAttribute('placeholder', '+44 7400 123456');
+  await field(page, 'Country').selectOption('FR');
+  await expect(field(page, 'Phone number')).toHaveAttribute('placeholder', '+33 6 12 34 56 78');
   await expect(page.getByRole('checkbox', { name: 'Cot for a baby (optional)' })).not.toBeChecked();
-  await expect(field('Message to your hosts (optional)')).toHaveJSProperty('tagName', 'TEXTAREA');
+  await expect(field(page, 'Message to your hosts (optional)')).toHaveJSProperty(
+    'tagName',
+    'TEXTAREA',
+  );
 
-  // A pair shares a row, as does a short field with the tick box after it; a short field alone
-  // takes half of one.
-  const top = async (name: string) => (await field(name).boundingBox())!.y;
+  // From 40rem a pair shares a row, as does a short field with the tick box after it, and a short
+  // field alone takes half of one; on a phone each takes its own.
+  const wide = page.viewportSize()!.width >= 640;
+  const top = async (name: string) => (await field(page, name).boundingBox())!.y;
   const row = async (one: string, other: string) =>
-    expect(Math.abs((await top(one)) - (await top(other)))).toBeLessThan(1);
+    expect(Math.abs((await top(one)) - (await top(other))) < 1).toBe(wide);
   await row('First name', 'Surname');
   await row('E-mail address', 'Phone number');
-  const time = (await field('Arrival time (optional)').boundingBox())!;
+  const time = (await field(page, 'Arrival time (optional)').boundingBox())!;
   const cot = (await page
     .getByRole('checkbox', { name: 'Cot for a baby (optional)' })
     .boundingBox())!;
-  expect(Math.abs(time.y + time.height / 2 - (cot.y + cot.height / 2))).toBeLessThan(4);
-  expect(cot.x).toBeGreaterThan(time.x + time.width);
-  expect((await field('Ski school from (optional)').boundingBox())!.width).toBeCloseTo(time.width);
+  expect(Math.abs(time.y + time.height / 2 - (cot.y + cot.height / 2)) < 4).toBe(wide);
+  expect(cot.x > time.x + time.width).toBe(wide);
+  const form = (await page.locator('.answers').boundingBox())!;
+  expect(time.width < form.width / 2).toBe(wide);
   expect(await top('Ski school from (optional)')).toBeLessThan(time.y - 1);
 });
 
@@ -184,7 +202,7 @@ test('the form names each error and its fix once the button is pressed, then as 
   page,
 }) => {
   await stepOf(page, '/en/apartments/ahorn');
-  const email = page.getByLabel('E-mail address');
+  const email = field(page, 'E-mail address');
   const button = page.getByRole('button', { name: 'Book and pay' });
   const errors = page.locator('form hlm-field-error:visible');
   // Leaving a field shows no error, which would move the button under a pressing pointer.
@@ -197,7 +215,7 @@ test('the form names each error and its fix once the button is pressed, then as 
   // Pressed with the e-mail still focused, as a guest does.
   await email.focus();
   await button.click();
-  await expect(page.getByLabel('First name')).toBeFocused();
+  await expect(field(page, 'First name')).toBeFocused();
   await expect(errors).toHaveText([
     'Enter your first name.',
     'Enter your surname.',
@@ -214,36 +232,36 @@ test('the form names each error and its fix once the button is pressed, then as 
 
   // Then each error follows the answer: a number written as at home is whole once its country is
   // chosen.
-  const phone = 'Enter a full phone number, with its country code, such as +44 20 7946 0000.';
-  await page.getByLabel('Phone number').fill('06 12 34 56 78');
+  const phone = 'Enter a full phone number, with its country code, such as +44 7400 123456.';
+  await field(page, 'Phone number').fill('06 12 34 56 78');
   await expect(errors.nth(3)).toHaveText(phone);
-  await page.getByLabel('Country').selectOption('FR');
+  await field(page, 'Country').selectOption('FR');
   await expect(errors).toHaveCount(4);
-  await page.getByLabel('Surname').fill('Lovelace 2');
+  await field(page, 'Surname').fill('Lovelace 2');
   await expect(errors.nth(1)).toHaveText('Enter your surname in letters.');
   await email.fill('ada@example.com');
-  await page.getByLabel('Ski school from (optional)').fill('2027-02-06');
+  await field(page, 'Ski school from (optional)').fill('2027-02-06');
   await expect(errors).toHaveCount(3);
   await expect(email).not.toHaveAttribute('aria-invalid');
 });
 
 test('the form is filled in and sent by keyboard', async ({ page }) => {
   await stepOf(page, '/en/apartments/ahorn');
-  await page.getByLabel('First name').focus();
+  await field(page, 'First name').focus();
   for (const text of ['Ada', 'Lovelace', 'ada@example.com', '+44 20 7946 0000']) {
     await page.keyboard.type(text);
     await page.keyboard.press('Tab');
   }
   // The country by its first letters, as a dropdown takes them.
   await page.keyboard.type('Austria');
-  await expect(page.getByLabel('Country')).toHaveValue('AT');
+  await expect(field(page, 'Country')).toHaveValue('AT');
   await page.keyboard.press('Tab');
-  await expect(page.getByLabel('Arriving by')).toBeFocused();
+  await expect(field(page, 'Arriving by')).toBeFocused();
   await page.keyboard.type('Train');
   await page.keyboard.press('Tab');
-  await expect(page.getByLabel('Pillows (optional)')).toBeFocused();
+  await expect(field(page, 'Pillows (optional)')).toBeFocused();
   await page.keyboard.type('Firm');
-  await expect(page.getByLabel('Pillows (optional)')).toHaveValue('1');
+  await expect(field(page, 'Pillows (optional)')).toHaveValue('1');
   // Through the date's and the time's parts, which take as many stops as the engine gives them.
   const cot = page.getByRole('checkbox', { name: 'Cot for a baby (optional)' });
   while (!(await cot.evaluate((box) => box === document.activeElement)))

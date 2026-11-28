@@ -222,17 +222,17 @@
       "phone": {
         "label": "Telefoonnummer",
         "missing": "Vul uw telefoonnummer in.",
-        "invalid": "Vul een volledig telefoonnummer in, met landcode, zoals +32 2 123 45 67."
+        "invalid": "Vul een volledig telefoonnummer in, met landcode, zoals {example}."
       },
       "mobile": {
         "label": "Gsm-nummer",
         "missing": "Vul uw gsm-nummer in.",
-        "invalid": "Vul een volledig gsm-nummer in, met landcode, zoals +32 470 12 34 56."
+        "invalid": "Vul een volledig gsm-nummer in, met landcode, zoals {example}."
       },
       "fax": {
         "label": "Faxnummer",
         "missing": "Vul uw faxnummer in.",
-        "invalid": "Vul een volledig faxnummer in, met landcode, zoals +32 2 123 45 68."
+        "invalid": "Vul een volledig faxnummer in, met landcode, zoals {example}."
       },
       "company": {
         "label": "Bedrijf",

@@ -271,17 +271,17 @@
       "phone": {
         "label": "Phone number",
         "missing": "Enter your phone number.",
-        "invalid": "Enter a full phone number, with its country code, such as +44 20 7946 0000."
+        "invalid": "Enter a full phone number, with its country code, such as {example}."
       },
       "mobile": {
         "label": "Mobile number",
         "missing": "Enter your mobile number.",
-        "invalid": "Enter a full mobile number, with its country code, such as +44 7400 123456."
+        "invalid": "Enter a full mobile number, with its country code, such as {example}."
       },
       "fax": {
         "label": "Fax number",
         "missing": "Enter your fax number.",
-        "invalid": "Enter a full fax number, with its country code, such as +44 20 7946 0001."
+        "invalid": "Enter a full fax number, with its country code, such as {example}."
       },
       "company": {
         "label": "Company",

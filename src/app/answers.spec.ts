@@ -1,5 +1,6 @@
 import type { Question } from '../beds24/questions';
 import texts from '../content/generated/texts.en';
+import type { Language } from '../content/schema';
 import { answerRules, blank, inputOf } from './answers';
 
 describe('answerRules', () => {
@@ -22,7 +23,7 @@ describe('answerRules', () => {
     custom('custom3', { type: 'dateSelector', required: false, label: { en: 'Ski school from' } }),
     custom('custom4', { type: 'tickBox', required: false, label: { en: 'Cot' } }),
   ];
-  const rules = answerRules(questions, texts, 'en');
+  const rules = answerRules(questions, texts, { code: 'en', tag: 'en-GB' } as Language);
   const valid = {
     firstName: 'Ada',
     email: 'ada@example.com',
@@ -76,7 +77,8 @@ describe('answerRules', () => {
       }),
     ).toEqual({
       email: 'Enter an e-mail address such as name@example.com.',
-      phone: 'Enter a full phone number, with its country code, such as +44 20 7946 0000.',
+      // Of no country: the example is of the page's language's region.
+      phone: 'Enter a full phone number, with its country code, such as +44 7400 123456.',
       countrySelect: 'Choose your country.',
       arrivalTime: 'Enter the time you expect to arrive.',
       custom1: 'Choose an answer to “Arriving by”.',
@@ -84,8 +86,18 @@ describe('answerRules', () => {
     });
     // Too few digits for a French number; Austria has numbers that short.
     expect(errors({ phone: '12 34', countrySelect: 'FR' })).toEqual({
-      phone: 'Enter a full phone number, with its country code, such as +44 20 7946 0000.',
+      phone: 'Enter a full phone number, with its country code, such as +33 6 12 34 56 78.',
     });
+    // Signs between digits only: libphonenumber alone would drop the trailing ones.
+    for (const phone of [
+      '+44 20 7946 0000....',
+      '+44 20-79460000;',
+      '+44 20 7946 0000.',
+      '0664//123456',
+    ])
+      expect(errors({ phone })).toEqual({
+        phone: 'Enter a full phone number, with its country code, such as +43 664 123456.',
+      });
     expect(errors({ firstName: 'Ada2' })).toEqual({
       firstName: 'Enter your first name in letters.',
     });
@@ -93,19 +105,23 @@ describe('answerRules', () => {
 
   it("reads a number written as at home in the guest's country, and any with its country code", () => {
     const local = { phone: '06 12 34 56 78' };
-    const invalid = {
-      phone: 'Enter a full phone number, with its country code, such as +44 20 7946 0000.',
-    };
+    const invalid = (example: string) => ({
+      phone: `Enter a full phone number, with its country code, such as ${example}.`,
+    });
     expect(errors({ ...local, countrySelect: 'FR' })).toEqual({});
-    // In the United Kingdom, or with no country chosen yet, it is not whole.
-    expect(errors({ ...local, countrySelect: 'GB' })).toEqual(invalid);
+    expect(errors({ phone: '06.12.34.56.78', countrySelect: 'FR' })).toEqual({});
+    // In the United Kingdom, or with no country chosen yet, it is not whole; the example is the
+    // country's, else the page's language's region's.
+    expect(errors({ ...local, countrySelect: 'GB' })).toEqual(invalid('+44 7400 123456'));
     expect(errors({ ...local, countrySelect: '' })).toEqual({
-      ...invalid,
+      ...invalid('+44 7400 123456'),
       countrySelect: 'Choose your country.',
     });
     expect(errors({ phone: '+33 6 12 34 56 78', countrySelect: 'GB' })).toEqual({});
     // A French mobile number one digit short.
-    expect(errors({ phone: '06 12 34 56 7', countrySelect: 'FR' })).toEqual(invalid);
+    expect(errors({ phone: '06 12 34 56 7', countrySelect: 'FR' })).toEqual(
+      invalid('+33 6 12 34 56 78'),
+    );
     // Names of any script and sign pass.
     expect(errors({ firstName: "Zoë-Anne O'Brien" })).toEqual({});
     expect(errors({ firstName: 'Łukasz' })).toEqual({});

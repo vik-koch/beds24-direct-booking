@@ -48,7 +48,10 @@ how it is built:
    - an e-mail address has a name, an at sign and a domain with a dot;
    - a phone, mobile or fax number has a length and a start its country's numbers have, by
      **libphonenumber-js**'s data: with its country code, or written as at home in the country the
-     guest chose, so that "06 12 34 56 78" with France is whole;
+     guest chose, so that "06 12 34 56 78" with France is whole; its signs (spaces, brackets, dots,
+     slashes, hyphens) stand between digits only. The field shows a mobile number of the chosen
+     country, else of the page's language's region, from libphonenumber-js's examples, as its
+     placeholder and in its error;
    - a first name and a surname have no digit;
    - a country is one of ISO 3166's codes, a date a day of the calendar, an arrival time a time.
 

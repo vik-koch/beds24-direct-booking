@@ -1,4 +1,4 @@
-import { Component, ElementRef, inject, signal, viewChild } from '@angular/core';
+import { Component, computed, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { form, FormField, FormRoot, validate } from '@angular/forms/signals';
 import { ActivatedRoute } from '@angular/router';
 import { NgIcon, provideIcons } from '@ng-icons/core';
@@ -20,7 +20,15 @@ import type { Question } from '../beds24/questions';
 import type { FreeWeeks } from '../beds24/weeks';
 import site from '../content/generated/site';
 import { placesOf, srcset } from '../content/names';
-import { answerRules, blank, countries, guestFields, inputOf, type Answers } from './answers';
+import {
+  answerRules,
+  blank,
+  countries,
+  guestFields,
+  inputOf,
+  phoneExample,
+  type Answers,
+} from './answers';
 import { Choice, fits, seasonOf, taxed, taxFor } from './choice';
 import { Files } from './files';
 import { Season } from './season';
@@ -91,7 +99,12 @@ const pairs = [
                     [formField]="$any(field)"
                     [aria-describedby]="error ? id + '-error' : null"
                   />
-                  <label hlmFieldLabel [for]="id">{{ label }}</label>
+                  <label hlmFieldLabel [for]="id"
+                    >{{ label }}
+                    @if (!question.required) {
+                      <span class="optional">{{ ' (' + texts.book.optional + ')' }}</span>
+                    }
+                  </label>
                   <hlm-field-error [id]="id + '-error'">{{ error }}</hlm-field-error>
                 </div>
               } @else {
@@ -100,7 +113,12 @@ const pairs = [
                   [class.half]="halves.has(question.key) || kind in pickerIcons"
                   [class.pair]="pairs.includes(question.key)"
                 >
-                  <label hlmFieldLabel [for]="id">{{ label }}</label>
+                  <label hlmFieldLabel [for]="id"
+                    >{{ label }}
+                    @if (!question.required) {
+                      <span class="optional">{{ ' (' + texts.book.optional + ')' }}</span>
+                    }
+                  </label>
                   @switch (kind) {
                     @case ('select') {
                       <div class="spartan-control">
@@ -138,6 +156,7 @@ const pairs = [
                           [formField]="$any(field)"
                           [attr.autocomplete]="autocompleteOf(question)"
                           [attr.aria-required]="question.required || null"
+                          [attr.placeholder]="kind === 'tel' ? example() : null"
                         />
                         @if (icon) {
                           <ng-icon [name]="icon" aria-hidden="true" />
@@ -312,6 +331,12 @@ const pairs = [
         }
       }
 
+      /* Its own flex item in the label, which would drop its leading space. */
+      .optional {
+        color: var(--color-ink-soft);
+        white-space: pre-wrap;
+      }
+
       .summary {
         overflow: clip;
       }
@@ -425,7 +450,7 @@ export class Book {
     // on leaving a field would push the button down under a pointer pressing it, and the press
     // would be lost.
     (path) => {
-      const rules = answerRules(this.questions, this.texts, this.language.code);
+      const rules = answerRules(this.questions, this.texts, this.language);
       for (const { key } of this.questions)
         validate(path[key], ({ value, valueOf }) => {
           const message = this.pressed() && rules[key](value(), valueOf(path));
@@ -443,6 +468,11 @@ export class Book {
         onInvalid: (answers) => answers().errorSummary()[0]?.fieldTree().focusBoundControl(),
       },
     },
+  );
+
+  // The phone fields' example, in the guest's chosen country.
+  protected readonly example = computed(() =>
+    phoneExample(this.answers().value(), this.language.tag),
   );
 
   constructor() {
@@ -521,7 +551,7 @@ export class Book {
       'type' in question
         ? question.label[this.language.code]
         : this.texts.book.fields[question.key].label;
-    return question.required ? label : `${label} (${this.texts.book.optional})`;
+    return label;
   }
 
   protected autocompleteOf(question: Question) {

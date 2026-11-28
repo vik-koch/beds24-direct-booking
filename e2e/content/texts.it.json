@@ -222,17 +222,17 @@
       "phone": {
         "label": "Numero di telefono",
         "missing": "Indicate il vostro numero di telefono.",
-        "invalid": "Inserisci un numero di telefono completo, con il prefisso internazionale, come +39 06 1234 5678."
+        "invalid": "Inserisci un numero di telefono completo, con il prefisso internazionale, come {example}."
       },
       "mobile": {
         "label": "Numero di cellulare",
         "missing": "Indicate il vostro numero di cellulare.",
-        "invalid": "Inserisci un numero di cellulare completo, con il prefisso internazionale, come +39 312 345 6789."
+        "invalid": "Inserisci un numero di cellulare completo, con il prefisso internazionale, come {example}."
       },
       "fax": {
         "label": "Numero di fax",
         "missing": "Indicate il vostro numero di fax.",
-        "invalid": "Inserisci un numero di fax completo, con il prefisso internazionale, come +39 06 1234 5679."
+        "invalid": "Inserisci un numero di fax completo, con il prefisso internazionale, come {example}."
       },
       "company": {
         "label": "Azienda",
