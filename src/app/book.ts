@@ -17,7 +17,7 @@ import { HlmInput } from '@spartan-ng/helm/input';
 import { HlmTextarea } from '@spartan-ng/helm/textarea';
 import type { Listing } from '../beds24/client';
 import type { Question } from '../beds24/questions';
-import type { FreeWeeks } from '../beds24/weeks';
+import type { Capacity, FreeWeeks } from '../beds24/weeks';
 import site from '../content/generated/site';
 import { placesOf, srcset } from '../content/names';
 import {
@@ -142,6 +142,7 @@ const pairs = [
                         hlmTextarea
                         [id]="id"
                         [formField]="$any(field)"
+                        [attr.autocomplete]="autocompleteOf(question)"
                         [attr.aria-required]="question.required || null"
                       ></textarea>
                     }
@@ -247,7 +248,9 @@ const pairs = [
               @let terms = texts.book.terms.text.split('{link}');
               <p class="terms">
                 {{ terms[0]
-                }}<a [href]="texts.book.terms.link.href">{{ texts.book.terms.link.text }}</a
+                }}<a [href]="choice.link(texts.book.terms.link.href)">{{
+                  texts.book.terms.link.text
+                }}</a
                 >{{ terms[1] }}
               </p>
               <!-- Enter in a field presses it too. -->
@@ -444,6 +447,10 @@ export class Book {
   private readonly element = viewChild<ElementRef<HTMLFormElement>>('element');
   protected readonly pressed = signal(false);
   private readonly countryNames = new Intl.DisplayNames(this.language.tag, { type: 'region' });
+  // The countries by their names in the page's language, the value Beds24's code.
+  private readonly countryOptions = countries
+    .map((value) => ({ value, text: this.countryNames.of(value) ?? value }))
+    .sort((a, b) => a.text.localeCompare(b.text, this.language.tag));
   protected readonly answers = form(
     signal<Answers>(blank(this.questions)),
     // The answers are checked once the button is pressed, then as the guest types. An error shown
@@ -523,23 +530,31 @@ export class Book {
           },
         ]
       : [];
-    // Without Beds24 the stay goes unchecked, and the form cannot be asked.
-    this.problem = !valid
-      ? this.texts.book.invalid
-      : !this.weeks || !this.questions.length || !this.weeks.apartments[0].bookable
-        ? this.texts.book.unavailable
-        : Number.isNaN(this.price)
-          ? this.texts.book.taken
-          : limits && !fits(limits, adults, children)
-            ? fill(this.texts.panel.small, {
-                name: this.name,
-                guests: this.count(this.texts.weeks.guests, limits.maxPeople),
-              })
-            : null;
+    this.problem = this.problemOf(valid, limits, adults, children);
     // The apartment's panel shows the week chosen, as blocked where it is no longer free.
     const page = address(this.language, 'apartment', this.slug);
     // Its season is the one shown when it is followed.
     this.back = `${page}${valid ? `?arrival=${this.arrival}` : ''}#booking`;
+  }
+
+  // Why the stay cannot be booked here, if it cannot. Without Beds24 it goes unchecked, and the
+  // form cannot be asked.
+  private problemOf(
+    valid: boolean,
+    limits: Capacity | undefined,
+    adults: number,
+    children: number,
+  ) {
+    if (!valid) return this.texts.book.invalid;
+    if (!this.weeks || !this.questions.length || !this.weeks.apartments[0].bookable)
+      return this.texts.book.unavailable;
+    if (Number.isNaN(this.price)) return this.texts.book.taken;
+    if (limits && !fits(limits, adults, children))
+      return fill(this.texts.panel.small, {
+        name: this.name,
+        guests: this.count(this.texts.weeks.guests, limits.maxPeople),
+      });
+    return null;
   }
 
   protected money(amount: number) {
@@ -562,12 +577,10 @@ export class Book {
     return ('type' in question && question.choices?.[this.language.code]) || [];
   }
 
-  // A choice's position, or a country's code by its name in the page's language.
+  // A choice's position, or a country.
   protected optionsOf(question: Question) {
     return 'type' in question
       ? this.choicesOf(question).map((text, index) => ({ value: String(index), text }))
-      : countries
-          .map((value) => ({ value, text: this.countryNames.of(value) ?? value }))
-          .sort((a, b) => a.text.localeCompare(b.text, this.language.tag));
+      : this.countryOptions;
   }
 }
