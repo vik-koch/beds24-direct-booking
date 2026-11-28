@@ -565,6 +565,13 @@ export const textsSchema = z.strictObject({
     }),
     // The errors of the property's own questions, which Beds24 words.
     custom: z.strictObject({ missing: text, choose: text, tick: text }),
+    // The summary: the arrival's and the departure's day, each with the hours Beds24 sets
+    // ({from}, {until}), and the week's rent and tourist tax as two lines of the total.
+    arrival: text,
+    departure: text,
+    times: z.strictObject({ both: text, from: text, until: text }),
+    rent: text,
+    tax: text,
     // A line beside the button with the rental terms linked in place of {link}.
     terms: z.strictObject({
       text: text.refine((value) => value.split('{link}').length === 2, 'needs {link} once'),

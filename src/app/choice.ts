@@ -11,9 +11,8 @@ import {
 } from '@angular/core';
 import type { Tax } from '../beds24/client';
 import type { Capacity, FreeWeeks } from '../beds24/weeks';
-import type { Texts } from '../content/schema';
 import { Season } from './season';
-import { fill, isDay, replaceQuery } from './texts';
+import { isDay, replaceQuery } from './texts';
 
 const usual = { adults: 2, children: 0 };
 
@@ -31,26 +30,6 @@ export const taxed = (room: Capacity, adults: number, children: number) =>
 
 export const taxFor = (tax: Tax, count: number) =>
   Math.round(tax.amount * count * (tax.per === 'night' ? 7 : 1) * 100) / 100;
-
-// The tourist tax of a week's stay: its line, as the panel and the booking step show it.
-export function taxLine(
-  texts: Texts,
-  plural: Intl.PluralRules,
-  money: (amount: number) => string,
-  tax: Tax | null | undefined,
-  room: Capacity | null | undefined,
-  adults: number,
-  children: number,
-) {
-  if (!tax || !room) return null;
-  const count = taxed(room, adults, children);
-  const forms = room.asksChildren ? texts.panel.adults : texts.weeks.guests;
-  const guests = fill(plural.select(count) === 'one' ? forms.one : forms.other, { count });
-  return {
-    text: fill(texts.panel.tax[tax.per], { guests, nights: 7, amount: money(tax.amount) }),
-    amount: taxFor(tax, count),
-  };
-}
 
 // The season of a link's week: a day of the calendar within one of the seasons. The site writes
 // only weeks it offered; a link edited by hand must not break the page, and how it shows is not

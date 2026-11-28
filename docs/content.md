@@ -289,8 +289,10 @@ content. The application has no wording, no colour and no typeface of its own. T
   fax numbers, one for an answer of the wrong form (`invalid`). Every field has its label in every
   language, whether a property asks it or not, so a field switched on in Beds24 never lacks one. A
   property's own questions are worded in Beds24; their errors come from `custom`, with `{question}`
-  for the question's text. `terms` is the line beside the button, with the rental terms linked in
-  place of `{link}`, by a path from the site's root.
+  for the question's text. The summary beside the form names the days of `arrival` and `departure`,
+  each with the hours Beds24 sets for the property in `times` (`both`, `from`, `until`, with
+  `{from}` and `{until}`), and the total's two lines, `rent` and `tax`. `terms` is the line above
+  the button, with the rental terms linked in place of `{link}`, by a path from the site's root.
 - **The notice** (`notice` in a texts file) is an optional line above the header, with an optional
   link. Left out, no line is shown. A link within the site is a path from its root, such as
   `/en/apartments/ahorn`, which then carries the visitor's guests; any other is a full `https://`

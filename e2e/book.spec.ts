@@ -83,20 +83,25 @@ for (const [lang, path, guests, total] of [
     await expect(fresh.locator('.summary h2')).toHaveText('Lärche');
     await expect(fresh.locator('.summary .facts li')).toHaveText([/^2\s\D+$/, /^61\sm²\s*$/]);
     await expect(fresh.locator('.summary img:visible')).toHaveAttribute('alt', /\w/);
-    await expect(fresh.locator('.total dd').first()).toHaveText(guests);
+    // The days of arrival and departure, a week apart, with the hours Beds24 sets.
+    await expect(fresh.locator('.dates dt')).toHaveText(
+      lang === 'de' ? ['Anreise', 'Abreise', 'Gäste'] : ['Check-in', 'Check-out', 'Guests'],
+    );
+    await expect(fresh.locator('.dates dd')).toHaveText([
+      /2\d\d\d$/,
+      lang === 'de' ? '16:00–20:00 Uhr' : '16:00–20:00',
+      /2\d\d\d$/,
+      lang === 'de' ? 'bis 10:00 Uhr' : 'by 10:00',
+      guests,
+    ]);
     expect(await labels(fresh)).toEqual(firn[lang]);
     await fresh.close();
 
-    await expect(page.locator('.total dt')).toHaveText([
-      lang === 'de' ? 'Gäste' : 'Guests',
-      /2\d\d\d.*–.*2\d\d\d/,
-      lang === 'de'
-        ? 'Ortstaxe: 2 Erwachsene × 7 Nächte × € 3,50'
-        : 'Local tax: 2 adults × 7 nights × €3.50',
-      total,
-    ]);
+    await expect(page.locator('.total dt')).toHaveText(
+      lang === 'de' ? ['Miete', 'Ortstaxe', total] : ['Rent', 'Local tax', total],
+    );
     // The price, 49 of tax for two adults, and their sum.
-    const [, price, tax, sum] = (await page.locator('.total dd').allInnerTexts()).map((text) =>
+    const [price, tax, sum] = (await page.locator('.total dd').allInnerTexts()).map((text) =>
       Number(
         text
           .replace(/[^\d,.]/g, '')

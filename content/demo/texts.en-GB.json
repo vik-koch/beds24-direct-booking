@@ -324,6 +324,15 @@
       "choose": "Choose an answer to “{question}”.",
       "tick": "Tick “{question}” to book."
     },
+    "arrival": "Check-in",
+    "departure": "Check-out",
+    "times": {
+      "both": "{from}–{until}",
+      "from": "from {from}",
+      "until": "by {until}"
+    },
+    "rent": "Rent",
+    "tax": "Local tax",
     "terms": {
       "text": "Booking means you accept the {link}.",
       "link": {

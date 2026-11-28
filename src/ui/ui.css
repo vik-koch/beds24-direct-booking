@@ -215,18 +215,13 @@
   border: 0;
 }
 
-.spartan-field-label,
-.spartan-field-legend {
-  font-weight: var(--font-weight-medium);
-}
-
 /* On the page's ground the white fill and the label mark a field. Its edge shows only an error,
    and in forced colours, where a transparent edge is drawn. */
 .spartan-input,
 .spartan-textarea {
   min-height: var(--size-control);
   padding: 0.5rem 1.125rem;
-  border: 2px solid transparent;
+  border: 1px solid transparent;
   border-radius: var(--radius-control);
   background: var(--color-surface);
   color: var(--color-ink);
@@ -234,7 +229,40 @@
 
 .spartan-textarea {
   field-sizing: content;
+  min-height: calc(2lh + 1rem + 2px);
   border-radius: var(--radius-menu);
+}
+
+/* The copied controls' outline-none, which other components' classes generate, would hide the
+   page's focus ring. */
+:is(.spartan-input, .spartan-textarea, .spartan-checkbox):focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 3px;
+}
+
+/* A box beside its label stands on the middle of the label's capitals, as an icon beside text
+   does (styles.css): on the baseline, lowered by half its size less half a capital. Its tick or
+   dot is out of the flow, so that the baseline is its lower edge. */
+.spartan-field-orientation-horizontal,
+label:has(> hlm-radio) {
+  align-items: baseline;
+}
+
+.spartan-field-orientation-horizontal > hlm-checkbox .spartan-checkbox,
+label > hlm-radio {
+  --drop: round(calc(0.75rem - 0.5cap), 1px);
+  position: relative;
+  top: var(--drop);
+  margin-top: calc(-1 * var(--drop));
+}
+
+.spartan-checkbox-indicator,
+[data-slot='radio-group-indicator'] > div {
+  position: absolute;
+}
+
+.spartan-checkbox-indicator {
+  inset: 0;
 }
 
 /* A field with an icon at its end: a dropdown's chevron, a date's calendar, a time's clock. The
@@ -317,10 +345,16 @@ select.spartan-input {
       background: var(--color-ground);
     }
 
+    /* Lucide's check, as in the guests' list. */
     &::checkmark {
+      content: '';
       order: 1;
+      width: 1rem;
+      height: 1rem;
       margin-left: auto;
-      color: var(--color-accent);
+      background: var(--color-accent);
+      mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E")
+        center / contain no-repeat;
     }
   }
 }
@@ -329,7 +363,6 @@ select.spartan-input {
    words. */
 [data-matches-spartan-invalid='true']:is(.spartan-input, .spartan-textarea),
 [data-matches-spartan-invalid='true'] > .spartan-checkbox {
-  border-width: 2px;
   border-color: var(--color-error);
 }
 

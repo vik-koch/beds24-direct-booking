@@ -49,7 +49,7 @@ const pages = ({ code, paths }: Language): Routes => [
       {
         path: paths.book,
         loadComponent: () => import('./book').then((m) => m.Book),
-        resolve: { weeks, questions },
+        resolve: { weeks, questions, listing },
         data: { page: 'book' },
       },
     ],

@@ -275,6 +275,15 @@
       "choose": "Kies een antwoord op ‘{question}’.",
       "tick": "Vink ‘{question}’ aan om te boeken."
     },
+    "arrival": "Aankomst",
+    "departure": "Vertrek",
+    "times": {
+      "both": "{from}–{until}",
+      "from": "vanaf {from}",
+      "until": "tegen {until}"
+    },
+    "rent": "Huur",
+    "tax": "Toeristenbelasting",
     "terms": {
       "text": "Wie boekt, aanvaardt de {link}.",
       "link": {

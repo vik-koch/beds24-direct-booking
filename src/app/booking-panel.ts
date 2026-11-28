@@ -29,7 +29,7 @@ import type { FreeWeeks } from '../beds24/weeks';
 import site from '../content/generated/site';
 import type { SeasonName } from '../content/names';
 import { BookingBar, type BarLine } from './booking-bar';
-import { Choice, fits, seasonOf, taxLine, type View } from './choice';
+import { Choice, fits, seasonOf, taxed, taxFor, type View } from './choice';
 import { GuestCounts } from './guest-counts';
 import { Season } from './season';
 import { swapper } from './swap';
@@ -812,17 +812,21 @@ export class BookingPanel {
   private readonly swapSeason = swapper();
   private readonly swapMonth = swapper();
 
-  protected readonly taxLine = computed(() =>
-    taxLine(
-      this.texts,
-      this.plural,
-      (amount) => this.money(amount),
-      this.weeks?.tax,
-      this.limits,
-      this.choice.adults(),
-      this.choice.children(),
-    ),
-  );
+  protected readonly taxLine = computed(() => {
+    const tax = this.weeks?.tax;
+    if (!tax || !this.limits) return null;
+    const count = taxed(this.limits, this.choice.adults(), this.choice.children());
+    const forms = this.limits.asksChildren ? this.texts.panel.adults : this.texts.weeks.guests;
+    const guests = fill(this.plural.select(count) === 'one' ? forms.one : forms.other, { count });
+    return {
+      text: fill(this.texts.panel.tax[tax.per], {
+        guests,
+        nights: 7,
+        amount: this.money(tax.amount),
+      }),
+      amount: taxFor(tax, count),
+    };
+  });
 
   // The bar's line per season: the chosen week's price, or the season's lowest. The total with the
   // tax, which depends on the guests, is the panel's.

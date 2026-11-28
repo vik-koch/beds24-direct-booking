@@ -16,16 +16,25 @@ import { HlmFieldImports } from '@spartan-ng/helm/field';
 import { HlmInput } from '@spartan-ng/helm/input';
 import { HlmRadioGroupImports } from '@spartan-ng/helm/radio-group';
 import { HlmTextarea } from '@spartan-ng/helm/textarea';
+import type { Listing } from '../beds24/client';
 import type { Question } from '../beds24/questions';
 import type { FreeWeeks } from '../beds24/weeks';
 import site from '../content/generated/site';
 import { placesOf, srcset } from '../content/names';
 import { answerRules, blank, countries, guestFields, inputOf, type Answers } from './answers';
-import { Choice, fits, seasonOf, taxLine } from './choice';
+import { Choice, fits, seasonOf, taxed, taxFor } from './choice';
 import { Files } from './files';
 import { Season } from './season';
 import { heading } from './shell';
-import { addDays, address, fill, formatMoney, formatStay, isDay, LANGUAGE, TEXTS } from './texts';
+import { addDays, address, fill, formatMoney, isDay, LANGUAGE, TEXTS } from './texts';
+
+const pairs = [
+  ['firstName', 'lastName'],
+  ['email', 'phone'],
+  ['email', 'mobile'],
+  ['phone', 'mobile'],
+  ['postcode', 'city'],
+];
 
 // The booking step: the stay from the address, checked against the apartment's weeks and limits,
 // and the form that asks what the property's booking questions in Beds24 ask (ADR 19).
@@ -64,80 +73,17 @@ import { addDays, address, fill, formatMoney, formatStay, isDay, LANGUAGE, TEXTS
       @if (problem) {
         <p class="text-ink-soft mt-6">{{ problem }}</p>
       } @else {
-        <div class="booking-step">
-          <div class="summary">
-            <div class="summary-picture">
-              @for (shown of place; track $index) {
-                @let picture = shown.picture;
-                <img
-                  class="season-picture"
-                  [attr.data-for]="shown.season"
-                  [appFiles]="{
-                    sizes: '(min-width: 64rem) 24rem, 100vw',
-                    srcset: srcset(picture),
-                    src: picture.sources[0].url,
-                  }"
-                  [width]="picture.width"
-                  [height]="picture.height"
-                  [alt]="picture.alt[language.code]"
-                />
-                @if (picture.generated) {
-                  <span class="ai-label season-picture" [attr.data-for]="shown.season"
-                    ><ng-icon name="lucideSparkles" aria-hidden="true" />{{
-                      texts.apartment.generated
-                    }}</span
-                  >
-                }
-              }
-            </div>
-            <div class="summary-text">
-              <h2>{{ name }}</h2>
-              @if (listed; as listed) {
-                <ul class="facts">
-                  @if (listed.bedrooms) {
-                    <li>
-                      <ng-icon name="lucideBedDouble" aria-hidden="true" />{{
-                        count(texts.apartment.bedrooms, listed.bedrooms)
-                      }}
-                    </li>
-                  }
-                  <li>
-                    <ng-icon name="lucideRuler" aria-hidden="true" />{{
-                      fill(texts.weeks.size.shown, { size: listed.size })
-                    }}
-                  </li>
-                </ul>
-              }
-              <dl class="total">
-                <div>
-                  <dt>{{ texts.panel.guests }}</dt>
-                  <dd>{{ guests }}</dd>
-                </div>
-                <div>
-                  <dt>{{ fill(texts.panel.week, { stay: week }) }}</dt>
-                  <dd>{{ money(price) }}</dd>
-                </div>
-                @if (tax) {
-                  <div>
-                    <dt>{{ tax.text }}</dt>
-                    <dd>{{ money(tax.amount) }}</dd>
-                  </div>
-                }
-                <div class="sum">
-                  <dt>{{ texts.panel.total }}</dt>
-                  <dd>{{ money(price + (tax?.amount ?? 0)) }}</dd>
-                </div>
-              </dl>
-            </div>
-          </div>
-          <form #element class="answers" method="post" [formRoot]="answers">
+        <!-- One form for the answers and the summary, whose button sends it. -->
+        <form #element class="booking-step" method="post" [formRoot]="answers">
+          <div class="answers">
             <h2>{{ texts.book.details }}</h2>
             @for (question of questions; track question.key) {
               @let field = answers[question.key];
               @let id = 'answer-' + question.key;
               @let label = labelOf(question);
               @let error = field().errors()[0]?.message;
-              @if (inputOf(question) === 'checkbox') {
+              @let kind = inputOf(question);
+              @if (kind === 'checkbox') {
                 <div hlmField orientation="horizontal">
                   <!-- Its error is on the box, which brain's checkbox does not link itself. -->
                   <hlm-checkbox
@@ -148,7 +94,7 @@ import { addDays, address, fill, formatMoney, formatStay, isDay, LANGUAGE, TEXTS
                   <label hlmFieldLabel [for]="id">{{ label }}</label>
                   <hlm-field-error [id]="id + '-error'">{{ error }}</hlm-field-error>
                 </div>
-              } @else if (inputOf(question) === 'radio') {
+              } @else if (kind === 'radio') {
                 <fieldset hlmField>
                   <legend hlmFieldLegend [id]="id + '-label'">{{ label }}</legend>
                   <div
@@ -168,9 +114,9 @@ import { addDays, address, fill, formatMoney, formatStay, isDay, LANGUAGE, TEXTS
                   <hlm-field-error [id]="id + '-error'">{{ error }}</hlm-field-error>
                 </fieldset>
               } @else {
-                <div hlmField>
+                <div hlmField [class.half]="halves.has(question.key) || kind in pickerIcons">
                   <label hlmFieldLabel [for]="id">{{ label }}</label>
-                  @switch (inputOf(question)) {
+                  @switch (kind) {
                     @case ('select') {
                       <div class="spartan-control">
                         <select
@@ -191,20 +137,19 @@ import { addDays, address, fill, formatMoney, formatStay, isDay, LANGUAGE, TEXTS
                     @case ('textarea') {
                       <textarea
                         hlmTextarea
-                        rows="3"
                         [id]="id"
                         [formField]="$any(field)"
                         [attr.aria-required]="question.required || null"
                       ></textarea>
                     }
                     @default {
-                      @let icon = pickerIcons[inputOf(question)];
+                      @let icon = pickerIcons[kind];
                       <div [class.spartan-control]="icon">
                         <input
                           hlmInput
                           class="w-full"
                           [id]="id"
-                          [type]="inputOf(question)"
+                          [type]="kind"
                           [formField]="$any(field)"
                           [attr.autocomplete]="autocompleteOf(question)"
                           [attr.aria-required]="question.required || null"
@@ -219,29 +164,106 @@ import { addDays, address, fill, formatMoney, formatStay, isDay, LANGUAGE, TEXTS
                 </div>
               }
             }
-            @let terms = texts.book.terms.text.split('{link}');
-            <p class="terms">
-              {{ terms[0]
-              }}<a [href]="texts.book.terms.link.href">{{ texts.book.terms.link.text }}</a
-              >{{ terms[1] }}
-            </p>
-            <!-- Enter in a field presses it too. -->
-            <button type="submit" class="button wide" (click)="pressed.set(true)">
-              {{ texts.book.submit }}
-            </button>
-          </form>
-        </div>
+          </div>
+          <div class="summary">
+            <div class="summary-picture">
+              @for (shown of place; track $index) {
+                @let picture = shown.picture;
+                <img
+                  class="season-picture"
+                  [attr.data-for]="shown.season"
+                  [appFiles]="{
+                    sizes: '(min-width: 64rem) 24rem, 100vw',
+                    srcset: srcset(picture),
+                    src: picture.sources[0].url,
+                  }"
+                  [width]="picture.width"
+                  [height]="picture.height"
+                  [alt]="picture.alt[language.code]"
+                  loading="lazy"
+                />
+                @if (picture.generated) {
+                  <span class="ai-label season-picture" [attr.data-for]="shown.season"
+                    ><ng-icon name="lucideSparkles" aria-hidden="true" />{{
+                      texts.apartment.generated
+                    }}</span
+                  >
+                }
+              }
+            </div>
+            <div class="summary-text">
+              <h2>{{ name }}</h2>
+              @if (listing; as listing) {
+                <ul class="facts">
+                  @if (listing.bedrooms) {
+                    <li>
+                      <ng-icon name="lucideBedDouble" aria-hidden="true" />{{
+                        count(texts.apartment.bedrooms, listing.bedrooms)
+                      }}
+                    </li>
+                  }
+                  <li>
+                    <ng-icon name="lucideRuler" aria-hidden="true" />{{
+                      fill(texts.weeks.size.shown, { size: listing.size })
+                    }}
+                  </li>
+                </ul>
+              }
+              <dl class="dates">
+                @for (end of ends; track end.label) {
+                  <div>
+                    <dt>{{ end.label }}</dt>
+                    <dd>{{ end.day }}</dd>
+                    @if (end.time) {
+                      <dd class="time">{{ end.time }}</dd>
+                    }
+                  </div>
+                }
+                <div class="guests">
+                  <dt>{{ texts.panel.guests }}</dt>
+                  <dd>{{ guests }}</dd>
+                </div>
+              </dl>
+              <dl class="total">
+                <div>
+                  <dt>{{ texts.book.rent }}</dt>
+                  <dd>{{ money(price) }}</dd>
+                </div>
+                @if (tax !== null) {
+                  <div>
+                    <dt>{{ texts.book.tax }}</dt>
+                    <dd>{{ money(tax) }}</dd>
+                  </div>
+                }
+                <div class="sum">
+                  <dt>{{ texts.panel.total }}</dt>
+                  <dd>{{ money(price + (tax ?? 0)) }}</dd>
+                </div>
+              </dl>
+              @let terms = texts.book.terms.text.split('{link}');
+              <p class="terms">
+                {{ terms[0]
+                }}<a [href]="texts.book.terms.link.href">{{ texts.book.terms.link.text }}</a
+                >{{ terms[1] }}
+              </p>
+              <!-- Enter in a field presses it too. -->
+              <button type="submit" class="button wide" (click)="pressed.set(true)">
+                {{ texts.book.submit }}
+              </button>
+            </div>
+          </div>
+        </form>
       }
     </div>
   `,
   styles: `
     @layer components {
-      /* As on the apartment's page, the stay beside the form from 64rem, where it stays in view;
-         on a phone it comes first. */
+      /* As on the apartment's page, the summary beside the form from 64rem, where it stays in view
+         if the screen is tall enough; below, it ends the form with its button. */
       .booking-step {
         display: grid;
         grid-template-columns: minmax(0, 1fr);
-        gap: 2rem;
+        gap: 2.5rem;
         margin-top: 1.5rem;
 
         @media (min-width: 64rem) {
@@ -252,24 +274,55 @@ import { addDays, address, fill, formatMoney, formatStay, isDay, LANGUAGE, TEXTS
           .summary {
             grid-column: 2;
             grid-row: 1;
-            position: sticky;
-            top: 5.5rem;
+          }
+
+          @media (min-height: 52rem) {
+            .summary {
+              position: sticky;
+              top: 5.5rem;
+            }
           }
         }
+      }
+
+      /* Two fields share a row where they are a pair, or short, from 40rem, where the form's column
+         is at least 29rem wide, also beside the summary. */
+      .answers {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 1.25rem 1rem;
+        max-width: 36rem;
+
+        > * {
+          grid-column: 1 / -1;
+        }
+
+        h2 {
+          margin: 0;
+        }
+
+        @media (min-width: 40rem) {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+
+          > .half {
+            grid-column: auto;
+          }
+        }
+      }
+
+      .choice {
+        display: flex;
+        gap: 0.75rem;
+        min-height: var(--size-control-small);
       }
 
       .summary {
         overflow: clip;
       }
 
-      /* A banner on a phone, so that the form starts within the screen. */
       .summary-picture {
         aspect-ratio: 5 / 2;
         border-radius: 0;
-
-        @media (min-width: 64rem) {
-          aspect-ratio: 3 / 2;
-        }
       }
 
       .summary-text {
@@ -285,20 +338,11 @@ import { addDays, address, fill, formatMoney, formatStay, isDay, LANGUAGE, TEXTS
           margin-top: -0.5rem;
           font-size: 0.9375rem;
         }
-      }
-
-      .answers {
-        display: grid;
-        gap: 1.25rem;
-        max-width: 36rem;
-
-        h2 {
-          margin: 0;
-        }
 
         .terms {
-          margin-top: 0.5rem;
+          margin-top: 0.25rem;
           color: var(--color-ink-soft);
+          font-size: 0.9375rem;
         }
 
         .button.wide {
@@ -306,11 +350,26 @@ import { addDays, address, fill, formatMoney, formatStay, isDay, LANGUAGE, TEXTS
         }
       }
 
-      .choice {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        min-height: var(--size-control-small);
+      /* Arrival and departure side by side, each its day and its hours; the guests below. */
+      .dates {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.75rem 1rem;
+        padding-block: 1rem;
+        border-block: 1px solid var(--color-line);
+        font-size: 0.9375rem;
+
+        dt {
+          color: var(--color-ink-soft);
+        }
+
+        .time {
+          color: var(--color-ink-soft);
+        }
+
+        .guests {
+          grid-column: 1 / -1;
+        }
       }
     }
   `,
@@ -319,6 +378,7 @@ export class Book {
   protected readonly texts = inject(TEXTS);
   protected readonly fill = fill;
   protected readonly inputOf = inputOf;
+  // A date and a time are short: each takes half a row.
   protected readonly pickerIcons: Record<string, string> = {
     date: 'lucideCalendar',
     time: 'lucideClock',
@@ -344,12 +404,21 @@ export class Book {
 
   private readonly weeks: FreeWeeks | null = this.route.data['weeks'];
   protected readonly questions: Question[] = this.route.data['questions'] ?? [];
-  protected readonly listed = this.weeks?.apartments[0];
+  protected readonly listing: Listing | null = this.route.data['listing'];
+  // Fields that share a row when Beds24 asks them one after the other.
+  protected readonly halves = new Set(
+    this.questions.flatMap((question, index) => {
+      const next = this.questions[index + 1];
+      return next && pairs.some(([a, b]) => question.key === a && next.key === b)
+        ? [question.key, next.key]
+        : [];
+    }),
+  );
   private readonly arrival = this.route.queryParamMap.get('arrival') ?? '';
-  protected readonly week: string;
+  protected readonly ends: { label: string; day: string; time: string | null }[];
   protected readonly guests: string;
   protected readonly price: number;
-  protected readonly tax: { text: string; amount: number } | null;
+  protected readonly tax: number | null;
   protected readonly problem: string | null;
   protected readonly back: string;
 
@@ -397,15 +466,8 @@ export class Book {
     const valid = this.weeks ? !!season : isDay(this.arrival);
     this.price =
       season?.weeks.find(({ arrival }) => arrival === this.arrival)?.prices[0] ?? Number.NaN;
-    this.tax = taxLine(
-      this.texts,
-      this.plural,
-      (amount) => this.money(amount),
-      this.weeks?.tax,
-      limits,
-      adults,
-      children,
-    );
+    this.tax =
+      this.weeks?.tax && limits ? taxFor(this.weeks.tax, taxed(limits, adults, children)) : null;
     const dates = new Intl.DateTimeFormat(this.language.tag, {
       weekday: 'short',
       day: 'numeric',
@@ -413,9 +475,30 @@ export class Book {
       year: 'numeric',
       timeZone: 'UTC',
     });
-    this.week = valid
-      ? formatStay(dates, { arrival: this.arrival, departure: addDays(this.arrival, 7) })
-      : '';
+    const { from, until } = this.listing?.checkIn ?? { from: null, until: null };
+    const times = this.texts.book.times;
+    const checkOut = this.listing?.checkOut;
+    this.ends = valid
+      ? [
+          {
+            label: this.texts.book.arrival,
+            day: dates.format(new Date(this.arrival)),
+            time:
+              from && until
+                ? fill(times.both, { from, until })
+                : from
+                  ? fill(times.from, { from })
+                  : until
+                    ? fill(times.until, { until })
+                    : null,
+          },
+          {
+            label: this.texts.book.departure,
+            day: dates.format(new Date(addDays(this.arrival, 7))),
+            time: checkOut ? fill(times.until, { until: checkOut }) : null,
+          },
+        ]
+      : [];
     // Without Beds24 the stay goes unchecked, and the form cannot be asked.
     this.problem = !valid
       ? this.texts.book.invalid

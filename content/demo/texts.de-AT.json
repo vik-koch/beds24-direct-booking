@@ -324,6 +324,15 @@
       "choose": "Wählen Sie eine Antwort zu „{question}“.",
       "tick": "Kreuzen Sie „{question}“ an, um zu buchen."
     },
+    "arrival": "Anreise",
+    "departure": "Abreise",
+    "times": {
+      "both": "{from}–{until} Uhr",
+      "from": "ab {from} Uhr",
+      "until": "bis {until} Uhr"
+    },
+    "rent": "Miete",
+    "tax": "Ortstaxe",
     "terms": {
       "text": "Mit der Buchung akzeptieren Sie die {link}.",
       "link": {
