@@ -278,7 +278,7 @@
     "arrival": "Aankomst",
     "departure": "Vertrek",
     "times": {
-      "both": "{from}–{until}",
+      "both": "{from} – {until}",
       "from": "vanaf {from}",
       "until": "tegen {until}"
     },

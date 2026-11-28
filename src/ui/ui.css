@@ -222,7 +222,7 @@
   min-height: var(--size-control);
   padding: 0.5rem 1.125rem;
   border: 1px solid transparent;
-  border-radius: var(--radius-control);
+  border-radius: var(--radius-menu);
   background: var(--color-surface);
   color: var(--color-ink);
 }
@@ -230,7 +230,6 @@
 .spartan-textarea {
   field-sizing: content;
   min-height: calc(2lh + 1rem + 2px);
-  border-radius: var(--radius-menu);
 }
 
 /* The copied controls' outline-none, which other components' classes generate, would hide the
@@ -238,6 +237,12 @@
 :is(.spartan-input, .spartan-textarea, .spartan-checkbox):focus-visible {
   outline: var(--focus-ring);
   outline-offset: 3px;
+}
+
+/* Pressed with a pointer, a field shows its caret or its list instead (the booking step's
+   data-pointer). */
+[data-pointer] :is(.spartan-input, .spartan-textarea):focus-visible {
+  outline: none;
 }
 
 /* A box beside its label stands on the middle of the label's capitals, as an icon beside text

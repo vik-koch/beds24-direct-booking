@@ -256,6 +256,13 @@ const pairs = [
       }
     </div>
   `,
+  // A field pressed with a pointer shows no focus ring, as a button does not; Tab brings it back.
+  // Set at once, not on the next render, which would show the ring for a frame.
+  host: {
+    '(pointerdown)': '$any($event.currentTarget).toggleAttribute("data-pointer", true)',
+    '(keydown.tab)': '$any($event.currentTarget).removeAttribute("data-pointer")',
+    '(keydown.shift.tab)': '$any($event.currentTarget).removeAttribute("data-pointer")',
+  },
   styles: `
     @layer components {
       /* As on the apartment's page, the summary beside the form from 64rem, where it stays in view
@@ -325,28 +332,41 @@ const pairs = [
         border-radius: 0;
       }
 
+      /* Spaced as the booking panel: its sections apart by a line, the total's first row as far
+         below its line as the sum's is above it. */
       .summary-text {
-        display: grid;
-        gap: 1rem;
-        padding: 1.25rem 1.25rem 1.5rem;
+        --inset: 1.25rem;
+        padding: 1.5rem var(--inset);
+
+        @media (min-width: 48rem) {
+          --inset: 2rem;
+          padding-block: 2rem;
+        }
 
         h2 {
           margin: 0;
+          line-height: 1.2;
         }
 
         .facts {
-          margin-top: -0.5rem;
+          margin-top: 0.5rem;
           font-size: 0.9375rem;
+        }
+
+        > :is(.dates, .total) {
+          margin-top: 1rem;
+          padding-top: 1rem;
+          border-top: 1px solid var(--color-line);
+        }
+
+        > .total {
+          padding-top: 0.375rem;
         }
 
         .terms {
-          margin-top: 0.25rem;
+          margin-top: 1rem;
           color: var(--color-ink-soft);
           font-size: 0.9375rem;
-        }
-
-        .button.wide {
-          margin-top: 0;
         }
       }
 
@@ -355,20 +375,23 @@ const pairs = [
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 0.75rem 1rem;
-        padding-block: 1rem;
-        border-block: 1px solid var(--color-line);
         font-size: 0.9375rem;
 
-        dt {
-          color: var(--color-ink-soft);
-        }
-
+        dt,
         .time {
           color: var(--color-ink-soft);
         }
 
+        dt + dd {
+          font-weight: var(--font-weight-medium);
+        }
+
         .guests {
           grid-column: 1 / -1;
+
+          dd {
+            font-weight: var(--font-weight-normal);
+          }
         }
       }
     }

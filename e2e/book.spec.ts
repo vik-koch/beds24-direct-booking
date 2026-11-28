@@ -89,7 +89,7 @@ for (const [lang, path, guests, total] of [
     );
     await expect(fresh.locator('.dates dd')).toHaveText([
       /2\d\d\d$/,
-      lang === 'de' ? '16:00–20:00 Uhr' : '16:00–20:00',
+      lang === 'de' ? '16:00 – 20:00 Uhr' : '16:00 – 20:00',
       /2\d\d\d$/,
       lang === 'de' ? 'bis 10:00 Uhr' : 'by 10:00',
       guests,

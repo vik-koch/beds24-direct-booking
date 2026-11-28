@@ -278,7 +278,7 @@
     "arrival": "Arrivo",
     "departure": "Partenza",
     "times": {
-      "both": "{from}–{until}",
+      "both": "{from} – {until}",
       "from": "dalle {from}",
       "until": "entro le {until}"
     },

@@ -327,7 +327,7 @@
     "arrival": "Check-in",
     "departure": "Check-out",
     "times": {
-      "both": "{from}–{until}",
+      "both": "{from} – {until}",
       "from": "from {from}",
       "until": "by {until}"
     },
