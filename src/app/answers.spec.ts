@@ -53,6 +53,13 @@ describe('answerRules', () => {
     ).toEqual({});
   });
 
+  it('takes an answer not sent at all, as a post may leave one out, for a missing one', () => {
+    expect(errors({ firstName: null, email: undefined })).toEqual({
+      firstName: 'Enter your first name.',
+      email: 'Enter your e-mail address.',
+    });
+  });
+
   it('names what is missing, in the words of the field or the question', () => {
     expect(
       errors({ firstName: ' ', email: '', countrySelect: '', custom1: '', custom2: false }),
@@ -98,6 +105,12 @@ describe('answerRules', () => {
       expect(errors({ phone })).toEqual({
         phone: 'Enter a full phone number, with its country code, such as +43 664 123456.',
       });
+    // Hours and minutes of the clock only.
+    for (const arrivalTime of ['24:00', '29:75', '17:60'])
+      expect(errors({ arrivalTime })).toEqual({
+        arrivalTime: 'Enter the time you expect to arrive.',
+      });
+    expect(errors({ arrivalTime: '23:59' })).toEqual({});
     expect(errors({ firstName: 'Ada2' })).toEqual({
       firstName: 'Enter your first name in letters.',
     });

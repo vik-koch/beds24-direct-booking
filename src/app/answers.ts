@@ -72,7 +72,11 @@ export const guestFields: Record<
     autocomplete: 'country',
     valid: (value) => countries.includes(value),
   },
-  arrivalTime: { input: 'time', autocomplete: 'off', valid: (value) => /^\d\d:\d\d$/.test(value) },
+  arrivalTime: {
+    input: 'time',
+    autocomplete: 'off',
+    valid: (value) => /^([01]\d|2[0-3]):[0-5]\d$/.test(value),
+  },
   comments: { input: 'textarea', autocomplete: 'off' },
 };
 
@@ -107,7 +111,8 @@ const answer =
     invalid: (answers: Answers) => string = () => missing,
   ) =>
   (value: unknown, answers: Answers) => {
-    const text = String(value);
+    // A value not sent at all is missing, not the text "null".
+    const text = typeof value === 'string' ? value : '';
     return required && text.trim() === ''
       ? missing
       : text !== '' && valid && !valid(text, answers)
