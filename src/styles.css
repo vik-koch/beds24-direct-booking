@@ -704,10 +704,23 @@
     }
   }
 
-  /* The apartment page's and the booking step's headings, and a map's section after an
+  /* An apartment's page and its booking step: a link back above the name. */
+  .apartment {
+    padding-top: 1rem;
+
+    h1 {
+      margin-top: 0.5rem;
+    }
+
+    .back {
+      font-size: 0.9375rem;
+    }
+  }
+
+  /* The headings of an apartment's page and its booking step, and a map's section after an
      apartment's or a content page's text: the map runs edge to edge, its heading stays in the
      column. */
-  :is(.apartment, .map-section, .booking-step) {
+  :is(.apartment, .map-section) {
     --size-heading: clamp(1.375rem, 1.2rem + 0.8vw, 1.75rem);
 
     h2 {
@@ -799,9 +812,9 @@
     }
   }
 
-  /* A picture filling its frame, on the home page's cards and in the gallery; a season's two
-     lie on each other. */
-  :is(.tile, .teaser-picture) {
+  /* A picture filling its frame, on the home page's cards, in the gallery and on the booking
+     step; a season's two lie on each other. */
+  :is(.tile, .teaser-picture, .summary-picture) {
     position: relative;
     overflow: hidden;
     border-radius: var(--radius-card);

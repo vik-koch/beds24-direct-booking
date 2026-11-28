@@ -294,10 +294,10 @@ test('the apartment page is styled from its first frame, on a full load and in t
   // Before every frame, for the page and the gallery each, whether its own rules apply.
   await page.addInitScript(() => {
     const rules = (element: Element) =>
-      element.matches('.apartment')
-        ? getComputedStyle(element).paddingTop === '16px'
+      element.matches('.apartment-columns')
+        ? getComputedStyle(element).display === 'grid'
         : getComputedStyle(element).containerType === 'inline-size';
-    const frames: Record<string, boolean[]> = { '.apartment': [], '.gallery': [] };
+    const frames: Record<string, boolean[]> = { '.apartment-columns': [], '.gallery': [] };
     Object.assign(window, { frames_: frames, rules_: rules });
     const sample = () => {
       for (const [selector, seen] of Object.entries(frames)) {
@@ -327,7 +327,7 @@ test('the apartment page is styled from its first frame, on a full load and in t
   // Off the page its rules are gone, so the way back adds them again.
   expect(
     await page.evaluate(() =>
-      ['apartment', 'gallery'].map((name) => {
+      ['apartment-columns', 'gallery'].map((name) => {
         const element = document.body.appendChild(document.createElement('div'));
         element.className = name;
         const applied = (window as unknown as Probe).rules_(element);

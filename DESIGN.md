@@ -10,6 +10,7 @@ colors:
   ink-soft: '#5a666e'
   line: '#e9e3db'
   edge: '#7c878f'
+  error: '#a52a1f'
   winter: '#3b587c'
   winter-soft: '#e2e8f0'
   summer: '#2c7060'
@@ -150,6 +151,8 @@ A neutral, slightly warm light palette with a single accent that changes with th
 - **Soft Ink** (#5a666e): secondary text, column notes, a booked week.
 - **Hairline** (#e9e3db): the line between two rows of a list.
 - **Edge** (#7c878f): the outline of a control that has no fill, at 3:1 against the ground.
+- **Brick Red** (#a52a1f): a form's error and the edge of the field it names, at 4.5:1 against the
+  ground and the surface.
 - **Navy Tint** (#e2e8f0) and **Emerald Tint** (#deede8): the hover behind a price.
 
 ### Map

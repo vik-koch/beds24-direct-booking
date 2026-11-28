@@ -80,11 +80,15 @@ for (const [lang, path, guests, total] of [
     await fresh.route(/\/main-[\w-]+\.js$/, () => undefined);
     const response = await fresh.goto(step, { waitUntil: 'commit' });
     expect(response!.status()).toBe(200);
-    await expect(fresh.locator('.facts dd')).toHaveText(['Lärche', guests]);
+    await expect(fresh.locator('.summary h2')).toHaveText('Lärche');
+    await expect(fresh.locator('.summary .facts li')).toHaveText([/^2\s\D+$/, /^61\sm²\s*$/]);
+    await expect(fresh.locator('.summary img:visible')).toHaveAttribute('alt', /\w/);
+    await expect(fresh.locator('.total dd').first()).toHaveText(guests);
     expect(await labels(fresh)).toEqual(firn[lang]);
     await fresh.close();
 
     await expect(page.locator('.total dt')).toHaveText([
+      lang === 'de' ? 'Gäste' : 'Guests',
       /2\d\d\d.*–.*2\d\d\d/,
       lang === 'de'
         ? 'Ortstaxe: 2 Erwachsene × 7 Nächte × € 3,50'
@@ -92,7 +96,7 @@ for (const [lang, path, guests, total] of [
       total,
     ]);
     // The price, 49 of tax for two adults, and their sum.
-    const [price, tax, sum] = (await page.locator('.total dd').allInnerTexts()).map((text) =>
+    const [, price, tax, sum] = (await page.locator('.total dd').allInnerTexts()).map((text) =>
       Number(
         text
           .replace(/[^\d,.]/g, '')

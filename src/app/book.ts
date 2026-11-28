@@ -1,6 +1,16 @@
 import { Component, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { form, FormField, FormRoot, validate } from '@angular/forms/signals';
 import { ActivatedRoute } from '@angular/router';
+import { NgIcon, provideIcons } from '@ng-icons/core';
+import {
+  lucideArrowLeft,
+  lucideBedDouble,
+  lucideCalendar,
+  lucideChevronDown,
+  lucideClock,
+  lucideRuler,
+  lucideSparkles,
+} from '@ng-icons/lucide';
 import { HlmCheckbox } from '@spartan-ng/helm/checkbox';
 import { HlmFieldImports } from '@spartan-ng/helm/field';
 import { HlmInput } from '@spartan-ng/helm/input';
@@ -9,8 +19,11 @@ import { HlmTextarea } from '@spartan-ng/helm/textarea';
 import type { Question } from '../beds24/questions';
 import type { FreeWeeks } from '../beds24/weeks';
 import site from '../content/generated/site';
+import { placesOf, srcset } from '../content/names';
 import { answerRules, blank, countries, guestFields, inputOf, type Answers } from './answers';
 import { Choice, fits, seasonOf, taxLine } from './choice';
+import { Files } from './files';
+import { Season } from './season';
 import { heading } from './shell';
 import { addDays, address, fill, formatMoney, formatStay, isDay, LANGUAGE, TEXTS } from './texts';
 
@@ -19,6 +32,8 @@ import { addDays, address, fill, formatMoney, formatStay, isDay, LANGUAGE, TEXTS
 @Component({
   selector: 'app-book',
   imports: [
+    NgIcon,
+    Files,
     FormRoot,
     FormField,
     HlmFieldImports,
@@ -27,45 +42,93 @@ import { addDays, address, fill, formatMoney, formatStay, isDay, LANGUAGE, TEXTS
     HlmCheckbox,
     HlmRadioGroupImports,
   ],
+  providers: [
+    provideIcons({
+      lucideArrowLeft,
+      lucideBedDouble,
+      lucideCalendar,
+      lucideChevronDown,
+      lucideClock,
+      lucideRuler,
+      lucideSparkles,
+    }),
+  ],
   template: `
-    <div class="column pt-(--space-section)">
+    <div class="column apartment">
+      <a class="back" [href]="choice.link(back)"
+        ><ng-icon name="lucideArrowLeft" aria-hidden="true" />{{
+          fill(texts.book.back, { apartment: name })
+        }}</a
+      >
       <h1 class="headline">{{ heading }}</h1>
       @if (problem) {
         <p class="text-ink-soft mt-6">{{ problem }}</p>
-        <p class="mt-6">
-          <a class="button" [href]="choice.link(back)">{{
-            fill(texts.book.back, { apartment: name })
-          }}</a>
-        </p>
       } @else {
         <div class="booking-step">
           <div class="summary">
-            <dl class="facts">
-              <div>
-                <dt>{{ texts.weeks.apartment }}</dt>
-                <dd>{{ name }}</dd>
-              </div>
-              <div>
-                <dt>{{ texts.panel.guests }}</dt>
-                <dd>{{ guests }}</dd>
-              </div>
-            </dl>
-            <dl class="total">
-              <div>
-                <dt>{{ fill(texts.panel.week, { stay: week }) }}</dt>
-                <dd>{{ money(price) }}</dd>
-              </div>
-              @if (tax) {
-                <div>
-                  <dt>{{ tax.text }}</dt>
-                  <dd>{{ money(tax.amount) }}</dd>
-                </div>
+            <div class="summary-picture">
+              @for (shown of place; track $index) {
+                @let picture = shown.picture;
+                <img
+                  class="season-picture"
+                  [attr.data-for]="shown.season"
+                  [appFiles]="{
+                    sizes: '(min-width: 64rem) 24rem, 100vw',
+                    srcset: srcset(picture),
+                    src: picture.sources[0].url,
+                  }"
+                  [width]="picture.width"
+                  [height]="picture.height"
+                  [alt]="picture.alt[language.code]"
+                />
+                @if (picture.generated) {
+                  <span class="ai-label season-picture" [attr.data-for]="shown.season"
+                    ><ng-icon name="lucideSparkles" aria-hidden="true" />{{
+                      texts.apartment.generated
+                    }}</span
+                  >
+                }
               }
-              <div class="sum">
-                <dt>{{ texts.panel.total }}</dt>
-                <dd>{{ money(price + (tax?.amount ?? 0)) }}</dd>
-              </div>
-            </dl>
+            </div>
+            <div class="summary-text">
+              <h2>{{ name }}</h2>
+              @if (listed; as listed) {
+                <ul class="facts">
+                  @if (listed.bedrooms) {
+                    <li>
+                      <ng-icon name="lucideBedDouble" aria-hidden="true" />{{
+                        count(texts.apartment.bedrooms, listed.bedrooms)
+                      }}
+                    </li>
+                  }
+                  <li>
+                    <ng-icon name="lucideRuler" aria-hidden="true" />{{
+                      fill(texts.weeks.size.shown, { size: listed.size })
+                    }}
+                  </li>
+                </ul>
+              }
+              <dl class="total">
+                <div>
+                  <dt>{{ texts.panel.guests }}</dt>
+                  <dd>{{ guests }}</dd>
+                </div>
+                <div>
+                  <dt>{{ fill(texts.panel.week, { stay: week }) }}</dt>
+                  <dd>{{ money(price) }}</dd>
+                </div>
+                @if (tax) {
+                  <div>
+                    <dt>{{ tax.text }}</dt>
+                    <dd>{{ money(tax.amount) }}</dd>
+                  </div>
+                }
+                <div class="sum">
+                  <dt>{{ texts.panel.total }}</dt>
+                  <dd>{{ money(price + (tax?.amount ?? 0)) }}</dd>
+                </div>
+              </dl>
+            </div>
           </div>
           <form #element class="answers" method="post" [formRoot]="answers">
             <h2>{{ texts.book.details }}</h2>
@@ -109,18 +172,21 @@ import { addDays, address, fill, formatMoney, formatStay, isDay, LANGUAGE, TEXTS
                   <label hlmFieldLabel [for]="id">{{ label }}</label>
                   @switch (inputOf(question)) {
                     @case ('select') {
-                      <select
-                        hlmInput
-                        [id]="id"
-                        [formField]="$any(field)"
-                        [attr.autocomplete]="autocompleteOf(question)"
-                        [attr.aria-required]="question.required || null"
-                      >
-                        <option value="">{{ texts.book.choose }}</option>
-                        @for (choice of optionsOf(question); track choice.value) {
-                          <option [value]="choice.value">{{ choice.text }}</option>
-                        }
-                      </select>
+                      <div class="spartan-control">
+                        <select
+                          hlmInput
+                          [id]="id"
+                          [formField]="$any(field)"
+                          [attr.autocomplete]="autocompleteOf(question)"
+                          [attr.aria-required]="question.required || null"
+                        >
+                          <option value="">{{ texts.book.choose }}</option>
+                          @for (choice of optionsOf(question); track choice.value) {
+                            <option [value]="choice.value">{{ choice.text }}</option>
+                          }
+                        </select>
+                        <ng-icon name="lucideChevronDown" aria-hidden="true" />
+                      </div>
                     }
                     @case ('textarea') {
                       <textarea
@@ -132,14 +198,21 @@ import { addDays, address, fill, formatMoney, formatStay, isDay, LANGUAGE, TEXTS
                       ></textarea>
                     }
                     @default {
-                      <input
-                        hlmInput
-                        [id]="id"
-                        [type]="inputOf(question)"
-                        [formField]="$any(field)"
-                        [attr.autocomplete]="autocompleteOf(question)"
-                        [attr.aria-required]="question.required || null"
-                      />
+                      @let icon = pickerIcons[inputOf(question)];
+                      <div [class.spartan-control]="icon">
+                        <input
+                          hlmInput
+                          class="w-full"
+                          [id]="id"
+                          [type]="inputOf(question)"
+                          [formField]="$any(field)"
+                          [attr.autocomplete]="autocompleteOf(question)"
+                          [attr.aria-required]="question.required || null"
+                        />
+                        @if (icon) {
+                          <ng-icon [name]="icon" aria-hidden="true" />
+                        }
+                      </div>
                     }
                   }
                   <hlm-field-error [id]="id + '-error'">{{ error }}</hlm-field-error>
@@ -163,14 +236,17 @@ import { addDays, address, fill, formatMoney, formatStay, isDay, LANGUAGE, TEXTS
   `,
   styles: `
     @layer components {
-      /* Beside the form from 64rem, the stay stays in view; on a phone it comes first. */
+      /* As on the apartment's page, the stay beside the form from 64rem, where it stays in view;
+         on a phone it comes first. */
       .booking-step {
         display: grid;
+        grid-template-columns: minmax(0, 1fr);
         gap: 2rem;
-        margin-top: 2rem;
+        margin-top: 1.5rem;
 
         @media (min-width: 64rem) {
           grid-template-columns: minmax(0, 1fr) 24rem;
+          column-gap: 3rem;
           align-items: start;
 
           .summary {
@@ -183,17 +259,31 @@ import { addDays, address, fill, formatMoney, formatStay, isDay, LANGUAGE, TEXTS
       }
 
       .summary {
-        padding: 1.5rem 1.25rem;
+        overflow: clip;
+      }
+
+      /* A banner on a phone, so that the form starts within the screen. */
+      .summary-picture {
+        aspect-ratio: 5 / 2;
+        border-radius: 0;
+
+        @media (min-width: 64rem) {
+          aspect-ratio: 3 / 2;
+        }
+      }
+
+      .summary-text {
+        display: grid;
+        gap: 1rem;
+        padding: 1.25rem 1.25rem 1.5rem;
+
+        h2 {
+          margin: 0;
+        }
 
         .facts {
-          display: grid;
-          gap: 0.75rem;
-          margin-bottom: 1rem;
-
-          dt {
-            color: var(--color-ink-soft);
-            font-size: 0.9375rem;
-          }
+          margin-top: -0.5rem;
+          font-size: 0.9375rem;
         }
       }
 
@@ -201,6 +291,10 @@ import { addDays, address, fill, formatMoney, formatStay, isDay, LANGUAGE, TEXTS
         display: grid;
         gap: 1.25rem;
         max-width: 36rem;
+
+        h2 {
+          margin: 0;
+        }
 
         .terms {
           margin-top: 0.5rem;
@@ -225,17 +319,24 @@ export class Book {
   protected readonly texts = inject(TEXTS);
   protected readonly fill = fill;
   protected readonly inputOf = inputOf;
-  private readonly language = inject(LANGUAGE);
+  protected readonly pickerIcons: Record<string, string> = {
+    date: 'lucideCalendar',
+    time: 'lucideClock',
+  };
+  protected readonly language = inject(LANGUAGE);
+  protected readonly srcset = srcset;
   protected readonly choice = inject(Choice);
   private readonly route = inject(ActivatedRoute).snapshot;
   protected readonly heading = heading(this.texts, this.route);
   private readonly slug: string = this.route.params['slug'];
   private readonly apartment = site.apartments.find(({ slug }) => slug === this.slug)!;
   protected readonly name = this.apartment.name;
+  // The first place's pictures, of one season each where the gallery has two.
+  protected readonly place = placesOf(this.apartment.pictures, inject(Season).names)[0];
 
   private readonly plural = new Intl.PluralRules(this.language.tag);
   // A count and its noun stay on one line.
-  private readonly count = (forms: { one: string; other: string }, count: number) =>
+  protected readonly count = (forms: { one: string; other: string }, count: number) =>
     fill(this.plural.select(count) === 'one' ? forms.one : forms.other, { count }).replaceAll(
       ' ',
       ' ',
@@ -243,6 +344,7 @@ export class Book {
 
   private readonly weeks: FreeWeeks | null = this.route.data['weeks'];
   protected readonly questions: Question[] = this.route.data['questions'] ?? [];
+  protected readonly listed = this.weeks?.apartments[0];
   private readonly arrival = this.route.queryParamMap.get('arrival') ?? '';
   protected readonly week: string;
   protected readonly guests: string;
