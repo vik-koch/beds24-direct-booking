@@ -62,8 +62,11 @@ export interface BookingSetup {
 // Stripe and Beds24's confirmation need them, so the form asks them where Beds24 does not.
 const always: GuestField[] = ['firstName', 'lastName', 'email'];
 const full = 'confirmedWithDepositCollection1';
+// A deposit's share of the price in percent; not a number where it is fixed or reckoned otherwise.
 const share = ({ fixedAmount, variableAmount }: Deposit) =>
-  fixedAmount ? NaN : (variableAmount?.percentageValue ?? 0);
+  fixedAmount || (variableAmount && variableAmount.type !== 'percentage')
+    ? NaN
+    : (variableAmount?.percentageValue ?? 0);
 
 // The site takes the whole price when the guest books; Beds24 must ask the same, also near the
 // arrival and in an exceptional period that has not passed.

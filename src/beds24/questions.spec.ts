@@ -166,9 +166,9 @@ describe('readQuestions', () => {
 
   it("closes the booking where Beds24's rules take other than the full price at booking", () => {
     const { bookingRules: rules, paymentCollection: payment } = property();
-    const deposit = (fixedAmount: number, percentageValue: number) => ({
+    const deposit = (fixedAmount: number, percentageValue: number | null, type = 'percentage') => ({
       fixedAmount,
-      variableAmount: { type: 'percentage', percentageValue },
+      variableAmount: { type, percentageValue },
     });
     for (const change of [
       { bookingRules: { ...rules, bookingType: 'requestWithManualConfirmation' } },
@@ -176,6 +176,9 @@ describe('readQuestions', () => {
       { paymentCollection: { ...payment, depositPayment1: deposit(0, 30) } },
       { paymentCollection: { ...payment, depositPayment1: deposit(100, 100) } },
       { paymentCollection: { ...payment, depositPayment2: deposit(0, 70) } },
+      // A share reckoned otherwise than in percent, whatever value it keeps.
+      { paymentCollection: { ...payment, depositPayment1: deposit(0, 100, 'firstNight') } },
+      { paymentCollection: { ...payment, depositPayment2: deposit(0, null, 'firstNight') } },
       {
         bookingRules: {
           ...rules,
