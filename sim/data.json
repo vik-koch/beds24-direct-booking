@@ -179,6 +179,10 @@
         "customQuestion5": {
           "de": "Babybett",
           "en": "Cot for a baby"
+        },
+        "customQuestion6": {
+          "de": "Ich habe die Hausordnung gelesen",
+          "en": "I have read the house rules"
         }
       },
       "rooms": [
@@ -250,7 +254,8 @@
         "customQuestion4": "optional dateSelector",
         "guestArrivalTime": "optional",
         "customQuestion5": "optional tickBox",
-        "guestComments": "optional"
+        "guestComments": "optional",
+        "customQuestion6": "compulsoryBookingPage tickBox"
       }
     },
     {

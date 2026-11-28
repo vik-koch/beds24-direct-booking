@@ -107,7 +107,7 @@ for (const [lang, path, guests, total] of [
         name: lang === 'de' ? 'Mietbedingungen' : 'rental terms',
         exact: true,
       }),
-    ).toHaveAttribute('href', lang === 'de' ? '/de/agb' : '/en/terms');
+    ).toHaveAttribute('href', `${lang === 'de' ? '/de/agb' : '/en/terms'}?children=1`);
     await expect(
       page.getByRole('button', { name: lang === 'de' ? 'Buchen und bezahlen' : 'Book and pay' }),
     ).toBeVisible();
@@ -142,6 +142,7 @@ test("each field is asked as Beds24's question and the browser may fill it in", 
     'Arrival time (optional)',
     'Cot for a baby (optional)',
     'Message to your hosts (optional)',
+    'I have read the house rules',
   ]);
   for (const [name, type, autocomplete] of [
     ['First name', 'text', 'given-name'],
@@ -154,6 +155,10 @@ test("each field is asked as Beds24's question and the browser may fill it in", 
     await expect(field(page, name)).toHaveAttribute('type', type);
     await expect(field(page, name)).toHaveAttribute('autocomplete', autocomplete);
   }
+  await expect(field(page, 'Message to your hosts (optional)')).toHaveAttribute(
+    'autocomplete',
+    'off',
+  );
   await expect(field(page, 'Country')).toHaveAttribute('autocomplete', 'country');
   // Countries by their names in the page's language, the value Beds24's code.
   await expect(field(page, 'Country').locator('option[value=AT]')).toHaveText('Austria');
@@ -200,6 +205,7 @@ test("each field is asked as Beds24's question and the browser may fill it in", 
 
 test('the form names each error and its fix once the button is pressed, then as the guest types', async ({
   page,
+  browserName,
 }) => {
   await stepOf(page, '/en/apartments/ahorn');
   const email = field(page, 'E-mail address');
@@ -223,6 +229,7 @@ test('the form names each error and its fix once the button is pressed, then as 
     'Enter your phone number.',
     'Choose your country.',
     'Choose an answer to “Arriving by”.',
+    'Tick “I have read the house rules” to book.',
   ]);
   await expect(email).toHaveAttribute('aria-invalid', 'true');
   await expect(email).toHaveAccessibleDescription(
@@ -236,13 +243,28 @@ test('the form names each error and its fix once the button is pressed, then as 
   await field(page, 'Phone number').fill('06 12 34 56 78');
   await expect(errors.nth(3)).toHaveText(phone);
   await field(page, 'Country').selectOption('FR');
-  await expect(errors).toHaveCount(4);
+  await expect(errors).toHaveCount(5);
   await field(page, 'Surname').fill('Lovelace 2');
   await expect(errors.nth(1)).toHaveText('Enter your surname in letters.');
   await email.fill('ada@example.com');
   await field(page, 'Ski school from (optional)').fill('2027-02-06');
-  await expect(errors).toHaveCount(3);
+  await expect(errors).toHaveCount(4);
   await expect(email).not.toHaveAttribute('aria-invalid');
+
+  // Brain's checkbox does not link its error itself; the form does. In Firefox, Playwright's
+  // driver crashes the page when it works out this box's name late in a test, so there the box is
+  // found by its id and the link read in the DOM.
+  const tick = 'Tick “I have read the house rules” to book.';
+  if (browserName === 'firefox') {
+    await expect(page.locator('#answer-custom6')).toHaveAttribute(
+      'aria-describedby',
+      'answer-custom6-error',
+    );
+    await expect(page.locator('#answer-custom6-error')).toHaveText(tick);
+  } else
+    await expect(
+      page.getByRole('checkbox', { name: 'I have read the house rules' }),
+    ).toHaveAccessibleDescription(tick);
 });
 
 test('the form is filled in and sent by keyboard', async ({ page }) => {
@@ -268,7 +290,12 @@ test('the form is filled in and sent by keyboard', async ({ page }) => {
     await page.keyboard.press('Tab');
   await page.keyboard.press('Space');
   await expect(cot).toBeChecked();
-  for (let i = 0; i < 3; i++) await page.keyboard.press('Tab');
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Tab');
+  await expect(page.getByRole('checkbox', { name: 'I have read the house rules' })).toBeFocused();
+  await page.keyboard.press('Space');
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Tab');
   await expect(page.getByRole('button', { name: 'Book and pay' })).toBeFocused();
   // The answers go to the server, which books the week (#349).
   const [request] = await Promise.all([
@@ -279,6 +306,9 @@ test('the form is filled in and sent by keyboard', async ({ page }) => {
   expect(sent.get('answers.lastName')).toBe('Lovelace');
   expect(sent.get('answers.countrySelect')).toBe('AT');
   expect(sent.get('answers.custom1')).toBe('1');
+  // A tick box sends "1" ticked, as Beds24 keeps it, and nothing left empty.
+  expect(sent.get('answers.custom5')).toBe('1');
+  expect(sent.get('answers.custom6')).toBe('1');
 });
 
 test("an apartment that Beds24's settings let the site not book shows no booking button", async ({

@@ -64,10 +64,10 @@ days pass:
 - **The booking questions** are few, as a host would ask: Haus Firn asks the name, the e-mail, the
   phone, the country, and optionally the arrival time and a message, with its mobile number
   internal. Haus Farn asks the same and one of each kind of choice: a dropdown, a list, a date and a
-  tick box after the arrival time; it leaves out the first name, asks the e-mail as optional and
-  keeps one question internal. Haus Moos, with Fichte alone, takes bookings on request only, which
-  the site does not do. The custom questions are written in German and English only, so on the e2e
-  test site Haus Farn's compulsory one closes its booking.
+  tick box after the arrival time, and a required tick box last; it leaves out the first name, asks
+  the e-mail as optional and keeps one question internal. Haus Moos, with Fichte alone, takes
+  bookings on request only, which the site does not do. The custom questions are written in German
+  and English only, so on the e2e test site Haus Farn's compulsory one closes its booking.
 
 ## What differs from Beds24
 

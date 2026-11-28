@@ -99,6 +99,13 @@ const pairs = [
                     [formField]="$any(field)"
                     [aria-describedby]="error ? id + '-error' : null"
                   />
+                  <!-- Brain's box is a button, which a form does not send: its answer, as Beds24
+                       keeps a ticked one. -->
+                  <input
+                    type="hidden"
+                    [name]="'answers.' + question.key"
+                    [value]="field().value() ? '1' : ''"
+                  />
                   <label hlmFieldLabel [for]="id"
                     >{{ label }}
                     @if (!question.required) {
