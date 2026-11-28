@@ -209,7 +209,7 @@ const pairs = [
                   </li>
                 </ul>
               }
-              <dl class="dates">
+              <dl class="dates card-part">
                 @for (end of ends; track end.label) {
                   <div>
                     <dt>{{ end.label }}</dt>
@@ -224,7 +224,7 @@ const pairs = [
                   <dd>{{ guests }}</dd>
                 </div>
               </dl>
-              <dl class="total">
+              <dl class="total card-part">
                 <div>
                   <dt>{{ texts.book.rent }}</dt>
                   <dd>{{ money(price) }}</dd>
@@ -332,17 +332,7 @@ const pairs = [
         border-radius: 0;
       }
 
-      /* Spaced as the booking panel: its sections apart by a line, the total's first row as far
-         below its line as the sum's is above it. */
       .summary-text {
-        --inset: 1.25rem;
-        padding: 1.5rem var(--inset);
-
-        @media (min-width: 48rem) {
-          --inset: 2rem;
-          padding-block: 2rem;
-        }
-
         h2 {
           margin: 0;
           line-height: 1.2;
@@ -350,23 +340,12 @@ const pairs = [
 
         .facts {
           margin-top: 0.5rem;
-          font-size: 0.9375rem;
-        }
-
-        > :is(.dates, .total) {
-          margin-top: 1rem;
-          padding-top: 1rem;
-          border-top: 1px solid var(--color-line);
-        }
-
-        > .total {
-          padding-top: 0.375rem;
         }
 
         .terms {
           margin-top: 1rem;
           color: var(--color-ink-soft);
-          font-size: 0.9375rem;
+          font-size: 0.875rem;
         }
       }
 

@@ -215,8 +215,9 @@
   border: 0;
 }
 
-/* On the page's ground the white fill and the label mark a field. Its edge shows only an error,
-   and in forced colours, where a transparent edge is drawn. */
+/* On the page's ground the white fill and the label mark a field, below WCAG 1.4.11's 3:1 for a
+   field without an edge: the site's fields get their look in one step later. Its edge shows only
+   an error, and in forced colours, where a transparent edge is drawn. */
 .spartan-input,
 .spartan-textarea {
   min-height: var(--size-control);
@@ -270,6 +271,19 @@ label > hlm-radio {
   inset: 0;
 }
 
+/* A select's chevron, which turns as its list opens, and a field's icon: the guests' select and
+   the booking form's fields. */
+.spartan-select-trigger-icon,
+.spartan-control > ng-icon {
+  --ng-icon__size: 1rem;
+  --ng-icon__color: var(--color-ink-soft);
+  transition: rotate 0.2s;
+}
+
+[aria-expanded='true'] > .spartan-select-trigger-icon {
+  rotate: 180deg;
+}
+
 /* A field with an icon at its end: a dropdown's chevron, a date's calendar, a time's clock. The
    browser's own picker button stays under the icon, unseen, so that pressing the icon opens it. */
 .spartan-control {
@@ -286,20 +300,25 @@ label > hlm-radio {
     right: 1.125rem;
     translate: 0 -50%;
     pointer-events: none;
-    --ng-icon__size: 1rem;
-    --ng-icon__color: var(--color-ink-soft);
-    transition: rotate 0.2s;
   }
 
+  /* Chromium's second stop in a date or a time, which opens its picker: its own icon gone, the
+     ring around the site's. */
   ::-webkit-calendar-picker-indicator {
     position: absolute;
-    right: 1.125rem;
-    width: 1rem;
-    height: 1rem;
+    right: 0.875rem;
+    width: 1.5rem;
+    height: 1.5rem;
     margin: 0;
     padding: 0;
-    opacity: 0;
+    border-radius: 0.375rem;
+    background: none;
     cursor: pointer;
+
+    &:focus-visible {
+      outline: var(--focus-ring);
+      outline-offset: 0;
+    }
   }
 }
 
@@ -308,11 +327,12 @@ select.spartan-input {
   cursor: pointer;
 }
 
-/* Where the browser lets a page style the dropdown's list, it looks like the site's other selects. */
+/* Its own rule: a browser without :open would drop the others with it. */
 .spartan-control:has(select:open) > ng-icon {
   rotate: 180deg;
 }
 
+/* Where the browser lets a page style the dropdown's list, it looks like the guests' select's. */
 @supports (appearance: base-select) {
   select.spartan-input,
   select.spartan-input::picker(select) {

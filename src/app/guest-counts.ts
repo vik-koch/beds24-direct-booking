@@ -174,17 +174,8 @@ import { TEXTS } from './texts';
         justify-content: flex-end;
       }
 
-      :is(.spartan-select-trigger-icon, .spartan-select-item-indicator) {
+      .spartan-select-item-indicator {
         --ng-icon__size: 1rem;
-      }
-
-      .spartan-select-trigger-icon {
-        --ng-icon__color: var(--color-ink-soft);
-        transition: rotate 0.2s;
-
-        [aria-expanded='true'] > & {
-          rotate: 180deg;
-        }
       }
 
       .spartan-select-content {

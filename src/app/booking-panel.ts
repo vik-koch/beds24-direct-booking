@@ -303,7 +303,7 @@ const shownMonths = new InjectionToken('booking panel months', {
             </div>
           }
         </div>
-        <div class="guests">
+        <div class="guests card-part">
           @if (choice.asksChildren()) {
             <h3>{{ texts.panel.guests }}</h3>
           }
@@ -319,7 +319,7 @@ const shownMonths = new InjectionToken('booking panel months', {
              of it is chosen, which shows as blocked. -->
         @for (season of weeks.seasons; track season.name) {
           @if (season.state === 'open' || pickIn(season.name)) {
-            <div class="outcome" [attr.data-for]="season.name">
+            <div class="outcome card-part" [attr.data-for]="season.name">
               @if (pickIn(season.name); as stay) {
                 <dl class="total">
                   <div>
@@ -407,8 +407,6 @@ const shownMonths = new InjectionToken('booking panel months', {
         --pill: var(--color-accent);
         --on-pill: var(--color-on-accent);
         --band: var(--color-accent-soft);
-        --inset: 1.25rem;
-        padding: 1.5rem var(--inset);
         /* The phone bar brings the panel's foot as far from the screen's foot as from its sides. */
         scroll-margin-bottom: 1rem;
 
@@ -416,11 +414,6 @@ const shownMonths = new InjectionToken('booking panel months', {
           --pill: var(--color-line);
           --on-pill: var(--color-ink-soft);
           --band: color-mix(in srgb, var(--color-line) 50%, transparent);
-        }
-
-        @media (min-width: 48rem) {
-          --inset: 2rem;
-          padding-block: 2rem;
         }
 
         /* Sized as the page's other headings. */
@@ -695,13 +688,6 @@ const shownMonths = new InjectionToken('booking panel months', {
         }
       }
 
-      .guests,
-      .outcome {
-        margin-top: 1rem;
-        padding-top: 1rem;
-        border-top: 1px solid var(--color-line);
-      }
-
       /* The months' last line has some air below it already. */
       .panel-seasons + .guests {
         margin-top: 0.5rem;
@@ -713,11 +699,6 @@ const shownMonths = new InjectionToken('booking panel months', {
 
       .too-small:not(:empty) {
         margin-top: 0.75rem;
-      }
-
-      /* The total's rows bring their own padding, so it starts as close to its line as the sum. */
-      .outcome:has(.total) {
-        padding-top: 0.625rem;
       }
 
       .clear-week {
