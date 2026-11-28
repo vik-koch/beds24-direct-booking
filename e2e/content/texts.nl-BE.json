@@ -206,11 +206,13 @@
       },
       "firstName": {
         "label": "Voornaam",
-        "missing": "Vul uw voornaam in."
+        "missing": "Vul uw voornaam in.",
+        "invalid": "Vul je voornaam in letters in."
       },
       "lastName": {
         "label": "Achternaam",
-        "missing": "Vul uw achternaam in."
+        "missing": "Vul uw achternaam in.",
+        "invalid": "Vul je achternaam in letters in."
       },
       "email": {
         "label": "E-mailadres",
@@ -220,17 +222,17 @@
       "phone": {
         "label": "Telefoonnummer",
         "missing": "Vul uw telefoonnummer in.",
-        "invalid": "Vul een telefoonnummer in cijfers in, zoals +32 2 123 45 67."
+        "invalid": "Vul een volledig telefoonnummer in, met landcode, zoals +32 2 123 45 67."
       },
       "mobile": {
         "label": "Gsm-nummer",
         "missing": "Vul uw gsm-nummer in.",
-        "invalid": "Vul een gsm-nummer in cijfers in, zoals +32 470 12 34 56."
+        "invalid": "Vul een volledig gsm-nummer in, met landcode, zoals +32 470 12 34 56."
       },
       "fax": {
         "label": "Faxnummer",
         "missing": "Vul uw faxnummer in.",
-        "invalid": "Vul een faxnummer in cijfers in, zoals +32 2 123 45 68."
+        "invalid": "Vul een volledig faxnummer in, met landcode, zoals +32 2 123 45 68."
       },
       "company": {
         "label": "Bedrijf",

@@ -206,11 +206,13 @@
       },
       "firstName": {
         "label": "Nome",
-        "missing": "Indicate il vostro nome."
+        "missing": "Indicate il vostro nome.",
+        "invalid": "Inserisci il tuo nome in lettere."
       },
       "lastName": {
         "label": "Cognome",
-        "missing": "Indicate il vostro cognome."
+        "missing": "Indicate il vostro cognome.",
+        "invalid": "Inserisci il tuo cognome in lettere."
       },
       "email": {
         "label": "Indirizzo e-mail",
@@ -220,17 +222,17 @@
       "phone": {
         "label": "Numero di telefono",
         "missing": "Indicate il vostro numero di telefono.",
-        "invalid": "Indicate un numero di telefono in cifre, per esempio +39 0471 123456."
+        "invalid": "Inserisci un numero di telefono completo, con il prefisso internazionale, come +39 06 1234 5678."
       },
       "mobile": {
         "label": "Numero di cellulare",
         "missing": "Indicate il vostro numero di cellulare.",
-        "invalid": "Indicate un numero di cellulare in cifre, per esempio +39 333 1234567."
+        "invalid": "Inserisci un numero di cellulare completo, con il prefisso internazionale, come +39 312 345 6789."
       },
       "fax": {
         "label": "Numero di fax",
         "missing": "Indicate il vostro numero di fax.",
-        "invalid": "Indicate un numero di fax in cifre, per esempio +39 0471 123457."
+        "invalid": "Inserisci un numero di fax completo, con il prefisso internazionale, come +39 06 1234 5679."
       },
       "company": {
         "label": "Azienda",
