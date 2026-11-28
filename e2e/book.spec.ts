@@ -32,18 +32,8 @@ const firn = {
     'E-mail address',
     'Phone number',
     'Country',
-    'Street and number (optional)',
-    'Postcode (optional)',
-    'Town or city (optional)',
-    'Arriving by',
-    'Pillows (optional)',
-    'Cot for a baby (optional)',
-    'Ski school from (optional)',
-    'Car number plate (optional)',
-    'Allergies (optional)',
     'Arrival time (optional)',
     'Message to your hosts (optional)',
-    'I have read the house rules',
   ],
   de: [
     'Vorname',
@@ -51,18 +41,8 @@ const firn = {
     'E-Mail-Adresse',
     'Telefonnummer',
     'Land',
-    'Straße und Hausnummer (optional)',
-    'Postleitzahl (optional)',
-    'Ort (optional)',
-    'Anreise mit',
-    'Kissen (optional)',
-    'Babybett (optional)',
-    'Skikurs ab (optional)',
-    'Kennzeichen des Autos (optional)',
-    'Allergien (optional)',
     'Ankunftszeit (optional)',
     'Nachricht an die Gastgeber (optional)',
-    'Ich habe die Hausordnung gelesen',
   ],
 };
 
@@ -137,18 +117,29 @@ for (const [lang, path, guests, total] of [
 test("each field is asked as Beds24's question and the browser may fill it in", async ({
   page,
 }) => {
-  await stepOf(page, '/en/apartments/laerche');
+  await stepOf(page, '/en/apartments/ahorn');
+  // Haus Farn hides the first name, which is asked first, and asks the e-mail as optional, which
+  // Stripe and the confirmation need; its note is internal.
+  expect(await labels(page)).toEqual([
+    'First name',
+    'Surname',
+    'E-mail address',
+    'Phone number',
+    'Country',
+    'Arriving by',
+    'Pillows (optional)',
+    'Ski school from (optional)',
+    'Arrival time (optional)',
+    'Cot for a baby (optional)',
+    'Message to your hosts (optional)',
+  ]);
   const field = (name: string) => page.getByLabel(name, { exact: true });
   for (const [name, type, autocomplete] of [
     ['First name', 'text', 'given-name'],
     ['Surname', 'text', 'family-name'],
     ['E-mail address', 'email', 'email'],
     ['Phone number', 'tel', 'tel'],
-    ['Street and number (optional)', 'text', 'street-address'],
-    ['Postcode (optional)', 'text', 'postal-code'],
-    ['Town or city (optional)', 'text', 'address-level2'],
     ['Ski school from (optional)', 'date', 'off'],
-    ['Car number plate (optional)', 'text', 'off'],
     ['Arrival time (optional)', 'time', 'off'],
   ]) {
     await expect(field(name)).toHaveAttribute('type', type);
@@ -170,38 +161,29 @@ test("each field is asked as Beds24's question and the browser may fill it in", 
     'Firm',
   ]);
   await expect(page.getByRole('checkbox', { name: 'Cot for a baby (optional)' })).not.toBeChecked();
-  for (const name of ['Allergies (optional)', 'Message to your hosts (optional)'])
-    await expect(field(name)).toHaveJSProperty('tagName', 'TEXTAREA');
-  await expect(page.getByLabel('Mobile number')).toHaveCount(0);
-});
+  await expect(field('Message to your hosts (optional)')).toHaveJSProperty('tagName', 'TEXTAREA');
 
-test('where Beds24 hides the first name, it is asked first, and a question without its text is left out', async ({
-  page,
-}) => {
-  await stepOf(page, '/en/apartments/ahorn');
-  expect(await labels(page)).toEqual([
-    'First name',
-    'Title (optional)',
-    'Surname',
-    // Optional in Beds24, but Stripe and the confirmation need it.
-    'E-mail address',
-    'Company (optional)',
-    'Country',
-    'State or region (optional)',
-    'Fax number (optional)',
-    'How did you hear of us? (optional)',
-  ]);
-  await expect(page.getByLabel('Title (optional)')).toHaveAttribute(
-    'autocomplete',
-    'honorific-prefix',
-  );
-  await expect(page.getByLabel('Country')).toHaveAttribute('autocomplete', 'country-name');
+  // A pair shares a row, as does a short field with the tick box after it; a short field alone
+  // takes half of one.
+  const top = async (name: string) => (await field(name).boundingBox())!.y;
+  const row = async (one: string, other: string) =>
+    expect(Math.abs((await top(one)) - (await top(other)))).toBeLessThan(1);
+  await row('First name', 'Surname');
+  await row('E-mail address', 'Phone number');
+  const time = (await field('Arrival time (optional)').boundingBox())!;
+  const cot = (await page
+    .getByRole('checkbox', { name: 'Cot for a baby (optional)' })
+    .boundingBox())!;
+  expect(Math.abs(time.y + time.height / 2 - (cot.y + cot.height / 2))).toBeLessThan(4);
+  expect(cot.x).toBeGreaterThan(time.x + time.width);
+  expect((await field('Ski school from (optional)').boundingBox())!.width).toBeCloseTo(time.width);
+  expect(await top('Ski school from (optional)')).toBeLessThan(time.y - 1);
 });
 
 test('the form names each error and its fix once the button is pressed, then as the guest types', async ({
   page,
 }) => {
-  await stepOf(page, '/en/apartments/laerche');
+  await stepOf(page, '/en/apartments/ahorn');
   const email = page.getByLabel('E-mail address');
   const button = page.getByRole('button', { name: 'Book and pay' });
   const errors = page.locator('form hlm-field-error:visible');
@@ -223,31 +205,30 @@ test('the form names each error and its fix once the button is pressed, then as 
     'Enter your phone number.',
     'Choose your country.',
     'Choose an answer to “Arriving by”.',
-    'Tick “I have read the house rules” to book.',
   ]);
   await expect(email).toHaveAttribute('aria-invalid', 'true');
   await expect(email).toHaveAccessibleDescription(
     'Enter an e-mail address such as name@example.com.',
   );
-  await expect(
-    page.getByRole('checkbox', { name: 'I have read the house rules' }),
-  ).toHaveAccessibleDescription('Tick “I have read the house rules” to book.');
   expect((await new AxeBuilder({ page }).include('form').analyze()).violations).toEqual([]);
 
-  // Then each error follows the answer.
-  await page.getByLabel('Phone number').fill('call me');
-  await expect(errors.nth(3)).toHaveText(
-    'Enter a phone number in digits, such as +44 20 7946 0000.',
-  );
+  // Then each error follows the answer: a number written as at home is whole once its country is
+  // chosen.
+  const phone = 'Enter a full phone number, with its country code, such as +44 20 7946 0000.';
+  await page.getByLabel('Phone number').fill('06 12 34 56 78');
+  await expect(errors.nth(3)).toHaveText(phone);
+  await page.getByLabel('Country').selectOption('FR');
+  await expect(errors).toHaveCount(4);
+  await page.getByLabel('Surname').fill('Lovelace 2');
+  await expect(errors.nth(1)).toHaveText('Enter your surname in letters.');
   await email.fill('ada@example.com');
-  await page.getByLabel('Postcode (optional)').fill('5753');
   await page.getByLabel('Ski school from (optional)').fill('2027-02-06');
-  await expect(errors).toHaveCount(6);
+  await expect(errors).toHaveCount(3);
   await expect(email).not.toHaveAttribute('aria-invalid');
 });
 
 test('the form is filled in and sent by keyboard', async ({ page }) => {
-  await stepOf(page, '/en/apartments/laerche');
+  await stepOf(page, '/en/apartments/ahorn');
   await page.getByLabel('First name').focus();
   for (const text of ['Ada', 'Lovelace', 'ada@example.com', '+44 20 7946 0000']) {
     await page.keyboard.type(text);
@@ -256,23 +237,20 @@ test('the form is filled in and sent by keyboard', async ({ page }) => {
   // The country by its first letters, as a dropdown takes them.
   await page.keyboard.type('Austria');
   await expect(page.getByLabel('Country')).toHaveValue('AT');
-  for (let i = 0; i < 4; i++) await page.keyboard.press('Tab');
+  await page.keyboard.press('Tab');
   await expect(page.getByLabel('Arriving by')).toBeFocused();
   await page.keyboard.type('Train');
   await page.keyboard.press('Tab');
   await expect(page.getByLabel('Pillows (optional)')).toBeFocused();
   await page.keyboard.type('Firm');
   await expect(page.getByLabel('Pillows (optional)')).toHaveValue('1');
-  await page.keyboard.press('Tab');
-  await expect(page.getByRole('checkbox', { name: 'Cot for a baby (optional)' })).toBeFocused();
-  await page.keyboard.press('Space');
-  await expect(page.getByRole('checkbox', { name: 'Cot for a baby (optional)' })).toBeChecked();
-  const rules = page.getByRole('checkbox', { name: 'I have read the house rules' });
-  while (!(await rules.evaluate((box) => box === document.activeElement)))
+  // Through the date's and the time's parts, which take as many stops as the engine gives them.
+  const cot = page.getByRole('checkbox', { name: 'Cot for a baby (optional)' });
+  while (!(await cot.evaluate((box) => box === document.activeElement)))
     await page.keyboard.press('Tab');
   await page.keyboard.press('Space');
-  await page.keyboard.press('Tab');
-  await page.keyboard.press('Tab');
+  await expect(cot).toBeChecked();
+  for (let i = 0; i < 3; i++) await page.keyboard.press('Tab');
   await expect(page.getByRole('button', { name: 'Book and pay' })).toBeFocused();
   // The answers go to the server, which books the week (#349).
   const [request] = await Promise.all([
@@ -288,13 +266,13 @@ test('the form is filled in and sent by keyboard', async ({ page }) => {
 test("an apartment that Beds24's settings let the site not book shows no booking button", async ({
   page,
 }) => {
-  // On the e2e test site Fienile's house takes bookings on request, and Vista's and Castagno's
-  // asks questions without an Italian text; Zonneterras's only leaves one out.
+  // On the e2e test site Fienile's house takes bookings on request, and Zonneterras's asks a
+  // question without an Italian text; Vista's and Castagno's asks none of its own.
   for (const [slug, bookable] of [
     ['fienile', false],
-    ['vista', false],
-    ['castagno', false],
-    ['zonneterras', true],
+    ['vista', true],
+    ['castagno', true],
+    ['zonneterras', false],
   ] as const) {
     const path = `http://localhost:4002/it/appartamenti/${slug}`;
     const arrival = await weekOf(page, path, 'free');

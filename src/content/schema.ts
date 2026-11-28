@@ -546,8 +546,8 @@ export const textsSchema = z.strictObject({
     // Beds24's guest fields, each asked where the property's booking questions ask it.
     fields: z.strictObject({
       title: field,
-      firstName: field,
-      lastName: field,
+      firstName: formed,
+      lastName: formed,
       email: formed,
       phone: formed,
       mobile: formed,

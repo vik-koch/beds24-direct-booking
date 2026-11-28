@@ -228,19 +228,19 @@ describe('properties', () => {
     expect(Object.keys(firn.bookingQuestions)).toHaveLength(26);
     expect(firn.bookingQuestions.guestFirstName).toEqual({ usage: 'compulsory', order: 1 });
     expect(firn.bookingQuestions.guestFax).toEqual({ usage: 'notUsed', order: null });
-    expect(firn.bookingQuestions.customQuestion7).toEqual({
-      usage: 'compulsoryBookingPage',
-      order: 18,
+    expect(farn.bookingQuestions.customQuestion5).toEqual({
+      usage: 'optional',
+      order: 10,
       type: 'tickBox',
     });
-    expect(firn.bookingQuestions.customQuestion9).toEqual({
+    expect(farn.bookingQuestions.customQuestion9).toEqual({
       usage: 'notUsed',
       order: null,
       type: 'singleLineField',
     });
-    expect(firn.texts[1].customQuestion1).toBe('Arriving by [Car][Train][Plane]');
-    // Haus Farn's breakfast question has no English text; Haus Moos takes requests only.
-    expect(farn.texts[1].customQuestion2).toBe('');
+    expect(farn.texts[1].customQuestion1).toBe('Arriving by [Car][Train][Plane]');
+    // Haus Firn asks no question of its own; Haus Moos takes requests only.
+    expect(firn.texts[1].customQuestion1).toBe('');
     expect(firn.bookingRules.bookingType).toBe('confirmedWithDepositCollection1');
     expect(firn.paymentCollection.depositPayment1.variableAmount.percentageValue).toBe(100);
     expect(moos.bookingRules.bookingType).toBe('requestWithManualConfirmation');

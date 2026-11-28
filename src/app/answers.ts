@@ -1,3 +1,4 @@
+import { isValidPhoneNumber, type CountryCode } from 'libphonenumber-js';
 import type { GuestField, Question } from '../beds24/questions';
 import type { Texts } from '../content/schema';
 import { fill, isDay } from './texts';
@@ -9,9 +10,18 @@ export type Answers = Record<string, string | boolean>;
 // unusual one, which Beds24's e-mail tells.
 const email = (value: string) => /^[^\s@]+@[^\s@.]+(\.[^\s@.]+)+$/.test(value);
 
-// Digits with the signs people write between them; a short number is a typing slip.
-const phone = (value: string) =>
-  /^\+?[\d\s()./-]+$/.test(value) && value.replace(/\D/g, '').length >= 6;
+// A number of a length and a start its country's numbers have, by libphonenumber's data: with its
+// country code, or written as at home in the country the guest chose. Not whether it is in use.
+const phone = (value: string, answers: Answers) => {
+  const country = String(answers['countrySelect'] ?? '');
+  return isValidPhoneNumber(
+    value,
+    countries.includes(country) ? (country as CountryCode) : undefined,
+  );
+};
+
+// A name has no digits; any letters and signs between them are someone's.
+const name = (value: string) => !/\d/.test(value);
 
 // ISO 3166-1's codes, which Beds24 takes as a booking's country.
 export const countries = (
@@ -29,11 +39,11 @@ export const countries = (
 // answer must have.
 export const guestFields: Record<
   GuestField,
-  { input: string; autocomplete: string; valid?: (value: string) => boolean }
+  { input: string; autocomplete: string; valid?: (value: string, answers: Answers) => boolean }
 > = {
   title: { input: 'text', autocomplete: 'honorific-prefix' },
-  firstName: { input: 'text', autocomplete: 'given-name' },
-  lastName: { input: 'text', autocomplete: 'family-name' },
+  firstName: { input: 'text', autocomplete: 'given-name', valid: name },
+  lastName: { input: 'text', autocomplete: 'family-name', valid: name },
   email: { input: 'email', autocomplete: 'email', valid: email },
   phone: { input: 'tel', autocomplete: 'tel', valid: phone },
   mobile: { input: 'tel', autocomplete: 'mobile tel', valid: phone },
@@ -77,21 +87,26 @@ export const blank = (questions: Question[]): Answers =>
 
 // A text answer's error: missing where it must be given, or of the wrong form where it is.
 const answer =
-  (required: boolean, missing: string, valid?: (value: string) => boolean, invalid = missing) =>
-  (value: unknown) => {
+  (
+    required: boolean,
+    missing: string,
+    valid?: (value: string, answers: Answers) => boolean,
+    invalid = missing,
+  ) =>
+  (value: unknown, answers: Answers) => {
     const text = String(value);
     return required && text.trim() === ''
       ? missing
-      : text !== '' && valid && !valid(text)
+      : text !== '' && valid && !valid(text, answers)
         ? invalid
         : null;
   };
 
-// Each answer's check, worded in the page's language: the error it has, or null. The form checks
-// with them, and the server again (#349).
+// Each answer's check, worded in the page's language: the error it has given all the answers, or
+// null. The form checks with them, and the server again (#349).
 export function answerRules(questions: Question[], texts: Texts, code: string) {
   const { custom, fields } = texts.book;
-  const rule = (question: Question): ((value: unknown) => string | null) => {
+  const rule = (question: Question): ((value: unknown, answers: Answers) => string | null) => {
     if (!('type' in question)) {
       const words = fields[question.key];
       return answer(

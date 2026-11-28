@@ -61,11 +61,13 @@ days pass:
   restarts. As the demo is public, a booking keeps its stay, status and money and a session its
   amount and metadata, never the guest's details: `customer_email` is dropped.
 - **The lead time** is seven days, so the nearest Saturday is always inside it.
-- **The booking questions** cover what the booking form must handle: Haus Firn asks every kind of
-  custom question and uses every usage, Haus Farn leaves out the first name, asks the e-mail as
-  optional and has one question without its English text, and Haus Moos, with Fichte alone, takes
-  bookings on request only, which the site does not do. The custom questions are written in German
-  and English only, so on the e2e test site Haus Firn's compulsory ones close its booking.
+- **The booking questions** are few, as a host would ask: Haus Firn asks the name, the e-mail, the
+  phone, the country, and optionally the arrival time and a message, with its mobile number
+  internal. Haus Farn asks the same and one of each kind of choice: a dropdown, a list, a date and a
+  tick box after the arrival time; it leaves out the first name, asks the e-mail as optional and
+  keeps one question internal. Haus Moos, with Fichte alone, takes bookings on request only, which
+  the site does not do. The custom questions are written in German and English only, so on the e2e
+  test site Haus Farn's compulsory one closes its booking.
 
 ## What differs from Beds24
 

@@ -255,11 +255,13 @@
       },
       "firstName": {
         "label": "First name",
-        "missing": "Enter your first name."
+        "missing": "Enter your first name.",
+        "invalid": "Enter your first name in letters."
       },
       "lastName": {
         "label": "Surname",
-        "missing": "Enter your surname."
+        "missing": "Enter your surname.",
+        "invalid": "Enter your surname in letters."
       },
       "email": {
         "label": "E-mail address",
@@ -269,17 +271,17 @@
       "phone": {
         "label": "Phone number",
         "missing": "Enter your phone number.",
-        "invalid": "Enter a phone number in digits, such as +44 20 7946 0000."
+        "invalid": "Enter a full phone number, with its country code, such as +44 20 7946 0000."
       },
       "mobile": {
         "label": "Mobile number",
         "missing": "Enter your mobile number.",
-        "invalid": "Enter a mobile number in digits, such as +44 7700 900000."
+        "invalid": "Enter a full mobile number, with its country code, such as +44 7400 123456."
       },
       "fax": {
         "label": "Fax number",
         "missing": "Enter your fax number.",
-        "invalid": "Enter a fax number in digits, such as +44 20 7946 0001."
+        "invalid": "Enter a full fax number, with its country code, such as +44 20 7946 0001."
       },
       "company": {
         "label": "Company",

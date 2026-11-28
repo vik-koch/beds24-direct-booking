@@ -26,9 +26,10 @@ how it is built:
 1. **Angular's Signal Forms** (`@angular/forms/signals`, stable since Angular 22) on a
    `form[formRoot]`, which sets `novalidate` so that only the site's errors show. The answers are
    one signal, keyed by the question.
-2. **A field is checked once the guest has left it,** or pressed the button, which touches every
-   field. Before, it is not invalid, so a screen reader does not call an empty field invalid on its
-   first visit. A failed submit moves the focus to the first field with an error.
+2. **The answers are checked once the button is pressed,** then as the guest types. Before, no field
+   is invalid, so a screen reader does not call an empty field invalid on its first visit. An error
+   shown on leaving a field would push the button down under a pointer pressing it, and the press
+   would be lost. A failed submit moves the focus to the first field with an error.
 3. **spartan/ui's field, label, input, textarea and checkbox,** copied from v1.9.0 into `src/ui/`.
    Brain reads a Signal Forms field's state itself: it marks an invalid field, sets `aria-invalid`,
    and links a shown error to its control with `aria-describedby`. Their look is in `src/ui/ui.css`;
@@ -42,7 +43,19 @@ how it is built:
    for both, and its first entry undoes an optional choice, which a radio button cannot.
 5. **Each answer's check is a plain function,** one per question, which returns its error in the
    page's language or nothing (`src/app/answers.ts`). The form runs them through Signal Forms'
-   `validate`; the server runs the same functions (#349).
+   `validate`; the server runs the same functions (#349). They check:
+   - a required answer is given, a ticked box ticked, a choice one of the question's;
+   - an e-mail address has a name, an at sign and a domain with a dot;
+   - a phone, mobile or fax number has a length and a start its country's numbers have, by
+     **libphonenumber-js**'s data: with its country code, or written as at home in the country the
+     guest chose, so that "06 12 34 56 78" with France is whole;
+   - a first name and a surname have no digit;
+   - a country is one of ISO 3166's codes, a date a day of the calendar, an arrival time a time.
+
+   Left unchecked on purpose: whether an e-mail address or a number is in use, which Beds24's
+   confirmation and the host's call tell; whether a mobile number is a mobile's, which some
+   countries do not tell apart; a name's letters beyond digits, a street, a town and a postcode,
+   whose forms differ by country more than a check could know, and which Beds24 takes as text.
 
 ## Options
 
@@ -60,6 +73,15 @@ For the checks:
 |---|---|---|---|
 | A zod/mini schema, through Signal Forms' `validateStandardSchema` | One schema object, the standard interface. zod is already a dependency of the content build. | Every rule is a custom check, so zod only carries them. Its async support brings Angular's `resource` into the initial bundle. Measured below. | Tried, rejected. |
 | Plain functions through `validate` | The same rules and words in the form and on the server, without a library in the browser. | Signal Forms' standard interface is not used; a new rule is written by hand. | Chosen. |
+
+For a phone number:
+
+<!-- prettier-ignore -->
+| Option | For | Against | Result |
+|---|---|---|---|
+| Digits and the signs between them, six at least | No data. | A number written as at home ("06…") cannot tell its country; a mistyped number of the right signs passes. | Replaced. |
+| A country code chosen apart from the number, with a mask | The country always known. | The browser fills a whole number into one field; a mask gets in the way of pasting. | Rejected. |
+| libphonenumber-js, its smaller data | Every country's lengths and starts; a number read in the guest's chosen country. | About 116 kB raw (24 kB gzipped) more in the booking chunk, which only the booking step loads. Its larger data told nothing apart in the numbers tried, at twice the size. | Chosen. |
 
 For the country:
 
@@ -87,6 +109,7 @@ For a list of choices (`multipleList`):
   | `main` before the form | 760.6 kB (185.6 kB) | 3.1 kB (1.4 kB) |
   | The form, checked through zod/mini | 775.9 kB (189.8 kB) | 99.3 kB (26.3 kB) |
   | The form, checked by plain functions | 768.9 kB (187.7 kB) | 76.8 kB (19.5 kB) |
+  | The form with libphonenumber-js (2026-11-28) | 770.6 kB (187.8 kB) | 192.8 kB (44.0 kB) |
 
   zod/mini cost 22 kB in the booking chunk, 8 kB of it the table of regular expressions that its
   e-mail check brings, and 7 kB on every page: `@angular/core`'s `resource`, which
@@ -94,10 +117,10 @@ For a list of choices (`multipleList`):
   functions is Signal Forms' control integration in `@angular/core` (7 kB) and the fields' styles (3
   kB); the reactive forms package and brain's field were there already, for the select.
 
-- **Verified in Chromium:** `aria-invalid` only after a field was left or the button pressed; each
-  shown error in its control's `aria-describedby`, the tick box's too, which brain's checkbox does
-  not link itself; the focus on the first error; the `autocomplete` and `name` of each field; axe
-  without violations; the form filled in and sent by keyboard.
+- **Verified in Chromium:** `aria-invalid` only after the button was pressed; each shown error in
+  its control's `aria-describedby`, the tick box's too, which brain's checkbox does not link itself;
+  the focus on the first error; the `autocomplete` and `name` of each field; axe without violations;
+  the form filled in and sent by keyboard.
 - **Not checked:** that a browser's saved details actually fill the fields, which a test browser
   does not have; Safari and VoiceOver (#100).
 

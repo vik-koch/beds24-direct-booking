@@ -27,6 +27,9 @@ import { Season } from './season';
 import { heading } from './shell';
 import { addDays, address, fill, formatMoney, isDay, LANGUAGE, TEXTS } from './texts';
 
+// A date and a time are short: each takes half a row.
+const pickerIcons: Record<string, string> = { date: 'lucideCalendar', time: 'lucideClock' };
+
 const pairs = [
   ['firstName', 'lastName'],
   ['email', 'phone'],
@@ -81,7 +84,7 @@ const pairs = [
               @let error = field().errors()[0]?.message;
               @let kind = inputOf(question);
               @if (kind === 'checkbox') {
-                <div hlmField orientation="horizontal">
+                <div hlmField orientation="horizontal" [class.half]="halves.has(question.key)">
                   <!-- Its error is on the box, which brain's checkbox does not link itself. -->
                   <hlm-checkbox
                     [inputId]="id"
@@ -92,7 +95,11 @@ const pairs = [
                   <hlm-field-error [id]="id + '-error'">{{ error }}</hlm-field-error>
                 </div>
               } @else {
-                <div hlmField [class.half]="halves.has(question.key) || kind in pickerIcons">
+                <div
+                  hlmField
+                  [class.half]="halves.has(question.key) || kind in pickerIcons"
+                  [class.pair]="pairs.includes(question.key)"
+                >
                   <label hlmFieldLabel [for]="id">{{ label }}</label>
                   @switch (kind) {
                     @case ('select') {
@@ -292,6 +299,16 @@ const pairs = [
           > .half {
             grid-column: auto;
           }
+
+          > .pair {
+            grid-column-start: 1;
+          }
+
+          /* A tick box beside a field stands level with the field, below its label. */
+          > .half[orientation='horizontal'] {
+            align-self: start;
+            padding-top: calc(1lh + 0.375rem + (var(--size-control) - 1lh) / 2);
+          }
         }
       }
 
@@ -352,11 +369,7 @@ export class Book {
   protected readonly texts = inject(TEXTS);
   protected readonly fill = fill;
   protected readonly inputOf = inputOf;
-  // A date and a time are short: each takes half a row.
-  protected readonly pickerIcons: Record<string, string> = {
-    date: 'lucideCalendar',
-    time: 'lucideClock',
-  };
+  protected readonly pickerIcons = pickerIcons;
   protected readonly language = inject(LANGUAGE);
   protected readonly srcset = srcset;
   protected readonly choice = inject(Choice);
@@ -379,14 +392,21 @@ export class Book {
   private readonly weeks: FreeWeeks | null = this.route.data['weeks'];
   protected readonly questions: Question[] = this.route.data['questions'] ?? [];
   protected readonly listing: Listing | null = this.route.data['listing'];
-  // Fields that share a row when Beds24 asks them one after the other.
+  // Fields that share a row when Beds24 asks them one after the other, the first starting it: a
+  // pair, or a short field and a tick box.
+  protected readonly pairs = this.questions.flatMap((question, index) => {
+    const next = this.questions[index + 1];
+    return next &&
+      (pairs.some(([a, b]) => question.key === a && next.key === b) ||
+        (inputOf(question) in pickerIcons && inputOf(next) === 'checkbox'))
+      ? [question.key]
+      : [];
+  });
   protected readonly halves = new Set(
-    this.questions.flatMap((question, index) => {
-      const next = this.questions[index + 1];
-      return next && pairs.some(([a, b]) => question.key === a && next.key === b)
-        ? [question.key, next.key]
-        : [];
-    }),
+    this.pairs.flatMap((key) => [
+      key,
+      this.questions[this.questions.findIndex((q) => q.key === key) + 1].key,
+    ]),
   );
   private readonly arrival = this.route.queryParamMap.get('arrival') ?? '';
   protected readonly ends: { label: string; day: string; time: string | null }[];
@@ -407,8 +427,8 @@ export class Book {
     (path) => {
       const rules = answerRules(this.questions, this.texts, this.language.code);
       for (const { key } of this.questions)
-        validate(path[key], ({ value }) => {
-          const message = this.pressed() && rules[key](value());
+        validate(path[key], ({ value, valueOf }) => {
+          const message = this.pressed() && rules[key](value(), valueOf(path));
           return message ? { kind: 'answer', message } : null;
         });
     },

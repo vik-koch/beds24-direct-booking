@@ -35,13 +35,15 @@ describe('answerRules', () => {
     custom4: false,
   };
   // Each answer's error, by its question.
-  const errors = (answers: object) =>
-    Object.fromEntries(
-      Object.entries({ ...valid, ...answers }).flatMap(([key, value]) => {
-        const error = rules[key](value);
+  const errors = (answers: object) => {
+    const all = { ...valid, ...answers };
+    return Object.fromEntries(
+      Object.entries(all).flatMap(([key, value]) => {
+        const error = rules[key](value, all);
         return error ? [[key, error]] : [];
       }),
     );
+  };
 
   it('takes answers of their form, an optional one left empty', () => {
     expect(errors({})).toEqual({});
@@ -74,16 +76,40 @@ describe('answerRules', () => {
       }),
     ).toEqual({
       email: 'Enter an e-mail address such as name@example.com.',
-      phone: 'Enter a phone number in digits, such as +44 20 7946 0000.',
+      phone: 'Enter a full phone number, with its country code, such as +44 20 7946 0000.',
       countrySelect: 'Choose your country.',
       arrivalTime: 'Enter the time you expect to arrive.',
       custom1: 'Choose an answer to “Arriving by”.',
       custom3: 'Answer “Ski school from”.',
     });
-    // Too few digits for any number.
-    expect(errors({ phone: '12 34' })).toEqual({
-      phone: 'Enter a phone number in digits, such as +44 20 7946 0000.',
+    // Too few digits for a French number; Austria has numbers that short.
+    expect(errors({ phone: '12 34', countrySelect: 'FR' })).toEqual({
+      phone: 'Enter a full phone number, with its country code, such as +44 20 7946 0000.',
     });
+    expect(errors({ firstName: 'Ada2' })).toEqual({
+      firstName: 'Enter your first name in letters.',
+    });
+  });
+
+  it("reads a number written as at home in the guest's country, and any with its country code", () => {
+    const local = { phone: '06 12 34 56 78' };
+    const invalid = {
+      phone: 'Enter a full phone number, with its country code, such as +44 20 7946 0000.',
+    };
+    expect(errors({ ...local, countrySelect: 'FR' })).toEqual({});
+    // In the United Kingdom, or with no country chosen yet, it is not whole.
+    expect(errors({ ...local, countrySelect: 'GB' })).toEqual(invalid);
+    expect(errors({ ...local, countrySelect: '' })).toEqual({
+      ...invalid,
+      countrySelect: 'Choose your country.',
+    });
+    expect(errors({ phone: '+33 6 12 34 56 78', countrySelect: 'GB' })).toEqual({});
+    // A French mobile number one digit short.
+    expect(errors({ phone: '06 12 34 56 7', countrySelect: 'FR' })).toEqual(invalid);
+    // Names of any script and sign pass.
+    expect(errors({ firstName: "Zoë-Anne O'Brien" })).toEqual({});
+    expect(errors({ firstName: 'Łukasz' })).toEqual({});
+    expect(errors({ firstName: '美咲' })).toEqual({});
   });
 
   it('starts every answer empty, and asks each by its kind', () => {

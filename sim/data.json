@@ -35,34 +35,6 @@
         "houseRules": {
           "de": "Nichtraucherhaus. Haustiere sind nicht erlaubt.\nNachtruhe von 22 bis 7 Uhr.",
           "en": "No smoking in the house. Pets are not allowed.\nQuiet hours from 10 pm to 7 am."
-        },
-        "customQuestion1": {
-          "de": "Anreise mit [Auto][Bahn][Flugzeug]",
-          "en": "Arriving by [Car][Train][Plane]"
-        },
-        "customQuestion2": {
-          "de": "Kissen [Weich][Fest]",
-          "en": "Pillows [Soft][Firm]"
-        },
-        "customQuestion3": {
-          "de": "Babybett",
-          "en": "Cot for a baby"
-        },
-        "customQuestion4": {
-          "de": "Skikurs ab",
-          "en": "Ski school from"
-        },
-        "customQuestion5": {
-          "de": "Kennzeichen des Autos",
-          "en": "Car number plate"
-        },
-        "customQuestion6": {
-          "de": "Allergien",
-          "en": "Allergies"
-        },
-        "customQuestion7": {
-          "de": "Ich habe die Hausordnung gelesen",
-          "en": "I have read the house rules"
         }
       },
       "rooms": [
@@ -155,18 +127,8 @@
         "guestPhone": "compulsory",
         "guestMobile": "internal",
         "guestCountrySelect": "compulsoryBookingPage",
-        "guestAddress": "optional",
-        "guestPostcode": "optional",
-        "guestCity": "optional",
-        "customQuestion1": "compulsory multipleSelect",
-        "customQuestion2": "optional multipleList",
-        "customQuestion3": "optional tickBox",
-        "customQuestion4": "optional dateSelector",
-        "customQuestion5": "optional singleLineField",
-        "customQuestion6": "optional multiLineField",
         "guestArrivalTime": "optional",
-        "guestComments": "optional",
-        "customQuestion7": "compulsoryBookingPage tickBox"
+        "guestComments": "optional"
       }
     },
     {
@@ -199,16 +161,24 @@
           "en": "No smoking in the house. Pets are not allowed.\nQuiet hours from 10 pm to 7 am."
         },
         "customQuestion1": {
-          "de": "Wie haben Sie von uns erfahren?",
-          "en": "How did you hear of us?"
+          "de": "Anreise mit [Auto][Bahn][Flugzeug]",
+          "en": "Arriving by [Car][Train][Plane]"
         },
         "customQuestion2": {
-          "de": "Frühstück [Ja][Nein]",
-          "en": ""
+          "de": "Kissen [Weich][Fest]",
+          "en": "Pillows [Soft][Firm]"
         },
         "customQuestion3": {
           "de": "Notiz",
           "en": "Note"
+        },
+        "customQuestion4": {
+          "de": "Skikurs ab",
+          "en": "Ski school from"
+        },
+        "customQuestion5": {
+          "de": "Babybett",
+          "en": "Cot for a baby"
         }
       },
       "rooms": [
@@ -270,16 +240,17 @@
         "depositNonPayment": "cancel"
       },
       "questions": {
-        "guestTitle": "optional",
         "guestLastName": "compulsory",
         "guestEmail": "optional",
-        "guestCompany": "optional",
-        "guestCountryText": "compulsory",
-        "guestState": "optional",
-        "guestFax": "optional",
-        "customQuestion1": "optional singleLineField",
-        "customQuestion2": "optional multipleSelect",
-        "customQuestion3": "internal singleLineField"
+        "guestPhone": "compulsory",
+        "guestCountrySelect": "compulsory",
+        "customQuestion1": "compulsory multipleSelect",
+        "customQuestion2": "optional multipleList",
+        "customQuestion3": "internal singleLineField",
+        "customQuestion4": "optional dateSelector",
+        "guestArrivalTime": "optional",
+        "customQuestion5": "optional tickBox",
+        "guestComments": "optional"
       }
     },
     {
