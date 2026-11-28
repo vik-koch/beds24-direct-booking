@@ -75,7 +75,7 @@
       "other": "{count} ospiti"
     },
     "size": {
-      "shown": "{size}\u00a0m²",
+      "shown": "{size} m²",
       "spoken": "{size} metri quadrati"
     },
     "taken": "occupata",
@@ -98,8 +98,14 @@
   },
   "apartment": {
     "back": "Tutti gli appartamenti",
-    "guests": { "one": "Fino a {count} ospite", "other": "Fino a {count} ospiti" },
-    "bedrooms": { "one": "1 camera", "other": "{count} camere" },
+    "guests": {
+      "one": "Fino a {count} ospite",
+      "other": "Fino a {count} ospiti"
+    },
+    "bedrooms": {
+      "one": "1 camera",
+      "other": "{count} camere"
+    },
     "more": "Leggi di più",
     "rooms": "Stanze e letti",
     "features": "Servizi",
@@ -154,12 +160,17 @@
     "position": "Immagine {index} di {count}",
     "previous": "Immagine precedente",
     "next": "Immagine successiva",
-    "more": { "one": "+{count} immagine", "other": "+{count} immagini" },
+    "more": {
+      "one": "+{count} immagine",
+      "other": "+{count} immagini"
+    },
     "plan": "Planimetria",
     "photos": "Foto"
   },
   "amenities": {
-    "areas": { "comfort": "Comfort" },
+    "areas": {
+      "comfort": "Comfort"
+    },
     "codes": {
       "PETS_NOT_ALLOWED": "Niente animali",
       "WIFI": "Wi-Fi",
@@ -172,15 +183,116 @@
       "BATH_SHOWER": "Doccia",
       "BATH_TOILET": "WC"
     },
-    "rooms": { "BEDROOM": "Camera", "BATHROOM": "Bagno" }
+    "rooms": {
+      "BEDROOM": "Camera",
+      "BATHROOM": "Bagno"
+    }
   },
   "book": {
-    "text": "La prenotazione diretta arriva presto. Fino ad allora, prenotate su Booking.com.",
-    "link": "Prenota questa settimana su Booking.com",
-    "children": { "one": "{count} bambino", "other": "{count} bambini" },
+    "children": {
+      "one": "{count} bambino",
+      "other": "{count} bambini"
+    },
     "invalid": "Questo indirizzo non indica una settimana prenotabile.",
     "taken": "Questa settimana non è più libera.",
-    "back": "Torna a {apartment}"
+    "unavailable": "Questo appartamento al momento non si può prenotare online.",
+    "back": "Torna a {apartment}",
+    "optional": "facoltativo",
+    "choose": "Scegliete…",
+    "fields": {
+      "title": {
+        "label": "Titolo",
+        "missing": "Indicate il vostro titolo, per esempio Sig.ra o Dott."
+      },
+      "firstName": {
+        "label": "Nome",
+        "missing": "Indicate il vostro nome.",
+        "invalid": "Inserisci il tuo nome in lettere."
+      },
+      "lastName": {
+        "label": "Cognome",
+        "missing": "Indicate il vostro cognome.",
+        "invalid": "Inserisci il tuo cognome in lettere."
+      },
+      "email": {
+        "label": "Indirizzo e-mail",
+        "missing": "Indicate il vostro indirizzo e-mail.",
+        "invalid": "Indicate un indirizzo e-mail come nome@example.com."
+      },
+      "phone": {
+        "label": "Numero di telefono",
+        "missing": "Indicate il vostro numero di telefono.",
+        "invalid": "Inserisci un numero di telefono completo, con il prefisso internazionale, come {example}."
+      },
+      "mobile": {
+        "label": "Numero di cellulare",
+        "missing": "Indicate il vostro numero di cellulare.",
+        "invalid": "Inserisci un numero di cellulare completo, con il prefisso internazionale, come {example}."
+      },
+      "fax": {
+        "label": "Numero di fax",
+        "missing": "Indicate il vostro numero di fax.",
+        "invalid": "Inserisci un numero di fax completo, con il prefisso internazionale, come {example}."
+      },
+      "company": {
+        "label": "Azienda",
+        "missing": "Indicate il nome della vostra azienda."
+      },
+      "address": {
+        "label": "Via e numero civico",
+        "missing": "Indicate la vostra via e il numero civico."
+      },
+      "city": {
+        "label": "Località",
+        "missing": "Indicate la vostra località."
+      },
+      "state": {
+        "label": "Provincia o regione",
+        "missing": "Indicate la vostra provincia o regione."
+      },
+      "postcode": {
+        "label": "CAP",
+        "missing": "Indicate il vostro CAP."
+      },
+      "countryText": {
+        "label": "Paese",
+        "missing": "Indicate il vostro paese."
+      },
+      "countrySelect": {
+        "label": "Paese",
+        "missing": "Scegliete il vostro paese."
+      },
+      "arrivalTime": {
+        "label": "Ora di arrivo",
+        "missing": "Indicate a che ora pensate di arrivare."
+      },
+      "comments": {
+        "label": "Messaggio per i padroni di casa",
+        "missing": "Scrivete un messaggio per i padroni di casa."
+      }
+    },
+    "custom": {
+      "missing": "Rispondete a «{question}».",
+      "choose": "Scegliete una risposta a «{question}».",
+      "tick": "Spuntate «{question}» per prenotare."
+    },
+    "arrival": "Arrivo",
+    "departure": "Partenza",
+    "times": {
+      "both": "{from} – {until}",
+      "from": "dalle {from}",
+      "until": "entro le {until}"
+    },
+    "rent": "Affitto",
+    "tax": "Tassa di soggiorno",
+    "terms": {
+      "text": "Prenotando accettate le {link}.",
+      "link": {
+        "text": "condizioni di locazione",
+        "href": "/it/condizioni"
+      }
+    },
+    "submit": "Prenota e paga"
   },
   "placeholder": "Questa pagina è in costruzione.",
   "notFound": {

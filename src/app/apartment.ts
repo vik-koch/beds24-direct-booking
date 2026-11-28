@@ -278,18 +278,6 @@ type Fold = ReturnType<typeof fold>;
         margin-bottom: 0;
       }
 
-      .apartment {
-        padding-top: 1rem;
-
-        h1 {
-          margin-top: 0.5rem;
-        }
-      }
-
-      .back {
-        font-size: 0.9375rem;
-      }
-
       /* One column on a phone, which nothing may widen: the panel's rows do not break. */
       .apartment-columns {
         display: grid;

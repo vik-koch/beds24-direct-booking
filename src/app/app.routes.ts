@@ -11,6 +11,7 @@ import { Home } from './home';
 import { listing } from './listing';
 import { NotFound } from './not-found';
 import { Placeholder } from './placeholder';
+import { questions } from './questions';
 import { Shell } from './shell';
 import { TextPage } from './text-page';
 import { LANGUAGE, TEXTS } from './texts';
@@ -48,7 +49,7 @@ const pages = ({ code, paths }: Language): Routes => [
       {
         path: paths.book,
         loadComponent: () => import('./book').then((m) => m.Book),
-        resolve: { weeks },
+        resolve: { weeks, questions, listing },
         data: { page: 'book' },
       },
     ],

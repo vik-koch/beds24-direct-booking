@@ -92,7 +92,7 @@
       "other": "{count} Gäste"
     },
     "size": {
-      "shown": "{size}\u00a0m²",
+      "shown": "{size} m²",
       "spoken": "{size} Quadratmeter"
     },
     "taken": "belegt",
@@ -115,8 +115,14 @@
   },
   "apartment": {
     "back": "Alle Wohnungen",
-    "guests": { "one": "Bis {count} Gast", "other": "Bis {count} Gäste" },
-    "bedrooms": { "one": "1 Schlafzimmer", "other": "{count} Schlafzimmer" },
+    "guests": {
+      "one": "Bis {count} Gast",
+      "other": "Bis {count} Gäste"
+    },
+    "bedrooms": {
+      "one": "1 Schlafzimmer",
+      "other": "{count} Schlafzimmer"
+    },
     "more": "Mehr lesen",
     "rooms": "Räume und Betten",
     "features": "Ausstattung",
@@ -171,7 +177,10 @@
     "position": "Bild {index} von {count}",
     "previous": "Voriges Bild",
     "next": "Nächstes Bild",
-    "more": { "one": "+{count} Bild", "other": "+{count} Bilder" },
+    "more": {
+      "one": "+{count} Bild",
+      "other": "+{count} Bilder"
+    },
     "plan": "Grundriss",
     "photos": "Fotos"
   },
@@ -229,12 +238,110 @@
     }
   },
   "book": {
-    "text": "Die Direktbuchung kommt bald. Diese Demo nimmt keine Buchungen an.",
-    "link": "Diese Woche auf Booking.com buchen",
-    "children": { "one": "{count} Kind", "other": "{count} Kinder" },
+    "children": {
+      "one": "{count} Kind",
+      "other": "{count} Kinder"
+    },
     "invalid": "Diese Adresse nennt keine Woche, die sich buchen lässt.",
     "taken": "Diese Woche ist nicht mehr frei.",
-    "back": "Zurück zu {apartment}"
+    "unavailable": "Diese Wohnung lässt sich derzeit nicht online buchen.",
+    "back": "Zurück zu {apartment}",
+    "optional": "optional",
+    "choose": "Bitte wählen",
+    "fields": {
+      "title": {
+        "label": "Anrede",
+        "missing": "Geben Sie Ihre Anrede an, etwa Frau oder Dr."
+      },
+      "firstName": {
+        "label": "Vorname",
+        "missing": "Geben Sie Ihren Vornamen an.",
+        "invalid": "Geben Sie Ihren Vornamen in Buchstaben an."
+      },
+      "lastName": {
+        "label": "Nachname",
+        "missing": "Geben Sie Ihren Nachnamen an.",
+        "invalid": "Geben Sie Ihren Nachnamen in Buchstaben an."
+      },
+      "email": {
+        "label": "E-Mail-Adresse",
+        "missing": "Geben Sie Ihre E-Mail-Adresse an.",
+        "invalid": "Geben Sie eine E-Mail-Adresse wie name@example.com an."
+      },
+      "phone": {
+        "label": "Telefonnummer",
+        "missing": "Geben Sie Ihre Telefonnummer an.",
+        "invalid": "Geben Sie eine vollständige Telefonnummer mit Ländervorwahl an, etwa {example}."
+      },
+      "mobile": {
+        "label": "Handynummer",
+        "missing": "Geben Sie Ihre Handynummer an.",
+        "invalid": "Geben Sie eine vollständige Handynummer mit Ländervorwahl an, etwa {example}."
+      },
+      "fax": {
+        "label": "Faxnummer",
+        "missing": "Geben Sie Ihre Faxnummer an.",
+        "invalid": "Geben Sie eine vollständige Faxnummer mit Ländervorwahl an, etwa {example}."
+      },
+      "company": {
+        "label": "Firma",
+        "missing": "Geben Sie den Namen Ihrer Firma an."
+      },
+      "address": {
+        "label": "Straße und Hausnummer",
+        "missing": "Geben Sie Ihre Straße und Hausnummer an."
+      },
+      "city": {
+        "label": "Ort",
+        "missing": "Geben Sie Ihren Ort an."
+      },
+      "state": {
+        "label": "Bundesland oder Region",
+        "missing": "Geben Sie Ihr Bundesland oder Ihre Region an."
+      },
+      "postcode": {
+        "label": "Postleitzahl",
+        "missing": "Geben Sie Ihre Postleitzahl an."
+      },
+      "countryText": {
+        "label": "Land",
+        "missing": "Geben Sie Ihr Land an."
+      },
+      "countrySelect": {
+        "label": "Land",
+        "missing": "Wählen Sie Ihr Land."
+      },
+      "arrivalTime": {
+        "label": "Ankunftszeit",
+        "missing": "Geben Sie an, wann Sie ungefähr ankommen."
+      },
+      "comments": {
+        "label": "Nachricht an die Gastgeber",
+        "missing": "Schreiben Sie eine Nachricht an die Gastgeber."
+      }
+    },
+    "custom": {
+      "missing": "Beantworten Sie „{question}“.",
+      "choose": "Wählen Sie eine Antwort zu „{question}“.",
+      "tick": "Kreuzen Sie „{question}“ an, um zu buchen."
+    },
+    "arrival": "Anreise",
+    "departure": "Abreise",
+    "times": {
+      "both": "{from} – {until} Uhr",
+      "from": "ab {from} Uhr",
+      "until": "bis {until} Uhr"
+    },
+    "rent": "Miete",
+    "tax": "Ortstaxe",
+    "terms": {
+      "text": "Mit der Buchung akzeptieren Sie die {link}.",
+      "link": {
+        "text": "Mietbedingungen",
+        "href": "/de/agb"
+      }
+    },
+    "submit": "Buchen und bezahlen"
   },
   "placeholder": "Diese Seite entsteht noch.",
   "notFound": {

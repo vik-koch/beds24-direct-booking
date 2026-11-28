@@ -184,3 +184,264 @@
     calc(var(--row-padding) + var(--row-icon) + var(--row-gap));
   color: var(--color-ink-soft);
 }
+
+/* The booking form's fields: a label, its control, and its error below once the guest has left
+   the field or pressed the button. Their utilities are not generated (styles.css). */
+.spartan-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.spartan-field-orientation-horizontal {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.375rem 0.75rem;
+
+  > [data-slot='field-label'] {
+    flex: 1 1 0;
+  }
+
+  > [data-slot='field-error'] {
+    flex-basis: 100%;
+  }
+}
+
+.spartan-field-set {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+/* On the page's ground the white fill and the label mark a field, below WCAG 1.4.11's 3:1 for a
+   field without an edge: the site's fields get their look in one step later. Its edge shows only
+   an error, and in forced colours, where a transparent edge is drawn. */
+.spartan-input,
+.spartan-textarea {
+  min-height: var(--size-control);
+  padding: 0.5rem 1.125rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-menu);
+  background: var(--color-surface);
+  color: var(--color-ink);
+}
+
+/* An example in a field, in soft ink so that it does not read as an answer. */
+:is(.spartan-input, .spartan-textarea)::placeholder {
+  color: var(--color-ink-soft);
+  opacity: 1;
+}
+
+/* A time's and a date's empty parts as wide as their digits, so that the dashes do not jump. */
+.spartan-input {
+  font-variant-numeric: tabular-nums;
+
+  &::-webkit-datetime-edit-hour-field,
+  &::-webkit-datetime-edit-minute-field,
+  &::-webkit-datetime-edit-day-field,
+  &::-webkit-datetime-edit-month-field {
+    display: inline-block;
+    min-width: 2ch;
+    text-align: center;
+  }
+
+  &::-webkit-datetime-edit-year-field {
+    display: inline-block;
+    min-width: 4ch;
+    text-align: center;
+  }
+}
+
+.spartan-textarea {
+  field-sizing: content;
+  min-height: calc(2lh + 1rem + 2px);
+}
+
+/* The copied controls' outline-none, which other components' classes generate, would hide the
+   page's focus ring. */
+:is(.spartan-input, .spartan-textarea, .spartan-checkbox):focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 3px;
+}
+
+/* Pressed with a pointer, a field shows its caret or its list instead (the booking step's
+   data-pointer). */
+[data-pointer] :is(.spartan-input, .spartan-textarea):focus-visible {
+  outline: none;
+}
+
+/* A tick box beside its label stands on the middle of the label's capitals, as an icon beside text
+   does (styles.css): on the baseline, lowered by half its size less half a capital. Its tick is
+   out of the flow, so that the baseline is its lower edge, ticked or not. */
+.spartan-field-orientation-horizontal {
+  align-items: baseline;
+}
+
+.spartan-field-orientation-horizontal > hlm-checkbox .spartan-checkbox {
+  --drop: round(calc(0.75rem - 0.5cap), 1px);
+  position: relative;
+  top: var(--drop);
+  margin-top: calc(-1 * var(--drop));
+}
+
+.spartan-checkbox-indicator {
+  position: absolute;
+  inset: 0;
+}
+
+/* A select's chevron, which turns as its list opens, and a field's icon: the guests' select and
+   the booking form's fields. */
+.spartan-select-trigger-icon,
+.spartan-control > ng-icon {
+  --ng-icon__size: 1rem;
+  --ng-icon__color: var(--color-ink-soft);
+  transition: rotate 0.2s;
+}
+
+[aria-expanded='true'] > .spartan-select-trigger-icon {
+  rotate: 180deg;
+}
+
+/* A field with an icon at its end: a dropdown's chevron, a date's calendar, a time's clock. The
+   browser's own picker button stays under the icon, unseen, so that pressing the icon opens it. */
+.spartan-control {
+  position: relative;
+  display: grid;
+
+  > .spartan-input {
+    padding-right: 2.75rem;
+  }
+
+  > ng-icon {
+    position: absolute;
+    top: 50%;
+    right: 1.125rem;
+    translate: 0 -50%;
+    pointer-events: none;
+  }
+
+  /* Chromium's second stop in a date or a time, which opens its picker: its own icon gone, a
+     round ring as large as a control around the site's, centred on it. */
+  ::-webkit-calendar-picker-indicator {
+    /* Over Chromium's own ring, which a :focus-visible here does not replace. */
+    outline-color: var(--color-accent);
+    position: absolute;
+    right: calc(1.125rem + 0.5rem - var(--size-control) / 2);
+    width: var(--size-control);
+    height: var(--size-control);
+    margin: 0;
+    padding: 0;
+    border-radius: 50%;
+    background: none;
+    cursor: pointer;
+
+    &:focus-visible {
+      outline: var(--focus-ring);
+      outline-offset: -2px;
+    }
+  }
+}
+
+select.spartan-input {
+  appearance: none;
+  cursor: pointer;
+}
+
+/* Its own rule: a browser without :open would drop the others with it. */
+.spartan-control:has(select:open) > ng-icon {
+  rotate: 180deg;
+}
+
+/* Where the browser lets a page style the dropdown's list, it looks like the guests' select's. */
+@supports (appearance: base-select) {
+  select.spartan-input,
+  select.spartan-input::picker(select) {
+    appearance: base-select;
+  }
+
+  select.spartan-input:is(:hover, :open) {
+    background: var(--color-surface);
+  }
+
+  select.spartan-input::picker-icon {
+    display: none;
+  }
+
+  select.spartan-input::picker(select) {
+    max-height: min(18rem, 50svh);
+    margin-block: 0.375rem;
+    padding: 0.375rem;
+    border: 0;
+    border-radius: var(--radius-menu);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-card);
+  }
+
+  select.spartan-input option {
+    gap: 0.5rem;
+    min-height: var(--size-control-small);
+    padding: 0.25rem 0.75rem;
+    border-radius: 0.5rem;
+    color: var(--color-ink);
+    cursor: pointer;
+
+    &:is(:hover, :focus-visible) {
+      outline: none;
+      background: var(--color-ground);
+    }
+
+    /* Lucide's check, as in the guests' list. */
+    &::checkmark {
+      content: '';
+      order: 1;
+      width: 1rem;
+      height: 1rem;
+      margin-left: auto;
+      background: var(--color-accent);
+      mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E")
+        center / contain no-repeat;
+    }
+  }
+}
+
+/* A field in error has an edge in the error's colour, and its error says what to change, in
+   words. */
+[data-matches-spartan-invalid='true']:is(.spartan-input, .spartan-textarea),
+[data-matches-spartan-invalid='true'] > .spartan-checkbox {
+  border-color: var(--color-error);
+}
+
+.spartan-field-error {
+  color: var(--color-error);
+  font-size: 0.9375rem;
+  font-weight: var(--font-weight-medium);
+}
+
+.spartan-checkbox {
+  border-width: 2px;
+  border-color: var(--color-ink);
+}
+
+.spartan-field-error {
+  font-size: 0.9375rem;
+  font-weight: var(--font-weight-medium);
+}
+
+.spartan-checkbox {
+  display: grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 1px solid var(--color-edge);
+  border-radius: 0.375rem;
+  background: var(--color-surface);
+  --ng-icon__size: 1.125rem;
+
+  &[data-state='checked'] {
+    border-color: var(--color-accent);
+    background: var(--color-accent);
+    color: var(--color-on-accent);
+  }
+}

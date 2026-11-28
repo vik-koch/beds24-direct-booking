@@ -2,9 +2,6 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 import { toLanguage } from './header';
 
-const plus = (date: string, days: number) =>
-  new Date(Date.parse(date) + days * 864e5).toISOString().slice(0, 10);
-
 // A free or a booked week of the apartment's later season, as its page offers it.
 async function weekOf(page: Page, path: string, kind: 'free' | 'full') {
   await page.goto(path);
@@ -15,41 +12,108 @@ async function weekOf(page: Page, path: string, kind: 'free' | 'full') {
   return (await cells.first().getAttribute('data-date'))!;
 }
 
-for (const [lang, path, week, guests, text] of [
-  [
-    'de',
-    '/de/wohnungen/laerche',
-    'Woche',
-    '2 Erwachsene und 1 Kind',
-    'Die Direktbuchung kommt bald.',
+// The step of a free week of the apartment, once the application has started.
+async function stepOf(page: Page, path: string, query = 'adults=2') {
+  const arrival = await weekOf(page, path, 'free');
+  const step = `${path}/${path.startsWith('/de') ? 'buchen' : 'book'}?arrival=${arrival}&${query}`;
+  await page.goto(step);
+  await expect(page.locator('html')).toHaveAttribute('data-started', '');
+  return { arrival, step };
+}
+
+// A field by its name, by role: Firefox's driver crashes the page when a lookup by label meets
+// brain's checkbox, whose aria-labelledby names the label that names it already.
+const field = (page: Page, name: string) =>
+  page
+    .getByRole('textbox', { name, exact: true })
+    .or(page.getByRole('combobox', { name, exact: true }));
+
+// Each label's text, as read: its name and "(optional)" are two boxes, which innerText breaks.
+const labels = async (page: Page) =>
+  (await page.locator('form').locator('label[data-slot=field-label], legend').allInnerTexts()).map(
+    (text) => text.replace(/\s+/g, ' '),
+  );
+
+// Haus Firn's questions, as Beds24 orders them: its mobile is internal, so not asked.
+const firn = {
+  en: [
+    'First name',
+    'Surname',
+    'E-mail address',
+    'Phone number',
+    'Country',
+    'Arrival time (optional)',
+    'Message to your hosts (optional)',
   ],
-  ['en', '/en/apartments/laerche', 'Week', '2 adults and 1 child', 'Direct booking opens soon.'],
+  de: [
+    'Vorname',
+    'Nachname',
+    'E-Mail-Adresse',
+    'Telefonnummer',
+    'Land',
+    'Ankunftszeit (optional)',
+    'Nachricht an die Gastgeber (optional)',
+  ],
+};
+
+for (const [lang, path, guests, total] of [
+  ['de', '/de/wohnungen/laerche', '2 Erwachsene und 1 Kind', 'Gesamt'],
+  ['en', '/en/apartments/laerche', '2 adults and 1 child', 'Total'],
 ] as const)
-  test(`the booking step shows the stay (${lang})`, async ({ page, browser }) => {
-    const arrival = await weekOf(page, path, 'free');
-    // As the panel's button links it.
-    const book = `${path}/${lang === 'de' ? 'buchen' : 'book'}?arrival=${arrival}&adults=2&children=1`;
+  test(`the booking step shows the stay, its total and Beds24's questions (${lang})`, async ({
+    page,
+    browser,
+  }) => {
+    const { arrival, step } = await stepOf(page, path, 'adults=2&children=1');
     // Rendered by the server, before the application starts.
     const fresh = await browser.newPage();
     await fresh.route(/\/main-[\w-]+\.js$/, () => undefined);
-    const response = await fresh.goto(book, { waitUntil: 'commit' });
+    const response = await fresh.goto(step, { waitUntil: 'commit' });
     expect(response!.status()).toBe(200);
-    await expect(fresh.locator('main dd')).toHaveText(['Lärche', /2\d\d\d.*–.*2\d\d\d/, guests]);
+    await expect(fresh.locator('.summary h2')).toHaveText('Lärche');
+    await expect(fresh.locator('.summary .facts li')).toHaveText([/^2\s\D+$/, /^61\sm²\s*$/]);
+    await expect(fresh.locator('.summary img:visible')).toHaveAttribute('alt', /\w/);
+    // The days of arrival and departure, a week apart, with the hours Beds24 sets.
+    await expect(fresh.locator('.dates dt')).toHaveText(
+      lang === 'de' ? ['Anreise', 'Abreise', 'Gäste'] : ['Check-in', 'Check-out', 'Guests'],
+    );
+    await expect(fresh.locator('.dates dd')).toHaveText([
+      /2\d\d\d$/,
+      lang === 'de' ? '16:00 – 20:00 Uhr' : '16:00 – 20:00',
+      /2\d\d\d$/,
+      lang === 'de' ? 'bis 10:00 Uhr' : 'by 10:00',
+      guests,
+    ]);
+    expect(await labels(fresh)).toEqual(firn[lang]);
     await fresh.close();
 
-    await page.goto(book);
-    await expect(page.locator('html')).toHaveAttribute('data-started', '');
-    await expect(page.locator('main dt')).toHaveText([
-      lang === 'de' ? 'Wohnung' : 'Apartment',
-      week,
-      lang === 'de' ? 'Gäste' : 'Guests',
-    ]);
-    await expect(page.locator('main')).toContainText(text);
-    // The demo's apartments give no other place to book them.
-    await expect(page.locator('main a')).toHaveCount(0);
+    await expect(page.locator('.total dt')).toHaveText(
+      lang === 'de' ? ['Miete', 'Ortstaxe', total] : ['Rent', 'Local tax', total],
+    );
+    // The price, 49 of tax for two adults, and their sum.
+    const [price, tax, sum] = (await page.locator('.total dd').allInnerTexts()).map((text) =>
+      Number(
+        text
+          .replace(/[^\d,.]/g, '')
+          .replace(lang === 'de' ? /\./g : /,/g, '')
+          .replace(',', '.'),
+      ),
+    );
+    expect(tax).toBe(49);
+    expect(sum).toBeCloseTo(price + tax);
+    expect(await labels(page)).toEqual(firn[lang]);
+    await expect(
+      page.getByRole('link', {
+        name: lang === 'de' ? 'Mietbedingungen' : 'rental terms',
+        exact: true,
+      }),
+    ).toHaveAttribute('href', `${lang === 'de' ? '/de/agb' : '/en/terms'}?children=1`);
+    await expect(
+      page.getByRole('button', { name: lang === 'de' ? 'Buchen und bezahlen' : 'Book and pay' }),
+    ).toBeVisible();
     expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
 
-    // Rendered in the browser: the other language keeps the stay.
+    // Rendered in the browser: the other language keeps the stay, and asks in its words.
     const [current, other, label] =
       lang === 'de'
         ? ['Sprache: Deutsch', 'English', 'Lärche: Book']
@@ -57,35 +121,222 @@ for (const [lang, path, week, guests, text] of [
     await toLanguage(page, current, other);
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(label);
     await expect(page).toHaveURL(new RegExp(`\\?arrival=${arrival}&adults=2&children=1$`));
-    await expect(page.locator('main dd').nth(2)).toHaveText(
-      lang === 'de' ? '2 adults and 1 child' : '2 Erwachsene und 1 Kind',
-    );
+    expect(await labels(page)).toEqual(firn[lang === 'de' ? 'en' : 'de']);
   });
 
-test('the booking step links where the apartment can be booked meanwhile, with the stay', async ({
+test("each field is asked as Beds24's question and the browser may fill it in", async ({
   page,
 }) => {
-  const path = 'http://localhost:4002/it/appartamenti/vista';
-  const arrival = await weekOf(page, path, 'free');
-  // Vista asks for no children: the site linked counts them as adults.
-  await page.goto(`${path}/prenota?arrival=${arrival}&adults=1&children=1`);
-  await expect(page.locator('html')).toHaveAttribute('data-started', '');
-  const link = page.getByRole('link', { name: 'Prenota questa settimana su Booking.com' });
-  await expect(link).toHaveAttribute(
-    'href',
-    `https://booking.example/vista?checkin=${arrival}&checkout=${plus(arrival, 7)}` +
-      '&group_adults=2&group_children=0&no_rooms=1',
+  await stepOf(page, '/en/apartments/ahorn');
+  // Haus Farn hides the first name, which is asked first, and asks the e-mail as optional, which
+  // Stripe and the confirmation need; its note is internal.
+  expect(await labels(page)).toEqual([
+    'First name',
+    'Surname',
+    'E-mail address',
+    'Phone number',
+    'Country',
+    'Arriving by',
+    'Pillows (optional)',
+    'Ski school from (optional)',
+    'Arrival time (optional)',
+    'Cot for a baby (optional)',
+    'Message to your hosts (optional)',
+    'I have read the house rules',
+  ]);
+  for (const [name, type, autocomplete] of [
+    ['First name', 'text', 'given-name'],
+    ['Surname', 'text', 'family-name'],
+    ['E-mail address', 'email', 'email'],
+    ['Phone number', 'tel', 'tel'],
+    ['Ski school from (optional)', 'date', 'off'],
+    ['Arrival time (optional)', 'time', 'off'],
+  ]) {
+    await expect(field(page, name)).toHaveAttribute('type', type);
+    await expect(field(page, name)).toHaveAttribute('autocomplete', autocomplete);
+  }
+  await expect(field(page, 'Message to your hosts (optional)')).toHaveAttribute(
+    'autocomplete',
+    'off',
   );
-  // Without a stay there is nothing to link.
-  await page.goto(`${path}/prenota`);
-  await expect(page.getByRole('link', { name: 'Torna a Vista sul Ghiacciaio' })).toBeVisible();
-  await expect(page.getByRole('link', { name: /Booking\.com/ })).toHaveCount(0);
-  await page.goto(`${path}/prenota?arrival=${arrival}&adults=1&children=1`);
-  // By keyboard: after the header's links.
-  for (let i = 0; i < 30 && !(await link.evaluate((a) => a === document.activeElement)); i++)
+  await expect(field(page, 'Country')).toHaveAttribute('autocomplete', 'country');
+  // Countries by their names in the page's language, the value Beds24's code.
+  await expect(field(page, 'Country').locator('option[value=AT]')).toHaveText('Austria');
+  await expect(field(page, 'Arriving by').locator('option')).toHaveText([
+    'Choose…',
+    'Car',
+    'Train',
+    'Plane',
+  ]);
+  // A list, radio buttons on Beds24's own page, is a dropdown too.
+  await expect(field(page, 'Pillows (optional)').locator('option')).toHaveText([
+    'Choose…',
+    'Soft',
+    'Firm',
+  ]);
+  // The phone's example is a number of the page's language's region, then of the chosen country.
+  await expect(field(page, 'Phone number')).toHaveAttribute('placeholder', '+44 7400 123456');
+  await field(page, 'Country').selectOption('FR');
+  await expect(field(page, 'Phone number')).toHaveAttribute('placeholder', '+33 6 12 34 56 78');
+  await expect(page.getByRole('checkbox', { name: 'Cot for a baby (optional)' })).not.toBeChecked();
+  await expect(field(page, 'Message to your hosts (optional)')).toHaveJSProperty(
+    'tagName',
+    'TEXTAREA',
+  );
+
+  // From 40rem a pair shares a row, as does a short field with the tick box after it, and a short
+  // field alone takes half of one; on a phone each takes its own.
+  const wide = page.viewportSize()!.width >= 640;
+  const top = async (name: string) => (await field(page, name).boundingBox())!.y;
+  const row = async (one: string, other: string) =>
+    expect(Math.abs((await top(one)) - (await top(other))) < 1).toBe(wide);
+  await row('First name', 'Surname');
+  await row('E-mail address', 'Phone number');
+  const time = (await field(page, 'Arrival time (optional)').boundingBox())!;
+  const cot = (await page
+    .getByRole('checkbox', { name: 'Cot for a baby (optional)' })
+    .boundingBox())!;
+  expect(Math.abs(time.y + time.height / 2 - (cot.y + cot.height / 2)) < 4).toBe(wide);
+  expect(cot.x > time.x + time.width).toBe(wide);
+  const form = (await page.locator('.answers').boundingBox())!;
+  expect(time.width < form.width / 2).toBe(wide);
+  expect(await top('Ski school from (optional)')).toBeLessThan(time.y - 1);
+});
+
+test('the form names each error and its fix once the button is pressed, then as the guest types', async ({
+  page,
+  browserName,
+}) => {
+  await stepOf(page, '/en/apartments/ahorn');
+  const email = field(page, 'E-mail address');
+  const button = page.getByRole('button', { name: 'Book and pay' });
+  const errors = page.locator('form hlm-field-error:visible');
+  // Leaving a field shows no error, which would move the button under a pressing pointer.
+  await email.fill('ada@');
+  await email.blur();
+  await expect(button).toBeVisible();
+  await expect(errors).toHaveCount(0);
+  await expect(page.locator('form [aria-invalid=true]')).toHaveCount(0);
+
+  // Pressed with the e-mail still focused, as a guest does.
+  await email.focus();
+  await button.click();
+  await expect(field(page, 'First name')).toBeFocused();
+  await expect(errors).toHaveText([
+    'Enter your first name.',
+    'Enter your surname.',
+    'Enter an e-mail address such as name@example.com.',
+    'Enter your phone number.',
+    'Choose your country.',
+    'Choose an answer to “Arriving by”.',
+    'Tick “I have read the house rules” to book.',
+  ]);
+  await expect(email).toHaveAttribute('aria-invalid', 'true');
+  await expect(email).toHaveAccessibleDescription(
+    'Enter an e-mail address such as name@example.com.',
+  );
+  expect((await new AxeBuilder({ page }).include('form').analyze()).violations).toEqual([]);
+
+  // Then each error follows the answer: a number written as at home is whole once its country is
+  // chosen.
+  const phone = 'Enter a full phone number, with its country code, such as +44 7400 123456.';
+  await field(page, 'Phone number').fill('06 12 34 56 78');
+  await expect(errors.nth(3)).toHaveText(phone);
+  await field(page, 'Country').selectOption('FR');
+  await expect(errors).toHaveCount(5);
+  await field(page, 'Surname').fill('Lovelace 2');
+  await expect(errors.nth(1)).toHaveText('Enter your surname in letters.');
+  await email.fill('ada@example.com');
+  await field(page, 'Ski school from (optional)').fill('2027-02-06');
+  await expect(errors).toHaveCount(4);
+  await expect(email).not.toHaveAttribute('aria-invalid');
+
+  // Brain's checkbox does not link its error itself; the form does. In Firefox, Playwright's
+  // driver crashes the page when it works out this box's name late in a test, so there the box is
+  // found by its id and the link read in the DOM.
+  const tick = 'Tick “I have read the house rules” to book.';
+  if (browserName === 'firefox') {
+    await expect(page.locator('#answer-custom6')).toHaveAttribute(
+      'aria-describedby',
+      'answer-custom6-error',
+    );
+    await expect(page.locator('#answer-custom6-error')).toHaveText(tick);
+  } else
+    await expect(
+      page.getByRole('checkbox', { name: 'I have read the house rules' }),
+    ).toHaveAccessibleDescription(tick);
+});
+
+test('the form is filled in and sent by keyboard', async ({ page }) => {
+  await stepOf(page, '/en/apartments/ahorn');
+  await field(page, 'First name').focus();
+  for (const text of ['Ada', 'Lovelace', 'ada@example.com', '+44 20 7946 0000']) {
+    await page.keyboard.type(text);
     await page.keyboard.press('Tab');
-  await expect(link).toBeFocused();
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  }
+  // The country by its first letters, as a dropdown takes them.
+  await page.keyboard.type('Austria');
+  await expect(field(page, 'Country')).toHaveValue('AT');
+  await page.keyboard.press('Tab');
+  await expect(field(page, 'Arriving by')).toBeFocused();
+  await page.keyboard.type('Train');
+  await page.keyboard.press('Tab');
+  await expect(field(page, 'Pillows (optional)')).toBeFocused();
+  await page.keyboard.type('Firm');
+  await expect(field(page, 'Pillows (optional)')).toHaveValue('1');
+  // Through the date's and the time's parts, which take as many stops as the engine gives them.
+  const cot = page.getByRole('checkbox', { name: 'Cot for a baby (optional)' });
+  while (!(await cot.evaluate((box) => box === document.activeElement)))
+    await page.keyboard.press('Tab');
+  await page.keyboard.press('Space');
+  await expect(cot).toBeChecked();
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Tab');
+  await expect(page.getByRole('checkbox', { name: 'I have read the house rules' })).toBeFocused();
+  await page.keyboard.press('Space');
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Tab');
+  await expect(page.getByRole('button', { name: 'Book and pay' })).toBeFocused();
+  // The answers go to the server, which books the week (#349).
+  const [request] = await Promise.all([
+    page.waitForRequest((request) => request.method() === 'POST'),
+    page.keyboard.press('Enter'),
+  ]);
+  const sent = new URLSearchParams(request.postData()!);
+  expect(sent.get('answers.lastName')).toBe('Lovelace');
+  expect(sent.get('answers.countrySelect')).toBe('AT');
+  expect(sent.get('answers.custom1')).toBe('1');
+  // A tick box sends "1" ticked, as Beds24 keeps it, and nothing left empty.
+  expect(sent.get('answers.custom5')).toBe('1');
+  expect(sent.get('answers.custom6')).toBe('1');
+});
+
+test("an apartment that Beds24's settings let the site not book shows no booking button", async ({
+  page,
+}) => {
+  // On the e2e test site Fienile's house takes bookings on request, and Zonneterras's asks a
+  // question without an Italian text; Vista's and Castagno's asks none of its own.
+  for (const [slug, bookable] of [
+    ['fienile', false],
+    ['vista', true],
+    ['castagno', true],
+    ['zonneterras', false],
+  ] as const) {
+    const path = `http://localhost:4002/it/appartamenti/${slug}`;
+    const arrival = await weekOf(page, path, 'free');
+    await page.goto(`${path}?arrival=${arrival}`);
+    await expect(page.locator('.panel .total')).toBeVisible();
+    await expect(page.locator('.panel').getByRole('link', { name: 'Prenota' }), slug).toHaveCount(
+      bookable ? 1 : 0,
+    );
+    await expect(page.locator('.panel').getByRole('button', { name: 'Prenota' })).toHaveCount(0);
+    await page.goto(`${path}/prenota?arrival=${arrival}`);
+    await expect(page.locator('main p').first()).toHaveText(
+      bookable
+        ? /Prenotando accettate/
+        : 'Questo appartamento al momento non si può prenotare online.',
+    );
+  }
 });
 
 for (const [lang, path, invalid, taken, back] of [
@@ -109,7 +360,7 @@ for (const [lang, path, invalid, taken, back] of [
     for (const query of ['', '?arrival=2020-01-04', '?arrival=2027-02-30', '?arrival=x']) {
       await page.goto(`${step}${query}`);
       await expect(page.locator('main p').first()).toHaveText(invalid);
-      await expect(page.locator('main dl')).toHaveCount(0);
+      await expect(page.locator('main form')).toHaveCount(0);
       await expect(page.getByRole('link', { name: back })).toHaveAttribute(
         'href',
         `${path}#booking`,
@@ -145,30 +396,33 @@ test('more guests than the apartment takes are named on the booking step', async
 });
 
 test(
-  'while Beds24 cannot be reached the booking step shows the stay unchecked',
+  'while Beds24 cannot be reached the booking step says booking is unavailable',
   { tag: '@any-engine' },
   async ({ page }) => {
     const response = await page.goto(
       'http://localhost:4001/en/apartments/zirbe/book?arrival=2027-01-02',
     );
     expect(response!.status()).toBe(503);
-    await expect(page.locator('main dd')).toHaveText([
-      'Zirbe',
-      'Sat, 2 January 2027 – Sat, 9 January 2027',
-      '2 adults',
-    ]);
+    await expect(page.locator('main p').first()).toHaveText(
+      'This apartment cannot be booked online at the moment.',
+    );
+    await expect(page.locator('main form')).toHaveCount(0);
   },
 );
 
 test('at 320 px the booking step does not scroll sideways, in both seasons', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 640 });
-  const arrival = await weekOf(page, '/de/wohnungen/ahorn', 'free');
-  for (const season of ['winter', 'summer'])
-    for (const path of ['/de/wohnungen/ahorn/buchen', '/en/apartments/ahorn/book']) {
-      await page.goto(`${path}?arrival=${arrival}&adults=4&children=2&season=${season}`);
-      await expect(page.locator('main dl')).toBeVisible();
+  for (const path of ['/de/wohnungen/laerche', '/en/apartments/ahorn']) {
+    const arrival = await weekOf(page, path, 'free');
+    for (const season of ['winter', 'summer']) {
+      const step = `${path}/${path.startsWith('/de') ? 'buchen' : 'book'}`;
+      await page.goto(`${step}?arrival=${arrival}&adults=2&season=${season}`);
+      await expect(page.locator('main form')).toBeVisible();
+      await page.locator('main button[type=submit]').click();
+      await expect(page.locator('form hlm-field-error:visible').first()).toBeVisible();
       await expect
         .poll(() => page.locator('html').evaluate((html) => html.scrollWidth - html.offsetWidth))
         .toBe(0);
     }
+  }
 });

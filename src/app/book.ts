@@ -1,74 +1,496 @@
-import { Component, inject } from '@angular/core';
+import { Component, computed, ElementRef, inject, signal, viewChild } from '@angular/core';
+import { form, FormField, FormRoot, validate } from '@angular/forms/signals';
 import { ActivatedRoute } from '@angular/router';
-import type { FreeWeeks } from '../beds24/weeks';
+import { NgIcon, provideIcons } from '@ng-icons/core';
+import {
+  lucideArrowLeft,
+  lucideBedDouble,
+  lucideCalendar,
+  lucideChevronDown,
+  lucideClock,
+  lucideRuler,
+  lucideSparkles,
+} from '@ng-icons/lucide';
+import { HlmCheckbox } from '@spartan-ng/helm/checkbox';
+import { HlmFieldImports } from '@spartan-ng/helm/field';
+import { HlmInput } from '@spartan-ng/helm/input';
+import { HlmTextarea } from '@spartan-ng/helm/textarea';
+import type { Listing } from '../beds24/client';
+import type { Question } from '../beds24/questions';
+import type { Capacity, FreeWeeks } from '../beds24/weeks';
 import site from '../content/generated/site';
-import { Choice, fits, seasonOf } from './choice';
+import { placesOf, srcset } from '../content/names';
+import {
+  answerRules,
+  blank,
+  countries,
+  guestFields,
+  inputOf,
+  phoneExample,
+  type Answers,
+} from './answers';
+import { Choice, fits, seasonOf, taxed, taxFor } from './choice';
+import { Files } from './files';
+import { Season } from './season';
 import { heading } from './shell';
-import { addDays, address, fill, formatStay, isDay, LANGUAGE, TEXTS } from './texts';
+import { addDays, address, fill, formatMoney, isDay, LANGUAGE, TEXTS } from './texts';
 
-// The booking step until online booking opens: the stay from the address, checked against the
-// apartment's weeks and limits, and a link to book it elsewhere, such as on a booking site. While
-// Beds24 cannot be reached the stay goes unchecked: the site linked checks it.
+// A date and a time are short: each takes half a row.
+const pickerIcons: Record<string, string> = { date: 'lucideCalendar', time: 'lucideClock' };
+
+const pairs = [
+  ['firstName', 'lastName'],
+  ['email', 'phone'],
+  ['email', 'mobile'],
+  ['phone', 'mobile'],
+  ['postcode', 'city'],
+];
+
+// The booking step: the stay from the address, checked against the apartment's weeks and limits,
+// and the form that asks what the property's booking questions in Beds24 ask (ADR 19).
 @Component({
   selector: 'app-book',
+  imports: [
+    NgIcon,
+    Files,
+    FormRoot,
+    FormField,
+    HlmFieldImports,
+    HlmInput,
+    HlmTextarea,
+    HlmCheckbox,
+  ],
+  providers: [
+    provideIcons({
+      lucideArrowLeft,
+      lucideBedDouble,
+      lucideCalendar,
+      lucideChevronDown,
+      lucideClock,
+      lucideRuler,
+      lucideSparkles,
+    }),
+  ],
   template: `
-    <div class="column pt-(--space-section)">
+    <div class="column apartment">
+      <a class="back" [href]="choice.link(back)"
+        ><ng-icon name="lucideArrowLeft" aria-hidden="true" />{{
+          fill(texts.book.back, { apartment: name })
+        }}</a
+      >
       <h1 class="headline">{{ heading }}</h1>
       @if (problem) {
         <p class="text-ink-soft mt-6">{{ problem }}</p>
-        <p class="mt-6">
-          <a class="button" [href]="choice.link(back)">{{
-            fill(texts.book.back, { apartment: name })
-          }}</a>
-        </p>
       } @else {
-        <dl class="mt-6 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1">
-          <dt class="text-ink-soft">{{ texts.weeks.apartment }}</dt>
-          <dd>{{ name }}</dd>
-          <dt class="text-ink-soft">{{ texts.weeks.week }}</dt>
-          <dd>{{ week }}</dd>
-          <dt class="text-ink-soft">{{ texts.panel.guests }}</dt>
-          <dd>{{ guests }}</dd>
-        </dl>
-        <p class="mt-6">{{ texts.book.text }}</p>
-        @if (elsewhere) {
-          <p class="mt-6">
-            <a class="button" [href]="elsewhere">{{ texts.book.link }}</a>
-          </p>
-        }
+        <!-- One form for the answers and the summary, whose button sends it. -->
+        <form #element class="booking-step" method="post" [formRoot]="answers">
+          <div class="answers">
+            @for (question of questions; track question.key) {
+              @let field = answers[question.key];
+              @let id = 'answer-' + question.key;
+              @let label = labelOf(question);
+              @let error = field().errors()[0]?.message;
+              @let kind = inputOf(question);
+              @if (kind === 'checkbox') {
+                <div hlmField orientation="horizontal" [class.half]="halves.has(question.key)">
+                  <!-- Its error is on the box, which brain's checkbox does not link itself. -->
+                  <hlm-checkbox
+                    [inputId]="id"
+                    [formField]="$any(field)"
+                    [aria-describedby]="error ? id + '-error' : null"
+                  />
+                  <!-- Brain's box is a button, which a form does not send: its answer, as Beds24
+                       keeps a ticked one. -->
+                  <input
+                    type="hidden"
+                    [name]="'answers.' + question.key"
+                    [value]="field().value() ? '1' : ''"
+                  />
+                  <label hlmFieldLabel [for]="id"
+                    >{{ label }}
+                    @if (!question.required) {
+                      <span class="optional">{{ ' (' + texts.book.optional + ')' }}</span>
+                    }
+                  </label>
+                  <hlm-field-error [id]="id + '-error'">{{ error }}</hlm-field-error>
+                </div>
+              } @else {
+                <div
+                  hlmField
+                  [class.half]="halves.has(question.key) || kind in pickerIcons"
+                  [class.pair]="pairs.includes(question.key)"
+                >
+                  <label hlmFieldLabel [for]="id"
+                    >{{ label }}
+                    @if (!question.required) {
+                      <span class="optional">{{ ' (' + texts.book.optional + ')' }}</span>
+                    }
+                  </label>
+                  @switch (kind) {
+                    @case ('select') {
+                      <div class="spartan-control">
+                        <select
+                          hlmInput
+                          [id]="id"
+                          [formField]="$any(field)"
+                          [attr.autocomplete]="autocompleteOf(question)"
+                          [attr.aria-required]="question.required || null"
+                        >
+                          <option value="">{{ texts.book.choose }}</option>
+                          @for (choice of optionsOf(question); track choice.value) {
+                            <option [value]="choice.value">{{ choice.text }}</option>
+                          }
+                        </select>
+                        <ng-icon name="lucideChevronDown" aria-hidden="true" />
+                      </div>
+                    }
+                    @case ('textarea') {
+                      <textarea
+                        hlmTextarea
+                        [id]="id"
+                        [formField]="$any(field)"
+                        [attr.autocomplete]="autocompleteOf(question)"
+                        [attr.aria-required]="question.required || null"
+                      ></textarea>
+                    }
+                    @default {
+                      @let icon = pickerIcons[kind];
+                      <div [class.spartan-control]="icon">
+                        <input
+                          hlmInput
+                          class="w-full"
+                          [id]="id"
+                          [type]="kind"
+                          [formField]="$any(field)"
+                          [attr.autocomplete]="autocompleteOf(question)"
+                          [attr.aria-required]="question.required || null"
+                          [attr.placeholder]="kind === 'tel' ? example() : null"
+                        />
+                        @if (icon) {
+                          <ng-icon [name]="icon" aria-hidden="true" />
+                        }
+                      </div>
+                    }
+                  }
+                  <hlm-field-error [id]="id + '-error'">{{ error }}</hlm-field-error>
+                </div>
+              }
+            }
+          </div>
+          <div class="summary">
+            <div class="summary-picture">
+              @for (shown of place; track $index) {
+                @let picture = shown.picture;
+                <img
+                  class="season-picture"
+                  [attr.data-for]="shown.season"
+                  [appFiles]="{
+                    sizes: '(min-width: 64rem) 24rem, 100vw',
+                    srcset: srcset(picture),
+                    src: picture.sources[0].url,
+                  }"
+                  [width]="picture.width"
+                  [height]="picture.height"
+                  [alt]="picture.alt[language.code]"
+                  loading="lazy"
+                />
+                @if (picture.generated) {
+                  <span class="ai-label season-picture" [attr.data-for]="shown.season"
+                    ><ng-icon name="lucideSparkles" aria-hidden="true" />{{
+                      texts.apartment.generated
+                    }}</span
+                  >
+                }
+              }
+            </div>
+            <div class="summary-text">
+              <h2>{{ name }}</h2>
+              @if (listing; as listing) {
+                <ul class="facts">
+                  @if (listing.bedrooms) {
+                    <li>
+                      <ng-icon name="lucideBedDouble" aria-hidden="true" />{{
+                        count(texts.apartment.bedrooms, listing.bedrooms)
+                      }}
+                    </li>
+                  }
+                  <li>
+                    <ng-icon name="lucideRuler" aria-hidden="true" />{{
+                      fill(texts.weeks.size.shown, { size: listing.size })
+                    }}
+                  </li>
+                </ul>
+              }
+              <dl class="dates card-part">
+                @for (end of ends; track end.label) {
+                  <div>
+                    <dt>{{ end.label }}</dt>
+                    <dd>{{ end.day }}</dd>
+                    @if (end.time) {
+                      <dd class="time">{{ end.time }}</dd>
+                    }
+                  </div>
+                }
+                <div class="guests">
+                  <dt>{{ texts.panel.guests }}</dt>
+                  <dd>{{ guests }}</dd>
+                </div>
+              </dl>
+              <dl class="total card-part">
+                <div>
+                  <dt>{{ texts.book.rent }}</dt>
+                  <dd>{{ money(price) }}</dd>
+                </div>
+                @if (tax !== null) {
+                  <div>
+                    <dt>{{ texts.book.tax }}</dt>
+                    <dd>{{ money(tax) }}</dd>
+                  </div>
+                }
+                <div class="sum">
+                  <dt>{{ texts.panel.total }}</dt>
+                  <dd>{{ money(price + (tax ?? 0)) }}</dd>
+                </div>
+              </dl>
+              @let terms = texts.book.terms.text.split('{link}');
+              <p class="terms">
+                {{ terms[0]
+                }}<a [href]="choice.link(texts.book.terms.link.href)">{{
+                  texts.book.terms.link.text
+                }}</a
+                >{{ terms[1] }}
+              </p>
+              <!-- Enter in a field presses it too. -->
+              <button type="submit" class="button wide" (click)="pressed.set(true)">
+                {{ texts.book.submit }}
+              </button>
+            </div>
+          </div>
+        </form>
       }
     </div>
+  `,
+  // A field pressed with a pointer shows no focus ring, as a button does not; Tab brings it back.
+  // Set at once, not on the next render, which would show the ring for a frame.
+  host: {
+    '(pointerdown)': '$any($event.currentTarget).toggleAttribute("data-pointer", true)',
+    '(keydown.tab)': '$any($event.currentTarget).removeAttribute("data-pointer")',
+    '(keydown.shift.tab)': '$any($event.currentTarget).removeAttribute("data-pointer")',
+  },
+  styles: `
+    @layer components {
+      /* As on the apartment's page, the summary beside the form from 64rem, where it stays in view
+         if the screen is tall enough; below, it ends the form with its button. */
+      .booking-step {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 2.5rem;
+        margin-top: 1.5rem;
+
+        @media (min-width: 64rem) {
+          grid-template-columns: minmax(0, 1fr) 24rem;
+          column-gap: 3rem;
+          align-items: start;
+
+          .summary {
+            grid-column: 2;
+            grid-row: 1;
+          }
+
+          @media (min-height: 52rem) {
+            .summary {
+              position: sticky;
+              top: 5.5rem;
+            }
+          }
+        }
+      }
+
+      /* Two fields share a row where they are a pair, or short, from 40rem, where the form's column
+         is at least 29rem wide, also beside the summary. */
+      .answers {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 1.25rem 1rem;
+        max-width: 36rem;
+
+        > * {
+          grid-column: 1 / -1;
+        }
+
+        h2 {
+          margin: 0;
+        }
+
+        @media (min-width: 40rem) {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+
+          > .half {
+            grid-column: auto;
+          }
+
+          > .pair {
+            grid-column-start: 1;
+          }
+
+          /* A tick box beside a field stands level with the field, below its label. */
+          > .half[orientation='horizontal'] {
+            align-self: start;
+            padding-top: calc(1lh + 0.375rem + (var(--size-control) - 1lh) / 2);
+          }
+        }
+      }
+
+      /* Its own flex item in the label, which would drop its leading space. */
+      .optional {
+        color: var(--color-ink-soft);
+        white-space: pre-wrap;
+      }
+
+      .summary {
+        overflow: clip;
+      }
+
+      .summary-picture {
+        aspect-ratio: 5 / 2;
+        border-radius: 0;
+      }
+
+      .summary-text {
+        h2 {
+          margin: 0;
+          line-height: 1.2;
+        }
+
+        .facts {
+          margin-top: 0.5rem;
+        }
+
+        .terms {
+          margin-top: 1rem;
+          color: var(--color-ink-soft);
+          font-size: 0.875rem;
+        }
+      }
+
+      /* Arrival and departure side by side, each its day and its hours; the guests below. */
+      .dates {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.75rem 1rem;
+        font-size: 0.9375rem;
+
+        dt,
+        .time {
+          color: var(--color-ink-soft);
+        }
+
+        dt + dd {
+          font-weight: var(--font-weight-medium);
+        }
+
+        .guests {
+          grid-column: 1 / -1;
+
+          dd {
+            font-weight: var(--font-weight-normal);
+          }
+        }
+      }
+    }
   `,
 })
 export class Book {
   protected readonly texts = inject(TEXTS);
   protected readonly fill = fill;
-  private readonly language = inject(LANGUAGE);
+  protected readonly inputOf = inputOf;
+  protected readonly pickerIcons = pickerIcons;
+  protected readonly language = inject(LANGUAGE);
+  protected readonly srcset = srcset;
   protected readonly choice = inject(Choice);
   private readonly route = inject(ActivatedRoute).snapshot;
   protected readonly heading = heading(this.texts, this.route);
   private readonly slug: string = this.route.params['slug'];
   private readonly apartment = site.apartments.find(({ slug }) => slug === this.slug)!;
   protected readonly name = this.apartment.name;
+  // The first place's pictures, of one season each where the gallery has two.
+  protected readonly place = placesOf(this.apartment.pictures, inject(Season).names)[0];
 
   private readonly plural = new Intl.PluralRules(this.language.tag);
   // A count and its noun stay on one line.
-  private readonly count = (forms: { one: string; other: string }, count: number) =>
+  protected readonly count = (forms: { one: string; other: string }, count: number) =>
     fill(this.plural.select(count) === 'one' ? forms.one : forms.other, { count }).replaceAll(
       ' ',
-      '\u00a0',
+      ' ',
     );
 
+  private readonly weeks: FreeWeeks | null = this.route.data['weeks'];
+  protected readonly questions: Question[] = this.route.data['questions'] ?? [];
+  protected readonly listing: Listing | null = this.route.data['listing'];
+  // Fields that share a row when Beds24 asks them one after the other, the first starting it: a
+  // pair, or a short field and a tick box.
+  protected readonly pairs = this.questions.flatMap((question, index) => {
+    const next = this.questions[index + 1];
+    return next &&
+      (pairs.some(([a, b]) => question.key === a && next.key === b) ||
+        (inputOf(question) in pickerIcons && inputOf(next) === 'checkbox'))
+      ? [question.key]
+      : [];
+  });
+  protected readonly halves = new Set(
+    this.pairs.flatMap((key) => [
+      key,
+      this.questions[this.questions.findIndex((q) => q.key === key) + 1].key,
+    ]),
+  );
   private readonly arrival = this.route.queryParamMap.get('arrival') ?? '';
-  protected readonly week: string;
+  protected readonly ends: { label: string; day: string; time: string | null }[];
   protected readonly guests: string;
+  protected readonly price: number;
+  protected readonly tax: number | null;
   protected readonly problem: string | null;
   protected readonly back: string;
-  protected readonly elsewhere: string | null;
+
+  private readonly element = viewChild<ElementRef<HTMLFormElement>>('element');
+  protected readonly pressed = signal(false);
+  private readonly countryNames = new Intl.DisplayNames(this.language.tag, { type: 'region' });
+  // The countries by their names in the page's language, the value Beds24's code.
+  private readonly countryOptions = countries
+    .map((value) => ({ value, text: this.countryNames.of(value) ?? value }))
+    .sort((a, b) => a.text.localeCompare(b.text, this.language.tag));
+  protected readonly answers = form(
+    signal<Answers>(blank(this.questions)),
+    // The answers are checked once the button is pressed, then as the guest types. An error shown
+    // on leaving a field would push the button down under a pointer pressing it, and the press
+    // would be lost.
+    (path) => {
+      const rules = answerRules(this.questions, this.texts, this.language);
+      for (const { key } of this.questions)
+        validate(path[key], ({ value, valueOf }) => {
+          const message = this.pressed() && rules[key](value(), valueOf(path));
+          return message ? { kind: 'answer', message } : null;
+        });
+    },
+    {
+      name: 'answers',
+      submission: {
+        // The server books the week and sends the guest on to pay (#349).
+        action: async () => {
+          this.element()!.nativeElement.submit();
+          return undefined;
+        },
+        onInvalid: (answers) => answers().errorSummary()[0]?.fieldTree().focusBoundControl(),
+      },
+    },
+  );
+
+  // The phone fields' example, in the guest's chosen country.
+  protected readonly example = computed(() =>
+    phoneExample(this.answers().value(), this.language.tag),
+  );
 
   constructor() {
-    const weeks: FreeWeeks | null = this.route.data['weeks'];
-    const limits = weeks?.capacities[this.slug];
+    const limits = this.weeks?.capacities[this.slug];
     const [adults, children] = [this.choice.adults(), this.choice.children()];
     // Where the apartment asks for no children, they are guests like the adults.
     const plain = limits && !limits.asksChildren;
@@ -78,11 +500,12 @@ export class Book {
           this.count(this.texts.panel.adults, adults),
           ...(children ? [this.count(this.texts.book.children, children)] : []),
         ]);
-    const season = weeks && seasonOf(weeks, this.arrival);
-    const valid = weeks ? !!season : isDay(this.arrival);
-    const free =
-      !weeks ||
-      !!season?.weeks.some(({ arrival, prices }) => arrival === this.arrival && prices[0] !== null);
+    const season = this.weeks && seasonOf(this.weeks, this.arrival);
+    const valid = this.weeks ? !!season : isDay(this.arrival);
+    this.price =
+      season?.weeks.find(({ arrival }) => arrival === this.arrival)?.prices[0] ?? Number.NaN;
+    this.tax =
+      this.weeks?.tax && limits ? taxFor(this.weeks.tax, taxed(limits, adults, children)) : null;
     const dates = new Intl.DateTimeFormat(this.language.tag, {
       weekday: 'short',
       day: 'numeric',
@@ -90,33 +513,81 @@ export class Book {
       year: 'numeric',
       timeZone: 'UTC',
     });
-    this.week = valid
-      ? formatStay(dates, { arrival: this.arrival, departure: addDays(this.arrival, 7) })
-      : '';
-    this.problem = !valid
-      ? this.texts.book.invalid
-      : !free
-        ? this.texts.book.taken
-        : limits && !fits(limits, adults, children)
-          ? fill(this.texts.panel.small, {
-              name: this.name,
-              guests: this.count(this.texts.weeks.guests, limits.maxPeople),
-            })
-          : null;
+    const { from, until } = this.listing?.checkIn ?? { from: null, until: null };
+    const times = this.texts.book.times;
+    const checkOut = this.listing?.checkOut;
+    this.ends = valid
+      ? [
+          {
+            label: this.texts.book.arrival,
+            day: dates.format(new Date(this.arrival)),
+            time:
+              from && until
+                ? fill(times.both, { from, until })
+                : from
+                  ? fill(times.from, { from })
+                  : until
+                    ? fill(times.until, { until })
+                    : null,
+          },
+          {
+            label: this.texts.book.departure,
+            day: dates.format(new Date(addDays(this.arrival, 7))),
+            time: checkOut ? fill(times.until, { until: checkOut }) : null,
+          },
+        ]
+      : [];
+    this.problem = this.problemOf(valid, limits, adults, children);
     // The apartment's panel shows the week chosen, as blocked where it is no longer free.
     const page = address(this.language, 'apartment', this.slug);
     // Its season is the one shown when it is followed.
     this.back = `${page}${valid ? `?arrival=${this.arrival}` : ''}#booking`;
-    // The site linked counts them as adults too.
-    const url = this.apartment.elsewhere;
-    this.elsewhere =
-      url && valid
-        ? fill(url, {
-            arrival: this.arrival,
-            departure: addDays(this.arrival, 7),
-            adults: plain ? adults + children : adults,
-            children: plain ? 0 : children,
-          })
-        : null;
+  }
+
+  // Why the stay cannot be booked here, if it cannot. Without Beds24 it goes unchecked, and the
+  // form cannot be asked.
+  private problemOf(
+    valid: boolean,
+    limits: Capacity | undefined,
+    adults: number,
+    children: number,
+  ) {
+    if (!valid) return this.texts.book.invalid;
+    if (!this.weeks || !this.questions.length || !this.weeks.apartments[0].bookable)
+      return this.texts.book.unavailable;
+    if (Number.isNaN(this.price)) return this.texts.book.taken;
+    if (limits && !fits(limits, adults, children))
+      return fill(this.texts.panel.small, {
+        name: this.name,
+        guests: this.count(this.texts.weeks.guests, limits.maxPeople),
+      });
+    return null;
+  }
+
+  protected money(amount: number) {
+    return formatMoney(this.language.tag, this.weeks!.currency, amount);
+  }
+
+  protected labelOf(question: Question) {
+    const label =
+      'type' in question
+        ? question.label[this.language.code]
+        : this.texts.book.fields[question.key].label;
+    return label;
+  }
+
+  protected autocompleteOf(question: Question) {
+    return 'type' in question ? 'off' : guestFields[question.key].autocomplete;
+  }
+
+  protected choicesOf(question: Question) {
+    return ('type' in question && question.choices?.[this.language.code]) || [];
+  }
+
+  // A choice's position, or a country.
+  protected optionsOf(question: Question) {
+    return 'type' in question
+      ? this.choicesOf(question).map((text, index) => ({ value: String(index), text }))
+      : this.countryOptions;
   }
 }

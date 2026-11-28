@@ -6,8 +6,8 @@ import { TEXTS } from './texts';
 
 // What the bar says in one season: maybe an apartment's name, an amount with words around it,
 // maybe a line below, and a link on with its label, or without a link a button the page
-// answers. A chosen week has a cross that clears it; a blocked one, which cannot be booked, has
-// only the cross and says why in place of the amount.
+// answers, or nothing without a label. A chosen week has a cross that clears it; a blocked one,
+// which cannot be booked, has only the cross and says why in place of the amount.
 export interface BarLine {
   season: SeasonName;
   name: string;
@@ -58,7 +58,7 @@ export interface BarLine {
                 <ng-icon name="lucideX" aria-hidden="true" />
               </button>
             }
-            @if (!line.blocked) {
+            @if (!line.blocked && line.label) {
               @if (line.link) {
                 <a class="button" [href]="line.link">{{ line.label }}</a>
               } @else {

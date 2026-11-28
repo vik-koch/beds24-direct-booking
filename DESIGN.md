@@ -10,6 +10,7 @@ colors:
   ink-soft: '#5a666e'
   line: '#e9e3db'
   edge: '#7c878f'
+  error: '#a52a1f'
   winter: '#3b587c'
   winter-soft: '#e2e8f0'
   summer: '#2c7060'
@@ -149,7 +150,10 @@ A neutral, slightly warm light palette with a single accent that changes with th
 - **Slate Ink** (#27323a): text and headings, and the chosen apartment tab.
 - **Soft Ink** (#5a666e): secondary text, column notes, a booked week.
 - **Hairline** (#e9e3db): the line between two rows of a list.
-- **Edge** (#7c878f): the outline of a control that has no fill, at 3:1 against the ground.
+- **Edge** (#7c878f): the outline of a control that has no fill and of a form's field, at 3:1
+  against the ground.
+- **Brick Red** (#a52a1f): a form's error and the edge of the field it names, at 4.5:1 against the
+  ground and the surface.
 - **Navy Tint** (#e2e8f0) and **Emerald Tint** (#deede8): the hover behind a price.
 
 ### Map
@@ -207,7 +211,9 @@ hierarchy; weight barely does.
   the other season. A text button within a page's content ("Mehr lesen", the list's link to the
   other season) takes body size, as the text it stands in.
 - **Hint** (400, 0.875rem, ink-soft): every note and hint: the guests' note, the too-small hint with
-  its info icon, the list's price note.
+  its info icon, the list's price note, the line on the terms above the booking button.
+- **A form's field** has its label in body text and its error below it in the label style, in brick
+  red.
 
 ### Named Rules
 
@@ -275,6 +281,7 @@ downwards, so it reads as lying on the page rather than floating.
   round.
 - **Borders are rare:** one pixel in the edge colour around a control without a fill, and a hairline
   between list rows. No frames around cards.
+- **A form's fields** have the menu's corners (1rem), not a pill's.
 - **Icons** come from one set with round line ends, at 1.375rem beside text: Lucide, the set
   spartan/ui's components use, at its stroke width of 2. Beside text (facts, features, rooms,
   amenities, hints) they are in soft ink, so the prose has less black; in a control they take its

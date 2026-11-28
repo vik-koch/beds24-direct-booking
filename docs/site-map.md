@@ -43,7 +43,8 @@ slug is the same in both languages and comes from the deployment's content.
 - **The booking step** belongs to one apartment and takes the stay as query parameters, which are
   not translated. The stay is in the address so that a reload or a shared link keeps it. Opened
   without a stay, or with one that is not free or too many guests, it says so and links back to the
-  apartment's page and its stay picker.
+  apartment's page and its stay picker; the same where the apartment takes no booking on the site or
+  Beds24 cannot be reached. Otherwise it shows the stay with its total and the booking form.
 - **The confirmation** has one address per language, because Stripe returns the guest to it.
 - **An apartment's own pages** are content pages that belong to it, below its address. Its page
   links them from folds of its own under "Good to know", after Beds24's, each with an icon, a title

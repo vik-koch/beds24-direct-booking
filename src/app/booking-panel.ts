@@ -303,7 +303,7 @@ const shownMonths = new InjectionToken('booking panel months', {
             </div>
           }
         </div>
-        <div class="guests">
+        <div class="guests card-part">
           @if (choice.asksChildren()) {
             <h3>{{ texts.panel.guests }}</h3>
           }
@@ -319,7 +319,7 @@ const shownMonths = new InjectionToken('booking panel months', {
              of it is chosen, which shows as blocked. -->
         @for (season of weeks.seasons; track season.name) {
           @if (season.state === 'open' || pickIn(season.name)) {
-            <div class="outcome" [attr.data-for]="season.name">
+            <div class="outcome card-part" [attr.data-for]="season.name">
               @if (pickIn(season.name); as stay) {
                 <dl class="total">
                   <div>
@@ -340,12 +340,14 @@ const shownMonths = new InjectionToken('booking panel months', {
                     </div>
                   }
                 </dl>
-                @if (!blocked()) {
+                @if (bookable && !blocked()) {
                   <a class="button wide" [href]="bookingLink(stay)"
                     >{{ texts.panel.book }}<ng-icon name="lucideArrowRight" aria-hidden="true"
                   /></a>
-                } @else {
+                } @else if (bookable) {
                   <button type="button" class="button wide" disabled>{{ texts.panel.book }}</button>
+                }
+                @if (blocked()) {
                   <!-- The bar and its cross are not there on a desktop. -->
                   <button type="button" class="text-button clear-week" (click)="clear()">
                     {{ texts.weeks.clear }}
@@ -405,8 +407,6 @@ const shownMonths = new InjectionToken('booking panel months', {
         --pill: var(--color-accent);
         --on-pill: var(--color-on-accent);
         --band: var(--color-accent-soft);
-        --inset: 1.25rem;
-        padding: 1.5rem var(--inset);
         /* The phone bar brings the panel's foot as far from the screen's foot as from its sides. */
         scroll-margin-bottom: 1rem;
 
@@ -414,11 +414,6 @@ const shownMonths = new InjectionToken('booking panel months', {
           --pill: var(--color-line);
           --on-pill: var(--color-ink-soft);
           --band: color-mix(in srgb, var(--color-line) 50%, transparent);
-        }
-
-        @media (min-width: 48rem) {
-          --inset: 2rem;
-          padding-block: 2rem;
         }
 
         /* Sized as the page's other headings. */
@@ -693,13 +688,6 @@ const shownMonths = new InjectionToken('booking panel months', {
         }
       }
 
-      .guests,
-      .outcome {
-        margin-top: 1rem;
-        padding-top: 1rem;
-        border-top: 1px solid var(--color-line);
-      }
-
       /* The months' last line has some air below it already. */
       .panel-seasons + .guests {
         margin-top: 0.5rem;
@@ -713,59 +701,10 @@ const shownMonths = new InjectionToken('booking panel months', {
         margin-top: 0.75rem;
       }
 
-      /* The total's rows bring their own padding, so it starts as close to its line as the sum. */
-      .outcome:has(.total) {
-        padding-top: 0.625rem;
-      }
-
-      .total {
-        font-size: 0.9375rem;
-
-        div {
-          display: flex;
-          justify-content: space-between;
-          gap: 1rem;
-          padding-block: 0.25rem;
-        }
-
-        dt {
-          color: var(--color-ink-soft);
-        }
-
-        dd {
-          white-space: nowrap;
-        }
-
-        .sum {
-          margin-top: 0.375rem;
-          padding-top: 0.625rem;
-          border-top: 1px solid var(--color-line);
-          font-size: 1.1875rem;
-          font-weight: var(--font-weight-medium);
-
-          dt {
-            color: var(--color-ink);
-          }
-        }
-      }
-
       .clear-week {
         display: flex;
         width: fit-content;
         margin: 0.5rem auto 0;
-      }
-
-      .button.wide {
-        justify-content: center;
-        gap: 0.5rem;
-        width: 100%;
-        margin-top: 1rem;
-
-        &:disabled {
-          background: var(--color-line);
-          color: var(--color-ink-soft);
-          box-shadow: none;
-        }
       }
     }
   `,
@@ -784,6 +723,8 @@ export class BookingPanel {
   protected readonly views = ['list', 'calendar'] as const;
 
   protected readonly weeks: FreeWeeks | null = this.route.data['weeks'];
+  // Where Beds24's settings do not let the site book it, no button offers it.
+  protected readonly bookable = !!this.weeks?.apartments[0]?.bookable;
   protected readonly limits: Listing | null = this.route.data['listing'];
   private readonly slug: string = this.route.params['slug'];
   private readonly name = site.apartments.find(({ slug }) => slug === this.slug)!.name;
@@ -883,7 +824,7 @@ export class BookingPanel {
             after: '',
             detail: this.stayText(stay),
             link: null,
-            label: this.texts.panel.bar.book,
+            label: this.bookable ? this.texts.panel.bar.book : '',
             chosen: true,
             blocked: !!this.blocked(),
           },

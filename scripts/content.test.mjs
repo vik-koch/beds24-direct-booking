@@ -63,15 +63,11 @@ test('a registration label without its number once is refused', () => {
   }
 });
 
-test('a link to book elsewhere is an https address with only the stay to fill in', () => {
-  const link = (value) => changed('apartments/zirbe.json', (zirbe) => (zirbe.elsewhere = value));
-  readContent(link('https://booking.example/z?checkin={arrival}&adults={adults}'));
-  for (const query of ['n={nights}', 'checkin={arrival-date}', 'checkin={arrival'])
-    assert.throws(
-      () => readContent(link(`https://booking.example/z?${query}`)),
-      /only \{arrival\}/,
-    );
-  assert.throws(() => readContent(link('http://booking.example/z')), /zirbe\.json\n {2}elsewhere/);
+test("the booking step's terms line links the terms once", () => {
+  for (const text of ['Booking means you accept the terms.', '{link} and {link}']) {
+    const dir = changed('texts.en-GB.json', (texts) => (texts.book.terms.text = text));
+    assert.throws(() => readContent(dir), /book\.terms\.text[^]*needs \{link\} once/);
+  }
 });
 
 test('a key the schema does not know is refused', () => {

@@ -1,6 +1,29 @@
 import type { AddressInfo } from 'node:net';
 import { sim } from '../../sim/server.ts';
-import { listingOf, loadInventory, multiplier } from './client';
+import { listingOf, loadInventory, multiplier, questionsOf } from './client';
+
+// Booking settings as the site takes them: the full price at booking, and a name and an e-mail.
+const bookable = {
+  bookingQuestions: {
+    guestFirstName: { usage: 'compulsory', order: 1 },
+    guestLastName: { usage: 'compulsory', order: 2 },
+    guestEmail: { usage: 'compulsory', order: 3 },
+  },
+  bookingRules: {
+    bookingType: 'confirmedWithDepositCollection1',
+    bookingNearType: null,
+    bookingNearTypeDays: null,
+    bookingExceptionalType: null,
+    bookingExceptionalTypeEnd: null,
+  },
+  paymentCollection: {
+    depositPayment1: {
+      fixedAmount: 0,
+      variableAmount: { type: 'percentage', percentageValue: 100 },
+    },
+    depositPayment2: { fixedAmount: 0, variableAmount: { type: 'percentage', percentageValue: 0 } },
+  },
+};
 
 describe('loadInventory', () => {
   const properties = {
@@ -22,6 +45,7 @@ describe('loadInventory', () => {
           { language: 'en', houseRules: '' },
         ],
         bookingPageMultiplier: '*0.9',
+        ...bookable,
         upsellItems: [
           { index: 1, type: 'notUsed', amount: 0, per: 'booking', period: 'oneTime' },
           { index: 2, type: 'obligatory', amount: 2.5, per: 'adult', period: 'daily' },
@@ -63,6 +87,9 @@ describe('loadInventory', () => {
         checkOutEnd: '',
         permit: '',
         featureCodes: [],
+        // Taken on request, which the site does not do.
+        ...bookable,
+        bookingRules: { ...bookable.bookingRules, bookingType: 'requestWithManualConfirmation' },
         roomTypes: [
           {
             id: 21,
@@ -113,9 +140,10 @@ describe('loadInventory', () => {
     vi.unstubAllEnvs();
   });
 
-  it('maps rooms, their lead time, multiplier and tax, and every day asked for', async () => {
+  it('maps rooms, their lead time, multiplier, tax and questions, and every day asked for', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     answer(200, properties, calendars);
-    const { rooms, days } = await loadInventory('2027-01-01', '2027-01-05');
+    const { rooms, days } = await loadInventory('2027-01-01', '2027-01-05', ['de', 'en']);
     expect(rooms).toEqual([
       {
         id: 11,
@@ -134,6 +162,11 @@ describe('loadInventory', () => {
         checkOut: '10:00',
         features: [['WIFI'], ['PARKING_PAID'], ['BEDROOM', 'BED_DOUBLE'], ['BOOT_DRYER']],
         headlines: { de: 'Für vier', en: '' },
+        questions: [
+          { key: 'firstName', required: true },
+          { key: 'lastName', required: true },
+          { key: 'email', required: true },
+        ],
         texts: {
           de: {
             description: '<p><strong>61 m²</strong> mit Balkon.</p>',
@@ -159,6 +192,7 @@ describe('loadInventory', () => {
         checkOut: null,
         features: [],
         headlines: { de: '' },
+        questions: null,
         texts: { de: { description: '', houseRules: '' } },
       },
     ]);
@@ -170,6 +204,9 @@ describe('loadInventory', () => {
       // Not listed by Beds24, so closed.
       { date: '2027-01-05', free: false, price: null, changeover: false },
     ]);
+    expect(error).toHaveBeenCalledWith(
+      "Property 2: Beds24's booking rules ask for other than the full price: booking closed",
+    );
     expect(fetch).toHaveBeenCalledWith(
       'http://beds24.test/v2/inventory/rooms/calendar?startDate=2027-01-01&endDate=2027-01-05&includeNumAvail=true&includePrices=true&includeOverride=true',
       expect.objectContaining({ headers: { token: 'secret' } }),
@@ -183,7 +220,7 @@ describe('loadInventory', () => {
     Object.assign(strict.data[0].roomTypes[0], { maxAdult: 3, maxChildren: 2 });
     Object.assign(strict.data[1].roomTypes[0], { maxAdult: 3 });
     answer(200, strict, calendars);
-    const { rooms } = await loadInventory('2027-01-01', '2027-01-05');
+    const { rooms } = await loadInventory('2027-01-01', '2027-01-05', ['de', 'en']);
     expect(warn.mock.calls).toEqual([
       ['Room 11 limits adults or children apart from its total: ignored'],
       ['Room 21 limits adults or children apart from its total: ignored'],
@@ -197,7 +234,7 @@ describe('loadInventory', () => {
 
   it('asks for the texts in every language', async () => {
     answer(200, properties, calendars);
-    await loadInventory('2027-01-01', '2027-01-05');
+    await loadInventory('2027-01-01', '2027-01-05', ['de', 'en']);
     expect(fetch).toHaveBeenCalledWith(
       expect.stringMatching(/\/properties\?.*includeTexts=all&includeLanguages=all/),
       expect.anything(),
@@ -206,13 +243,15 @@ describe('loadInventory', () => {
 
   it('fails when Beds24 refuses the token', async () => {
     answer(401, { success: false, type: 'error', code: 401, error: 'Token not valid' });
-    await expect(loadInventory('2027-01-01', '2027-01-05')).rejects.toThrow('Beds24 answered 401');
+    await expect(loadInventory('2027-01-01', '2027-01-05', ['de', 'en'])).rejects.toThrow(
+      'Beds24 answered 401',
+    );
   });
 
   it('names the missing address instead of fetching', async () => {
     answer(200, { data: [] });
     vi.stubEnv('BEDS24_URL', undefined);
-    await expect(loadInventory('2027-01-01', '2027-01-05')).rejects.toThrow(
+    await expect(loadInventory('2027-01-01', '2027-01-05', ['de', 'en'])).rejects.toThrow(
       'BEDS24_URL is not set',
     );
     expect(fetch).not.toHaveBeenCalled();
@@ -248,6 +287,7 @@ describe('listingOf', () => {
     checkOut: '10:00',
     features: [['WIFI']],
     headlines: { de: 'Für vier' },
+    questions: [{ key: 'email' as const, required: true }],
     texts: Object.fromEntries(
       ['de', 'en', 'it'].map((code) => [code, { description: code, houseRules: '' }]),
     ),
@@ -267,6 +307,11 @@ describe('listingOf', () => {
       features: [['WIFI']],
       texts: { de: room.texts['de'], en: room.texts['en'] },
     });
+  });
+
+  it("gives a room's questions, and fails for a room Beds24 does not list", () => {
+    expect(questionsOf([room], 11)).toEqual([{ key: 'email', required: true }]);
+    expect(() => questionsOf([room], 12)).toThrow('Beds24 has no room 12');
   });
 
   it('fails for a room Beds24 does not list', () => {
@@ -295,7 +340,7 @@ describe('the token and the bookings', () => {
       .length;
   // A week the simulator has free for its second apartment.
   const freeWeek = async () => {
-    const { days } = await client.loadInventory('2027-06-05', '2027-09-30');
+    const { days } = await client.loadInventory('2027-06-05', '2027-09-30', ['de', 'en']);
     const list = days[9001012];
     const index = list.findIndex(
       (day, i) =>
@@ -329,28 +374,30 @@ describe('the token and the bookings', () => {
   it('takes one access token for callers at the same moment, and renews it an hour before it expires', async () => {
     vi.useFakeTimers({ toFake: ['Date'] });
     await Promise.all([
-      client.loadInventory('2027-01-01', '2027-01-07'),
-      client.loadInventory('2027-01-01', '2027-01-07'),
+      client.loadInventory('2027-01-01', '2027-01-07', ['de', 'en']),
+      client.loadInventory('2027-01-01', '2027-01-07', ['de', 'en']),
     ]);
     vi.advanceTimersByTime(22 * 36e5);
-    await client.loadInventory('2027-01-01', '2027-01-07');
+    await client.loadInventory('2027-01-01', '2027-01-07', ['de', 'en']);
     expect(renewals()).toBe(1);
     vi.advanceTimersByTime(36e5 + 1);
-    await client.loadInventory('2027-01-01', '2027-01-07');
+    await client.loadInventory('2027-01-01', '2027-01-07', ['de', 'en']);
     expect(renewals()).toBe(2);
     // Past the expiry too, as after a night without a page view.
     vi.advanceTimersByTime(2 * 864e5);
-    await client.loadInventory('2027-01-01', '2027-01-07');
+    await client.loadInventory('2027-01-01', '2027-01-07', ['de', 'en']);
     expect(renewals()).toBe(3);
   });
 
   it('fails when Beds24 refuses the refresh token, and tries again on the next call', async () => {
     vi.stubEnv('BEDS24_REFRESH_TOKEN', 'expired');
-    await expect(client.loadInventory('2027-01-01', '2027-01-07')).rejects.toThrow(
+    await expect(client.loadInventory('2027-01-01', '2027-01-07', ['de', 'en'])).rejects.toThrow(
       'Beds24 answered 401 to the token refresh',
     );
     vi.stubEnv('BEDS24_REFRESH_TOKEN', 'simulator');
-    await expect(client.loadInventory('2027-01-01', '2027-01-07')).resolves.toBeDefined();
+    await expect(
+      client.loadInventory('2027-01-01', '2027-01-07', ['de', 'en']),
+    ).resolves.toBeDefined();
   });
 
   it('books a week, records its payment, confirms and cancels it', async () => {
@@ -415,25 +462,27 @@ describe('the token and the bookings', () => {
   });
 
   it('drops an access token Beds24 refuses, so that the next call renews it', async () => {
-    await client.loadInventory('2027-01-01', '2027-01-07');
+    await client.loadInventory('2027-01-01', '2027-01-07', ['de', 'en']);
     vi.mocked(fetch).mockResolvedValueOnce(new Response('{}', { status: 401 }));
-    await expect(client.loadInventory('2027-01-01', '2027-01-07')).rejects.toThrow('401');
-    await client.loadInventory('2027-01-01', '2027-01-07');
+    await expect(client.loadInventory('2027-01-01', '2027-01-07', ['de', 'en'])).rejects.toThrow(
+      '401',
+    );
+    await client.loadInventory('2027-01-01', '2027-01-07', ['de', 'en']);
     expect(renewals()).toBe(2);
   });
 
   it('keeps a renewed token when a late answer refuses the one before it', async () => {
-    await client.loadInventory('2027-01-01', '2027-01-07');
+    await client.loadInventory('2027-01-01', '2027-01-07', ['de', 'en']);
     let answer: ((response: Response) => void) | undefined;
     vi.mocked(fetch).mockImplementationOnce(() => new Promise((resolve) => (answer = resolve)));
     const slow = client.cancelBooking(1).catch(() => undefined);
     await vi.waitFor(() => expect(answer).toBeDefined());
     vi.mocked(fetch).mockResolvedValueOnce(new Response('{}', { status: 401 }));
     await expect(client.cancelBooking(1)).rejects.toThrow('401');
-    await client.loadInventory('2027-01-01', '2027-01-07');
+    await client.loadInventory('2027-01-01', '2027-01-07', ['de', 'en']);
     answer!(new Response('{}', { status: 401 }));
     await slow;
-    await client.loadInventory('2027-01-01', '2027-01-07');
+    await client.loadInventory('2027-01-01', '2027-01-07', ['de', 'en']);
     expect(renewals()).toBe(2);
   });
 
@@ -457,7 +506,7 @@ describe('the token and the bookings', () => {
       expect(error).toBe(`Beds24 ${reason}`);
       for (const log of logs) expect(log).not.toHaveBeenCalled();
     };
-    beforeEach(() => client.loadInventory('2027-01-01', '2027-01-07'));
+    beforeEach(() => client.loadInventory('2027-01-01', '2027-01-07', ['de', 'en']));
 
     it('names only the room when Beds24 is unreachable', async () => {
       vi.stubEnv('BEDS24_URL', 'http://localhost:9/v2');

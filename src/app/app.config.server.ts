@@ -1,13 +1,14 @@
 import { ApplicationConfig, mergeApplicationConfig } from '@angular/core';
 import { provideServerRendering, withRoutes } from '@angular/ssr';
 import { cached } from '../beds24/cache';
-import { addDays, listingOf, loadInventory } from '../beds24/client';
+import { addDays, listingOf, loadInventory, questionsOf } from '../beds24/client';
 import { freeWeeks, type Period } from '../beds24/weeks';
 import site from '../content/generated/site';
 import { appConfig } from './app.config';
 import { serverRoutes } from './app.routes.server';
 import { FREE_WEEKS } from './free-weeks';
 import { LISTING } from './listing';
+import { QUESTIONS } from './questions';
 import { dayOf, seasonState, starts } from './season';
 
 const minute = 60_000;
@@ -19,7 +20,7 @@ const inventory = cached(
   () => {
     const today = dayOf(new Date());
     // A year of arrivals, and the week after the last one.
-    return loadInventory(today, addDays(today, 372));
+    return loadInventory(today, addDays(today, 372), languages);
   },
   2 * minute,
   24 * 60 * minute,
@@ -55,6 +56,10 @@ const serverConfig: ApplicationConfig = {
     {
       provide: LISTING,
       useValue: async (roomId: number) => listingOf((await inventory()).rooms, roomId, languages),
+    },
+    {
+      provide: QUESTIONS,
+      useValue: async (roomId: number) => questionsOf((await inventory()).rooms, roomId),
     },
   ],
 };

@@ -23,6 +23,18 @@ export const anchor = segment.refine(
 );
 const text = z.string().refine((value) => value.trim() !== '', 'empty or only spaces');
 
+// A link within the site is a path from its root, which carries the visitor's choices; any
+// other is a full https address.
+const href = z.union([
+  z.string().regex(/^\/(?!\/)/, 'a path from the root'),
+  z.url({ protocol: /^https$/, hostname: z.regexes.domain }),
+]);
+
+// A booking form's field: its label, and its error when it is left empty.
+const field = z.strictObject({ label: text, missing: text });
+// One whose answer has a form: its error too when the answer lacks it.
+const formed = field.extend({ invalid: text });
+
 const unique = <T>(list: T[], key: (item: T) => unknown) =>
   new Set(list.map(key)).size === list.length;
 
@@ -326,15 +338,6 @@ export const apartmentSchema = z.strictObject({
   // Its name on the map left of its pin, for one that would cover a neighbour's.
   mapLabel: z.literal('left').optional(),
   name: text.refine((value) => letters(value) <= 20, 'at most 20 characters'),
-  // Where the apartment can be booked until online booking opens, such as its page on a booking
-  // site: an https address in which the booking step fills in the stay.
-  elsewhere: z
-    .url({ protocol: /^https$/, hostname: z.regexes.domain })
-    .refine(
-      (value) => !/[{}]/.test(value.replace(/\{(arrival|departure|adults|children)\}/g, '')),
-      'only {arrival}, {departure}, {adults} and {children}',
-    )
-    .optional(),
   pictures: z
     .array(
       z.strictObject({
@@ -383,20 +386,10 @@ export const textsSchema = z.strictObject({
     location: anchor,
   }),
   skip: text,
-  // A link within the site is a path from its root, which carries the visitor's choices; any
-  // other is a full https address.
   notice: z
     .strictObject({
       text,
-      link: z
-        .strictObject({
-          text,
-          href: z.union([
-            z.string().regex(/^\/(?!\/)/, 'a path from the root'),
-            z.url({ protocol: /^https$/, hostname: z.regexes.domain }),
-          ]),
-        })
-        .optional(),
+      link: z.strictObject({ text, href }).optional(),
     })
     .optional(),
   nav: z.strictObject({
@@ -537,15 +530,53 @@ export const textsSchema = z.strictObject({
       gestures: z.strictObject({ windows: text, mac: text, touch: text }),
     })
     .optional(),
-  // The booking step until online booking opens: the stay, and a link to book it elsewhere where
-  // the apartment's file gives one. {apartment} and {count} are filled in by the page.
+  // The booking step: the stay and the booking form. {apartment}, {count}, {question} and {link}
+  // are filled in by the page.
   book: z.strictObject({
-    text,
-    link: text,
     children: z.strictObject({ one: text, other: text }),
     invalid: text,
     taken: text,
+    // The apartment takes no booking on the site, or Beds24 cannot be reached.
+    unavailable: text,
     back: text,
+    // Beside an optional field's label.
+    optional: text,
+    // A dropdown's first entry, before anything is chosen.
+    choose: text,
+    // Beds24's guest fields, each asked where the property's booking questions ask it.
+    fields: z.strictObject({
+      title: field,
+      firstName: formed,
+      lastName: formed,
+      email: formed,
+      phone: formed,
+      mobile: formed,
+      fax: formed,
+      company: field,
+      address: field,
+      city: field,
+      state: field,
+      postcode: field,
+      countryText: field,
+      countrySelect: field,
+      arrivalTime: field,
+      comments: field,
+    }),
+    // The errors of the property's own questions, which Beds24 words.
+    custom: z.strictObject({ missing: text, choose: text, tick: text }),
+    // The summary: the arrival's and the departure's day, each with the hours Beds24 sets
+    // ({from}, {until}), and the week's rent and tourist tax as two lines of the total.
+    arrival: text,
+    departure: text,
+    times: z.strictObject({ both: text, from: text, until: text }),
+    rent: text,
+    tax: text,
+    // A line beside the button with the rental terms linked in place of {link}.
+    terms: z.strictObject({
+      text: text.refine((value) => value.split('{link}').length === 2, 'needs {link} once'),
+      link: z.strictObject({ text, href }),
+    }),
+    submit: text,
   }),
   placeholder: text,
   notFound: z.strictObject({ title: text, text, home: text }),

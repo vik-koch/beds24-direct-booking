@@ -1,6 +1,9 @@
 @import 'tailwindcss';
 /* The tests' Playwright selectors, such as [aria-selected=true]:visible, read as classes. */
 @source not '../e2e';
+/* The booking form's spartan/ui parts take their look from ui.css alone: their utilities, such as
+   an outline-none that would hide the focus ring, would add to every page's styles. */
+@source not './ui/{checkbox,field,input,label,textarea}';
 @import 'tw-animate-css';
 @import '@spartan-ng/brain/hlm-tailwind-preset.css';
 @import './content/generated/theme.css';
@@ -701,8 +704,22 @@
     }
   }
 
-  /* The apartment page's headings, and a map's section after an apartment's or a content page's
-     text: the map runs edge to edge, its heading stays in the column. */
+  /* An apartment's page and its booking step: a link back above the name. */
+  .apartment {
+    padding-top: 1rem;
+
+    h1 {
+      margin-top: 0.5rem;
+    }
+
+    .back {
+      font-size: 0.9375rem;
+    }
+  }
+
+  /* The headings of an apartment's page and its booking step, and a map's section after an
+     apartment's or a content page's text: the map runs edge to edge, its heading stays in the
+     column. */
   :is(.apartment, .map-section) {
     --size-heading: clamp(1.375rem, 1.2rem + 0.8vw, 1.75rem);
 
@@ -718,11 +735,81 @@
     padding-top: var(--space-section);
   }
 
-  /* A card on the page's ground: the hero's text, the free weeks and the booking panel. */
-  :is(.hero-copy, .sheet, .panel) {
+  /* A card on the page's ground: the hero's text, the free weeks, the booking panel and the
+     booking step's summary. */
+  :is(.hero-copy, .sheet, .panel, .summary) {
     border-radius: var(--radius-card);
     background: var(--color-surface);
     box-shadow: var(--shadow-card);
+  }
+
+  /* The booking panel's and the booking step's summary's content, further in from 48rem. */
+  :is(.panel, .summary-text) {
+    --inset: 1.25rem;
+    padding: 1.5rem var(--inset);
+
+    @media (min-width: 48rem) {
+      --inset: 2rem;
+      padding-block: 2rem;
+    }
+  }
+
+  /* A part of such a card, apart from the one above by a line. A total's rows bring their own
+     padding: its first stands as far below the line as the sum below its own. */
+  .card-part {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--color-line);
+
+    &:is(.total, :has(> .total)) {
+      padding-top: 0.375rem;
+    }
+  }
+
+  /* A stay's price, its tax and their total: in the booking panel and on the booking step. */
+  .total {
+    font-size: 0.9375rem;
+
+    div {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      padding-block: 0.25rem;
+    }
+
+    dt {
+      color: var(--color-ink-soft);
+    }
+
+    dd {
+      white-space: nowrap;
+    }
+
+    .sum {
+      margin-top: 0.375rem;
+      padding-top: 0.625rem;
+      border-top: 1px solid var(--color-line);
+      font-size: 1.1875rem;
+      font-weight: var(--font-weight-medium);
+
+      dt {
+        color: var(--color-ink);
+      }
+    }
+  }
+
+  /* A button as wide as its card: the booking panel's and the booking step's. */
+  .button.wide {
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+    margin-top: 1rem;
+
+    &:disabled {
+      background: var(--color-line);
+      color: var(--color-ink-soft);
+      box-shadow: none;
+    }
   }
 
   /* An apartment too small for the chosen guests: on its card and in its panel. */
@@ -748,9 +835,9 @@
     }
   }
 
-  /* A picture filling its frame, on the home page's cards and in the gallery; a season's two
-     lie on each other. */
-  :is(.tile, .teaser-picture) {
+  /* A picture filling its frame, on the home page's cards, in the gallery and on the booking
+     step; a season's two lie on each other. */
+  :is(.tile, .teaser-picture, .summary-picture) {
     position: relative;
     overflow: hidden;
     border-radius: var(--radius-card);

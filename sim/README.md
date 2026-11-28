@@ -25,7 +25,7 @@ is described in [`data.json`](data.json); the decisions behind the simulator are
 <!-- prettier-ignore -->
 | Call | Answer |
 |---|---|
-| `GET /v2/properties` | The two houses with their four apartments; the demo lists three, the e2e test site all four. Rooms, texts, price rules and upsell items appear when their `include*` parameter is passed; `id` filters. |
+| `GET /v2/properties` | The three houses with their four apartments; the demo lists three, the e2e test site all four. Each house's booking questions, booking rules and deposits come without a parameter. Rooms, texts, price rules and upsell items appear when their `include*` parameter is passed; `id` filters. |
 | `GET /v2/authentication/token` | For the header `refreshToken: simulator`, a new access token valid for 24 hours. |
 | `GET /v2/inventory/rooms/calendar` | Per room the compressed date ranges between `startDate` and `endDate`, with the fields whose `include*` parameter is passed; `roomId` and `propertyId` filter. A held booking takes its nights out. |
 | `GET /v2/inventory/rooms/offers` | Per room, for `arrival` and `departure`, one offer when the stay is a Saturday-to-Saturday week, every night free and priced, beyond the lead time and within the room's guest limits (`numAdults`, `numChildren`); otherwise the room without `offers`. The price is the sum of the nights times the booking page multiplier, whatever the mix of guests. `roomId` and `propertyId` filter. |
@@ -61,11 +61,18 @@ days pass:
   restarts. As the demo is public, a booking keeps its stay, status and money and a session its
   amount and metadata, never the guest's details: `customer_email` is dropped.
 - **The lead time** is seven days, so the nearest Saturday is always inside it.
+- **The booking questions** are few, as a host would ask: Haus Firn asks the name, the e-mail, the
+  phone, the country, and optionally the arrival time and a message, with its mobile number
+  internal. Haus Farn asks the same and one of each kind of choice: a dropdown, a list, a date and a
+  tick box after the arrival time, and a required tick box last; it leaves out the first name, asks
+  the e-mail as optional and keeps one question internal. Haus Moos, with Fichte alone, takes
+  bookings on request only, which the site does not do. The custom questions are written in German
+  and English only, so on the e2e test site Haus Farn's compulsory one closes its booking.
 
 ## What differs from Beds24
 
-- **Left out:** the blocks of a property the site never reads (payment gateways, booking questions,
-  vouchers, units and the like), every other call, and the booking page.
+- **Left out:** the blocks of a property the site never reads (payment gateways, vouchers, units and
+  the like), every other call, and the booking page.
 - **Stripe** is played only as far as the site uses it: no customers, payment methods or webhooks,
   no validation of `expires_at`, and a session answers only the fields above.
 - **`maxChildren` 0** refuses any child in `offers`; whether Beds24 does is not checked.

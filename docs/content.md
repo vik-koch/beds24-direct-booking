@@ -202,11 +202,7 @@ content. The application has no wording, no colour and no typeface of its own. T
   ```
 
   The room ID is the Beds24 room the apartment is, and the name is how the site calls it in every
-  language. Until online booking opens, `elsewhere` (optional) is where the apartment can be booked
-  meanwhile, such as its page on a booking site. The booking step links it beside `book.text` with
-  the words of `book.link`, and fills in `{arrival}`, `{departure}`, `{adults}` and `{children}`:
-  `"https://www.booking.com/hotel/at/example.html?checkin={arrival}&checkout={departure}&group_adults={adults}&group_children={children}&no_rooms=1"`.
-  Without it the step shows its text alone.
+  language.
 
 - **An apartment's pictures** (`pictures` in its file) are listed in the order the site shows them,
   at least one, each a `file` and its alternative text `alt` in each of the site's languages by tag.
@@ -288,6 +284,18 @@ content. The application has no wording, no colour and no typeface of its own. T
   counts ask only for guests. `small` (`{name}`, `{guests}`) says how many an apartment too small
   for the chosen guests takes. The tax line takes `{guests}`, `{nights}` and `{amount}`; `adults`
   has a `one` and an `other` form for it.
+- **The booking step** (`book` in a texts file) labels Beds24's 16 guest fields under `fields`, each
+  with the error for a field left empty (`missing`) and, for the first name, the surname, the e-mail
+  and the phone, mobile and fax numbers, one for an answer of the wrong form (`invalid`): a name
+  with a digit, or a number its country does not have, which the error asks for with its country
+  code; `{example}` in it is a number of the guest's country, written so. Every field has its label
+  in every language, whether a property asks it or not, so a field switched on in Beds24 never lacks
+  one. A property's own questions are worded in Beds24; their errors come from `custom`, with
+  `{question}` for the question's text. The summary beside the form names the days of `arrival` and
+  `departure`, each with the hours Beds24 sets for the property in `times` (`both`, `from`, `until`,
+  with `{from}` and `{until}`), and the total's two lines, `rent` and `tax`. `terms` is the line
+  above the button, with the rental terms linked in place of `{link}`, by a path from the site's
+  root.
 - **The notice** (`notice` in a texts file) is an optional line above the header, with an optional
   link. Left out, no line is shown. A link within the site is a path from its root, such as
   `/en/apartments/ahorn`, which then carries the visitor's guests; any other is a full `https://`
@@ -432,6 +440,7 @@ beyond a limit fails its build, with the limit named.
 | A page's description | 160 characters | A search result shows a sentence or two, cut by the screen's width | The schema |
 | The contact's address | A street, a postal code before the place, and a country | The footer's lines; an address written the other way round, as in the United Kingdom, is not supported | The schema |
 | A room's guests in Beds24 | `maxAdult` empty or equal to `maxPeople`; `maxChildren` empty, 0 or at least `maxPeople − 1` | The site takes a room by its total: any guest may be an adult, and with one adult required the children's limit never applies on its own | Not the build: the server logs a warning when it loads a room beyond this, and treats it by its total |
+| Booking questions in Beds24 | The 16 guest fields, and custom questions of the six kinds Beds24 offers, each with its text, and a choice its options in brackets, in every language of the site; the full price taken at booking | The booking form asks them as [ADR 19](adr/0019-the-booking-form-asks-what-beds24-asks.md) says | Not the build: the server logs an optional question it cannot ask and leaves it out, and closes the property's booking for a required one or other booking rules |
 | Hero features | Up to 5 | The hero's card | The schema |
 | An apartment's picture | Square to 2:1, landscape, with 1% to spare | The gallery's frames; tested with 1:1, 4:3 and 3:2 | The content script; the demo has 3:2, the e2e test site 1:1 and 4:3 |
 | An apartment's floor plan | One drawing, all floors in it | The gallery shows one plan | The schema |

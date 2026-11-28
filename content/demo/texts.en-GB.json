@@ -92,7 +92,7 @@
       "other": "{count} guests"
     },
     "size": {
-      "shown": "{size}\u00a0m²",
+      "shown": "{size} m²",
       "spoken": "{size} square metres"
     },
     "taken": "booked",
@@ -115,8 +115,14 @@
   },
   "apartment": {
     "back": "All apartments",
-    "guests": { "one": "Up to {count} guest", "other": "Up to {count} guests" },
-    "bedrooms": { "one": "1 bedroom", "other": "{count} bedrooms" },
+    "guests": {
+      "one": "Up to {count} guest",
+      "other": "Up to {count} guests"
+    },
+    "bedrooms": {
+      "one": "1 bedroom",
+      "other": "{count} bedrooms"
+    },
     "more": "Read more",
     "rooms": "Rooms and beds",
     "features": "Amenities",
@@ -171,7 +177,10 @@
     "position": "Picture {index} of {count}",
     "previous": "Previous picture",
     "next": "Next picture",
-    "more": { "one": "+{count} picture", "other": "+{count} pictures" },
+    "more": {
+      "one": "+{count} picture",
+      "other": "+{count} pictures"
+    },
     "plan": "Floor plan",
     "photos": "Photos"
   },
@@ -229,12 +238,110 @@
     }
   },
   "book": {
-    "text": "Direct booking opens soon. This demo takes no bookings.",
-    "link": "Book this week on Booking.com",
-    "children": { "one": "{count} child", "other": "{count} children" },
+    "children": {
+      "one": "{count} child",
+      "other": "{count} children"
+    },
     "invalid": "This address names no week that can be booked.",
     "taken": "This week is no longer free.",
-    "back": "Back to {apartment}"
+    "unavailable": "This apartment cannot be booked online at the moment.",
+    "back": "Back to {apartment}",
+    "optional": "optional",
+    "choose": "Choose…",
+    "fields": {
+      "title": {
+        "label": "Title",
+        "missing": "Enter your title, such as Ms or Dr."
+      },
+      "firstName": {
+        "label": "First name",
+        "missing": "Enter your first name.",
+        "invalid": "Enter your first name in letters."
+      },
+      "lastName": {
+        "label": "Surname",
+        "missing": "Enter your surname.",
+        "invalid": "Enter your surname in letters."
+      },
+      "email": {
+        "label": "E-mail address",
+        "missing": "Enter your e-mail address.",
+        "invalid": "Enter an e-mail address such as name@example.com."
+      },
+      "phone": {
+        "label": "Phone number",
+        "missing": "Enter your phone number.",
+        "invalid": "Enter a full phone number, with its country code, such as {example}."
+      },
+      "mobile": {
+        "label": "Mobile number",
+        "missing": "Enter your mobile number.",
+        "invalid": "Enter a full mobile number, with its country code, such as {example}."
+      },
+      "fax": {
+        "label": "Fax number",
+        "missing": "Enter your fax number.",
+        "invalid": "Enter a full fax number, with its country code, such as {example}."
+      },
+      "company": {
+        "label": "Company",
+        "missing": "Enter your company's name."
+      },
+      "address": {
+        "label": "Street and number",
+        "missing": "Enter your street and house number."
+      },
+      "city": {
+        "label": "Town or city",
+        "missing": "Enter your town or city."
+      },
+      "state": {
+        "label": "State or region",
+        "missing": "Enter your state or region."
+      },
+      "postcode": {
+        "label": "Postcode",
+        "missing": "Enter your postcode."
+      },
+      "countryText": {
+        "label": "Country",
+        "missing": "Enter your country."
+      },
+      "countrySelect": {
+        "label": "Country",
+        "missing": "Choose your country."
+      },
+      "arrivalTime": {
+        "label": "Arrival time",
+        "missing": "Enter the time you expect to arrive."
+      },
+      "comments": {
+        "label": "Message to your hosts",
+        "missing": "Write a message to your hosts."
+      }
+    },
+    "custom": {
+      "missing": "Answer “{question}”.",
+      "choose": "Choose an answer to “{question}”.",
+      "tick": "Tick “{question}” to book."
+    },
+    "arrival": "Check-in",
+    "departure": "Check-out",
+    "times": {
+      "both": "{from} – {until}",
+      "from": "from {from}",
+      "until": "by {until}"
+    },
+    "rent": "Rent",
+    "tax": "Local tax",
+    "terms": {
+      "text": "Booking means you accept the {link}.",
+      "link": {
+        "text": "rental terms",
+        "href": "/en/terms"
+      }
+    },
+    "submit": "Book and pay"
   },
   "placeholder": "This page is still being built.",
   "notFound": {
