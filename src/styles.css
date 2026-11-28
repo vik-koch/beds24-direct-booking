@@ -3,7 +3,7 @@
 @source not '../e2e';
 /* The booking form's spartan/ui parts take their look from ui.css alone: their utilities, such as
    an outline-none that would hide the focus ring, would add to every page's styles. */
-@source not './ui/{checkbox,field,input,label,radio-group,textarea}';
+@source not './ui/{checkbox,field,input,label,textarea}';
 @import 'tw-animate-css';
 @import '@spartan-ng/brain/hlm-tailwind-preset.css';
 @import './content/generated/theme.css';

@@ -163,9 +163,12 @@ test("each field is asked as Beds24's question and the browser may fill it in", 
     'Train',
     'Plane',
   ]);
-  await expect(
-    page.getByRole('radiogroup', { name: 'Pillows (optional)' }).getByRole('radio'),
-  ).toHaveCount(2);
+  // A list, radio buttons on Beds24's own page, is a dropdown too.
+  await expect(field('Pillows (optional)').locator('option')).toHaveText([
+    'Choose…',
+    'Soft',
+    'Firm',
+  ]);
   await expect(page.getByRole('checkbox', { name: 'Cot for a baby (optional)' })).not.toBeChecked();
   for (const name of ['Allergies (optional)', 'Message to your hosts (optional)'])
     await expect(field(name)).toHaveJSProperty('tagName', 'TEXTAREA');
@@ -257,10 +260,9 @@ test('the form is filled in and sent by keyboard', async ({ page }) => {
   await expect(page.getByLabel('Arriving by')).toBeFocused();
   await page.keyboard.type('Train');
   await page.keyboard.press('Tab');
-  await page.keyboard.press('Space');
-  await expect(page.getByRole('radio', { name: 'Soft' })).toBeChecked();
-  await page.keyboard.press('ArrowDown');
-  await expect(page.getByRole('radio', { name: 'Firm' })).toBeChecked();
+  await expect(page.getByLabel('Pillows (optional)')).toBeFocused();
+  await page.keyboard.type('Firm');
+  await expect(page.getByLabel('Pillows (optional)')).toHaveValue('1');
   await page.keyboard.press('Tab');
   await expect(page.getByRole('checkbox', { name: 'Cot for a baby (optional)' })).toBeFocused();
   await page.keyboard.press('Space');

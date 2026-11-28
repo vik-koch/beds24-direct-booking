@@ -14,7 +14,6 @@ import {
 import { HlmCheckbox } from '@spartan-ng/helm/checkbox';
 import { HlmFieldImports } from '@spartan-ng/helm/field';
 import { HlmInput } from '@spartan-ng/helm/input';
-import { HlmRadioGroupImports } from '@spartan-ng/helm/radio-group';
 import { HlmTextarea } from '@spartan-ng/helm/textarea';
 import type { Listing } from '../beds24/client';
 import type { Question } from '../beds24/questions';
@@ -49,7 +48,6 @@ const pairs = [
     HlmInput,
     HlmTextarea,
     HlmCheckbox,
-    HlmRadioGroupImports,
   ],
   providers: [
     provideIcons({
@@ -76,7 +74,6 @@ const pairs = [
         <!-- One form for the answers and the summary, whose button sends it. -->
         <form #element class="booking-step" method="post" [formRoot]="answers">
           <div class="answers">
-            <h2>{{ texts.book.details }}</h2>
             @for (question of questions; track question.key) {
               @let field = answers[question.key];
               @let id = 'answer-' + question.key;
@@ -94,25 +91,6 @@ const pairs = [
                   <label hlmFieldLabel [for]="id">{{ label }}</label>
                   <hlm-field-error [id]="id + '-error'">{{ error }}</hlm-field-error>
                 </div>
-              } @else if (kind === 'radio') {
-                <fieldset hlmField>
-                  <legend hlmFieldLegend [id]="id + '-label'">{{ label }}</legend>
-                  <div
-                    hlmRadioGroup
-                    [formField]="$any(field)"
-                    [attr.aria-labelledby]="id + '-label'"
-                  >
-                    @for (choice of choicesOf(question); track $index) {
-                      <label class="choice" [for]="id + '-' + $index">
-                        <hlm-radio [value]="'' + $index" [inputId]="id + '-' + $index">
-                          <hlm-radio-indicator indicator />
-                        </hlm-radio>
-                        {{ choice }}
-                      </label>
-                    }
-                  </div>
-                  <hlm-field-error [id]="id + '-error'">{{ error }}</hlm-field-error>
-                </fieldset>
               } @else {
                 <div hlmField [class.half]="halves.has(question.key) || kind in pickerIcons">
                   <label hlmFieldLabel [for]="id">{{ label }}</label>
@@ -315,12 +293,6 @@ const pairs = [
             grid-column: auto;
           }
         }
-      }
-
-      .choice {
-        display: flex;
-        gap: 0.75rem;
-        min-height: var(--size-control-small);
       }
 
       .summary {

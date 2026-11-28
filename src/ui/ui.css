@@ -246,28 +246,22 @@
   outline: none;
 }
 
-/* A box beside its label stands on the middle of the label's capitals, as an icon beside text
-   does (styles.css): on the baseline, lowered by half its size less half a capital. Its tick or
-   dot is out of the flow, so that the baseline is its lower edge. */
-.spartan-field-orientation-horizontal,
-label:has(> hlm-radio) {
+/* A tick box beside its label stands on the middle of the label's capitals, as an icon beside text
+   does (styles.css): on the baseline, lowered by half its size less half a capital. Its tick is
+   out of the flow, so that the baseline is its lower edge, ticked or not. */
+.spartan-field-orientation-horizontal {
   align-items: baseline;
 }
 
-.spartan-field-orientation-horizontal > hlm-checkbox .spartan-checkbox,
-label > hlm-radio {
+.spartan-field-orientation-horizontal > hlm-checkbox .spartan-checkbox {
   --drop: round(calc(0.75rem - 0.5cap), 1px);
   position: relative;
   top: var(--drop);
   margin-top: calc(-1 * var(--drop));
 }
 
-.spartan-checkbox-indicator,
-[data-slot='radio-group-indicator'] > div {
-  position: absolute;
-}
-
 .spartan-checkbox-indicator {
+  position: absolute;
   inset: 0;
 }
 
@@ -422,39 +416,4 @@ select.spartan-input {
     background: var(--color-accent);
     color: var(--color-on-accent);
   }
-}
-
-[data-slot='radio-group-indicator'] {
-  position: relative;
-  display: grid;
-  place-items: center;
-  width: 1.5rem;
-  height: 1.5rem;
-  border: 1px solid var(--color-edge);
-  border-radius: 50%;
-  background: var(--color-surface);
-
-  > div {
-    width: 0.75rem;
-    height: 0.75rem;
-    border-radius: 50%;
-  }
-}
-
-.brn-radio {
-  position: relative;
-  display: flex;
-}
-
-.brn-radio-checked [data-slot='radio-group-indicator'] {
-  border-color: var(--color-accent);
-
-  > div {
-    background: var(--color-accent);
-  }
-}
-
-.brn-radio:has(:focus-visible) [data-slot='radio-group-indicator'] {
-  outline: var(--focus-ring);
-  outline-offset: 3px;
 }

@@ -53,15 +53,15 @@ export const guestFields: Record<
   comments: { input: 'textarea', autocomplete: 'off' },
 };
 
-// How a question is asked: an input of that type, a dropdown, several lines, radio buttons or a
-// tick box.
+// How a question is asked: an input of that type, a dropdown, several lines or a tick box. A
+// list Beds24 shows as radio buttons is a dropdown too, whose first entry undoes a choice.
 export const inputOf = (question: Question) =>
   'type' in question
     ? {
         singleLineField: 'text',
         multiLineField: 'textarea',
         multipleSelect: 'select',
-        multipleList: 'radio',
+        multipleList: 'select',
         tickBox: 'checkbox',
         dateSelector: 'date',
       }[question.type]

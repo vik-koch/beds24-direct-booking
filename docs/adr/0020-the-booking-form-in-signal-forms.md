@@ -29,15 +29,17 @@ how it is built:
 2. **A field is checked once the guest has left it,** or pressed the button, which touches every
    field. Before, it is not invalid, so a screen reader does not call an empty field invalid on its
    first visit. A failed submit moves the focus to the first field with an error.
-3. **spartan/ui's field, label, input, textarea, checkbox and radio group,** copied from v1.9.0 into
-   `src/ui/`. Brain reads a Signal Forms field's state itself: it marks an invalid field, sets
-   `aria-invalid`, and links a shown error to its control with `aria-describedby`. Their look is in
-   `src/ui/ui.css`; Tailwind does not generate their utility classes, whose `outline-none` would
-   hide the focus ring and which would add 6 kB to every page's styles. The field directive's
-   variants are kept without class-variance-authority, which the site does not depend on.
+3. **spartan/ui's field, label, input, textarea and checkbox,** copied from v1.9.0 into `src/ui/`.
+   Brain reads a Signal Forms field's state itself: it marks an invalid field, sets `aria-invalid`,
+   and links a shown error to its control with `aria-describedby`. Their look is in `src/ui/ui.css`;
+   Tailwind does not generate their utility classes, whose `outline-none` would hide the focus ring
+   and which would add 6 kB to every page's styles. The field directive's variants are kept without
+   class-variance-authority, which the site does not depend on.
 4. **Native controls where the browser fills them in or answers them:** the country is a
-   `<select autocomplete="country">` and a dropdown question a `<select>`, both with the input's
-   look; a date and the arrival time are `<input type="date">` and `<input type="time">`.
+   `<select autocomplete="country">` and a question of choices a `<select>`, both with the input's
+   look; a date and the arrival time are `<input type="date">` and `<input type="time">`. A list,
+   which Beds24's own page shows as radio buttons (`multipleList`), is a `<select>` too: one control
+   for both, and its first entry undoes an optional choice, which a radio button cannot.
 5. **Each answer's check is a plain function,** one per question, which returns its error in the
    page's language or nothing (`src/app/answers.ts`). The form runs them through Signal Forms'
    `validate`; the server runs the same functions (#349).
@@ -66,6 +68,14 @@ For the country:
 |---|---|---|---|
 | spartan/ui's select or combobox | The site's look, a search in the combobox. | Both are custom listboxes: the browser cannot fill in the country. The combobox's input is fixed to `autocomplete="off"` and takes a value only from a chosen item. | Rejected. |
 | A native `<select>` | The browser fills it in; a phone shows its own picker; typing a name chooses it. | Its list is the system's; the arrow is drawn by the site. | Chosen. |
+
+For a list of choices (`multipleList`):
+
+<!-- prettier-ignore -->
+| Option | For | Against | Result |
+|---|---|---|---|
+| spartan/ui's radio group, as Beds24's own page shows it | Every choice in view at once. | A second control to copy, style and test; an optional choice, once made, cannot be undone. | Tried, replaced. |
+| A native `<select>`, as a dropdown question | One control for every question of choices; its first entry undoes a choice. | The choices show only once the list is opened. | Chosen. |
 
 ## What this rests on
 

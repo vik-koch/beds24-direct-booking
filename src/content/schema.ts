@@ -539,7 +539,6 @@ export const textsSchema = z.strictObject({
     // The apartment takes no booking on the site, or Beds24 cannot be reached.
     unavailable: text,
     back: text,
-    details: text,
     // Beside an optional field's label.
     optional: text,
     // A dropdown's first entry, before anything is chosen.
